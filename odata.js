@@ -1231,6 +1231,18 @@ function schemaToEdmDocument(schema) {
                 if (!x.nullable) {
                     propertyElement.setAttribute("Nullable",false);
                 }
+                if (x.immutable) {
+                    var immutableAnnotation = doc.createElement('Annonation');
+                    immutableAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Immutable');
+                    immutableAnnotation.setAttribute('Tag', 'true');
+                    propertyElement.appendChild(immutableAnnotation);
+                }
+                if (x.computed) {
+                    var computedAnnotation = doc.createElement('Annonation');
+                    computedAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Computed');
+                    computedAnnotation.setAttribute('Tag', 'true');
+                    propertyElement.appendChild(computedAnnotation);
+                }
                 entityTypeElement.appendChild(propertyElement);
             });
             //append Schema > EntityType
@@ -1794,6 +1806,7 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                 }), function(x) {
                     var name = x.property || x.name;
                     var mapping = model.inferMapping(x.name);
+                    var findProperty = null;
                     if (_.isNil(mapping)) {
                         //find data type
                         var dataType = strategy.dataTypes[x.type];
@@ -1803,9 +1816,33 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                         if (x.primary) {
                             modelEntityType.hasKey(name, edmType);
                         }
-                        const findProperty = modelEntityType.property.find( p => {
+                        // get entity type property
+                        findProperty = modelEntityType.property.find( p => {
                             return p.name === name;
                         });
+                    }
+                    else {
+                        var namespacedType = x.type;
+                        //add navigation property
+                        var isNullable = x.hasOwnProperty('nullable') ? x.nullable : true;
+                        // add an exception for one-to-one association
+                        if (x.multiplicity === EdmMultiplicity.ZeroOrOne || x.multiplicity === EdmMultiplicity.One) {
+                            modelEntityType.addNavigationProperty(name, namespacedType, x.multiplicity);
+                        }
+                        else {
+                            modelEntityType.addNavigationProperty(name, namespacedType, x.many ? EdmMultiplicity.Many: (isNullable ? EdmMultiplicity.ZeroOrOne : EdmMultiplicity.One));
+                        }
+                        //add navigation property entity (if type is not a primitive type)
+                        if (!strategy.dataTypes.hasOwnProperty(x.type)) {
+                            self.addEntitySet(x.type, pluralize(x.type));
+                        }
+                        // get entity type navigationProperty
+                        findProperty = modelEntityType.navigationProperty.find( p => {
+                            return p.name === name;
+                        });
+                    }
+                    // add annotations to property of navigationProperty
+                    if (findProperty) {
                         // add immutable annotation
                         if (Object.prototype.hasOwnProperty.call(x, 'editable')) {
                             if (x.editable) {
@@ -1835,22 +1872,6 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                                 writable: true,
                                 value: true
                             });
-                        }
-                    }
-                    else {
-                        var namespacedType = x.type;
-                        //add navigation property
-                        var isNullable = x.hasOwnProperty('nullable') ? x.nullable : true;
-                        // add an exception for one-to-one association
-                        if (x.multiplicity === EdmMultiplicity.ZeroOrOne || x.multiplicity === EdmMultiplicity.One) {
-                            modelEntityType.addNavigationProperty(name, namespacedType, x.multiplicity);
-                        }
-                        else {
-                            modelEntityType.addNavigationProperty(name, namespacedType, x.many ? EdmMultiplicity.Many: (isNullable ? EdmMultiplicity.ZeroOrOne : EdmMultiplicity.One));
-                        }
-                        //add navigation property entity (if type is not a primitive type)
-                        if (!strategy.dataTypes.hasOwnProperty(x.type)) {
-                            self.addEntitySet(x.type, pluralize(x.type));
                         }
                     }
                 });
