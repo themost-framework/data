@@ -1192,7 +1192,7 @@ function schemaToEdmDocument(schema) {
             }
 
             if (entityType.implements) {
-                var implementsAnnotation = doc.createElement('Annonation');
+                var implementsAnnotation = doc.createElement('Annotation');
                 implementsAnnotation.setAttribute('Term', 'DataModel.OData.Core.V1.Implements');
                 implementsAnnotation.setAttribute('String', entityType.implements);
                 entityTypeElement.appendChild(implementsAnnotation);
@@ -1217,13 +1217,13 @@ function schemaToEdmDocument(schema) {
                 }
                 // add annotations
                 if (x.immutable) {
-                    var immutableAnnotation = doc.createElement('Annonation');
+                    var immutableAnnotation = doc.createElement('Annotation');
                     immutableAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Immutable');
                     immutableAnnotation.setAttribute('Tag', 'true');
                     propertyElement.appendChild(immutableAnnotation);
                 }
                 if (x.computed) {
-                    var computedAnnotation = doc.createElement('Annonation');
+                    var computedAnnotation = doc.createElement('Annotation');
                     computedAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Computed');
                     computedAnnotation.setAttribute('Tag', 'true');
                     propertyElement.appendChild(computedAnnotation);
@@ -1239,13 +1239,13 @@ function schemaToEdmDocument(schema) {
                     propertyElement.setAttribute("Nullable",false);
                 }
                 if (x.immutable) {
-                    var immutableAnnotation = doc.createElement('Annonation');
+                    var immutableAnnotation = doc.createElement('Annotation');
                     immutableAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Immutable');
                     immutableAnnotation.setAttribute('Tag', 'true');
                     propertyElement.appendChild(immutableAnnotation);
                 }
                 if (x.computed) {
-                    var computedAnnotation = doc.createElement('Annonation');
+                    var computedAnnotation = doc.createElement('Annotation');
                     computedAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Computed');
                     computedAnnotation.setAttribute('Tag', 'true');
                     propertyElement.appendChild(computedAnnotation);
