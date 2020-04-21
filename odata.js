@@ -1191,6 +1191,13 @@ function schemaToEdmDocument(schema) {
                 entityTypeElement.setAttribute("BaseType", entityType.baseType);
             }
 
+            if (entityType.implements) {
+                var implementsAnnotation = doc.createElement('Annonation');
+                implementsAnnotation.setAttribute('Term', 'DataModel.OData.Core.V1.Implements');
+                implementsAnnotation.setAttribute('String', entityType.implements);
+                entityTypeElement.appendChild(implementsAnnotation);
+            }
+
             if (entityType.key && entityType.key.propertyRef) {
                 var keyElement = doc.createElement('Key');
                 _.forEach(entityType.key.propertyRef, function(key) {
@@ -1797,6 +1804,15 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                     if (baseModel) {
                         inheritedAttributes = baseModel.attributeNames;
                     }
+                }
+                // add implements property
+                if (model.implements) {
+                    Object.defineProperty(modelEntityType, 'implements', {
+                        configurable: true,
+                        enumerable: true,
+                        writable: true,
+                        value: model.implements
+                    });
                 }
                 _.forEach(_.filter(model.attributes, function(x) {
                     if (x.primary && model.inherits) {
