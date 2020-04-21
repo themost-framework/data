@@ -1826,6 +1826,16 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                                 value: true
                             });
                         }
+                        // if attribute is readonly and has default value
+                        if (!!x.primary === false && x.readonly === true && Object.prototype.hasOwnProperty.call(x, 'value')) {
+                            // set computed attribute
+                            Object.defineProperty(findProperty, 'computed', {
+                                configurable: true,
+                                enumerable: true,
+                                writable: true,
+                                value: true
+                            });
+                        }
                     }
                     else {
                         var namespacedType = x.type;
