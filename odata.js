@@ -1844,8 +1844,8 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                     // add annotations to property of navigationProperty
                     if (findProperty) {
                         // add immutable annotation
-                        if (Object.prototype.hasOwnProperty.call(x, 'editable')) {
-                            if (x.editable) {
+                        if (!!x.primary === false && Object.prototype.hasOwnProperty.call(x, 'editable')) {
+                            if (x.editable === false) {
                                 Object.defineProperty(findProperty, 'immutable', {
                                     configurable: true,
                                      enumerable: true,
