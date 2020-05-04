@@ -11,7 +11,6 @@ var QueryEntity = require('@themost/query/query').QueryEntity;
 var QueryUtils = require('@themost/query/utils').QueryUtils;
 var async = require('async');
 var AccessDeniedError = require("@themost/common/errors").AccessDeniedError;
-var RandomUtils = require("@themost/common/utils").RandomUtils;
 var DataConfigurationStrategy = require("./data-configuration").DataConfigurationStrategy;
 var _ = require("lodash");
 var DataCacheStrategy = require("./data-cache").DataCacheStrategy;
@@ -197,13 +196,11 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
     var users = context.model('User'), permissions = context.model('Permission');
     if (_.isNil(users)) {
         //do nothing
-        callback();
-        return;
+        return callback();
     }
     if (_.isNil(permissions)) {
         //do nothing
-        callback();
-        return;
+        return callback();
     }
 
     effectiveAccounts(context, function(err, accounts) {
@@ -219,18 +216,18 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                     //throw error
                     var error = new Error('Access denied.');
                     error.statusCode = 401;
-                    callback(error);
+                    return callback(error);
                 }
                 else {
                     //do nothing
-                    callback(null);
+                    return callback();
                 }
             }
             else {
                 //set result to false (or true if model has no privileges at all)
                 event.result = !permEnabled;
                 //and exit
-                callback(null);
+                return callback();
             }
         }
         else {
@@ -267,14 +264,14 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         .and('account').in(accounts.map(function(x) { return x.id; }))
                         .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                             if (err) {
-                                cb(err);
+                                return cb(err);
                             }
                             else {
                                 if (count>=1) {
                                     cancel=true;
                                     event.result = true;
                                 }
-                                cb(null);
+                                return cb();
                             }
                         });
                 }
@@ -300,14 +297,14 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                             .and('account').in(accounts.map(function(x) { return x.id; }))
                             .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                                 if (err) {
-                                    cb(err);
+                                    return cb(err);
                                 }
                                 else {
                                     if (count>=1) {
                                         cancel=true;
                                         event.result = true;
                                     }
-                                    cb(null);
+                                    return cb();
                                 }
                             });
                     }
@@ -325,19 +322,19 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                     .and('account').in(accounts.map(function(x) { return x.id; }))
                                     .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                                         if (err) {
-                                            cb(err);
+                                            return cb(err);
                                         }
                                         else {
                                             if (count>=1) {
                                                 cancel=true;
                                                 event.result = true;
                                             }
-                                            cb(null);
+                                            return cb();
                                         }
                                     });
                             }
                             else {
-                                cb(null);
+                                return cb();
                             }
                         });
                     }
@@ -355,14 +352,14 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         .and('account').in(accounts.map(function(x) { return x.id; }))
                         .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                             if (err) {
-                                cb(err);
+                                return cb(err);
                             }
                             else {
                                 if (count>=1) {
                                     cancel=true;
                                     event.result = true;
                                 }
-                                cb(null);
+                                return cb();
                             }
                         });
                 }
@@ -419,14 +416,14 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                 query.$expand = q.query.$expand;
                                 model.context.db.execute(query,null, function(err, result) {
                                     if (err) {
-                                        cb(err);
+                                        return cb(err);
                                     }
                                     else {
                                         if (result.length===1) {
                                             cancel=true;
                                             event.result = true;
                                         }
-                                        cb(null);
+                                        return cb();
                                     }
                                 });
                             }
@@ -436,7 +433,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         //get privilege filter
                         model.filter(item.filter, function(err, q) {
                             if (err) {
-                                cb(err);
+                                return cb(err);
                             }
                             else {
                                 //prepare query and append primary key expression
@@ -446,7 +443,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                         cancel=true;
                                         event.result = true;
                                     }
-                                    cb(null);
+                                    return cb();
                                 })
                             }
                         });
@@ -454,12 +451,12 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                 }
                 else {
                     //do nothing (unknown permission)
-                    cb(null);
+                    return cb();
                 }
 
             }, function(err) {
                 if (err) {
-                    callback(err);
+                    return callback(err);
                 }
                 else {
                     if (event.throwError && !event.result) {
@@ -468,7 +465,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         callback(error);
                     }
                     else {
-                        callback();
+                        return callback();
                     }
                 }
             });
@@ -617,7 +614,9 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
     var context = event.model.context;
     var requestMask = 1;
     var workspace = 1;
+    // eslint-disable-next-line no-unused-vars
     var privilege = model.name;
+    // eslint-disable-next-line no-unused-vars
     var parentPrivilege = null;
     //get privilege from event arguments if it's defined (event.g. the operation requests execute permission User.ChangePassword where
     // privilege=ChangePassword and parentPrivilege=User)
