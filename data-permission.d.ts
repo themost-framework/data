@@ -14,7 +14,9 @@ export declare class DataPermissionEventArgs {
     query: any;
     mask: number;
     privilege: string;
+    parentPrivilge?: string;
     emitter?: DataQueryable;
+    throwError?: boolean;
 }
 
 export declare class PermissionMask {

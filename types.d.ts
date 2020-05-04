@@ -152,11 +152,12 @@ export declare class DataField {
 
 export declare class DataEventArgs {
     model: DataModel;
-    target: DataObject;
-    state: number;
+    target: any;
+    state?: number;
     emitter?: any;
     query?: any;
-    previous?: any
+    previous?: any;
+    throwError?: boolean;
 }
 
 export declare interface BeforeSaveEventListener {
