@@ -239,8 +239,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
             //enumerate privileges
             async.eachSeries(privileges, function(item, cb) {
                 if (cancel) {
-                    cb(null);
-                    return;
+                    return cb();
                 }
                 //global
                 if (item.type==='global') {
@@ -347,7 +346,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                     //if target object is a new object
                     if (requestMask===PermissionMask.Create) {
                         //do nothing
-                        cb(null); return;
+                        return cb();
                     }
                     permissions.where('privilege').equal(privilege)
                         .and('parentPrivilege').equal(null)
@@ -469,7 +468,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         callback(error);
                     }
                     else {
-                        callback(null);
+                        callback();
                     }
                 }
             });
