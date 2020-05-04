@@ -781,7 +781,11 @@ var DataObjectState = {
     /**
      * Delete State (4)
      */
-    Delete:4
+    Delete:4,
+    /**
+     * Delete State (4)
+     */
+    Execute:16
 };
 
 /**

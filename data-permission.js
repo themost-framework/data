@@ -16,10 +16,7 @@ var DataConfigurationStrategy = require("./data-configuration").DataConfiguratio
 var _ = require("lodash");
 var DataCacheStrategy = require("./data-cache").DataCacheStrategy;
 var Q = require('q');
-/**
- * @module @themost/data/data-permission
- * @ignore
- */
+var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 
 /**
  * @class
@@ -134,7 +131,7 @@ DataPermissionEventListener.prototype.beforeRemove = function(event, callback)
 };
 /**
  * Validates permissions against the event arguments provided.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+ * @param {DataEventArgs|DataPermissionEventArgs} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
  */
 DataPermissionEventListener.prototype.validate = function(event, callback) {
@@ -160,9 +157,23 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
     else if (event.state === 16)
         requestMask = PermissionMask.Execute;
     else {
-        callback(new Error('Target object has an invalid state.'));
-        return;
+        if (event.mask) {
+            // use mask defined by event arguments
+            requestMask = event.mask;
+        }
+        else {
+            // throw error
+            return callback(new Error('Target object has an invalid state.'));
+        }
     }
+
+    // use privilege defined by event arguments
+    var privilege = model.name;
+    var parentPrivilege = null;
+    if (event.privilege) {
+        privilege = event.privilege;
+    }
+
     //validate throwError
     if (typeof event.throwError === 'undefined')
         event.throwError = true;
@@ -241,7 +252,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                             event.result = true;
                             return cb();
                         }
-                        else if (item.hasOwnProperty("account")) {
+                        else if (hasOwnProperty(item, "account")) {
                             if (accounts.findIndex(function(x) { return x.name === item.account })>=0) {
                                 cancel=true;
                                 event.result = true;
@@ -250,12 +261,12 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         }
                     }
                     //try to find user has global permissions assigned
-                    permissions.where('privilege').equal(model.name).
-                        and('parentPrivilege').equal(null).
-                        and('target').equal('0').
-                        and('workspace').equal(workspace).
-                        and('account').in(accounts.map(function(x) { return x.id; })).
-                        and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
+                    permissions.where('privilege').equal(privilege)
+                        .and('parentPrivilege').equal(null)
+                        .and('target').equal('0')
+                        .and('workspace').equal(workspace)
+                        .and('account').in(accounts.map(function(x) { return x.id; }))
+                        .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                             if (err) {
                                 cb(err);
                             }
@@ -271,16 +282,24 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                 else if (item.type==='parent') {
                     var mapping = model.inferMapping(item.property);
                     if (!mapping) {
-                        cb(null);
-                        return;
+                        return cb();
+                    }
+                    // validate parent association
+                    if (mapping.childModel !== model.name) {
+                        return cb(new Error('Parent privileges are assigned by a wrong type of association.'))
+                    }
+                    // use parentPrivilege provided by arguments
+                    parentPrivilege = mapping.parentModel;
+                    if (event.parentPrivilege) {
+                        parentPrivilege = event.parentPrivilege;
                     }
                     if (requestMask===PermissionMask.Create) {
-                        permissions.where('privilege').equal(mapping.childModel).
-                            and('parentPrivilege').equal(mapping.parentModel).
-                            and('target').equal(event.target[mapping.childField]).
-                            and('workspace').equal(workspace).
-                            and('account').in(accounts.map(function(x) { return x.id; })).
-                            and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
+                        permissions.where('privilege').equal(privilege)
+                            .and('parentPrivilege').equal(parentPrivilege)
+                            .and('target').equal(event.target[mapping.childField])
+                            .and('workspace').equal(workspace)
+                            .and('account').in(accounts.map(function(x) { return x.id; }))
+                            .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                                 if (err) {
                                     cb(err);
                                 }
@@ -300,12 +319,12 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                 cb(err);
                             }
                             else if (result) {
-                                permissions.where('privilege').equal(mapping.childModel).
-                                    and('parentPrivilege').equal(mapping.parentModel).
-                                    and('target').equal(result[mapping.childField]).
-                                    and('workspace').equal(workspace).
-                                    and('account').in(accounts.map(function(x) { return x.id; })).
-                                    and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
+                                permissions.where('privilege').equal(privilege)
+                                    .and('parentPrivilege').equal(parentPrivilege)
+                                    .and('target').equal(result[mapping.childField])
+                                    .and('workspace').equal(workspace)
+                                    .and('account').in(accounts.map(function(x) { return x.id; }))
+                                    .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                                         if (err) {
                                             cb(err);
                                         }
@@ -330,12 +349,12 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         //do nothing
                         cb(null); return;
                     }
-                    permissions.where('privilege').equal(model.name).
-                        and('parentPrivilege').equal(null).
-                        and('target').equal(event.target[model.primaryKey]).
-                        and('workspace').equal(workspace).
-                        and('account').in(accounts.map(function(x) { return x.id; })).
-                        and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
+                    permissions.where('privilege').equal(privilege)
+                        .and('parentPrivilege').equal(null)
+                        .and('target').equal(event.target[model.primaryKey])
+                        .and('workspace').equal(workspace)
+                        .and('account').in(accounts.map(function(x) { return x.id; }))
+                        .and('mask').bit(requestMask, requestMask).silent().count(function(err, count) {
                             if (err) {
                                 cb(err);
                             }
@@ -362,8 +381,8 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         //cast target
                         var name, obj = event.target;
                         model.attributes.forEach(function(x) {
-                            name = obj.hasOwnProperty(x.property) ? x.property : x.name;
-                            if (obj.hasOwnProperty(name))
+                            name = hasOwnProperty(obj, x.property) ? x.property : x.name;
+                            if (hasOwnProperty(obj, name))
                             {
                                 var mapping = model.inferMapping(name);
                                 if (_.isNil(mapping)) {
@@ -709,7 +728,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             assigned=true;
                             return cb(new EachSeriesCancelled());
                         }
-                        else if (item.hasOwnProperty("account")) {
+                        else if (hasOwnProperty(item, "account")) {
                             if (accounts.findIndex(function(x) { return x.name === item.account })>=0) {
                                 assigned=true;
                                 return cb(new EachSeriesCancelled());
@@ -845,13 +864,10 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
     }
 };
 
-var perms = {
-    DataPermissionEventArgs:DataPermissionEventArgs,
-    DataPermissionEventListener:DataPermissionEventListener,
-    PermissionMask:PermissionMask
+module.exports = {
+    DataPermissionEventArgs,
+    DataPermissionEventListener,
+    PermissionMask
 };
 
-if (typeof exports !== 'undefined') {
-    module.exports = perms;
-}
 
