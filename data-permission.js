@@ -798,7 +798,11 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                                         if (_.isNil(expr))
                                             expr = QueryUtils.query();
                                         expr.$where = q.query.$prepared;
-                                        if (q.query.$expand) { expand = q.query.$expand; }
+                                        if (q.query.$expand) { 
+                                            // combine expands
+                                            expand = expand || [];
+                                            expand.push.apply(expand, q.query.$expand);
+                                        }
                                         expr.prepare(true);
                                         assigned=true;
                                         cb();
