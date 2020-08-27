@@ -1,4 +1,4 @@
-name: Publish Next Version
+name: Publish Next
 
 on:
   release:
