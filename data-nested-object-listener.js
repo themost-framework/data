@@ -429,14 +429,14 @@ function afterSaveMany_(attr, event, callback) {
     var context = event.model.context;
     var name = attr.property || attr.name;
     var key = event.model.getPrimaryKey();
-    var nestedObj = event.target[name];
+    var nestedArr = event.target[name];
     //if attribute is null or undefined
-    if (_.isNil(nestedObj)) {
+    if (_.isNil(nestedArr)) {
         //do nothing
         return callback();
     }
     //if nested object is not an array
-    if (!_.isArray(nestedObj)) {
+    if (!_.isArray(nestedArr)) {
         //throw exception
         return callback(new DataError("EASSOCIATION","Invalid argument type. Expected array.",null, event.model.name, name));
     }
@@ -457,12 +457,25 @@ function afterSaveMany_(attr, event, callback) {
     if (_.isNil(nestedModel)) {
         return callback();
     }
+    // validate parent object association key
+    if (mapping.parentField && mapping.parentField !== key) {
+        // validate that parentField is unique constraint of parent model
+        var constraint = _.find(event.model.constraintCollection, function(constraint) {
+            return constraint.type === 'unique' &&
+                constraint.fields &&
+                constraint.fields.length === 1 &&
+                constraint.fields[0] === mapping.parentField;
+        });
+        if (constraint == null) {
+            return callback(new DataError('EASSOCIATION', 'Nested association uses a foreign key that is not a primary key or a unique constraint field.'));
+        }
+    }
     //get nested primary key
     var nestedKey = nestedModel.getPrimaryKey();
     //on insert
     if (event.state===1) {
         //enumerate nested objects and set state to new
-        _.forEach(nestedObj, function(x) {
+        _.forEach(nestedArr, function(x) {
             //delete identifier
             delete x[nestedKey];
             //force state to new ($state=1)
@@ -471,9 +484,9 @@ function afterSaveMany_(attr, event, callback) {
             x[mapping.childField] = event.target[mapping.parentField];
         });
         //save nested objects
-        nestedModel.silent().save(nestedObj, function(err) {
+        nestedModel.silent().save(nestedArr, function(err) {
             //remove $state attribute
-            nestedObj.forEach(function(x) { delete x.$state; });
+            nestedArr.forEach(function(x) { delete x.$state; });
             //and return
             callback(err);
         });
@@ -483,55 +496,63 @@ function afterSaveMany_(attr, event, callback) {
         //first of all get original associated object, if any
         event.model.where(key)
             .equal(event.target[key])
-            .select(key,name)
+            .select(mapping.parentField, name)
             .expand(name)
             .silent()
             .first(function(err, result) {
-                if (err) { return callback(err); }
+                if (err) {
+                    return callback(err);
+                }
                 //if original object cannot be found, throw an invalid state exception
-                if (_.isNil(result)) { return callback(new Error('Invalid object state.')); }
+                if (result == null) {
+                    return callback(new Error('Invalid object state.'));
+                }
                 //get original nested objects
-                var originalNestedObjects = result[name] || [];
+                var originalNestedArr = result[name] || [];
                 //enumerate nested objects
-
-                _.forEach(nestedObj, function(x) {
-                    var obj = _.find(originalNestedObjects, function (y) {
+                _.forEach(nestedArr, function(x) {
+                    var obj = _.find(originalNestedArr, function (y) {
                         return y[nestedKey] === x[nestedKey];
                     });
                     if (obj) {
-                        //force state to update ($state=2)
-                        x.$state = 2;
+                        // if object is marked for deletion set delete state
+                        // otherwise set update state
+                        x.$state = (x.$state === 4) ? 4 : 2;
                     }
                     else {
-                        //delete identifier
+                        // delete identifier
                         delete x[nestedKey];
-                        //force state to new ($state=1)
+                        // force set insert state ($state=1)
                         x.$state = 1;
                     }
                     x[mapping.childField] = event.target[mapping.parentField];
                 });
 
-                _.forEach(originalNestedObjects, function(x) {
-                    var obj = _.find(nestedObj, function(y) {
+                // automatically remove other nested items
+                // todo::this operation is going to be deprecated
+                _.forEach(originalNestedArr, function(x) {
+                    var obj = _.find(nestedArr, function(y) {
                         return y[nestedKey] === x[nestedKey];
                     });
                     if (_.isNil(obj)) {
-                        //force state to delete ($state=4)
+                        // force state to delete ($state=4)
                         x.$state = 4;
-                        nestedObj.push(x);
+                        nestedArr.push(x);
                     }
                 });
 
-                //and finally save objects
-                nestedModel.silent().save(nestedObj, function(err) {
+                // and finally save objects
+                nestedModel.silent().save(nestedArr, function(err) {
                     //remove $state attribute
-                    _.remove(nestedObj, function(y) {
+                    _.remove(nestedArr, function(y) {
                        return y.$state === 4;
                     });
-                    _.forEach(nestedObj, function(x) {
+                    _.forEach(nestedArr, function(x) {
                         delete x.$state;
                     });
-                    if (err) { return callback(err); }
+                    if (err) {
+                        return callback(err);
+                    }
                     return callback();
                 });
             });
