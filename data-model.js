@@ -45,7 +45,7 @@ var DataField = require('./types').DataField;
  * @param {DataField} field
  * @private
  */
-function inferTagMapping_(field) {
+function inferTagMapping(field) {
     /**
      * @type {DataModel|*}
      */
@@ -54,8 +54,14 @@ function inferTagMapping_(field) {
     if (_.isNil(field)) {
         return;
     }
-    //validate DataField.many attribute
-    if (!(field.hasOwnProperty('many') && field.many === true)) {
+    var hasManyAttribute = Object.prototype.hasOwnProperty.call(field, 'many');
+    // if field does not have attribute 'many'
+    if (hasManyAttribute === false) {
+        // do nothing
+        return;
+    }
+    // if field has attribute 'many' but it's false
+    if (hasManyAttribute === true && field.many === false) {
         return;
     }
     //check if the type of the given field is a primitive data type
@@ -64,18 +70,21 @@ function inferTagMapping_(field) {
     if (_.isNil(dataType)) {
         return;
     }
-    //get associated model name
-    var name = self.name.concat(_.upperFirst(field.name));
-    var primaryKey = self.key();
-    return new DataAssociationMapping({
+    // get associated adapter name
+    var associationAdapter = self.name.concat(_.upperFirst(field.name));
+    // get parent field
+    var parentField = self.primaryKey;
+    // mapping attributes
+    var mapping = _.assign({}, {
         "associationType": "junction",
-        "associationAdapter": name,
+        "associationAdapter": associationAdapter,
         "cascade": "delete",
         "parentModel": self.name,
-        "parentField": primaryKey.name,
-        "refersTo": field.name,
-        "privileges": field.mapping && field.mapping.privileges
-    });
+        "parentField": parentField,
+        "refersTo": field.name
+    }, field.mapping);
+    // and return
+    return new DataAssociationMapping(mapping);
 }
 
 /**
@@ -2468,7 +2477,7 @@ function inferDefaultMapping(conf, name) {
     {
         if (typeof field.many === 'boolean' && field.many) {
             //validate primitive type mapping
-            var tagMapping = inferTagMapping_.call(self, field);
+            var tagMapping = inferTagMapping.call(self, field);
             if (tagMapping) {
                 //apply data association mapping to definition
                 var definitionField = conf.fields.find(function(x) {
