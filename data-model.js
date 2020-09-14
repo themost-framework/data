@@ -54,8 +54,14 @@ function inferTagMapping(field) {
     if (_.isNil(field)) {
         return;
     }
-    //validate DataField.many attribute
-    if (Object.prototype.hasOwnProperty.call(field, 'many') && field.many === false) {
+    var hasManyAttribute = Object.prototype.hasOwnProperty.call(field, 'many');
+    // if field does not have attribute 'many'
+    if (hasManyAttribute === false) {
+        // do nothing
+        return;
+    }
+    // if field has attribute 'many' but it's false
+    if (hasManyAttribute === true && field.many === false) {
         return;
     }
     //check if the type of the given field is a primitive data type
