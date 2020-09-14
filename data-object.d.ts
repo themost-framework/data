@@ -1,8 +1,9 @@
 import {DataQueryable} from "./data-queryable";
 import {DataContext} from "./types";
 import {DataModel} from "./data-model";
+import {SequentialEventEmitter} from "@themost/common";
 
-export declare class DataObject {
+export declare class DataObject extends SequentialEventEmitter {
     context:DataContext;
     silent(value?:boolean):DataObject;
     selector(name:string, selector:Function):DataObject;
