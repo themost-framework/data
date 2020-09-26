@@ -35,6 +35,9 @@ module.exports.DataField = _types.DataField;
 module.exports.DataEventArgs = _types.DataEventArgs;
 module.exports.DataAdapter = _types.DataAdapter;
 module.exports.DataContextEmitter = _types.DataContextEmitter;
+module.exports.PrivilegeType = _types.PrivilegeType;
+module.exports.DataObjectState = _types.DataObjectState;
+module.exports.DataCachingType = _types.DataCachingType;
 
 module.exports.DataConfiguration = _data_configuration.DataConfiguration;
 module.exports.DefaultSchemaLoaderStrategy = _data_configuration.DefaultSchemaLoaderStrategy;
