@@ -1,14 +1,6 @@
-
-/**
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2020, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {DataObject} from "./data-object";
-import {ConfigurationBase, SequentialEventEmitter} from "../common";
+import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
 
 export declare function DataAdapterCallback(err?:Error, result?:any);
 
@@ -203,5 +195,30 @@ export declare interface TypeParser {
     parseText(val: any): string;
 
 }
+
+declare interface PrivilegeTypeEnum {
+    readonly Self: string;
+    readonly Parent: string;
+    readonly Item: string;
+    readonly Global: string;
+}
+
+export declare const PrivilegeType: PrivilegeTypeEnum;
+
+declare interface DataObjectStateEnum {
+    readonly Insert: number;
+    readonly Update: number;
+    readonly Delete: number;
+}
+
+export declare const DataObjectState: DataObjectStateEnum;
+
+declare interface DataCachingTypeEnum {
+    readonly None: string;
+    readonly Always: string;
+    readonly Conditional: string;
+}
+
+export declare const DataCachingType: DataCachingTypeEnum;
 
 export declare const parsers: TypeParser;

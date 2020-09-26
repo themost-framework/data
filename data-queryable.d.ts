@@ -10,6 +10,7 @@ export declare class DataQueryable implements DataContextEmitter {
     join(model: string): DataQueryable;
     and(attr: string): DataQueryable;
     or(attr: string): DataQueryable;
+    prepare(orElse?: boolean): DataQueryable;
     is(value: any): DataQueryable;
     equal(value: any): DataQueryable;
     notEqual(value: any): DataQueryable;
