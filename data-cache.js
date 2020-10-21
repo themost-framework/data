@@ -427,6 +427,9 @@ DefaultDataCacheStrategy.prototype.getOrDefault = function(key, getFunc, absolut
                             }
                             return resolve(res);
                         });
+                    })
+                    .catch(function(err) {
+                        return reject(err);
                     });
                 }
                 catch(err) {
