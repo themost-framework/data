@@ -1085,6 +1085,27 @@ function SingletonConfiguration(builder, entityType, name) {
 LangUtils.inherits(SingletonConfiguration, EntitySetConfiguration);
 
 /**
+ * @param {SchemaConfiguration} schema 
+ * @param {string} name
+ * @returns {string} 
+ */
+function setQualifiedName(schema, name) {
+    if (/\./g.test(name)) {
+        return name;
+    }
+    var namespace = schema.namespace || schema.alias || 'self';
+    var match = /^Collection\(([a-zA-Z0-9._]+)\)$/ig.exec(name);
+    if (match) {
+        if (/\./g.test(match[1])) {
+            return `Collection(${match[1]})`;
+        } else {
+            return `Collection(${namespace}.${match[1]})`;
+        }
+    }
+    return `${namespace}.${name}`;
+}
+
+/**
  * Converts schema configuration to an edm document
  * @private
  * @this ODataModelBuilder
@@ -1102,6 +1123,13 @@ function schemaToEdmDocument(schema) {
     schemaElement.setAttribute("xmlns", "http://docs.oasis-open.org/odata/ns/edm");
     if (schema.namespace) {
         schemaElement.setAttribute("Namespace", schema.namespace);
+    }
+    // forcibly set alias when namespace is null
+    if (schema.namespace == null) {
+        schema.alias = schema.alias || 'self';
+    }
+    if (schema.alias != null) {
+        schemaElement.setAttribute("Alias", schema.alias);
     }
     var actionElements = [], functionElements = [];
     //append edmx:DataServices > Schema
@@ -1124,7 +1152,7 @@ function schemaToEdmDocument(schema) {
                 _.forEach(action.parameters, function(parameter) {
                     var paramElement =  doc.createElement("Parameter");
                     paramElement.setAttribute("Name", parameter.name);
-                    paramElement.setAttribute("Type", parameter.type);
+                    paramElement.setAttribute("Type", setQualifiedName(schema, parameter.type));
                     var nullable = _.isBoolean(parameter.nullable) ? parameter.nullable : false;
                     if (!nullable) {
                         paramElement.setAttribute("Nullable", nullable);
@@ -1137,10 +1165,10 @@ function schemaToEdmDocument(schema) {
                     var returnType = action.returnType;
                     if (action.returnCollectionType) {
                         returnType = action.returnCollectionType;
-                        returnTypeElement.setAttribute("Type", sprintf("Collection(%s)", returnType));
+                        returnTypeElement.setAttribute("Type", sprintf("Collection(%s)", setQualifiedName(schema, returnType)));
                     }
                     else {
-                        returnTypeElement.setAttribute("Type", returnType);
+                        returnTypeElement.setAttribute("Type",  setQualifiedName(schema, returnType));
                     }
                     returnTypeElement.setAttribute("Nullable", true);
                     actionElement.appendChild(returnTypeElement);
@@ -1159,7 +1187,7 @@ function schemaToEdmDocument(schema) {
                 _.forEach(func.parameters, function(parameter) {
                     var paramElement =  doc.createElement("Parameter");
                     paramElement.setAttribute("Name", parameter.name);
-                    paramElement.setAttribute("Type", parameter.type);
+                    paramElement.setAttribute("Type", setQualifiedName(schema, parameter.type));
                     var nullable = _.isBoolean(parameter.nullable) ? parameter.nullable : false;
                     if (!nullable) {
                         paramElement.setAttribute("Nullable", nullable);
@@ -1172,10 +1200,10 @@ function schemaToEdmDocument(schema) {
                     var returnType = func.returnType;
                     if (func.returnCollectionType) {
                         returnType = func.returnCollectionType;
-                        returnTypeElement.setAttribute("Type", sprintf("Collection(%s)", returnType));
+                        returnTypeElement.setAttribute("Type", sprintf("Collection(%s)", setQualifiedName(schema, returnType)));
                     }
                     else {
-                        returnTypeElement.setAttribute("Type", returnType);
+                        returnTypeElement.setAttribute("Type", setQualifiedName(schema, returnType));
                     }
                     returnTypeElement.setAttribute("Nullable", true);
                     functionElement.appendChild(returnTypeElement);
@@ -1188,7 +1216,7 @@ function schemaToEdmDocument(schema) {
             entityTypeElement.setAttribute("Name", entityType.name);
             entityTypeElement.setAttribute("OpenType", true);
             if (entityType.baseType) {
-                entityTypeElement.setAttribute("BaseType", entityType.baseType);
+                entityTypeElement.setAttribute("BaseType", setQualifiedName(schema, entityType.baseType));
             }
 
             if (entityType.implements) {
@@ -1211,7 +1239,7 @@ function schemaToEdmDocument(schema) {
             _.forEach(entityType.property, function(x) {
                 var propertyElement = doc.createElement('Property');
                 propertyElement.setAttribute("Name",x.name);
-                propertyElement.setAttribute("Type",x.type);
+                propertyElement.setAttribute("Type", setQualifiedName(schema, x.type));
                 if (_.isBoolean(x.nullable) && (x.nullable===false)) {
                     propertyElement.setAttribute("Nullable",false);
                 }
@@ -1225,7 +1253,7 @@ function schemaToEdmDocument(schema) {
                 if (x.computed) {
                     var computedAnnotation = doc.createElement('Annotation');
                     computedAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Computed');
-                    computedAnnotation.setAttribute('Tag', 'true');
+                    computedAnnotation.setAttribute('Bool', 'true');
                     propertyElement.appendChild(computedAnnotation);
                 }
                 entityTypeElement.appendChild(propertyElement);
@@ -1234,7 +1262,7 @@ function schemaToEdmDocument(schema) {
             _.forEach(entityType.navigationProperty, function(x) {
                 var propertyElement = doc.createElement('NavigationProperty');
                 propertyElement.setAttribute("Name",x.name);
-                propertyElement.setAttribute("Type",x.type);
+                propertyElement.setAttribute("Type",setQualifiedName(schema, x.type));
                 if (!x.nullable) {
                     propertyElement.setAttribute("Nullable",false);
                 }
@@ -1279,7 +1307,7 @@ function schemaToEdmDocument(schema) {
             var childElement = doc.createElement(child.kind);
             childElement.setAttribute("Name", child.name);
             if ((child.kind === EntitySetKind.EntitySet) || (child.kind === EntitySetKind.Singleton)) {
-                childElement.setAttribute("EntityType", child.entityType.name);
+                childElement.setAttribute("EntityType", setQualifiedName(schema, child.entityType.name));
             }
             var childAnnotation = doc.createElement("Annotation");
             childAnnotation.setAttribute("Term", "Org.OData.Core.V1.ResourcePath");
