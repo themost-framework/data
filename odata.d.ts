@@ -91,6 +91,7 @@ export declare interface EntityContainerConfiguration {
 
 export declare interface SchemaConfiguration {
     namespace?: string;
+    alias?: string;
     entityType: Array<EntityTypeConfiguration>;
     entityContainer: EntityContainerConfiguration;
 }
