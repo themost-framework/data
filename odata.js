@@ -1090,18 +1090,24 @@ LangUtils.inherits(SingletonConfiguration, EntitySetConfiguration);
  * @returns {string} 
  */
 function setQualifiedName(schema, name) {
+    // if name is already qualified e.g. ServiceModel.Account
     if (/\./g.test(name)) {
+        // do nothing
         return name;
     }
+    // get namespace or alias or the default alias which is "self"
     var namespace = schema.namespace || schema.alias || 'self';
+    // validate Collection(EntityType) expression
     var match = /^Collection\(([a-zA-Z0-9._]+)\)$/ig.exec(name);
     if (match) {
+        // convert expression
         if (/\./g.test(match[1])) {
             return `Collection(${match[1]})`;
         } else {
             return `Collection(${namespace}.${match[1]})`;
         }
     }
+    // otherwise return qualified name
     return `${namespace}.${name}`;
 }
 
