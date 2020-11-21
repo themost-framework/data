@@ -1344,6 +1344,7 @@ function ODataModelBuilder(configuration) {
     this[entityTypesProperty] = {};
     this[ignoreEntityTypesProperty] = [];
     this[entityContainerProperty] = [];
+    this.defaultNamespace = null;
     /**
      * @returns {ConfigurationBase}
      */
@@ -1534,6 +1535,7 @@ ODataModelBuilder.prototype.removeEntitySet = function(name) {
         return Q.promise(function(resolve, reject) {
             try{
                 var schema = {
+                    namespace: self.defaultNamespace,
                     entityType:[],
                     entityContainer: {
                         "name":"DefaultContainer",
