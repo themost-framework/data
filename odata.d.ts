@@ -184,6 +184,7 @@ export declare interface ModelBuilderJsonFormatterOptions {
 export declare class ODataModelBuilder {
     constructor(configuration: ConfigurationBase);
     serviceRoot: string;
+    defaultNamespace: string;
     getEntity(name: string): EntityTypeConfiguration;
     addEntity(name: string): EntityTypeConfiguration;
     addSingleton(entityType: string, name: string): SingletonConfiguration;
