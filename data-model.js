@@ -1808,9 +1808,10 @@ function saveBaseObject_(obj, callback) {
     self.once('after.save', DataNestedObjectListener.prototype.afterSave);
     //register data association listener (before save)
     self.once('before.save', DataObjectAssociationListener.prototype.beforeSave);
-    self.once('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
     //register data association listener
     self.once('after.save', DataObjectAssociationListener.prototype.afterSave);
+    //register zero or one  multiplicity listener
+    self.once('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
     //register unique constraint listener at the end of listeners collection (before emit)
     self.once('before.save', UniqueConstraintListener.prototype.beforeSave);
     //register data validators at the end of listeners collection (before emit)
