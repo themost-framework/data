@@ -38,7 +38,7 @@ var ModuleLoader = require('@themost/common/config').ModuleLoaderStrategy;
 var mappingsProperty = Symbol('mappings');
 var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
 var DataField = require('./types').DataField;
-
+var ZeroOrOneMultiplicityListener = require('./zero-or-one-multiplicity').ZeroOrOneMultiplicityListener;
 
 /**
  * @this DataModel
@@ -378,7 +378,9 @@ function DataModel(obj) {
             // define virtual attribute
             if (x.many) {
                 // set multiplicity property EdmMultiplicity.Many
-                x.multiplicity = 'Many';
+                if (Object.prototype.hasOwnProperty.call(x, 'multiplicity') === false) {
+                    x.multiplicity = 'Many';
+                }
             }
             if (x.nested) {
                 // try to find if current field defines one-to-one association
@@ -1814,6 +1816,8 @@ function saveBaseObject_(obj, callback) {
     self.once('before.save', DataObjectAssociationListener.prototype.beforeSave);
     //register data association listener
     self.once('after.save', DataObjectAssociationListener.prototype.afterSave);
+    //register zero or one  multiplicity listener
+    self.once('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
     //register unique constraint listener at the end of listeners collection (before emit)
     self.once('before.save', UniqueConstraintListener.prototype.beforeSave);
     //register data validators at the end of listeners collection (before emit)
@@ -1944,6 +1948,7 @@ function saveBaseObject_(obj, callback) {
                                             //raise after save listeners
                                             self.emit('after.save',e, function(err) {
                                                 self.removeListener('after.save', DataObjectAssociationListener.prototype.afterSave);
+                                                self.removeListener('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
                                                 self.removeListener('after.save', DataNestedObjectListener.prototype.afterSave);
                                                 //invoke callback
                                                 callback.call(self, err, e.target);
