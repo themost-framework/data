@@ -117,24 +117,31 @@ DataObjectAssociationListener.prototype.beforeSave = function(event, callback) {
  */
 DataObjectAssociationListener.prototype.afterSave = function(event, callback) {
     try {
-        if (typeof event.target === 'undefined' || event.target===null) {
-            callback(null);
+        if (event.target == null) {
+            return callback();
         }
         else {
             var keys = Object.keys(event.target);
             var mappings = [];
             keys.forEach(function(x) {
                 if (event.target.hasOwnProperty(x)) {
+                    
                     /**
                      * @type DataAssociationMapping
                      */
                     var mapping = event.model.inferMapping(x);
-                    if (mapping)
-                        if (mapping.associationType==='junction') {
+                    if (mapping != null) {
+                        var attribute = event.model.getAttribute(x);
+                        // get only many-to-many associations
+                        if (mapping.associationType==='junction' && attribute.multiplicity === 'Many') {
                             mappings.push({ name:x, mapping:mapping });
                         }
+                    }
                 }
             });
+            if (mappings.length === 0) {
+                return callback();
+            }
             async.eachSeries(mappings,
                 /**
                  * @param {{name:string,mapping:DataAssociationMapping}} x
@@ -150,7 +157,9 @@ DataObjectAssociationListener.prototype.afterSave = function(event, callback) {
                          * @type {*|{deleted:Array}}
                          */
                         var childs = obj[x.name], junction;
-                        if (!_.isArray(childs)) { return cb(); }
+                        if (!_.isArray(childs)) { 
+                            return cb(); 
+                        }
                         if (x.mapping.childModel===event.model.name) {
                             var HasParentJunction = require('./has-parent-junction').HasParentJunction;
                             junction = new HasParentJunction(obj, x.mapping);

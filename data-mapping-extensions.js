@@ -266,9 +266,14 @@ var mappingExtensions = {
                                 q.where(mapping.childField).in(values);
                             }
                             //and finally query childs
+                            var refersTo = thisQueryable.model.getAttribute(mapping.refersTo);
                             q.getItems().then(function(childs) {
                                 //if result contains only one item
                                 if (arr.length === 1) {
+                                    if (refersTo && (refersTo.multiplicity === 'ZeroOrOne' || refersTo.multiplicity === 'One')) {
+                                        arr[0][mapping.refersTo] = childs[0] != null ? childs[0] : null;
+                                        return deferred.resolve();
+                                    }
                                     arr[0][mapping.refersTo] = childs;
                                     return deferred.resolve();
                                 }
@@ -279,7 +284,17 @@ var mappingExtensions = {
                                     //get parent(s)
                                     var p = junctions.filter(function(y) { return (y[mapping.associationObjectField]===parentValue); }).map(function(r) { return r[mapping.associationValueField]; });
                                     //filter data and set property value (a filtered array of parent objects)
-                                    x[mapping.refersTo] = childs.filter(function(z) { return p.indexOf(z[mapping.childField])>=0; });
+                                    if (refersTo && (refersTo.multiplicity === 'ZeroOrOne' || refersTo.multiplicity === 'One')) {
+                                        // get only one child
+                                        x[mapping.refersTo] = childs.find(function(z) { 
+                                            return p.indexOf(z[mapping.childField])>=0; 
+                                        });
+                                    } else {
+                                        x[mapping.refersTo] = childs.filter(function(z) { 
+                                            return p.indexOf(z[mapping.childField])>=0; 
+                                        });
+                                    }
+                                    
                                 });
                                 return deferred.resolve();
                             }).catch(function(err) {
