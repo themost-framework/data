@@ -184,8 +184,8 @@ function HasParentJunction(obj, association) {
                 var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
                 var modelDefinition = { name:adapter, title: adapter, sealed:false, hidden:true, type:"hidden", source:adapter, view:adapter, version:'1.0', fields:[
                         { name: "id", type:"Counter", primary: true },
-                        { name: associationObjectField, indexed: true, nullable:false, type: (parentField.type==='Counter') ? 'Integer' : parentField.type },
-                        { name: associationValueField, indexed: true, nullable:false, type: (childField.type==='Counter') ? 'Integer' : childField.type } ],
+                        { name: associationObjectField, indexed: true, nullable:false, type: self.mapping.parentModel},
+                        { name: associationValueField, indexed: true, nullable:false, type: self.mapping.childModel } ],
                     constraints: [
                         {
                             description: "The relation between two objects must be unique.",
@@ -202,6 +202,19 @@ function HasParentJunction(obj, association) {
                             "account": "Administrators"
                         }
                     ]};
+                // add unique constraint if child model mappind is Zero Or One
+                var attribute = parentModel.attributes.filter(function (x) {
+                    return x.type === childModel.name;
+                }).filter(function (y) {
+                    var mapping = parentModel.inferMapping(y.name);
+                    return mapping && mapping.associationAdapter === adapter;
+                });
+                if (attribute) {
+                    if (attribute && (attribute.multiplicity === "ZeroOrOne" || attribute.multiplicity === "One")) {
+                        modelDefinition.constraints[0].fields = [associationObjectField];
+                    }
+                }
+
                 conf.setModelDefinition(modelDefinition);
                 //initialize base model
                 baseModel = new DataModel(modelDefinition);
