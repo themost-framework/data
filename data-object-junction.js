@@ -189,8 +189,8 @@ function DataObjectJunction(obj, association) {
                 var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
                 modelDefinition = { name:adapter, title: adapter, source:adapter, type:"hidden", hidden:true, sealed:false, view:adapter, version:'1.0', fields:[
                         { name: "id", type:"Counter", primary: true },
-                        { name: associationObjectField, indexed: true, nullable:false, type: (parentField.type === 'Counter') ? 'Integer' : parentField.type },
-                        { name: associationValueField, indexed: true, nullable:false, type: (childField.type === 'Counter') ? 'Integer' : childField.type } ],
+                        { name: associationObjectField, indexed: true, nullable:false, type: self.mapping.parentModel },
+                        { name: associationValueField, indexed: true, nullable:false, type: self.mapping.childModel } ],
                     "constraints": [
                         {
                             "description": "The relation between two objects must be unique.",
@@ -208,7 +208,12 @@ function DataObjectJunction(obj, association) {
                             "account": "Administrators"
                         }
                     ]};
-
+                if (self.mapping.refersTo) {
+                    var refersTo = parentModel.getAttribute(self.mapping.refersTo);
+                    if (refersTo && (refersTo.multiplicity === "ZeroOrOne" || refersTo.multiplicity === "One")) {
+                        modelDefinition.constraints[0].fields = [associationObjectField];
+                    }
+                }
                 conf.setModelDefinition(modelDefinition);
                 //initialize base model
                 baseModel = new DataModel(modelDefinition);
