@@ -1953,72 +1953,70 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
         return superAddEntitySet.bind(self)(entityType, name);
     };
 
-    /**
-     * @returns Promise|*
-     */
-    ODataConventionModelBuilder.prototype.initialize = function() {
-        var self = this;
-        if (self[initializeProperty]) {
-            return Q.resolve();
-        }
-        return Q.promise(function(resolve, reject) {
-
+/**
+ * @returns Promise|*
+ */
+ODataConventionModelBuilder.prototype.initialize = function() {
+    var self = this;
+    if (self[initializeProperty]) {
+        return Q.resolve();
+    }
+    return Q.promise(function(resolve, reject) {
+        try {
             /**
              * @type {*|DataConfigurationStrategy}
              */
             var dataConfiguration = self.getConfiguration().getStrategy(DataConfigurationStrategy);
             var schemaLoader = self.getConfiguration().getStrategy(SchemaLoaderStrategy);
             if (instanceOf(schemaLoader, DefaultSchemaLoaderStrategy)) {
-                var nativeFsModule = 'fs';
-                var fs = require(nativeFsModule);
-                var modelPath = schemaLoader.getModelPath();
-                if (_.isNil(modelPath)) {
-                    self[initializeProperty] = true;
-                    return resolve();
+                // read models
+                var models = schemaLoader.readSync();
+                // use loaders of DefaultSchemaLoaderStrategy
+                if (schemaLoader.loaders) {
+                    _.forEach(schemaLoader.loaders,
+                        /**
+                         * @param {SchemaLoaderStrategy} loader
+                         */
+                        function(loader) {
+                            // get loader models
+                            var otherModels = loader.readSync();
+                            if (otherModels && otherModels.length) {
+                                // get new models provided by loader
+                                var addModels = _.filter(otherModels, function(otherModel) {
+                                    return models.indexOf(otherModel) < 0;
+                                });
+                                // add those models
+                                models.push.apply(models, addModels);
+                            }
+                        });
                 }
-                return fs.readdir(modelPath, function(err, files) {
-                    try {
-                        if (err) {
-                            return reject(err);
-                        }
-                        var models = _.map( _.filter(files, function(x) {
-                            return /\.json$/.test(x);
-                        }), function(x) {
-                            return /(.*?)\.json$/.exec(x)[1];
-                        });
-                        _.forEach(models, function (x) {
-                            if (!_.isNil(x)) {
-                                self.addEntitySet(x, pluralize(x));
-                            }
-                        });
-                        //remove hidden models from entity set container
-                        for (var i = 0; i < self[entityContainerProperty].length; i++) {
-                            var x = self[entityContainerProperty][i];
-                            //get model
-                            var entityTypeName = x.entityType.name;
-                            var definition = dataConfiguration.model(x.entityType.name);
-                            if (definition && definition.hidden) {
-                                self.removeEntitySet(x.name);
-                                if (!definition.abstract) {
-                                    self.ignore(entityTypeName);
-                                }
-                                i -= 1;
-                            }
-                        }
-                        self[initializeProperty] = true;
-                        return resolve();
-                    }
-                    catch(err) {
-                        return reject(err);
+                _.forEach(models, function (x) {
+                    if (!_.isNil(x)) {
+                        self.addEntitySet(x, pluralize(x));
                     }
                 });
+                //remove hidden models from entity set container
+                for (var i = 0; i < self[entityContainerProperty].length; i++) {
+                    var x = self[entityContainerProperty][i];
+                    //get model
+                    var entityTypeName = x.entityType.name;
+                    var definition = dataConfiguration.model(x.entityType.name);
+                    if (definition && definition.hidden) {
+                        self.removeEntitySet(x.name);
+                        if (!definition.abstract) {
+                            self.ignore(entityTypeName);
+                        }
+                        i -= 1;
+                    }
+                }
             }
             self[initializeProperty] = true;
             return resolve();
-        });
-
-    };
-
+        } catch (err) {
+            return reject(err);
+        }
+    });
+};
 /**
  * @returns *
  */
