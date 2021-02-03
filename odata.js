@@ -1562,6 +1562,7 @@ ODataModelBuilder.prototype.getEdmSync = function() {
     ODataModelBuilder.prototype.clean = function(all) {
         delete this[edmProperty];
         if (typeof all === 'boolean' && all === true) {
+            delete this[initializeProperty];
             this[entityTypesProperty] = {};
             this[ignoreEntityTypesProperty] = [];
             this[entityContainerProperty] = [];
