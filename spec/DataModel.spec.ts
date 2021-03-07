@@ -1,8 +1,6 @@
-import {DataModel} from '../index';
+import {DataModel, EdmMapping, DataContext} from '../index';
 import { TestApplication } from './TestApplication';
-import { DataContext } from '../types';
 import { resolve } from 'path';
-import { EdmMapping } from '../odata';
 
 class Employee {
     public EmployeeID?: number;
@@ -67,4 +65,5 @@ describe('DataModel', () => {
         expect(item).toBeTruthy();
         expect(item.EmployeeID).toBe(1);
     });
+
 });
