@@ -7,6 +7,7 @@ import {DataObject} from "./data-object";
 export declare class DataModel extends SequentialEventEmitter{
     constructor(obj:any);
 
+    name: string;
     hidden?: boolean;
     sealed?: boolean;
     abstract?: boolean;

@@ -3,6 +3,10 @@
   "version": "2.6.1-next.3",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
+  "scripts": {
+    "test": "jasmine",
+    "install-peers": "npm-install-peers"
+  },
   "peerDependencies": {
     "@themost/common": ">= 2.5.2 < 3",
     "@themost/query": ">= 2.5.0 < 3",
@@ -34,9 +38,17 @@
   },
   "devDependencies": {
     "@types/core-js": "^2.5.0",
+    "@types/jasmine": "^3.6.4",
     "@types/lodash": "^4.14.149",
     "@types/node": "^10.12.0",
     "@types/pluralize": "0.0.29",
-    "@types/q": "^1.5.1"
+    "@types/q": "^1.5.1",
+    "@types/sql.js": "^1.4.0",
+    "jasmine": "^3.6.4",
+    "jasmine-spec-reporter": "^6.0.0",
+    "npm-install-peers": "^1.2.2",
+    "sql.js": "^1.4.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
   }
 }
