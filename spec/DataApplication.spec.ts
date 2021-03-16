@@ -20,7 +20,7 @@ class Strategy1 extends ApplicationService {
     }
 }
 
-fdescribe('DataApplication', () => {
+describe('DataApplication', () => {
 
     let cwd = resolve(__dirname, 'test1');
 
