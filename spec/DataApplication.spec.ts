@@ -53,4 +53,13 @@ fdescribe('DataApplication', () => {
         expect(service).toBeTruthy();
         expect(service.getMessage()).toBe('Hello World!!!');
     });
+
+    it('should use context', () => {
+        const app = new DataApplication(cwd);
+        const context = app.createContext();
+        expect(context).toBeTruthy();
+        const Products = context.model('Product');
+        expect(Products).toBeTruthy();
+        context.finalize();
+    });
 });
