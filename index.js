@@ -26,6 +26,7 @@ var _has_many_association = require('./has-many-association');
 var _has_parent_association = require('./has-parent-junction');
 var _data_listeners = require('./data-listeners');
 var _data_associations = require('./data-associations');
+var _data_application = require('./data-application');
 
 
 module.exports.DataAssociationMapping = _types.DataAssociationMapping;
@@ -112,3 +113,5 @@ module.exports.NotNullConstraintListener = _data_listeners.NotNullConstraintList
 module.exports.UniqueConstraintListener = _data_listeners.UniqueConstraintListener;
 
 module.exports.DataObjectAssociationListener = _data_associations.DataObjectAssociationListener;
+
+module.exports.DataApplication = _data_application.DataApplication;
