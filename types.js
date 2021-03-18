@@ -1,203 +1,8 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
-var sprintf = require('sprintf').sprintf;
-var _ = require('lodash');
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var LangUtils = require("@themost/common/utils").LangUtils;
-var AbstractClassError = require('@themost/common/errors').AbstractClassError;
-var AbstractMethodError = require('@themost/common/errors').AbstractMethodError;
-
-var types = { };
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
+const { SequentialEventEmitter, AbstractClassError, AbstractMethodError } = require("@themost/common");
 
 /**
  * @classdesc Represents an abstract data connector to a database
- * @description
- * <p>
- There are several data adapters for connections to common database engines:
- </p>
- <ul>
-    <li>MOST Web Framework MySQL Adapter for connecting with MySQL Database Server
-    <p>Install the data adapter:<p>
-    <pre class="prettyprint"><code>npm install most-data-mysql</code></pre>
-    <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
-    <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"MySQL Data Adapter", "invariantName": "mysql", "type":"most-data-mysql" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"mysql", "default":true,
-     "options": {
-       "host":"localhost",
-       "port":3306,
-       "user":"user",
-       "password":"password",
-       "database":"test"
-     }
- }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework MSSQL Adapter for connecting with Microsoft SQL Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-mssql</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"MSSQL Data Adapter", "invariantName": "mssql", "type":"most-data-mssql" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"mssql", "default":true,
-        "options": {
-          "server":"localhost",
-          "user":"user",
-          "password":"password",
-          "database":"test"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework PostgreSQL Adapter for connecting with PostgreSQL Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-pg</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"PostgreSQL Data Adapter", "invariantName": "postgres", "type":"most-data-pg" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"postgres", "default":true,
-        "options": {
-          "host":"localhost",
-          "post":5432,
-          "user":"user",
-          "password":"password",
-          "database":"db"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework Oracle Adapter for connecting with Oracle Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-oracle</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"Oracle Data Adapter", "invariantName": "oracle", "type":"most-data-oracle" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"oracle", "default":true,
-        "options": {
-          "host":"localhost",
-          "port":1521,
-          "user":"user",
-          "password":"password",
-          "service":"orcl",
-          "schema":"PUBLIC"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework SQLite Adapter for connecting with Sqlite Databases
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-sqlite</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"SQLite Data Adapter", "invariantName": "sqlite", "type":"most-data-sqlite" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"sqlite", "default":true,
-        "options": {
-            database:"db/local.db"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework Data Pool Adapter for connection pooling
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-pool</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"Pool Data Adapter", "invariantName": "pool", "type":"most-data-pool" }
- { "name":"...", "invariantName": "...", "type":"..." }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- { "name":"development", "invariantName":"...", "default":false,
-    "options": {
-      "server":"localhost",
-      "user":"user",
-      "password":"password",
-      "database":"test"
-    }
-},
- { "name":"development_with_pool", "invariantName":"pool", "default":true,
-    "options": {
-      "adapter":"development"
-    }
-}
- ...
- ]
- </code></pre>
- </li>
- </ul>
  * @class
  * @constructor
  * @param {*} options - The database connection options
@@ -205,81 +10,83 @@ var types = { };
  * @property {*} rawConnection - Gets or sets the native database connection
  * @property {*} options - Gets or sets the database connection options
  */
-function DataAdapter(options) {
-    if (this.constructor === DataAdapter.prototype.constructor) {
-        throw new AbstractClassError();
+class DataAdapter {
+    constructor(options) {
+        if (this.constructor === DataAdapter.prototype.constructor) {
+            throw new AbstractClassError();
+        }
+        this.rawConnection = null;
+        this.options = options;
     }
-    this.rawConnection=null;
-    this.options = options;
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Opens the underlying database connection
+     * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    open(callback) {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Closes the underlying database connection
+     * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    close(callback) {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Executes the given query against the underlying database.
+     * @param {string|*} query - A string or a query expression to execute.
+     * @param {*} values - An object which represents the named parameters that are going to used during query parsing
+     * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    execute(query, values, callback) {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Produces a new identity value for the given entity and attribute.
+     * @param {string} entity - A string that represents the target entity name
+     * @param {string} attribute - A string that represents the target attribute name
+     * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    selectIdentity(entity, attribute, callback) {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Begins a transactional operation and executes the given function
+     * @param {Function} fn - The function to execute
+     * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    executeInTransaction(fn, callback) {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * A helper method for creating a database view if the current data adapter supports views
+     * @param {string} name - A string that represents the name of the view to be created
+     * @param {QueryExpression|*} query - A query expression that represents the database view
+     * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    createView(name, query, callback) {
+        throw new AbstractMethodError();
+    }
 }
 
-// noinspection JSUnusedLocalSymbols
-/**
- * Opens the underlying database connection
- * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataAdapter.prototype.open = function(callback) {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * Closes the underlying database connection
- * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataAdapter.prototype.close = function(callback) {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * Executes the given query against the underlying database.
- * @param {string|*} query - A string or a query expression to execute.
- * @param {*} values - An object which represents the named parameters that are going to used during query parsing
- * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataAdapter.prototype.execute = function(query, values, callback) {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * Produces a new identity value for the given entity and attribute.
- * @param {string} entity - A string that represents the target entity name
- * @param {string} attribute - A string that represents the target attribute name
- * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataAdapter.prototype.selectIdentity = function(entity, attribute , callback) {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * Begins a transactional operation and executes the given function
- * @param {Function} fn - The function to execute
- * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataAdapter.prototype.executeInTransaction = function(fn, callback) {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * A helper method for creating a database view if the current data adapter supports views
- * @param {string} name - A string that represents the name of the view to be created
- * @param {QueryExpression|*} query - A query expression that represents the database view
- * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataAdapter.prototype.createView = function(name, query, callback) {
-    throw new AbstractMethodError();
-};
 
 /**
  * @classdesc Represents the event arguments of a data model listener.
@@ -292,7 +99,7 @@ DataAdapter.prototype.createView = function(name, query, callback) {
  * @property {*} query - Represents the underlying query expression. This property may be null.
  * @property {DataObject|*} previous - Represents the underlying data object.
  */
-function DataEventArgs() {
+class DataEventArgs {
     //
 }
 
@@ -303,55 +110,56 @@ function DataEventArgs() {
  * @constructor
  * @abstract
  */
-function DataContext() {
-    DataContext.super_.bind(this)();
-    //throw abstract class error
-    if (this.constructor === DataContext.prototype.constructor) {
-        throw new AbstractClassError();
+class DataContext extends SequentialEventEmitter {
+    constructor() {
+        super();
+        //throw abstract class error
+        if (this.constructor === DataContext.prototype.constructor) {
+            throw new AbstractClassError();
+        }
+        /**
+         * @property db
+         * @description Gets the current database adapter
+         * @type {DataAdapter}
+         * @memberOf DataContext#
+         */
+        Object.defineProperty(this, 'db', {
+            get: function () {
+                return null;
+            },
+            configurable: true,
+            enumerable: false
+        });
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Gets a data model based on the given data context
+     * @param name {string} A string that represents the model to be loaded.
+     * @returns {DataModel}
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    model(name) {
+        throw new AbstractMethodError();
     }
     /**
-     * @property db
-     * @description Gets the current database adapter
-     * @type {DataAdapter}
-     * @memberOf DataContext#
+     * Gets an instance of DataConfiguration class which is associated with this data context
+     * @returns {ConfigurationBase}
+     * @abstract
      */
-    Object.defineProperty(this, 'db', {
-        get : function() {
-            return null;
-        },
-        configurable : true,
-        enumerable:false });
+    getConfiguration() {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * @param {Function} callback
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    finalize(callback) {
+        throw new AbstractMethodError();
+    }
 }
-// noinspection JSUnusedLocalSymbols
-/**
- * Gets a data model based on the given data context
- * @param name {string} A string that represents the model to be loaded.
- * @returns {DataModel}
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataContext.prototype.model = function(name) {
-    throw new AbstractMethodError();
-};
-
-/**
- * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase}
- * @abstract
- */
-DataContext.prototype.getConfiguration = function() {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * @param {Function} callback
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataContext.prototype.finalize = function(callback) {
-    throw new AbstractMethodError();
-};
-LangUtils.inherits(DataContext, SequentialEventEmitter);
 
 /**
  * @classdesc Represents a data model's listener
@@ -359,84 +167,86 @@ LangUtils.inherits(DataContext, SequentialEventEmitter);
  * @constructor
  * @abstract
   */
-function DataEventListener() {
-    //do nothing
+class DataEventListener {
+    constructor() {
+        //do nothing
+    }
+    /**
+     * Occurs before executing a data operation. The event arguments contain the query that is going to be executed.
+     * @param {DataEventArgs} e - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    // eslint-disable-next-line no-unused-vars
+    beforeExecute(e, cb) {
+        return cb();
+    }
+    /**
+     * Occurs after executing a data operation. The event arguments contain the executed query.
+     * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    // eslint-disable-next-line no-unused-vars
+    afterExecute(event, cb) {
+        return cb();
+    }
+    /**
+     * Occurs before creating or updating a data object.
+     * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    // eslint-disable-next-line no-unused-vars
+    beforeSave(event, cb) {
+        return cb();
+    }
+    /**
+     * Occurs after creating or updating a data object.
+     * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    // eslint-disable-next-line no-unused-vars
+    afterSave(event, cb) {
+        return cb();
+    }
+    /**
+     * Occurs before removing a data object.
+     * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     * @returns {DataEventListener}
+     */
+    // eslint-disable-next-line no-unused-vars
+    beforeRemove(event, cb) {
+        return cb();
+    }
+    /**
+     * Occurs after removing a data object.
+     * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    // eslint-disable-next-line no-unused-vars
+    afterRemove(event, cb) {
+        return cb();
+    }
+    /**
+     * Occurs after upgrading a data model.
+     * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    // eslint-disable-next-line no-unused-vars
+    afterUpgrade(event, cb) {
+        return cb();
+    }
 }
-/**
- * Occurs before executing a data operation. The event arguments contain the query that is going to be executed.
- * @param {DataEventArgs} e - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.beforeExecute = function(e, cb) {
-    return cb();
-};
-/**
- * Occurs after executing a data operation. The event arguments contain the executed query.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.afterExecute = function(event, cb) {
-    return cb();
-};
-/**
- * Occurs before creating or updating a data object.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.beforeSave = function(event, cb) {
-    return cb();
-};
-/**
- * Occurs after creating or updating a data object.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.afterSave = function(event, cb) {
-    return cb();
-};
-/**
- * Occurs before removing a data object.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- * @returns {DataEventListener}
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.beforeRemove = function(event, cb) {
-    return cb();
-};
-/**
- * Occurs after removing a data object.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.afterRemove = function(event, cb) {
-    return cb();
-};
 
-/**
- * Occurs after upgrading a data model.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
- * @param {Function} cb - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-// eslint-disable-next-line no-unused-vars
-DataEventListener.prototype.afterUpgrade = function(event, cb) {
-    return cb();
-};
 
-var DateTimeRegex = /^(\d{4})(?:-?W(\d+)(?:-?(\d+)D?)?|(?:-(\d+))?-(\d+))(?:[T ](\d+):(\d+)(?::(\d+)(?:\.(\d+))?)?)?(?:Z(-?\d*))?$/g;
-var BooleanTrueRegex = /^true$/ig;
-var BooleanFalseRegex = /^false$/ig;
+const DateTimeRegex = /^(\d{4})(?:-?W(\d+)(?:-?(\d+)D?)?|(?:-(\d+))?-(\d+))(?:[T ](\d+):(\d+)(?::(\d+)(?:\.(\d+))?)?)?(?:Z(-?\d*))?$/g;
+const BooleanTrueRegex = /^true$/ig;
+const BooleanFalseRegex = /^false$/ig;
 /*
 var NullRegex = /^null$/ig;
 var UndefinedRegex = /^undefined$/ig;
 */
-var IntegerRegex =/^[-+]?\d+$/g;
-var FloatRegex =/^[+-]?\d+(\.\d+)?$/g;
+const IntegerRegex =/^[-+]?\d+$/g;
+const FloatRegex =/^[+-]?\d+(\.\d+)?$/g;
 
 
 /**
@@ -445,133 +255,58 @@ var FloatRegex =/^[+-]?\d+(\.\d+)?$/g;
  * @constructor
  * @ignore
  */
-function DataModelMigration() {
-    /**
-     * Gets an array that contains the definition of fields that are going to be added
-     * @type {Array}
-     */
-    this.add = [];
-    /**
-     * Gets an array that contains a collection of constraints which are going to be added
-     * @type {Array}
-     */
-    this.constraints = [];
-    /**
-     * Gets an array that contains a collection of indexes which are going to be added or updated
-     * @type {Array}
-     */
-    this.indexes = [];
-    /**
-     * Gets an array that contains the definition of fields that are going to be deleted
-     * @type {Array}
-     */
-    this.remove = [];
-    /**
-     * Gets an array that contains the definition of fields that are going to be changed
-     * @type {Array}
-     */
-    this.change = [];
-    /**
-     * Gets or sets a string that contains the internal version of this migration. This property cannot be null.
-     * @type {string}
-     */
-    this.version = '0.0';
-    /**
-     * Gets or sets a string that represents a short description of this migration
-     * @type {string}
-     */
-    this.description = null;
-    /**
-     * Gets or sets a string that represents the adapter that is going to be migrated through this operation.
-     * This property cannot be null.
-     */
-    this.appliesTo = null;
-    /**
-     * Gets or sets a string that represents the model that is going to be migrated through this operation.
-     * This property may be null.
-     */
-    this.model = null;
+class DataModelMigration {
+    constructor() {
+        /**
+         * Gets an array that contains the definition of fields that are going to be added
+         * @type {Array}
+         */
+        this.add = [];
+        /**
+         * Gets an array that contains a collection of constraints which are going to be added
+         * @type {Array}
+         */
+        this.constraints = [];
+        /**
+         * Gets an array that contains a collection of indexes which are going to be added or updated
+         * @type {Array}
+         */
+        this.indexes = [];
+        /**
+         * Gets an array that contains the definition of fields that are going to be deleted
+         * @type {Array}
+         */
+        this.remove = [];
+        /**
+         * Gets an array that contains the definition of fields that are going to be changed
+         * @type {Array}
+         */
+        this.change = [];
+        /**
+         * Gets or sets a string that contains the internal version of this migration. This property cannot be null.
+         * @type {string}
+         */
+        this.version = '0.0';
+        /**
+         * Gets or sets a string that represents a short description of this migration
+         * @type {string}
+         */
+        this.description = null;
+        /**
+         * Gets or sets a string that represents the adapter that is going to be migrated through this operation.
+         * This property cannot be null.
+         */
+        this.appliesTo = null;
+        /**
+         * Gets or sets a string that represents the model that is going to be migrated through this operation.
+         * This property may be null.
+         */
+        this.model = null;
+    }
 }
 
 /**
  * @classdesc DataAssociationMapping class describes the association between two models.
- * <p>
- *     An association between two models is described in field attributes. For example
- *     model Order may have an association with model Party (Person or Organization) through the field Order.customer:
- * </p>
- <pre class="prettyprint"><code>
-   { "name": "Order",
-     "fields": [
-    ...
-   {
-        "name": "customer",
-        "title": "Customer",
-        "description": "Party placing the order.",
-        "type": "Party"
-    }
-    ...]
-    }
- </code></pre>
- <p>
-      This association is equivalent with the following DataAssociationMapping instance:
- </p>
- <pre class="prettyprint"><code>
- "mapping": {
-    "cascade": "null",
-    "associationType": "association",
-    "select": [],
-    "childField": "customer",
-    "childModel": "Order",
-    "parentField": "id",
-    "parentModel": "Party"
-}
- </code></pre>
-  <p>
- The above association mapping was auto-generated from the field definition of Order.customer where the field type (Party)
- actually defines the association between these models.
- </p>
- <p>
- Another example of an association between two models is a many-to-many association. User model has a many-to-many association (for user groups) with Group model:
- </p>
- <pre class="prettyprint"><code>
- { "name": "User",
-   "fields": [
-  ...
- {
-    "name": "groups",
-    "title": "User Groups",
-    "description": "A collection of groups where user belongs.",
-    "type": "Group",
-    "expandable": true,
-    "mapping": {
-        "associationAdapter": "GroupMembers",
-        "parentModel": "Group",
-        "parentField": "id",
-        "childModel": "User",
-        "childField": "id",
-        "associationType": "junction",
-        "cascade": "delete"
-    }
-}
-  ...]
-  }
- </code></pre>
- <p>This association may also be defined in Group model:</p>
- <pre class="prettyprint"><code>
- { "name": "Group",
-   "fields": [
-  ...
- {
-    "name": "members",
-    "title": "Group Members",
-    "description": "Contains the collection of group members (users or groups).",
-    "type": "Account",
-    "many":true
-}
-  ...]
-  }
- </code></pre>
- *
  * @class
  * @property {string} associationAdapter - Gets or sets the association database object
  * @property {string} parentModel - Gets or sets the parent model name
@@ -590,11 +325,15 @@ function DataModelMigration() {
  * @param {*=} obj - An object that contains relation mapping attributes
  * @constructor
  */
-function DataAssociationMapping(obj) {
-    this.cascade = 'none';
-    this.associationType = 'association';
-    //this.select = [];
-    if (typeof obj === 'object') { _.assign(this, obj); }
+class DataAssociationMapping {
+    constructor(obj) {
+        this.cascade = 'none';
+        this.associationType = 'association';
+        //this.select = [];
+        if (typeof obj === 'object') { 
+            Object.assign(this, obj); 
+        }
+    }
 }
 
 
@@ -626,20 +365,22 @@ function DataAssociationMapping(obj) {
  * @property {boolean} virtual - Gets or sets a boolean that indicates whether this field is a view only field or not.
  * @property {boolean} indexed - Gets or sets a boolean which indicates whether this field will be indexed for searching items. The default value is false.
   */
-function DataField() {
-    this.nullable = true;
-    this.primary = false;
-    this.indexed = false;
-    this.readonly = false;
-    this.expandable = false;
-    this.virtual = false;
-    this.editable = true;
+class DataField {
+    constructor() {
+        this.nullable = true;
+        this.primary = false;
+        this.indexed = false;
+        this.readonly = false;
+        this.expandable = false;
+        this.virtual = false;
+        this.editable = true;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    getName() {
+        return this.property || this.name;
+    }
 }
 
-// noinspection JSUnusedGlobalSymbols
-DataField.prototype.getName = function() {
-  return this.property || this.name;
-};
 
 /**
  * @class
@@ -647,52 +388,14 @@ DataField.prototype.getName = function() {
  * @property {string} name - Gets or sets a short description for this listener
  * @property {string} type - Gets or sets a string which is the path of the module that exports this listener.
  * @property {boolean} disabled - Gets or sets a boolean value that indicates whether this listener is disabled or not. The default value is false.
- * @description
- * <p>
- * A data model uses event listeners as triggers which are automatically executed after data operations.
- * Those listeners are defined in [eventListeners] section of a model's schema.
- * </p>
- * <pre class="prettyprint">
- *<code>
-*     {
-*          ...
-*          "fields": [ ... ],
-*          ...
-*          "eventListeners": [
-*              { "name":"Update Listener", "type":"/app/controllers/an-update-listener.js" },
-*              { "name":"Another Update Listener", "type":"module-a/lib/listener" }
-*          ]
-*          ...
-*     }
- *</code>
- * </pre>
- * @example
- * // A simple DataEventListener that sends a message to sales users after new order was arrived.
- * var web = require("most-web");
- exports.afterSave = function(event, callback) {
-    //exit if state is other than [Insert]
-    if (event.state != 1) { return callback() }
-    //initialize web mailer
-    var mm = require("most-web-mailer"), context = event.model.context;
-    //send new order mail template by passing new item data
-    mm.mailer(context).to("sales@example.com")
-        .cc("supervisor@example.com")
-        .subject("New Order")
-        .template("new-order").send(event.target, function(err) {
-        if (err) { return web.common.log(err); }
-        return callback();
-    });
-};
- *
  */
-function DataModelEventListener() {
+class DataModelEventListener {
 
 }
 /**
  * An enumeration of tha available privilege types
- * @enum
  */
-var PrivilegeType = {
+const PrivilegeType = {
     /**
      * Self Privilege (self).
      * @type {string}
@@ -727,7 +430,7 @@ var PrivilegeType = {
  * @property {string} account - Gets or sets a wildcard (*) expression for global privileges only.
  * The defined set of permissions are automatically assigned to all users (e.g. read permissions for all users)
  */
-function DataModelPrivilege() {
+class DataModelPrivilege {
 
 }
 
@@ -741,10 +444,12 @@ function DataModelPrivilege() {
  * @property {Array} value - An array of objects which represents the query results.
  * @constructor
   */
-function DataResultSet() {
-    this.total = 0;
-    this.skip = 0;
-    this.value = [];
+class DataResultSet {
+    constructor() {
+        this.total = 0;
+        this.skip = 0;
+        this.value = [];
+    }
 }
 
 /**
@@ -752,24 +457,25 @@ function DataResultSet() {
  * @constructor
  * @ignore
  */
-function DataContextEmitter() {
-    if (this.constructor === DataContextEmitter.prototype.constructor) {
-        throw new AbstractClassError();
+class DataContextEmitter {
+    constructor() {
+        if (this.constructor === DataContextEmitter.prototype.constructor) {
+            throw new AbstractClassError();
+        }
+    }
+    /**
+     * @abstract
+     */
+    ensureContext() {
+        throw new AbstractMethodError();
     }
 }
 
-/**
- * @abstract
- */
-DataContextEmitter.prototype.ensureContext = function() {
-    throw new AbstractMethodError();
-};
 
 /**
  * An enumeration of the available data object states
- * @enum {number}
  */
-var DataObjectState = {
+const DataObjectState = {
     /**
      * Insert State (1)
      */
@@ -790,9 +496,8 @@ var DataObjectState = {
 
 /**
  * An enumeration of the available data caching types
- * @enum {string}
  */
-var DataCachingType = {
+const DataCachingType = {
     /**
      * Data will never be cached (none)
      */
@@ -807,24 +512,11 @@ var DataCachingType = {
     Conditional: 'conditional'
 };
 
-types.PrivilegeType = PrivilegeType;
-types.DataObjectState = DataObjectState;
-types.DataCachingType = DataCachingType;
-types.DataAdapter = DataAdapter;
-types.DataContext = DataContext;
-types.DataContextEmitter = DataContextEmitter;
-types.DataEventArgs = DataEventArgs;
-types.DataEventListener = DataEventListener;
-types.DataModelMigration = DataModelMigration;
-types.DataAssociationMapping = DataAssociationMapping;
-types.DataField=DataField;
-types.DataResultSet=DataResultSet;
-types.DataModelEventListener=DataModelEventListener;
-types.DataModelPrivilege=DataModelPrivilege;
+
 // noinspection JSUnusedGlobalSymbols
-types.parsers = {
+const parsers = {
     parseInteger: function(val) {
-        if (_.isNil(val))
+        if (val == null)
             return 0;
         else if (typeof val === 'number')
             return val;
@@ -844,10 +536,10 @@ types.parsers = {
         }
     },
     parseCounter: function(val) {
-        return types.parsers.parseInteger(val);
+        return parsers.parseInteger(val);
     },
     parseFloat: function(val) {
-        if (_.isNil(val))
+        if (val == null)
             return 0;
         else if (typeof val === 'number')
             return val;
@@ -865,10 +557,10 @@ types.parsers = {
         }
     },
     parseNumber: function(val) {
-        return types.parsers.parseFloat(val);
+        return parsers.parseFloat(val);
     },
     parseDateTime: function(val) {
-        if (_.isNil(val))
+        if (val == null)
             return null;
         if (val instanceof Date)
             return val;
@@ -882,7 +574,7 @@ types.parsers = {
         return null;
     },
     parseDate: function(val) {
-        var res = types.parsers.parseDateTime(val);
+        var res = parsers.parseDateTime(val);
         if (res instanceof Date) {
             res.setHours(0,0,0,0);
             return res;
@@ -890,10 +582,10 @@ types.parsers = {
         return res;
     },
     parseBoolean: function(val) {
-        return (types.parsers.parseInteger(val)!==0);
+        return (parsers.parseInteger(val)!==0);
     },
     parseText: function(val) {
-        if (_.isNil(val))
+        if (val == null)
             return val;
         else if (typeof val === 'string') {
             return val;
@@ -904,4 +596,20 @@ types.parsers = {
     }
 };
 
-module.exports = types;
+module.exports = {
+    parsers,
+    PrivilegeType,
+    DataObjectState,
+    DataCachingType,
+    DataAdapter,
+    DataContext,
+    DataContextEmitter,
+    DataEventArgs,
+    DataEventListener,
+    DataModelMigration,
+    DataAssociationMapping,
+    DataField,
+    DataResultSet,
+    DataModelEventListener,
+    DataModelPrivilege
+};
