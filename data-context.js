@@ -1,8 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
-const { TraceUtils } = require('@themost/common/utils');
+const { TraceUtils } = require('@themost/common');
 const { DataContext } = require('./types');
 const {DataConfigurationStrategy, DataConfiguration} = require('./data-configuration');
-const nameProperty = Symbol('name');
 
 /**
  * @classdesc Represents the default data context of MOST Data Applications.
@@ -194,7 +193,6 @@ class NamedDataContext extends DataContext {
             _db = null;
         };
         let self = this;
-        self[nameProperty] = name;
 
         self.getDb = function () {
             if (_db)
@@ -202,7 +200,7 @@ class NamedDataContext extends DataContext {
             let strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
             //otherwise load database options from configuration
             let adapter = strategy.adapters.find(function (x) {
-                return x.name === self[nameProperty];
+                return x.name === self.name;
             });
             let er;
             if (typeof adapter === 'undefined' || adapter === null) {
@@ -268,9 +266,10 @@ class NamedDataContext extends DataContext {
          * @type {string}
          */
         Object.defineProperty(self, 'name', {
-            get: function () {
-                return self[nameProperty];
-            }
+            enumerable: false,
+            configurable: true,
+            writable: false,
+            value: name
         });
 
     }
@@ -279,7 +278,7 @@ class NamedDataContext extends DataContext {
      * @returns {string}
      */
     getName() {
-        return this[nameProperty];
+        return this.name;
     }
     /**
      * Gets an instance of DataConfiguration class which is associated with this data context

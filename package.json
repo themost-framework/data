@@ -45,6 +45,7 @@
     "@types/q": "^1.5.1",
     "@types/sql.js": "^1.4.0",
     "eslint": "^7.22.0",
+    "eslint-plugin-node": "^11.1.0",
     "jasmine": "^3.6.4",
     "jasmine-spec-reporter": "^6.0.0",
     "npm-install-peers": "^1.2.2",
