@@ -372,11 +372,13 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                 try {
                     if (/^@themost\//.test(x.type)) {
                         //get require paths
+                        // eslint-disable-next-line node/no-unsupported-features/node-builtins
                         if (require.resolve && require.resolve.paths) {
                             /**
                              * get require paths collection
                              * @type string[]
                              */
+                            // eslint-disable-next-line node/no-unsupported-features/node-builtins
                             var paths = require.resolve.paths(x.type);
                             //get execution
                             var path1 = self.getConfiguration().getExecutionPath();
