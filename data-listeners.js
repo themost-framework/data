@@ -1,7 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-var async = require('async');
-var sprintf = require('sprintf');
+const {eachSeries} = require('async');
 const {QueryUtils, QueryField, QueryFieldRef} = require('@themost/query');
 const {NotNullError, UniqueConstraintError, TraceUtils, TextUtils} = require("@themost/common");
 const { DataCacheStrategy } = require("./data-cache");
@@ -27,7 +26,7 @@ class NotNullConstraintListener {
             callback(null);
             return 0;
         }
-        async.eachSeries(attrs, function (attr, cb) {
+        eachSeries(attrs, function (attr, cb) {
             var name = attr.property || attr.name, value = event.target[name];
             if ((((value === null) || (value === undefined)) && (event.state === 1))
                 || ((value === null) && (typeof value !== 'undefined') && (event.state === 2))) {
@@ -71,7 +70,7 @@ class UniqueConstraintListener {
             callback(null);
             return;
         }
-        async.eachSeries(constraints, function (constraint, cb) {
+        eachSeries(constraints, function (constraint, cb) {
             /**
              * @type {DataQueryable}
              */
@@ -162,7 +161,7 @@ class CalculatedValueListener {
         functionContext.context = event.model.context;
         //find all attributes that have a default value
         var attrs = event.model.attributes.filter(function (x) { return (x.calculation !== undefined); });
-        async.eachSeries(attrs, function (attr, cb) {
+        eachSeries(attrs, function (attr, cb) {
             var expr = attr.calculation;
             //validate expression
             if (typeof expr !== 'string') {
@@ -314,7 +313,7 @@ class DataCachingListener {
                         //log execution time (debug)
                         try {
                             if (process.env.NODE_ENV === 'development') {
-                                TraceUtils.log(sprintf.sprintf('Cache (Execution Time:%sms):%s', (new Date()).getTime() - logTime, key));
+                                TraceUtils.debug(`Cache (Execution Time: ${(new Date()).getTime() - logTime}ms) : ${key}`);
                             }
                         }
                         catch (err) {
@@ -432,7 +431,7 @@ class DefaultValueListener {
             Object.assign(functionContext, event);
             //find all attributes that have a default value
             var attrs = event.model.attributes.filter(function (x) { return (typeof x.value !== 'undefined'); });
-            async.eachSeries(attrs, function (attr, cb) {
+            eachSeries(attrs, function (attr, cb) {
                 try {
                     var expr = attr.value;
                     //if attribute is already defined
@@ -651,7 +650,7 @@ class DataModelSubTypesListener {
                     return callback();
                 }
                 //enumerate sub types
-                async.eachSeries(result, function (name, cb) {
+                eachSeries(result, function (name, cb) {
                     //get model
                     var model = context.model(name);
                     if (model == null) {
