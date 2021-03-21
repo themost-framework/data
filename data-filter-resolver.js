@@ -9,22 +9,20 @@ class DataFilterResolver {
     }
     resolveMember(member, callback) {
         if (/\//.test(member)) {
-            var arr = member.split('/');
+            let arr = member.split('/');
             callback(null, arr.slice(arr.length - 2).join('.'));
-        }
-        else {
+        } else {
             callback(null, this.viewAdapter.concat('.', member));
         }
     }
     resolveMethod(name, args, callback) {
         callback = callback || function () { };
         if (typeof DataFilterResolver.prototype[name] === 'function') {
-            var a = args || [];
+            let a = args || [];
             a.push(callback);
             try {
                 return DataFilterResolver.prototype[name].apply(this, a);
-            }
-            catch (e) {
+            } catch (e) {
                 return callback(e);
             }
         }
@@ -34,7 +32,7 @@ class DataFilterResolver {
      * @param {Function} callback
      */
     me(callback) {
-        var fx = new FunctionContext(this.context, this);
+        let fx = new FunctionContext(this.context, this);
         fx.user().then(function (value) {
             callback(null, value);
         }).catch(function (err) {
@@ -54,7 +52,7 @@ class DataFilterResolver {
      * @param {Function} callback
      */
     today(callback) {
-        var res = new Date();
+        let res = new Date();
         res.setHours(0, 0, 0, 0);
         callback(null, res);
     }
@@ -65,8 +63,7 @@ class DataFilterResolver {
         let culture = this.context.culture();
         if (culture) {
             return callback(null, culture.substr(0, 2));
-        }
-        else {
+        } else {
             return callback(null, "en");
         }
     }
@@ -74,5 +71,5 @@ class DataFilterResolver {
 
 
 module.exports = {
-        DataFilterResolver
+    DataFilterResolver
 };

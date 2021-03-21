@@ -1,16 +1,17 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
 function previousStateListener(event, callback) {
-    if (event.state===1) { return callback(); }
-    var key = event.model.primaryKey;
+    if (event.state===1) {
+        return callback(); 
+    }
+    let key = event.model.primaryKey;
     if (event.target[key] == null) {
         return callback();
     }
     event.model.where(key).equal(event.target[key]).silent().first(function(err,result) {
         if (err) {
             return callback(err);
-        }
-        else {
+        } else {
             event.previous = result;
             return callback();
         }

@@ -73,7 +73,8 @@ class DataAdapter {
     executeInTransaction(fn, callback) {
         throw new AbstractMethodError();
     }
-    // noinspection JSUnusedLocalSymbols
+
+    // noinspection JSUnusedLocalSymbols,JSValidateJSDoc
     /**
      * A helper method for creating a database view if the current data adapter supports views
      * @param {string} name - A string that represents the name of the view to be created
@@ -142,6 +143,7 @@ class DataContext extends SequentialEventEmitter {
     model(name) {
         throw new AbstractMethodError();
     }
+    // noinspection JSValidateJSDoc
     /**
      * Gets an instance of DataConfiguration class which is associated with this data context
      * @returns {ConfigurationBase}
@@ -289,7 +291,7 @@ class DataModelMigration {
         this.version = '0.0';
         /**
          * Gets or sets a string that represents a short description of this migration
-         * @type {string}
+         * @type {string|*}
          */
         this.description = null;
         /**
@@ -516,22 +518,21 @@ const DataCachingType = {
 // noinspection JSUnusedGlobalSymbols
 const parsers = {
     parseInteger: function(val) {
-        if (val == null)
+        if (val == null) {
             return 0;
-        else if (typeof val === 'number')
+        } else if (typeof val === 'number') {
             return val;
-        else if (typeof val === 'string') {
+        } else if (typeof val === 'string') {
             if (val.match(IntegerRegex) || val.match(FloatRegex)) {
                 return parseInt(val, 10);
-            }
-            else if (val.match(BooleanTrueRegex))
+            } else if (val.match(BooleanTrueRegex)) {
                 return 1;
-            else if (val.match(BooleanFalseRegex))
+            } else if (val.match(BooleanFalseRegex)) {
                 return 0;
-        }
-        else if (typeof val === 'boolean')
+            }
+        } else if (typeof val === 'boolean') {
             return val===true ? 1 : 0;
-        else {
+        } else {
             return parseInt(val) || 0;
         }
     },
@@ -539,20 +540,19 @@ const parsers = {
         return parsers.parseInteger(val);
     },
     parseFloat: function(val) {
-        if (val == null)
+        if (val == null) {
             return 0;
-        else if (typeof val === 'number')
+        } else if (typeof val === 'number') {
             return val;
-        else if (typeof val === 'string') {
+        } else if (typeof val === 'string') {
             if (val.match(IntegerRegex) || val.match(FloatRegex)) {
                 return parseFloat(val);
-            }
-            else if (val.match(BooleanTrueRegex))
+            } else if (val.match(BooleanTrueRegex)) {
                 return 1;
-        }
-        else if (typeof val === 'boolean')
+            }
+        } else if (typeof val === 'boolean') {
             return val===true ? 1 : 0;
-        else {
+        } else {
             return parseFloat(val);
         }
     },
@@ -560,21 +560,23 @@ const parsers = {
         return parsers.parseFloat(val);
     },
     parseDateTime: function(val) {
-        if (val == null)
+        if (val == null) {
             return null;
-        if (val instanceof Date)
-            return val;
-        if (typeof val === 'string') {
-            if (val.match(DateTimeRegex))
-                return new Date(Date.parse(val));
         }
-        else if (typeof val === 'number') {
+        if (val instanceof Date) {
+            return val;
+        }
+        if (typeof val === 'string') {
+            if (val.match(DateTimeRegex)) {
+                return new Date(Date.parse(val));
+            }
+        } else if (typeof val === 'number') {
             return new Date(val);
         }
         return null;
     },
     parseDate: function(val) {
-        var res = parsers.parseDateTime(val);
+        let res = parsers.parseDateTime(val);
         if (res instanceof Date) {
             res.setHours(0,0,0,0);
             return res;
@@ -585,12 +587,11 @@ const parsers = {
         return (parsers.parseInteger(val)!==0);
     },
     parseText: function(val) {
-        if (val == null)
+        if (val == null) {
             return val;
-        else if (typeof val === 'string') {
+        } else if (typeof val === 'string') {
             return val;
-        }
-        else {
+        } else {
             return val.toString();
         }
     }

@@ -9,10 +9,10 @@ class ZeroOrOneMultiplicityListener {
     }
     /**
      * @param {DataEventArgs} event
-     * @param {Function(Error=)} callback
+     * @param {function(Error=)} callback
      */
     afterSave(event, callback) {
-        var afterSaveAsync = ZeroOrOneMultiplicityListener.prototype.afterSaveAsync.bind(this);
+        let afterSaveAsync = ZeroOrOneMultiplicityListener.prototype.afterSaveAsync.bind(this);
         return afterSaveAsync(event).then(function () {
             return callback();
         }).catch(function (err) {
@@ -27,7 +27,7 @@ class ZeroOrOneMultiplicityListener {
         return Q.Promise(function (resolve, reject) {
             // get attributes that defines an zero or one multiplicity association
             // with this context model
-            var attributes = _.filter(event.model.attributes, function (attribute) {
+            let attributes = _.filter(event.model.attributes, function (attribute) {
                 if (Object.prototype.hasOwnProperty.call(event.target, attribute.name) === false) {
                     return false;
                 }
@@ -35,7 +35,7 @@ class ZeroOrOneMultiplicityListener {
                     return false;
                 }
                 // get mapping 
-                var mapping = event.model.inferMapping(attribute.name);
+                let mapping = event.model.inferMapping(attribute.name);
                 return !attribute.nested && //exclude nested attributes
                     attribute.multiplicity === 'ZeroOrOne' && // validate multiplicity
                     mapping.associationType === 'junction' && // and association type
@@ -45,7 +45,7 @@ class ZeroOrOneMultiplicityListener {
                 // do nothing
                 return resolve();
             }
-            var sources = _.map(attributes, function (attribute) {
+            let sources = _.map(attributes, function (attribute) {
                 return Q.Promise(function (_resolve, _reject) {
                     // exclude readonly attributes
                     if (Object.prototype.hasOwnProperty.call(attribute, 'readonly')) {
@@ -60,18 +60,19 @@ class ZeroOrOneMultiplicityListener {
                         }
                     }
                     const child = event.target[attribute.name];
-                    var context = event.model.context;
+                    let context = event.model.context;
                     // get target
-                    var target = event.model.convert(event.target);
+                    let target = event.model.convert(event.target);
                     // get attribute mapping
-                    var mapping = event.model.inferMapping(attribute.name);
+                    let mapping = event.model.inferMapping(attribute.name);
                     // get association def
-                    var association = new DataObjectJunction(target, mapping);
+                    let association = new DataObjectJunction(target, mapping);
+                    let silent = false;
                     if (child != null) {
                         // get silent model of parent model
-                        var silent = event.model.isSilent();
+                        silent = event.model.isSilent();
                         // find child
-                        var childModel = context.model(mapping.childModel);
+                        let childModel = context.model(mapping.childModel);
                         return childModel.silent(silent).find(child).getItem().then(function (item) {
                             if (item == null) {
                                 return _reject(new DataError('EDATA', 'An associated object cannot be found.', null, event.model.name, attribute.name));
@@ -112,5 +113,5 @@ class ZeroOrOneMultiplicityListener {
 }
 
 module.exports = {
-        ZeroOrOneMultiplicityListener
-    };
+    ZeroOrOneMultiplicityListener
+};

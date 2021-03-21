@@ -21,7 +21,7 @@ class HasOneAssociation extends DataQueryable {
          * @type {DataObject}
          * @private
          */
-        var parent = obj;
+        let parent = obj;
         /**
          * Gets or sets the parent data object
          * @type DataObject
@@ -33,7 +33,7 @@ class HasOneAssociation extends DataQueryable {
                 parent = value;
             }, configurable: false, enumerable: false
         });
-        var self = this;
+        let self = this;
         /**
          * @type {DataAssociationMapping}
          */
@@ -42,24 +42,24 @@ class HasOneAssociation extends DataQueryable {
             //infer mapping from field name
             //set relation mapping
             if (self.parent !== null) {
-                var model = self.parent.getModel();
-                if (model !== null)
+                let model = self.parent.getModel();
+                if (model !== null) {
                     self.mapping = model.inferMapping(association);
+                }
             }
-        }
-        else if (typeof association === 'object' && association !== null) {
+        } else if (typeof association === 'object' && association !== null) {
             //get the specified mapping
-            if (association instanceof DataAssociationMapping)
+            if (association instanceof DataAssociationMapping) {
                 self.mapping = association;
-
-            else
+            } else {
                 self.mapping = _.assign(new DataAssociationMapping(), association);
+            }
         }
 
         /**
          * @type QueryExpression
          */
-        var _query;
+        let _query;
         //override query property
         Object.defineProperty(this, 'query', {
             get: function () {
@@ -67,39 +67,38 @@ class HasOneAssociation extends DataQueryable {
                 if (_query != null) {
                     return _query;
                 }
-                if (typeof self.mapping === 'undefined' || self.mapping === null)
+                if (typeof self.mapping === 'undefined' || self.mapping === null) {
                     throw new Error('Data association mapping cannot be empty at this context.');
+                }
                 //get parent object
-                var associatedValue = null;
+                let associatedValue = null;
                 if (hasOwnProperty(self.parent, self.mapping.childField)) {
                     // get associated object
-                    var associatedObject = self.parent[self.mapping.childField];
+                    let associatedObject = self.parent[self.mapping.childField];
                     // if parent object has a property for mapping child field
                     if (associatedObject && hasOwnProperty(associatedObject, self.mapping.parentField)) {
                         // get associated value
                         associatedValue = associatedObject[self.mapping.parentField];
-                    }
-                    else if (associatedObject != null) {
+                    } else if (associatedObject != null) {
                         associatedValue = associatedObject;
                     }
                     // return query
                     _query = self.model.where(self.mapping.parentField).equal(associatedValue).prepare().query;
                     return _query;
-                }
-                else {
-                    var childModel = self.parent.getModel();
-                    var parentModel = self.model;
+                } else {
+                    let childModel = self.parent.getModel();
+                    let parentModel = self.model;
                     /**
                      * get empty query expression
                      * @type QueryExpression
                      */
                     _query = self.model.asQueryable().cache(false).select().query;
                     // get random alias
-                    var alias = self.model.name + '0';
+                    let alias = self.model.name + '0';
                     // get join left operand
-                    var left = new QueryExpression().select(self.mapping.parentField).from(parentModel.viewAdapter).$select;
+                    let left = new QueryExpression().select(self.mapping.parentField).from(parentModel.viewAdapter).$select;
                     // get join right operand
-                    var right = new QueryExpression().select(self.mapping.childField).from(alias).$select;
+                    let right = new QueryExpression().select(self.mapping.childField).from(alias).$select;
                     // create join
                     _query.join(childModel.viewAdapter, [], alias).with([left, right]);
                     // inject where
@@ -115,7 +114,7 @@ class HasOneAssociation extends DataQueryable {
         /**
          * @type DataModel
          */
-        var _model;
+        let _model;
         Object.defineProperty(this, 'model', {
             get: function () {
                 if (_model) {
@@ -134,16 +133,16 @@ class HasOneAssociation extends DataQueryable {
 
     }
     getItems() {
-        throw new Error('Unsupported method call:getItems()');
+        return Promise.reject(new Error('Unsupported method call:getItems()'));
     }
     getList() {
-        throw new Error('Unsupported method call:getList()');
+        return Promise.reject(new Error('Unsupported method call:getList()'));
     }
     getItem() {
-        return HasOneAssociation.super_.prototype.getItem.bind(this)();
+        return super.getItem();
     }
     getAllItems() {
-        throw new Error('Unsupported method call:getAllItems()');
+        return Promise.reject(new Error('Unsupported method call:getAllItems()'));
     }
 }
 

@@ -8,7 +8,7 @@ export declare interface DataValidationResult {
 }
 
 export declare class DataValidator {
-    setContext(context: DataContext);
+    setContext(context: DataContext): void;
     getContext(): DataContext;
     target: any;
 }

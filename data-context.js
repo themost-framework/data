@@ -3,6 +3,7 @@ const { TraceUtils } = require('@themost/common');
 const { DataContext } = require('./types');
 const {DataConfigurationStrategy, DataConfiguration} = require('./data-configuration');
 
+// noinspection JSValidateJSDoc
 /**
  * @classdesc Represents the default data context of MOST Data Applications.
  * The default data context uses the adapter which is registered as the default adapter in application configuration.
@@ -27,8 +28,9 @@ class DefaultDataContext extends DataContext {
          * @private
          */
         this._finalize = function () {
-            if (_db)
+            if (_db) {
                 _db.close();
+            }
             _db = null;
         };
         let self = this;
@@ -44,8 +46,9 @@ class DefaultDataContext extends DataContext {
 
         self.getDb = function () {
 
-            if (_db)
+            if (_db) {
                 return _db;
+            }
             let er;
             //otherwise load database options from configuration
             let strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
@@ -142,8 +145,9 @@ class DefaultDataContext extends DataContext {
             }
         }
         let obj = self.getConfiguration().getStrategy(DataConfigurationStrategy).model(modelName);
-        if (obj == null)
+        if (obj == null) {
             return null;
+        }
         let DataModel = require('./data-model').DataModel,
             model = new DataModel(obj);
         //set model context
@@ -183,10 +187,10 @@ class NamedDataContext extends DataContext {
          */
         this._finalize = function () {
             try {
-                if (_db)
+                if (_db) {
                     _db.close();
-            }
-            catch (err) {
+                }
+            } catch (err) {
                 TraceUtils.debug('An error occurred while closing the underlying database context.');
                 TraceUtils.debug(err);
             }
@@ -195,8 +199,9 @@ class NamedDataContext extends DataContext {
         let self = this;
 
         self.getDb = function () {
-            if (_db)
+            if (_db) {
                 return _db;
+            }
             let strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
             //otherwise load database options from configuration
             let adapter = strategy.adapters.find(function (x) {
@@ -313,8 +318,9 @@ class NamedDataContext extends DataContext {
             }
         }
         let obj = self.getConfiguration().getStrategy(DataConfigurationStrategy).model(modelName);
-        if (obj == null)
+        if (obj == null) {
             return null;
+        }
         let DataModel = require('./data-model').DataModel;
         let model = new DataModel(obj);
         //set model context

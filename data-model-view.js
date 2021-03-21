@@ -38,14 +38,14 @@ class DataModelView {
                 self.fields.forEach(function (x) {
                     if (self.model) {
                         let field = Object.assign(new DataField(), self.model.field(x.name));
-                        if (field)
+                        if (field) {
                             attrs.push(Object.assign(field, x));
-                        else
+                        } else {
                             attrs.push(Object.assign({}, x));
-                    }
-                    else
-                        //unbound view (?)
+                        }
+                    } else {
                         attrs.push(Object.assign({}, x));
+                    }
                 });
                 return attrs;
             }, configurable: false, enumerable: false
@@ -66,24 +66,25 @@ class DataModelView {
             obj.forEach(function (x) {
                 res = {};
                 localFields.forEach(function (y) {
-                    if (typeof x[y.name] !== 'undefined')
+                    if (typeof x[y.name] !== 'undefined') {
                         res[y.name] = x[y.name];
+                    }
                 });
                 arr.push(res);
             });
             return arr;
-        }
-        else {
+        } else {
             res = {};
             localFields.forEach(function (y) {
-                if (typeof obj[y.name] !== 'undefined')
+                if (typeof obj[y.name] !== 'undefined') {
                     res[y.name] = obj[y.name];
+                }
             });
             return res;
         }
     }
 }
 
- module.exports = {
-     DataModelView
+module.exports = {
+    DataModelView
 };

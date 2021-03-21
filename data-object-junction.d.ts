@@ -5,6 +5,7 @@ import {DataAssociationMapping, DataField} from "./types";
 import {DataModel} from "./data-model";
 
 export declare class DataObjectJunction extends DataQueryable {
+    constructor(obj: DataObject | any, association: any)
     parent: DataObject;
     mapping: DataAssociationMapping;
     getBaseModel(): DataModel;
@@ -13,5 +14,5 @@ export declare class DataObjectJunction extends DataQueryable {
     insert(obj: any): Promise<any>;
     remove(obj: any): Promise<any>;
     removeAll(): Promise<any>;
-    migrate(callback: (err?: Error) => void);
+    migrate(callback: (err?: Error) => void): void;
 }

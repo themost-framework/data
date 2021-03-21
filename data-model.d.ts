@@ -5,7 +5,7 @@ import {DataQueryable} from "./data-queryable";
 import {DataObject} from "./data-object";
 
 export declare class DataModel extends SequentialEventEmitter{
-    constructor(obj:any);
+    constructor(obj?:any);
 
     name: string;
     hidden?: boolean;
@@ -60,10 +60,10 @@ export declare class DataModel extends SequentialEventEmitter{
     inferMapping(name: string): DataAssociationMapping;
     validateForUpdate(obj: any): Promise<any>;
     validateForInsert(obj: any): Promise<any>;
-    levels(value: number);
+    levels(value: number): void;
     getSubTypes(): Promise<string>;
     getReferenceMappings(deep?: boolean): Array<any>;
-    getAttribute(name: string);
+    getAttribute(name: string): any;
     getTypedItems(): Promise<DataObject|any>;
     getItems(): Promise<any>;
     getTypedList():Promise<any>;

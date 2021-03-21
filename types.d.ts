@@ -2,7 +2,7 @@
 import {DataModel} from "./data-model";
 import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
 
-export declare function DataAdapterCallback(err?:Error, result?:any);
+export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
 export declare class DataAdapter {
     /**
@@ -23,13 +23,13 @@ export declare class DataAdapter {
      *
      * @param {(err?: Error) => void} callback
      */
-    open(callback:(err?:Error) => void);
+    open(callback:(err?:Error) => void): void;
 
     /**
      *
      * @param {(err?: Error) => void} callback
      */
-    close(callback:(err?:Error) => void);
+    close(callback:(err?:Error) => void): void;
 
     /**
      *
@@ -37,7 +37,7 @@ export declare class DataAdapter {
      * @param {Array<any>} values
      * @param {(err?: Error, result?: any) => void} callback
      */
-    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void);
+    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void): void;
 
     /**
      *
@@ -45,14 +45,14 @@ export declare class DataAdapter {
      * @param {string} attribute
      * @param {(err?: Error, result?: any) => void} callback
      */
-    selectIdentity(entity:string, attribute:string , callback?:(err?:Error, result?:any) => void);
+    selectIdentity(entity:string, attribute:string , callback?:(err?:Error, result?:any) => void): void;
 
     /**
      *
      * @param {Function} fn
      * @param {(err?: Error) => void} callback
      */
-    executeInTransaction(fn:Function, callback:(err?:Error) => void);
+    executeInTransaction(fn:Function, callback:(err?:Error) => void): void;
 
     /**
      *
@@ -60,7 +60,7 @@ export declare class DataAdapter {
      * @param query
      * @param {(err?: Error) => void} callback
      */
-    createView(name:string, query:any, callback:(err?:Error) => void);
+    createView(name:string, query:any, callback:(err?:Error) => void): void;
 }
 
 export declare class DataContext extends SequentialEventEmitter {
@@ -86,7 +86,7 @@ export declare class DataContext extends SequentialEventEmitter {
      *
      * @param {(err?: Error) => void} callback
      */
-    finalize(callback?:(err?:Error) => void);
+    finalize(callback?:(err?:Error) => void): void;
 }
 
 export declare class DataContextEmitter {
@@ -101,7 +101,7 @@ export declare interface DataModelPrivilege {
 }
 
 export declare class DataAssociationMapping {
-    constructor(obj: any);
+    constructor(obj?: any);
     associationAdapter?: string;
     parentModel?: string;
     childModel?: string;

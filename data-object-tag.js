@@ -26,9 +26,9 @@ class DataObjectTag extends DataQueryable {
          * @type {DataObject}
          * @private
          */
-        var parent_ = obj;
-        var model;
-        var DataModel = require('./data-model').DataModel;
+        let parent_ = obj;
+        let model;
+        let DataModel = require('./data-model').DataModel;
 
         /**
          * Gets or sets the parent data object
@@ -41,46 +41,49 @@ class DataObjectTag extends DataQueryable {
                 parent_ = value;
             }, configurable: false, enumerable: false
         });
-        var self = this;
+        let self = this;
         if (typeof association === 'string') {
             //infer mapping from field name
             //set relation mapping
             if (self.parent != null) {
                 model = self.parent.getModel();
-                if (model != null)
+                if (model != null) {
                     self.mapping = model.inferMapping(association);
+                }
+            }
+        } else if (typeof association === 'object' && association != null) {
+            //get the specified mapping
+            if (association instanceof DataAssociationMapping) {
+                self.mapping = association;
+            } else {
+                self.mapping = _.assign(new DataAssociationMapping(), association);
             }
         }
-        else if (typeof association === 'object' && association != null) {
-            //get the specified mapping
-            if (association instanceof DataAssociationMapping)
-                self.mapping = association;
-
-            else
-                self.mapping = _.assign(new DataAssociationMapping(), association);
-        }
         //validate mapping
-        var baseModel_;
+        let baseModel_;
         Object.defineProperty(this, 'baseModel', {
             get: function () {
-                if (baseModel_)
+                if (baseModel_) {
                     return baseModel_;
+                }
                 //get parent context
-                var context = self.parent.context;
+                let context = self.parent.context;
                 /**
                  * @type {DataConfigurationStrategy}
                  */
-                var strategy = context.getConfiguration().getStrategy(DataConfigurationStrategy);
-                var definition = strategy.getModelDefinition(self.mapping.associationAdapter);
+                let strategy = context.getConfiguration().getStrategy(DataConfigurationStrategy);
+                let definition = strategy.getModelDefinition(self.mapping.associationAdapter);
                 if (_.isNil(definition)) {
-                    var associationObjectField = self.mapping.associationObjectField || DataObjectTag.DEFAULT_OBJECT_FIELD;
-                    var associationValueField = self.mapping.associationValueField || DataObjectTag.DEFAULT_VALUE_FIELD;
-                    var parentModel = self.parent.getModel();
+                    let associationObjectField = self.mapping.associationObjectField || DataObjectTag.DEFAULT_OBJECT_FIELD;
+                    let associationValueField = self.mapping.associationValueField || DataObjectTag.DEFAULT_VALUE_FIELD;
+                    let parentModel = self.parent.getModel();
                     // get value type
-                    var refersTo = context.model(self.mapping.parentModel).getAttribute(self.mapping.refersTo);
-                    var refersToType = (refersTo && refersTo.type) || 'Text';
-                    var objectFieldType = parentModel.getAttribute(self.mapping.parentField).type;
-                    if (objectFieldType === 'Counter') { objectFieldType = 'Integer'; }
+                    let refersTo = context.model(self.mapping.parentModel).getAttribute(self.mapping.refersTo);
+                    let refersToType = (refersTo && refersTo.type) || 'Text';
+                    let objectFieldType = parentModel.getAttribute(self.mapping.parentField).type;
+                    if (objectFieldType === 'Counter') {
+                        objectFieldType = 'Integer'; 
+                    }
                     definition = {
                         "name": self.mapping.associationAdapter,
                         "hidden": true,
@@ -158,25 +161,25 @@ class DataObjectTag extends DataQueryable {
         // add select
         this.select(this.getValueField()).asArray();
         // modify query (add join parent model)
-        var left = {}, right = {};
+        let left = {}, right = {};
         // get parent adapter
-        var parentAdapter = self.parent.getModel().viewAdapter;
+        let parentAdapter = self.parent.getModel().viewAdapter;
         // set left operand of native join expression
         left[parentAdapter] = [this.mapping.parentField];
         // set right operand of native join expression
         right[this.mapping.associationAdapter] = [QueryField.select(this.getObjectField()).from(this.mapping.associationAdapter).$name];
-        var field1 = QueryField.select(this.getObjectField()).from(this.mapping.associationAdapter).$name;
+        let field1 = QueryField.select(this.getObjectField()).from(this.mapping.associationAdapter).$name;
         // apply join expression
         this.query.join(parentAdapter, []).with([left, right]).where(field1).equal(obj[this.mapping.parentField]).prepare(false);
     }
     /**
-     * @returns {string=}
+     * @returns {string}
      */
     getObjectField() {
         return DataObjectJunction.prototype.getObjectField.bind(this)();
     }
     /**
-     * @returns {string=}
+     * @returns {string}
      */
     getValueField() {
         return DataObjectJunction.prototype.getValueField.bind(this)();
@@ -194,8 +197,8 @@ class DataObjectTag extends DataQueryable {
      * @ignore
      */
     count(callback) {
-        var self = this;
-        var superCount = super.count.bind(this);
+        let self = this;
+        let superCount = super.count.bind(this);
         if (typeof callback === 'undefined') {
             return Q.Promise(function (resolve, reject) {
                 return self.migrate(function (err) {
@@ -225,7 +228,7 @@ class DataObjectTag extends DataQueryable {
      * @ignore
      */
     execute(callback) {
-        var superExecute = super.execute.bind(this);
+        let superExecute = super.execute.bind(this);
         this.migrate(function (err) {
             if (err) {
                 return callback(err);
@@ -240,7 +243,7 @@ class DataObjectTag extends DataQueryable {
      * @param {Function=} callback
      */
     insert(item, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback === 'undefined') {
             return Q.Promise(function (resolve, reject) {
                 return insert_.bind(self)(item, function (err) {
@@ -269,16 +272,17 @@ class DataObjectTag extends DataQueryable {
      *
      */
     removeAll(callback) {
-        var self = this;
+        let self = this;
         if (typeof callback !== 'function') {
             return Q.Promise(function (resolve, reject) {
                 return clear_.bind(self)(function (err) {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err); 
+                    }
                     return resolve();
                 });
             });
-        }
-        else {
+        } else {
             return clear_.call(self, callback);
         }
     }
@@ -289,11 +293,13 @@ class DataObjectTag extends DataQueryable {
      * @returns Promise<T>|*
      */
     remove(item, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback !== 'function') {
             return Q.Promise(function (resolve, reject) {
                 return remove_.bind(self)(item, function (err) {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err); 
+                    }
                     return resolve();
                 });
             });
@@ -312,26 +318,26 @@ DataObjectTag.DEFAULT_VALUE_FIELD = "value";
  * @private
  */
 function insert_(obj, callback) {
-    var self = this;
-    var values = [];
+    let self = this;
+    let values = [];
     if (_.isArray(obj)) {
         values = obj;
-    }
-    else {
+    } else {
         values.push(obj);
     }
     self.migrate(function(err) {
-        if (err)
+        if (err) {
             return callback(err);
+        }
         // get object field name
-        var objectField = self.getObjectField();
+        let objectField = self.getObjectField();
         // get value field name
-        var valueField = self.getValueField();
+        let valueField = self.getValueField();
         // map the given items
-        var items = _.map(_.filter(values, function(x) {
+        let items = _.map(_.filter(values, function(x) {
             return !_.isNil(x);
         }), function (x) {
-            var res = {};
+            let res = {};
             res[objectField] = self.parent[self.mapping.parentField];
             res[valueField] = x;
             return res;
@@ -352,18 +358,20 @@ function insert_(obj, callback) {
  * @private
  */
 function clear_(callback) {
-    var self = this;
+    let self = this;
     self.migrate(function(err) {
         if (err) {
             return callback(err);
         }
         self.getBaseModel().silent(self.$silent).where(self.getObjectField()).equal(self.parent[self.mapping.parentField]).select("id").getAllItems().then(function(result) {
-            if (result.length===0) { return callback(); }
+            if (result.length===0) {
+                return callback(); 
+            }
             return self.getBaseModel().remove(result).then(function () {
-               return callback();
+                return callback();
             });
         }).catch(function(err) {
-           return callback(err);
+            return callback(err);
         });
     });
 }
@@ -376,11 +384,11 @@ function clear_(callback) {
  * @private
  */
 function remove_(obj, callback) {
-    var self = this;
-    var values = [];
-    if (_.isArray(obj))
+    let self = this;
+    let values = [];
+    if (_.isArray(obj)) {
         values = obj;
-    else {
+    } else {
         values.push(obj);
     }
     self.migrate(function(err) {
@@ -388,13 +396,13 @@ function remove_(obj, callback) {
             return callback(err);
         }
         // get object field name
-        var objectField = self.getObjectField();
+        let objectField = self.getObjectField();
         // get value field name
-        var valueField = self.getValueField();
-        var items = _.map(_.filter(values, function(x) {
+        let valueField = self.getValueField();
+        let items = _.map(_.filter(values, function(x) {
             return !_.isNil(x);
         }), function (x) {
-            var res = {};
+            let res = {};
             res[objectField] = self.parent[self.mapping.parentField];
             res[valueField] = x;
             return res;

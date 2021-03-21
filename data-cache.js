@@ -35,12 +35,11 @@ class DataCache extends SequentialEventEmitter {
                 callback();
                 return;
             }
-            var NodeCache = require("node-cache");
+            let NodeCache = require("node-cache");
             this.rawCache = new NodeCache();
             this.initialized = true;
             callback();
-        }
-        catch (e) {
+        } catch (e) {
             callback(e);
         }
     }
@@ -57,13 +56,12 @@ class DataCache extends SequentialEventEmitter {
      };
      */
     remove(key, callback) {
-        var self = this;
+        let self = this;
         callback = callback || function () { };
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.set(key, callback);
             }
         });
@@ -80,13 +78,12 @@ class DataCache extends SequentialEventEmitter {
      };
      */
     removeAll(callback) {
-        var self = this;
+        let self = this;
         callback = callback || function () { };
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.flushAll();
                 callback();
             }
@@ -106,13 +103,12 @@ class DataCache extends SequentialEventEmitter {
      });
      */
     add(key, value, ttl, callback) {
-        var self = this;
+        let self = this;
         callback = callback || function () { };
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.set(key, value, ttl, callback);
             }
         });
@@ -124,7 +120,7 @@ class DataCache extends SequentialEventEmitter {
      * @param {function(Error=,*=)} callback - A callback function where the first argument will contain the Error object if an error occurred and the second argument will contain the result.
      */
     ensure(key, fn, callback) {
-        var self = this;
+        let self = this;
         callback = callback || function () { };
         if (typeof fn !== 'function') {
             callback(new Error('Invalid argument. Expected function.'));
@@ -138,8 +134,7 @@ class DataCache extends SequentialEventEmitter {
             }
             if (typeof result !== 'undefined') {
                 callback(null, result);
-            }
-            else {
+            } else {
                 //execute fn
                 fn(function (err, result) {
                     if (err) {
@@ -166,7 +161,7 @@ class DataCache extends SequentialEventEmitter {
      };
      */
     get(key, callback) {
-        var self = this;
+        let self = this;
         callback = callback || function () { };
         if (key == null) {
             return callback();
@@ -174,17 +169,14 @@ class DataCache extends SequentialEventEmitter {
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.get(key, function (err, value) {
                     if (err) {
                         callback(err);
-                    }
-                    else {
+                    } else {
                         if (typeof value[key] !== 'undefined') {
                             callback(null, value[key]);
-                        }
-                        else {
+                        } else {
                             callback();
                         }
                     }
@@ -197,7 +189,7 @@ class DataCache extends SequentialEventEmitter {
      */
     static getCurrent() {
         if (typeof global !== 'undefined' || global !== null) {
-            var app = global.application;
+            let app = global.application;
             if (app) {
                 //and if this application has a cache object
                 if (app.cache) {
@@ -215,6 +207,7 @@ class DataCache extends SequentialEventEmitter {
 }
 
 class DataCacheStrategy extends ConfigurationStrategy {
+    // noinspection JSValidateJSDoc
     /**
      * @param {ConfigurationBase} config
      */
@@ -273,8 +266,7 @@ class DataCacheStrategy extends ConfigurationStrategy {
     }
 }
 
-
-
+// noinspection JSValidateJSDoc
 /**
  *
  * @param {ConfigurationBase} config
@@ -284,9 +276,9 @@ class DataCacheStrategy extends ConfigurationStrategy {
 class DefaultDataCacheStrategy extends DataCacheStrategy {
     constructor(config) {
         super(config);
-        var NodeCache = require("node-cache");
-        var expiration = CACHE_ABSOLUTE_EXPIRATION;
-        var absoluteExpiration = LangUtils.parseInt(config.getSourceAt('settings/cache/absoluteExpiration'));
+        let NodeCache = require("node-cache");
+        let expiration = CACHE_ABSOLUTE_EXPIRATION;
+        let absoluteExpiration = LangUtils.parseInt(config.getSourceAt('settings/cache/absoluteExpiration'));
         if (absoluteExpiration > 0) {
             expiration = absoluteExpiration;
         }
@@ -303,7 +295,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
      */
     // eslint-disable-next-line no-unused-vars
     add(key, value, absoluteExpiration) {
-        var self = this;
+        let self = this;
         return new Promise(function (resolve, reject) {
             self.rawCache.set(key, value, absoluteExpiration, function (err) {
                 if (err) {
@@ -320,7 +312,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
      */
     // eslint-disable-next-line no-unused-vars
     get(key) {
-        var self = this;
+        let self = this;
         return new Promise(function (resolve, reject) {
             self.rawCache.get(key, function (err, res) {
                 if (err) {
@@ -337,7 +329,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
      */
     // eslint-disable-next-line no-unused-vars
     remove(key) {
-        var self = this;
+        let self = this;
         return new Promise(function (resolve, reject) {
             self.rawCache.del(key, function (err, count) {
                 if (err) {
@@ -352,7 +344,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
      * @returns {Promise|*}
      */
     clear() {
-        var self = this;
+        let self = this;
         return new Promise(function (resolve, reject) {
             self.rawCache.flushAll(function (err, count) {
                 if (err) {
@@ -371,20 +363,18 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
      */
     // eslint-disable-next-line no-unused-vars
     getOrDefault(key, getFunc, absoluteExpiration) {
-        var self = this;
+        let self = this;
         return new Promise(function (resolve, reject) {
             //try to get from cache
             self.rawCache.get(key, function (err, result) {
                 if (err) {
                     return reject(err);
-                }
-                else if (typeof result !== 'undefined' && hasOwnProperty(result, key)) {
+                } else if (typeof result !== 'undefined' && hasOwnProperty(result, key)) {
                     return resolve(result[key]);
-                }
-                else {
+                } else {
                     try {
                         //execute function and validate promise
-                        var source = getFunc();
+                        let source = getFunc();
                         Args.check(typeof source !== 'undefined' && typeof source.then === 'function', 'Invalid argument. Expected a valid promise.');
                         return source.then(function (res) {
                             if (res == null) {
@@ -400,8 +390,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
                             .catch(function (err) {
                                 return reject(err);
                             });
-                    }
-                    catch (err) {
+                    } catch (err) {
                         return reject(err);
                     }
                 }
@@ -411,7 +400,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
 }
 
 module.exports = {
-        DataCache,
-        DataCacheStrategy,
-        DefaultDataCacheStrategy
-    };
+    DataCache,
+    DataCacheStrategy,
+    DefaultDataCacheStrategy
+};

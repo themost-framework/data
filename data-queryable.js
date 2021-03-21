@@ -31,7 +31,7 @@ class DataAttributeResolver {
         }
         return DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
     }
-    selecteNestedAttribute(attr, alias) {
+    selectNestedAttribute(attr, alias) {
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
         if (expr) {
             if (_.isNil(alias))
@@ -51,7 +51,7 @@ class DataAttributeResolver {
     selectAggregatedAttribute(aggregation, attribute, alias) {
         var self = this, result;
         if (DataAttributeResolver.prototype.testNestedAttribute(attribute)) {
-            result = DataAttributeResolver.prototype.selecteNestedAttribute.call(self, attribute, alias);
+            result = DataAttributeResolver.prototype.selectNestedAttribute.call(self, attribute, alias);
         }
         else {
             result = self.fieldOf(attribute);
@@ -1240,7 +1240,7 @@ class DataQueryable {
                             else {
                                 b = DataAttributeResolver.prototype.testNestedAttribute.call(self, name);
                                 if (b) {
-                                    expr = DataAttributeResolver.prototype.selecteNestedAttribute.call(self, b.name, x.property);
+                                    expr = DataAttributeResolver.prototype.selectNestedAttribute.call(self, b.name, x.property);
                                     if (expr) { arr.push(expr); }
                                 }
                                 else {
@@ -2725,7 +2725,7 @@ function select_(arg) {
     else {
         a = DataAttributeResolver.prototype.testNestedAttribute.call(self,arg);
         if (a) {
-            return DataAttributeResolver.prototype.selecteNestedAttribute.call(self, a.name, a.property);
+            return DataAttributeResolver.prototype.selectNestedAttribute.call(self, a.name, a.property);
         }
         else {
             a = DataAttributeResolver.prototype.testAttribute.call(self,arg);

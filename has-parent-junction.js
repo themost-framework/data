@@ -9,6 +9,7 @@ const {DataConfigurationStrategy} = require('./data-configuration');
 const {DataQueryable} = require('./data-queryable');
 const {DataObjectJunction} = require('./data-object-junction');
 const {hasOwnProperty} = require('./has-own-property');
+
 /**
  * @classdesc Represents a many-to-many association between two data models.
  * @augments DataQueryable
@@ -18,23 +19,23 @@ const {hasOwnProperty} = require('./has-own-property');
  */
 class HasParentJunction extends DataQueryable {
     /**
-     * 
+     *
      * @param {DataObject} obj The parent data object reference
      * @param {string|*} association - A string that represents the name of the field which holds association mapping or the association mapping itself.
      */
     constructor(obj, association) {
         super();
-        var self = this;
+        let self = this;
         /**
          * @type {DataObject}
          * @private
          */
-        var parent_ = obj,
-            /**
-             * @type {DataModel}
-             */
-            model_,
-            DataModel = require('./data-model').DataModel;
+        let parent_ = obj;
+        /**
+         * @type {DataModel}
+         */
+        let model_;
+        let DataModel = require('./data-model').DataModel;
         /**
          * Gets or sets the parent data object
          * @type DataObject
@@ -51,20 +52,20 @@ class HasParentJunction extends DataQueryable {
         if (typeof association === 'string') {
             if (parent_) {
                 model_ = parent_.getModel();
-                if (model_ !== null)
+                if (model_ !== null) {
                     self.mapping = model_.inferMapping(association);
+                }
+            }
+        } else if (typeof association === 'object' && association !== null) {
+            //get the specified mapping
+            if (association instanceof DataAssociationMapping) {
+                self.mapping = association;
+            } else {
+                self.mapping = _.assign(new DataAssociationMapping(), association);
             }
         }
-        else if (typeof association === 'object' && association !== null) {
-            //get the specified mapping
-            if (association instanceof DataAssociationMapping)
-                self.mapping = association;
 
-            else
-                self.mapping = _.assign(new DataAssociationMapping(), association);
-        }
-
-        var relatedModel = this.parent.context.model(self.mapping.parentModel);
+        let relatedModel = this.parent.context.model(self.mapping.parentModel);
         // override DataQueryable.model
         Object.defineProperty(this, 'model', {
             configurable: true,
@@ -80,23 +81,24 @@ class HasParentJunction extends DataQueryable {
             value: QueryUtils.query(relatedModel.viewAdapter)
         });
         //modify query (add join model)
-        var adapter = relatedModel.viewAdapter;
-        var left = {}, right = {};
+        let adapter = relatedModel.viewAdapter;
+        let left = {}, right = {};
         this.query.select(relatedModel.attributes.filter(function (x) {
             return !x.many;
         }).map(function (x) {
             return QueryField.select(x.name).from(adapter);
         }));
 
-        var baseModel;
+        let baseModel;
         Object.defineProperty(this, 'baseModel', {
             get: function () {
-                if (baseModel)
+                if (baseModel) {
                     return baseModel;
+                }
                 /**
                  * @type {*|DataConfigurationStrategy}
                  */
-                var conf = self.parent.context.getConfiguration().getStrategy(DataConfigurationStrategy);
+                let conf = self.parent.context.getConfiguration().getStrategy(DataConfigurationStrategy);
                 //search in cache (configuration.current.cache)
                 if (conf.getModelDefinition(self.mapping.associationAdapter)) {
                     baseModel = new DataModel(conf.getModelDefinition(self.mapping.associationAdapter));
@@ -104,18 +106,31 @@ class HasParentJunction extends DataQueryable {
                     return baseModel;
                 }
                 //otherwise create model
-                var parentModel = self.parent.getModel();
-                var childModel = self.parent.context.model(self.mapping.childModel);
-                var adapter = self.mapping.associationAdapter;
+                let parentModel = self.parent.getModel();
+                let childModel = self.parent.context.model(self.mapping.childModel);
+                let adapter = self.mapping.associationAdapter;
                 baseModel = self.parent.context.model(adapter);
                 if (_.isNil(baseModel)) {
-                    var associationObjectField = self.mapping.associationObjectField || DataObjectJunction.DEFAULT_OBJECT_FIELD;
-                    var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
-                    var modelDefinition = {
-                        name: adapter, title: adapter, sealed: false, hidden: true, type: "hidden", source: adapter, view: adapter, version: '1.0', fields: [
-                            { name: "id", type: "Counter", primary: true },
-                            { name: associationObjectField, indexed: true, nullable: false, type: self.mapping.parentModel },
-                            { name: associationValueField, indexed: true, nullable: false, type: self.mapping.childModel }
+                    let associationObjectField = self.mapping.associationObjectField || DataObjectJunction.DEFAULT_OBJECT_FIELD;
+                    let associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
+                    let modelDefinition = {
+                        name: adapter,
+                        title: adapter,
+                        sealed: false,
+                        hidden: true,
+                        type: "hidden",
+                        source: adapter,
+                        view: adapter,
+                        version: '1.0',
+                        fields: [
+                            {name: "id", type: "Counter", primary: true},
+                            {
+                                name: associationObjectField,
+                                indexed: true,
+                                nullable: false,
+                                type: self.mapping.parentModel
+                            },
+                            {name: associationValueField, indexed: true, nullable: false, type: self.mapping.childModel}
                         ],
                         constraints: [
                             {
@@ -123,7 +138,8 @@ class HasParentJunction extends DataQueryable {
                                 type: "unique",
                                 fields: [associationObjectField, associationValueField]
                             }
-                        ], "privileges": self.mapping.privileges || [
+                        ],
+                        "privileges": self.mapping.privileges || [
                             {
                                 "mask": 15,
                                 "type": "global"
@@ -135,11 +151,11 @@ class HasParentJunction extends DataQueryable {
                             }
                         ]
                     };
-                    // add unique constraint if child model mappind is Zero Or One
-                    var attribute = parentModel.attributes.filter(function (x) {
+                    // add unique constraint if child model mapping is Zero Or One
+                    let attribute = parentModel.attributes.filter(function (x) {
                         return x.type === childModel.name;
                     }).filter(function (y) {
-                        var mapping = parentModel.inferMapping(y.name);
+                        let mapping = parentModel.inferMapping(y.name);
                         return mapping && mapping.associationAdapter === adapter;
                     });
                     if (attribute) {
@@ -171,11 +187,11 @@ class HasParentJunction extends DataQueryable {
             return this.baseModel;
         };
         // get association adapter
-        var associationAdapter = self.mapping.associationAdapter;
+        let associationAdapter = self.mapping.associationAdapter;
         // get parent field
-        var parentField = QueryField.select(this.getObjectField()).from(associationAdapter).$name;
+        let parentField = QueryField.select(this.getObjectField()).from(associationAdapter).$name;
         // get child field
-        var childField = QueryField.select(this.getValueField()).from(associationAdapter).$name;
+        let childField = QueryField.select(this.getValueField()).from(associationAdapter).$name;
         // set left operand of join expression
         left[adapter] = [this.mapping.parentField];
         // set right operand of join expression
@@ -184,18 +200,21 @@ class HasParentJunction extends DataQueryable {
         this.query.join(this.mapping.associationAdapter, []).with([left, right]).where(childField).equal(obj[this.mapping.childField]).prepare();
 
     }
+
     /**
-     * @returns {string=}
+     * @returns {string}
      */
     getObjectField() {
         return DataObjectJunction.prototype.getObjectField.bind(this)();
     }
+
     /**
-     * @returns {string=}
+     * @returns {string}
      */
     getValueField() {
         return DataObjectJunction.prototype.getValueField.bind(this)();
     }
+
     /**
      * Inserts an association between parent object and the given object or array of objects.
      * @param {*|Array} obj - An object or an array of objects to be related with parent object
@@ -203,7 +222,7 @@ class HasParentJunction extends DataQueryable {
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
      */
     insert(obj, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback === 'undefined') {
             return Q.Promise(function (resolve, reject) {
                 return insert_.bind(self)(obj, function (err) {
@@ -218,6 +237,7 @@ class HasParentJunction extends DataQueryable {
             return callback(err);
         });
     }
+
     /**
      * Removes the association between parent object and the given object or array of objects.
      * @param {*|Array} obj - An object or an array of objects to be disconnected from parent object
@@ -225,7 +245,7 @@ class HasParentJunction extends DataQueryable {
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
      */
     remove(obj, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback === 'undefined') {
             return Q.Promise(function (resolve, reject) {
                 return remove_.bind(self)(obj, function (err) {
@@ -240,16 +260,18 @@ class HasParentJunction extends DataQueryable {
             return callback(err);
         });
     }
+
     migrate(callback) {
         this.baseModel.migrate(callback);
     }
+
     /**
      * Overrides DataQueryable.count() method
      * @param callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
      * @ignore
      */
     count(callback) {
-        var self = this;
+        let self = this;
         if (typeof callback === 'undefined') {
             return Q.Promise(function (resolve, reject) {
                 return self.migrate(function (err) {
@@ -257,7 +279,7 @@ class HasParentJunction extends DataQueryable {
                         return reject(err);
                     }
                     // noinspection JSPotentiallyInvalidConstructorUsage
-                    var superCount = HasParentJunction.super_.prototype.count.bind(self);
+                    let superCount = HasParentJunction.super_.prototype.count.bind(self);
                     return superCount().then(function (result) {
                         return resolve(result);
                     }).catch(function (err) {
@@ -271,12 +293,11 @@ class HasParentJunction extends DataQueryable {
                 return callback(err);
             }
             // noinspection JSPotentiallyInvalidConstructorUsage
-            var superCount = HasParentJunction.super_.prototype.count.bind(self);
+            let superCount = HasParentJunction.super_.prototype.count.bind(self);
             return superCount(callback);
         });
     }
 }
-
 
 
 /**
@@ -287,29 +308,27 @@ class HasParentJunction extends DataQueryable {
  * @private
  */
 function insertSingleObject_(obj, callback) {
-    var self = this;
+    let self = this;
     //get parent and child
-    var parent = obj;
+    let parent = obj;
     if (typeof obj !== 'object') {
         parent = {};
         parent[self.mapping.parentField] = obj;
     }
-    var parentValue = parent[self.mapping.parentField];
-    var childValue = self.parent[self.mapping.childField];
+    let parentValue = parent[self.mapping.parentField];
+    let childValue = self.parent[self.mapping.childField];
     //validate relation existence
-    self.baseModel.silent(self.$silent).where(self.getObjectField()).equal(parentValue).and(self.getValueField()).equal(childValue).first(function(err, result) {
+    self.baseModel.silent(self.$silent).where(self.getObjectField()).equal(parentValue).and(self.getValueField()).equal(childValue).first(function (err, result) {
         if (err) {
             //on error exit with error
             return callback(err);
-        }
-        else {
+        } else {
             if (result) {
                 //if relation already exists, do nothing
                 return callback();
-            }
-            else {
+            } else {
                 //otherwise create new item
-                var newItem = { };
+                let newItem = {};
                 newItem[self.getObjectField()] = parentValue;
                 newItem[self.getValueField()] = childValue;
                 //and insert it
@@ -326,47 +345,46 @@ function insertSingleObject_(obj, callback) {
  * @private
  */
 function insert_(obj, callback) {
-    var self = this;
-    var arr = [];
-    if (_.isArray(obj))
+    let self = this;
+    let arr = [];
+    if (_.isArray(obj)) {
         arr = obj;
-    else {
+    } else {
         arr.push(obj);
     }
-    self.migrate(function(err) {
-        if (err)
+    self.migrate(function (err) {
+        if (err) {
             callback(err);
-        else {
-            async.eachSeries(arr, function(item, cb) {
-                var parent = item;
+        } else {
+            async.eachSeries(arr, function (item, cb) {
+                let parent = item;
                 if (typeof item !== 'object') {
                     parent = {};
                     parent[self.mapping.parentField] = item;
                 }
                 //validate if child identifier exists
                 if (hasOwnProperty(parent, self.mapping.parentField)) {
-                    insertSingleObject_.call(self, parent, function(err) {
+                    insertSingleObject_.call(self, parent, function (err) {
                         cb(err);
                     });
-                }
-                else {
+                } else {
                     //get related model
-                    var relatedModel = self.parent.context.model(self.mapping.parentModel);
+                    let relatedModel = self.parent.context.model(self.mapping.parentModel);
                     //ensure silent mode
-                    if (self.getBaseModel().$silent) { relatedModel.silent(); }
+                    if (self.getBaseModel().$silent) {
+                        relatedModel.silent();
+                    }
                     //find object by querying child object
                     relatedModel.find(item).select(self.mapping.parentField).first(function (err, result) {
                         if (err) {
                             cb(null);
-                        }
-                        else {
+                        } else {
                             if (!result) {
                                 //child was not found (do nothing or throw exception)
                                 cb(null);
-                            }
-                            else {
+                            } else {
                                 parent[self.mapping.parentField] = result[self.mapping.parentField];
-                                insertSingleObject_.call(self, parent, function(err) {
+                                insertSingleObject_.call(self, parent, function (err) {
                                     cb(err);
                                 });
                             }
@@ -388,25 +406,23 @@ function insert_(obj, callback) {
  * @private
  */
 function removeSingleObject_(obj, callback) {
-    var self = this;
+    let self = this;
     //get parent and child
-    var parent = obj;
+    let parent = obj;
     if (typeof obj !== 'object') {
         parent = {};
         parent[self.mapping.parentField] = obj;
     }
-    var parentValue = parent[self.mapping.parentField];
-    var childValue = self.parent[self.mapping.childField];
+    let parentValue = parent[self.mapping.parentField];
+    let childValue = self.parent[self.mapping.childField];
     //get relation model
-    self.baseModel.silent(self.$silent).where(this.getObjectField()).equal(parentValue).and(this.getValueField()).equal(childValue).first(function(err, result) {
+    self.baseModel.silent(self.$silent).where(this.getObjectField()).equal(parentValue).and(this.getValueField()).equal(childValue).first(function (err, result) {
         if (err) {
             callback(err);
-        }
-        else {
+        } else {
             if (!result) {
                 callback(null);
-            }
-            else {
+            } else {
                 //otherwise remove item
                 self.baseModel.silent(self.$silent).remove(result, callback);
             }
@@ -421,38 +437,35 @@ function removeSingleObject_(obj, callback) {
  * @private
  */
 function remove_(obj, callback) {
-    var self = this, arr = [];
-    if (_.isArray(obj))
+    let self = this, arr = [];
+    if (_.isArray(obj)) {
         arr = obj;
-    else {
+    } else {
         arr.push(obj);
     }
-    self.migrate(function(err) {
-        if (err)
+    self.migrate(function (err) {
+        if (err) {
             callback(err);
-        else
-        {
-            async.eachSeries(arr, function(item, cb) {
-                var parent = item;
+        } else {
+            async.eachSeries(arr, function (item, cb) {
+                let parent = item;
                 if (typeof item !== 'object') {
                     parent = {};
                     parent[self.mapping.parentField] = item;
                 }
                 //get related model
-                var relatedModel = self.parent.context.model(self.mapping.parentModel);
+                let relatedModel = self.parent.context.model(self.mapping.parentModel);
                 //find object by querying child object
                 relatedModel.find(parent).select(self.mapping.parentField).first(function (err, result) {
                     if (err) {
                         return cb();
-                    }
-                    else {
+                    } else {
                         if (!result) {
                             //child was not found (do nothing or throw exception)
                             cb();
-                        }
-                        else {
+                        } else {
                             parent[self.mapping.parentField] = result[self.mapping.parentField];
-                            removeSingleObject_.call(self, parent, function(err) {
+                            removeSingleObject_.call(self, parent, function (err) {
                                 cb(err);
                             });
                         }

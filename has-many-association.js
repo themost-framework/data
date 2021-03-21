@@ -19,14 +19,13 @@ class HasManyAssociation extends DataQueryable {
      * @param {DataObject} obj - A DataObject instance that represents the parent data object
      * @param {string|*} association - A string that represents the name of the field which holds association mapping or the association mapping itself.
      */
-    constructor(obj, association)
-    {
+    constructor(obj, association) {
         super();
         /**
          * @type {DataObject}
          * @private
          */
-        var parent_ = obj;
+        let parent_ = obj;
         /**
          * Gets or sets the parent data object
          * @type DataObject
@@ -36,35 +35,37 @@ class HasManyAssociation extends DataQueryable {
         }, set: function (value) {
             parent_ = value;
         }, configurable: false, enumerable: false});
-        var self = this;
+        let self = this;
 
         if (typeof association === 'string') {
             //infer mapping from field name
             //set relation mapping
             if (self.parent!=null) {
-                var model = self.parent.getModel();
-                if (model!=null)
+                let model = self.parent.getModel();
+                if (model!=null) {
                     self.mapping = model.inferMapping(association);
+                }
+            }
+        } else if (typeof association === 'object' && association !=null) {
+            //get the specified mapping
+            if (association instanceof DataAssociationMapping) {
+                self.mapping = association;
+            } else {
+                self.mapping = _.assign(new DataAssociationMapping(), association);
             }
         }
-        else if (typeof association === 'object' && association !=null) {
-            //get the specified mapping
-            if (association instanceof DataAssociationMapping)
-                self.mapping = association;
-            else
-                self.mapping = _.assign(new DataAssociationMapping(), association);
-        }
 
-        var q = null;
+        let q = null;
         //override query property
         Object.defineProperty(this, 'query', {
             get:function() {
                 //if query is already defined
-                if (q!=null)
-                //return this query
+                if (q!=null) {
                     return q;
-                if (typeof self.mapping === 'undefined' || self.mapping==null)
+                }
+                if (typeof self.mapping === 'undefined' || self.mapping==null) {
                     throw new Error('Data association mapping cannot be empty at this context.');
+                }
                 //prepare query by selecting the foreign key of the related object
                 q = QueryUtils.query(self.model.viewAdapter).where(self.mapping.childField).equal(self.parent[self.mapping.parentField]).prepare();
                 return q;
@@ -73,14 +74,14 @@ class HasManyAssociation extends DataQueryable {
             enumerable:false
         });
 
-        var m = null;
+        let m = null;
         //override model property
         Object.defineProperty(this, 'model', {
             get:function() {
                 //if query is already defined
-                if (m!=null)
-                //return this query
+                if (m!=null) {
                     return m;
+                }
                 m = self.parent.context.model(self.mapping.childModel);
                 return m;
             },

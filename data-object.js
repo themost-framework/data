@@ -2,7 +2,6 @@
 
 const sprintf = require('sprintf').sprintf;
 const _ = require("lodash");
-const Q = require('q');
 const {DataObjectJunction} = require('./data-object-junction');
 const {DataObjectTag} = require('./data-object-tag');
 const {HasManyAssociation} = require('./has-many-association');
@@ -26,23 +25,23 @@ const STR_MISSING_CALLBACK_ARGUMENT = 'Missing argument. Callback function expec
  * @private
  */
 function save_(context, callback) {
-    var self = this;
+    let self = this;
     //get current application
-    var model = self.getModel();
+    let model = self.getModel();
     if (_.isNil(model)) {
         return callback.call(self, new DataError('EMODEL', 'Data model cannot be found.'));
     }
-    var i;
+    let i;
     //register before listeners
-    var beforeListeners = self.listeners('before.save');
+    let beforeListeners = self.listeners('before.save');
     for (i = 0; i < beforeListeners.length; i++) {
-        var beforeListener = beforeListeners[i];
+        let beforeListener = beforeListeners[i];
         model.on('before.save', beforeListener);
     }
     //register after listeners
-    var afterListeners = self.listeners('after.save');
+    let afterListeners = self.listeners('after.save');
     for (i = 0; i < afterListeners.length; i++) {
-        var afterListener = afterListeners[i];
+        let afterListener = afterListeners[i];
         model.on('after.save', afterListener);
     }
     model.save(self, callback);
@@ -56,22 +55,22 @@ function save_(context, callback) {
  * @private
  */
 function remove_(context, callback) {
-    var self = this;
+    let self = this;
     //get current application
-    var model = self.getModel();
+    let model = self.getModel();
     if (_.isNil(model)) {
         return callback.call(self, new DataError('EMODEL', 'Data model cannot be found.'));
     }
     //register before listeners
-    var beforeListeners = self.listeners('before.remove');
-    for (var i = 0; i < beforeListeners.length; i++) {
-        var beforeListener = beforeListeners[i];
+    let beforeListeners = self.listeners('before.remove');
+    for (let i = 0; i < beforeListeners.length; i++) {
+        let beforeListener = beforeListeners[i];
         model.on('before.remove', beforeListener);
     }
     //register after listeners
-    var afterListeners = self.listeners('after.remove');
-    for (var j = 0; j < afterListeners.length; j++) {
-        var afterListener = afterListeners[j];
+    let afterListeners = self.listeners('after.remove');
+    for (let j = 0; j < afterListeners.length; j++) {
+        let afterListener = afterListeners[j];
         model.on('after.remove', afterListener);
     }
     model.remove(self, callback);
@@ -85,15 +84,16 @@ function remove_(context, callback) {
  * @private
  */
 function attrOf_(name, callback) {
-    var self = this, model = this.$$model,
+    let self = this, model = this.$$model,
         mapping = model.inferMapping(name);
     if (_.isNil(mapping)) {
         if (hasOwnProperty(self, name)) {
             return callback(null, self[name]);
-        }
-        else {
+        } else {
             return model.where(model.primaryKey).equal(self[model.primaryKey]).select(name).value(function (err, result) {
-                if (err) { return callback(err); }
+                if (err) {
+                    return callback(err); 
+                }
                 self[name] = result;
                 return callback(null, result);
             });
@@ -107,24 +107,22 @@ function attrOf_(name, callback) {
             if (typeof self[name] === 'object' && self[name] !== null) {
                 //return the defined parent field
                 callback(null, self[name][mapping.parentField]);
-            }
-            else if (self[name] === null) {
+            } else if (self[name] === null) {
                 callback();
-            }
-            else {
+            } else {
                 callback(null, self[name]);
             }
-        }
-        else {
+        } else {
             //otherwise get value from db
             model.where(model.primaryKey).equal(this[model.primaryKey]).select(mapping.childField).flatten().value(function (err, result) {
-                if (err) { return callback(err); }
+                if (err) {
+                    return callback(err); 
+                }
                 self[name] = result;
                 return callback(null, result);
             });
         }
-    }
-    else {
+    } else {
         return callback();
     }
 }
@@ -147,32 +145,34 @@ class DataObject extends SequentialEventEmitter {
      */
     constructor(type, obj) {
         super();
-        var self = this;
+        let self = this;
         /**
          * @name DataObject#context
          * @type DataContext
          * @description An instance of DataContext class associated with this object.
          */
         Object.defineProperty(this, 'context', {
-            get: function () { return this[contextProperty]; },
-            set: function (value) { this[contextProperty] = value; },
+            get: function () {
+                return this[contextProperty]; 
+            },
+            set: function (value) {
+                this[contextProperty] = value; 
+            },
             enumerable: false,
             configurable: false
         });
-        if (type)
+        if (type) {
             this[typeProperty] = type;
-        else {
+        } else {
             if (hasOwnProperty(this.constructor, 'entityTypeDecorator')) {
                 this[typeProperty] = this.constructor['entityTypeDecorator'];
-            }
-
-            //get type from constructor name
-            else if (/Model$/.test(this.constructor.name)) {
+            } else if (/Model$/.test(this.constructor.name)) {
+                //get type from constructor name
                 this[typeProperty] = this.constructor.name.replace(/Model$/, '');
-            }
-            else {
-                if (this.constructor.name !== 'DataObject')
+            } else {
+                if (this.constructor.name !== 'DataObject') {
                     this[typeProperty] = this.constructor.name;
+                }
             }
         }
         Object.defineProperty(this, '$$type', {
@@ -190,7 +190,7 @@ class DataObject extends SequentialEventEmitter {
         Object.defineProperty(this, '$$id', {
             get: function () {
                 if (self.context) {
-                    var model = self.$$model;
+                    let model = self.$$model;
                     if (model) {
                         return self[model.primaryKey];
                     }
@@ -204,8 +204,9 @@ class DataObject extends SequentialEventEmitter {
 
         Object.defineProperty(this, '$$model', {
             get: function () {
-                if (_.isNil(this[typeProperty]))
+                if (_.isNil(this[typeProperty])) {
                     return null;
+                }
                 if (this[modelProperty]) {
                     return this[modelProperty];
                 }
@@ -241,28 +242,32 @@ class DataObject extends SequentialEventEmitter {
                 if (typeof callback !== 'function') {
                     throw new Error(STR_MISSING_CALLBACK_ARGUMENT);
                 }
-                var self = this;
-                var model = self.$$model;
+                let self = this;
+                let model = self.$$model;
                 model.inferState(self, function (err, state) {
-                    if (err) { return callback(err); }
+                    if (err) {
+                        return callback(err); 
+                    }
                     callback(null, (state === 1));
                 });
             }).selector('live',
-                /**
+            /**
                  * @this DataObject
                  * @param {Function} callback
                  */
-                function (callback) {
-                    if (typeof callback !== 'function') {
-                        throw new Error(STR_MISSING_CALLBACK_ARGUMENT);
+            function (callback) {
+                if (typeof callback !== 'function') {
+                    throw new Error(STR_MISSING_CALLBACK_ARGUMENT);
+                }
+                let self = this;
+                let model = self.$$model;
+                model.inferState(self, function (err, state) {
+                    if (err) {
+                        return callback(err); 
                     }
-                    var self = this;
-                    var model = self.$$model;
-                    model.inferState(self, function (err, state) {
-                        if (err) { return callback(err); }
-                        callback(null, (state === 2));
-                    });
+                    callback(null, (state === 2));
                 });
+            });
 
         if (typeof obj !== 'undefined' && obj !== null) {
             _.assign(this, obj);
@@ -282,7 +287,7 @@ class DataObject extends SequentialEventEmitter {
      * @returns {DataObject}
      */
     silent(value) {
-        var model = this.getModel();
+        let model = this.getModel();
         if (typeof model === 'undefined' || model === null) {
             throw new TypeError('Data model cannot be empty at this context');
         }
@@ -331,12 +336,12 @@ class DataObject extends SequentialEventEmitter {
         if (!/^:\w+$/.test(selector)) {
             throw new Error('Invalid selector. A valid selector should always start with : e.g. :new or :live.');
         }
-        var fn = this.selectors[selector.substr(1)];
+        let fn = this.selectors[selector.substr(1)];
         if (typeof fn !== 'function') {
             throw new Error('The specified selector is no associated with this object.');
         }
-        var self = this;
-        return Q.promise(function (resolve, reject) {
+        let self = this;
+        return new Promise(function (resolve, reject) {
             fn.call(self, function (err, result) {
                 if (err) {
                     return reject(err);
@@ -364,16 +369,17 @@ class DataObject extends SequentialEventEmitter {
      * @returns {DataQueryable|*}
      */
     property(name) {
-        if (typeof name !== 'string')
+        if (typeof name !== 'string') {
             return null;
-        var self = this, er;
+        }
+        let self = this, er;
         //validate relation based on the given name
-        var model = self.$$model, field = model.field(name);
+        let model = self.$$model, field = model.field(name);
         if (_.isNil(field)) {
             er = new Error('The specified field cannot be found.'); er.code = 'EDATA';
             throw er;
         }
-        var mapping = model.inferMapping(field.name);
+        let mapping = model.inferMapping(field.name);
         if (_.isNil(mapping)) {
             //return queryable field value
             return {
@@ -384,20 +390,22 @@ class DataObject extends SequentialEventEmitter {
                         if (hasOwnProperty(self, name)) {
                             //return attribute
                             return callback(null, self[name]);
-                        }
-                        else {
+                        } else {
                             //otherwise get attribute value
                             if (hasOwnProperty(self, model.primaryKey)) {
                                 model.where(model.primaryKey).equal(self[model.primaryKey]).select(name).value(function (err, value) {
-                                    if (err) { return callback(err); }
+                                    if (err) {
+                                        return callback(err); 
+                                    }
                                     // set property
                                     self[name] = value;
                                     callback(null, value);
                                 });
-                            }
-                            else {
+                            } else {
                                 model.inferState(self, function (err, state) {
-                                    if (err) { return callback(err); }
+                                    if (err) {
+                                        return callback(err); 
+                                    }
                                     if (state === 2) {
                                         model.where(model.primaryKey).equal(self.getId()).select(name).value(function (err, value) {
                                             if (err) {
@@ -407,8 +415,7 @@ class DataObject extends SequentialEventEmitter {
                                             self[name] = value;
                                             return callback(null, value);
                                         });
-                                    }
-                                    else {
+                                    } else {
                                         return callback(null);
                                     }
                                 });
@@ -418,7 +425,7 @@ class DataObject extends SequentialEventEmitter {
                     if (typeof callback === 'function') {
                         return getValueWithCallback(callback);
                     }
-                    return Q.promise(function (resolve, reject) {
+                    return new Promise(function (resolve, reject) {
                         return getValueWithCallback(function (err, value) {
                             if (err) {
                                 return reject(err);
@@ -434,25 +441,20 @@ class DataObject extends SequentialEventEmitter {
         if (mapping.associationType === 'association') {
             if (mapping.childField === field.name && mapping.childModel === model.name) {
                 return new HasOneAssociation(self, mapping);
-            }
-            else {
+            } else {
                 return new HasManyAssociation(self, mapping);
             }
-        }
-        else if (mapping.associationType === 'junction') {
+        } else if (mapping.associationType === 'junction') {
             if (mapping.parentModel === model.name) {
                 if (typeof mapping.childModel === 'undefined') {
                     return new DataObjectTag(self, mapping);
-                }
-                else {
+                } else {
                     return new DataObjectJunction(self, mapping);
                 }
-            }
-            else {
+            } else {
                 return new HasParentJunction(self, mapping);
             }
-        }
-        else {
+        } else {
             er = new Error('The association which is specified for the given field is not implemented.'); er.code = 'EDATA';
             throw er;
         }
@@ -470,16 +472,17 @@ class DataObject extends SequentialEventEmitter {
      * @returns {Promise<*>} If callback is missing then returns a promise.
      */
     attrOf(name, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback !== 'function') {
-            return Q.promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 return attrOf_.call(self, name, function (err, result) {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err); 
+                    }
                     resolve(result);
                 });
             });
-        }
-        else {
+        } else {
             return attrOf_.call(self, name, callback);
         }
     }
@@ -490,34 +493,34 @@ class DataObject extends SequentialEventEmitter {
     attr(name, callback) {
         if (hasOwnProperty(this, name)) {
             callback(null, this[name]);
-        }
-        else {
-            var self = this, model = self.$$model, field = model.field(name);
+        } else {
+            let self = this, model = self.$$model, field = model.field(name);
             if (field) {
-                var mapping = model.inferMapping(field.name);
+                let mapping = model.inferMapping(field.name);
                 if (_.isNil(mapping)) {
                     if (self[model.primaryKey]) {
                         model.where(model.primaryKey).equal(self[model.primaryKey]).select(name).first(function (err, result) {
-                            if (err) { callback(err); return; }
-                            var value = null;
+                            if (err) {
+                                callback(err); return; 
+                            }
+                            let value = null;
                             if (result) {
                                 value = result[name];
                             }
                             self[name] = value;
                             callback(null, value);
                         });
-                    }
-                    else {
+                    } else {
                         if (model.constraints.length === 0) {
                             callback(new Error(sprintf('The value of property [%s] cannot be retrieved. The target data model has no constraints defined.', name)));
-                        }
-                        else {
-                            var arr = model.constraints.filter(function (x) {
-                                var valid = true;
-                                if (x.fields.length === 0)
+                        } else {
+                            let arr = model.constraints.filter(function (x) {
+                                let valid = true;
+                                if (x.fields.length === 0) {
                                     return false;
-                                for (var i = 0; i < x.fields.length; i++) {
-                                    var field = x.fields[i];
+                                }
+                                for (let i = 0; i < x.fields.length; i++) {
+                                    let field = x.fields[i];
                                     if (hasOwnProperty(self, field) === false) {
                                         valid = false;
                                         break;
@@ -527,22 +530,23 @@ class DataObject extends SequentialEventEmitter {
                             });
                             if (arr.length === 0) {
                                 callback(new Error(sprintf('The value of property [%s] cannot be retrieved. The target data model has constraints but the required properties are missing.', name)));
-                            }
-                            else {
+                            } else {
                                 //get first constraint
-                                var constraint = arr[0], q = null;
-                                for (var i = 0; i < constraint.fields.length; i++) {
-                                    var attr = constraint.fields[i];
-                                    var value = self[attr];
-                                    if (q === null)
+                                let constraint = arr[0], q = null;
+                                for (let i = 0; i < constraint.fields.length; i++) {
+                                    let attr = constraint.fields[i];
+                                    let value = self[attr];
+                                    if (q === null) {
                                         q = model.where(attr).equal(value);
-
-                                    else
+                                    } else {
                                         q.and(attr).equal(value);
+                                    }
                                 }
                                 q.select([name]).first(function (err, result) {
-                                    if (err) { callback(err); return; }
-                                    var value = null;
+                                    if (err) {
+                                        callback(err); return; 
+                                    }
+                                    let value = null;
                                     if (result) {
                                         value = result[name];
                                     }
@@ -552,12 +556,10 @@ class DataObject extends SequentialEventEmitter {
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     callback(null, self.property(name));
                 }
-            }
-            else {
+            } else {
                 callback(new Error('The specified field cannot be found.'));
             }
 
@@ -570,7 +572,7 @@ class DataObject extends SequentialEventEmitter {
      * @ignore
      */
     execute(context, fn) {
-        var self = this;
+        let self = this;
         if (typeof fn !== 'function') {
             throw new TypeError('Wrong argument. Expected function.');
         }
@@ -583,8 +585,10 @@ class DataObject extends SequentialEventEmitter {
      * @returns {DataQueryable}
      */
     query(attr) {
-        var mapping = this.getModel().inferMapping(attr);
-        if (_.isNil(mapping)) { new DataError('EASSOCIATION', 'The given attribute does not define an association of any type.'); }
+        let mapping = this.getModel().inferMapping(attr);
+        if (_.isNil(mapping)) {
+            new DataError('EASSOCIATION', 'The given attribute does not define an association of any type.'); 
+        }
         return this.property(attr);
     }
     /**
@@ -594,16 +598,17 @@ class DataObject extends SequentialEventEmitter {
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
      */
     save(context, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback !== 'function') {
-            return Q.promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 return save_.call(self, context || self.context, function (err) {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err); 
+                    }
                     return resolve();
                 });
             });
-        }
-        else {
+        } else {
             return save_.call(self, context || self.context, callback);
         }
     }
@@ -614,17 +619,18 @@ class DataObject extends SequentialEventEmitter {
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
      */
     remove(context, callback) {
-        var self = this;
+        let self = this;
         if (typeof callback !== 'function') {
 
-            return Q.promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 return remove_.call(self, context || self.context, function (err) {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err); 
+                    }
                     return resolve();
                 });
             });
-        }
-        else {
+        } else {
             return remove_.call(self, context || self.context, callback);
         }
     }
@@ -633,15 +639,17 @@ class DataObject extends SequentialEventEmitter {
      * @returns {Promise<DataModel>}
      */
     getAdditionalModel() {
-        var self = this;
-        return Q.promise(function (resolve, reject) {
+        let self = this;
+        return new Promise(function (resolve, reject) {
             try {
-                var model = self.getModel();
-                var attr = self.getModel().attributes.find(function (x) { return x.name === "additionalType"; });
+                let model = self.getModel();
+                let attr = self.getModel().attributes.find(function (x) {
+                    return x.name === "additionalType"; 
+                });
                 if (typeof attr === 'undefined') {
                     return resolve();
                 }
-                var attrName = attr.property || attr.name;
+                let attrName = attr.property || attr.name;
                 self.attr(attrName, function (err, additionalType) {
                     try {
                         if (err) {
@@ -658,13 +666,11 @@ class DataObject extends SequentialEventEmitter {
                             return resolve(model);
                         }
                         return resolve(self.context.model(additionalType));
-                    }
-                    catch (err) {
+                    } catch (err) {
                         return reject(err);
                     }
                 });
-            }
-            catch (err) {
+            } catch (err) {
                 return reject(err);
             }
         });
@@ -675,8 +681,8 @@ class DataObject extends SequentialEventEmitter {
      * @returns {Promise<DataObject>}
      */
     getAdditionalObject() {
-        var self = this;
-        return Q.promise(function (resolve, reject) {
+        let self = this;
+        return new Promise(function (resolve, reject) {
             try {
                 self.getAdditionalModel().then(function (additionalModel) {
                     try {
@@ -688,7 +694,9 @@ class DataObject extends SequentialEventEmitter {
                             //return nothing
                             return resolve();
                         }
-                        if (self.getModel().$silent) { additionalModel.silent(); }
+                        if (self.getModel().$silent) {
+                            additionalModel.silent(); 
+                        }
                         additionalModel.where(self.getModel().getPrimaryKey()).equal(self.getId()).first().then(function (result) {
                             if (result) {
                                 return resolve(additionalModel.convert(result));
@@ -697,15 +705,13 @@ class DataObject extends SequentialEventEmitter {
                         }).catch(function (err) {
                             return reject(err);
                         });
-                    }
-                    catch (err) {
+                    } catch (err) {
                         return reject(err);
                     }
                 }).catch(function (err) {
                     return reject(err);
                 });
-            }
-            catch (err) {
+            } catch (err) {
                 return reject(err);
             }
         });

@@ -12,7 +12,7 @@ const { hasOwnProperty } = require('./has-own-property');
  */
 class DataValidator {
     constructor() {
-        var context_;
+        let context_;
         /**
          * Sets the current data context.
          * @param {DataContext|*} context
@@ -32,7 +32,7 @@ class DataValidator {
 
 function zeroPad_(number, length) {
     number = number || 0;
-    var res = number.toString();
+    let res = number.toString();
     while (res.length < length) {
         res = '0' + res;
     }
@@ -62,24 +62,24 @@ class PatternValidator extends DataValidator {
         if (_.isNil(val)) {
             return;
         }
-        var valueTo = val;
+        let valueTo = val;
         if (val instanceof Date) {
-            var year = val.getFullYear();
-            var month = zeroPad_(val.getMonth() + 1, 2);
-            var day = zeroPad_(val.getDate(), 2);
-            var hour = zeroPad_(val.getHours(), 2);
-            var minute = zeroPad_(val.getMinutes(), 2);
-            var second = zeroPad_(val.getSeconds(), 2);
-            var millisecond = zeroPad_(val.getMilliseconds(), 3);
+            let year = val.getFullYear();
+            let month = zeroPad_(val.getMonth() + 1, 2);
+            let day = zeroPad_(val.getDate(), 2);
+            let hour = zeroPad_(val.getHours(), 2);
+            let minute = zeroPad_(val.getMinutes(), 2);
+            let second = zeroPad_(val.getSeconds(), 2);
+            let millisecond = zeroPad_(val.getMilliseconds(), 3);
             //format timezone
-            var offset = (new Date()).getTimezoneOffset(),
+            let offset = (new Date()).getTimezoneOffset(),
                 timezone = (offset >= 0 ? '+' : '') + zeroPad_(Math.floor(offset / 60), 2) + ':' + zeroPad_(offset % 60, 2);
             valueTo = year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second + '.' + millisecond + timezone;
         }
-        var re = new RegExp(this.pattern, "ig");
+        let re = new RegExp(this.pattern, "ig");
         if (!re.test(valueTo)) {
 
-            var innerMessage = null, message = this.message || PatternValidator.DefaultMessage;
+            let innerMessage = null, message = this.message || PatternValidator.DefaultMessage;
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = this.getContext().translate(this.message || PatternValidator.DefaultMessage);
@@ -114,7 +114,7 @@ class MinLengthValidator extends DataValidator {
     /**
          * Validates the given value. If validation fails, the operation will return a validation result.
          * @param {*} val
-         * @returns {{code: string, minLength: number, message:string, innerMessage: string}|undefined}
+         * @returns {{code: string, minLength: any, message:string, innerMessage: string | *} | *}
          */
     validateSync(val) {
         if (_.isNil(val)) {
@@ -123,8 +123,8 @@ class MinLengthValidator extends DataValidator {
         if (hasOwnProperty(val, 'length')) {
             if (val.length < this.minLength) {
 
-                var innerMessage = null;
-                var message = sprintf.sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
+                let innerMessage = null;
+                let message = sprintf.sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
                 if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                     innerMessage = message;
                     message = sprintf.sprintf(this.getContext().translate(this.message || MinLengthValidator.DefaultMessage), this.minLength);
@@ -169,7 +169,7 @@ class MaxLengthValidator extends DataValidator {
             return;
         }
 
-        var innerMessage = null, message = sprintf.sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
+        let innerMessage = null, message = sprintf.sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
         if (this.getContext() && (typeof this.getContext().translate === 'function')) {
             innerMessage = message;
             message = sprintf.sprintf(this.getContext().translate(this.message || MaxLengthValidator.DefaultMessage), this.maxLength);
@@ -216,7 +216,7 @@ class MinValueValidator extends DataValidator {
         }
         if (val < this.minValue) {
 
-            var innerMessage = null, message = sprintf.sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
+            let innerMessage = null, message = sprintf.sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = sprintf.sprintf(this.getContext().translate(this.message || MinValueValidator.DefaultMessage), this.minValue);
@@ -259,7 +259,7 @@ class MaxValueValidator extends DataValidator {
         }
         if (val > this.maxValue) {
 
-            var innerMessage = null, message = sprintf.sprintf(this.message || MaxValueValidator.DefaultMessage, this.maxValue);
+            let innerMessage = null, message = sprintf.sprintf(this.message || MaxValueValidator.DefaultMessage, this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = sprintf.sprintf(this.getContext().translate(this.message || MaxValueValidator.DefaultMessage), this.maxValue);
@@ -308,7 +308,7 @@ class RangeValidator extends DataValidator {
         if (_.isNil(val)) {
             return;
         }
-        var minValidator, maxValidator, minValidation, maxValidation;
+        let minValidator, maxValidator, minValidation, maxValidation;
         if (!_.isNil(this.minValue)) {
             minValidator = new MinValueValidator(this.minValue);
             minValidation = minValidator.validateSync(val);
@@ -318,7 +318,7 @@ class RangeValidator extends DataValidator {
             maxValidation = maxValidator.validateSync(val);
         }
         if (minValidator && maxValidator && (minValidation || maxValidation)) {
-            var innerMessage = null, message = sprintf.sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
+            let innerMessage = null, message = sprintf.sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = sprintf.sprintf(this.getContext().translate(this.message || RangeValidator.DefaultMessage), this.minValue, this.maxValue);
@@ -329,11 +329,9 @@ class RangeValidator extends DataValidator {
                 message: message,
                 innerMessage: innerMessage
             };
-        }
-        else if (minValidation) {
+        } else if (minValidation) {
             return minValidation;
-        }
-        else if (maxValidation) {
+        } else if (maxValidation) {
             return maxValidation;
         }
     }
@@ -360,8 +358,7 @@ class DataTypeValidator extends DataValidator {
             get: function () {
                 if (typeof type === 'string') {
                     return this.getContext().getConfiguration().getStrategy(DataConfigurationStrategy).dataTypes[type];
-                }
-                else {
+                } else {
                     return type;
                 }
             }
@@ -378,9 +375,9 @@ class DataTypeValidator extends DataValidator {
         /**
          * @type {{pattern:string,patternMessage:string,minValue:*,maxValue:*,minLength:number,maxLength:number}}
          */
-        var properties = this.dataType.properties;
+        let properties = this.dataType.properties;
         if (typeof properties !== 'undefined') {
-            var validator, validationResult;
+            let validator, validationResult;
             //validate pattern if any
             if (properties.pattern) {
                 validator = new PatternValidator(properties.pattern);
@@ -405,16 +402,14 @@ class DataTypeValidator extends DataValidator {
                 if (validationResult) {
                     return validationResult;
                 }
-            }
-            else if (hasOwnProperty(properties, 'minValue')) {
+            } else if (hasOwnProperty(properties, 'minValue')) {
                 validator = new MinValueValidator(properties.minValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     return validationResult;
                 }
-            }
-            else if (hasOwnProperty(properties, 'maxValue')) {
+            } else if (hasOwnProperty(properties, 'maxValue')) {
                 validator = new MaxValueValidator(properties.maxValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -459,22 +454,22 @@ class DataValidatorListener {
          * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
          */
     beforeSave(event, callback) {
-        if (event.state === 4) { return callback(); }
+        if (event.state === 4) {
+            return callback(); 
+        }
         if (event.state === 1) {
             return event.model.validateForInsert(event.target).then(function () {
                 return callback();
             }).catch(function (err) {
                 return callback(err);
             });
-        }
-        else if (event.state === 2) {
+        } else if (event.state === 2) {
             return event.model.validateForUpdate(event.target).then(function () {
                 return callback();
             }).catch(function (err) {
                 return callback(err);
             });
-        }
-        else {
+        } else {
             return callback();
         }
     }
@@ -495,16 +490,15 @@ class RequiredValidator extends DataValidator {
          * @returns {{code: string, maxLength: number, message:string, innerMessage: string}|undefined|*}
          */
     validateSync(val) {
-        var invalid = false;
+        let invalid = false;
         if (_.isNil(val)) {
             invalid = true;
-        }
-        else if ((typeof val === 'number') && isNaN(val)) {
+        } else if ((typeof val === 'number') && isNaN(val)) {
             invalid = true;
         }
         if (invalid) {
 
-            var innerMessage = null, message = "A value is required.";
+            let innerMessage = null, message = "A value is required.";
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = this.getContext().translate("A value is required.");

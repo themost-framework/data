@@ -35,46 +35,48 @@ class FunctionContext {
          */
         this.target = target;
     }
+
+    /**
+     * @param {*} expr
+     * @param {function(err=:*)} callback
+     * @returns *
+     */
     eval(expr, callback) {
         callback = callback || function () { };
         if (typeof expr !== 'string') {
             callback(null);
             return;
         }
-        var re = /(fn:)\s?(.*?)\s?\((.*?)\)/, expr1 = expr;
+        let re = /(fn:)\s?(.*?)\s?\((.*?)\)/, expr1 = expr;
         if (expr.indexOf('fn:') !== 0) {
             expr1 = 'fn:' + expr1;
         }
-        var match = re.exec(expr1);
+        let match = re.exec(expr1);
         if (match) {
-            var expr2eval;
+            let expr2eval;
             //check parameters (match[3])
             if (match[3].length === 0) {
                 expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2(); });");
-            }
-            else {
+            } else {
                 expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2($3); });");
             }
             //evaluate expression
             try {
-                var f = eval(expr2eval);
-                var value1 = f.call(this);
+                let f = eval(expr2eval);
+                let value1 = f.call(this);
                 if (typeof value1 !== 'undefined' && value1 !== null && typeof value1.then === 'function') {
                     value1.then(function (result) {
                         return callback(null, result);
                     }).catch(function (err) {
                         callback(err);
                     });
-                }
-                else {
+                } else {
                     return callback(null, value1);
                 }
-            }
-            catch (err) {
+            } catch (err) {
                 callback(err);
             }
-        }
-        else {
+        } else {
             console.log(sprintf.sprintf('Cannot evaluate %s.', expr1));
             callback(new Error('Cannot evaluate expression.'));
         }
@@ -85,7 +87,7 @@ class FunctionContext {
      * @returns {Promise<Date>}
      */
     now() {
-        return Q.promise(function (resolve) {
+        return new Promise(function (resolve) {
             return resolve(new Date());
         });
     }
@@ -94,7 +96,7 @@ class FunctionContext {
      * @returns {Promise<Date>}
      */
     today() {
-        return Q.promise(function (resolve) {
+        return new Promise(function (resolve) {
             return resolve(new Date().getDate());
         });
     }
@@ -102,7 +104,7 @@ class FunctionContext {
      * @returns {Promise|*}
      */
     newid() {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         this.model.context.db.selectIdentity(this.model.sourceAdapter, this.model.primaryKey, function (err, result) {
             if (err) {
                 return deferred.reject(err);
@@ -115,12 +117,11 @@ class FunctionContext {
      * @returns {Promise|*}
      */
     newGuid() {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         process.nextTick(function () {
             try {
                 deferred.resolve(newGuidInternal());
-            }
-            catch (err) {
+            } catch (err) {
                 deferred.reject(err);
             }
         });
@@ -133,12 +134,11 @@ class FunctionContext {
      * @returns {Promise|*}
      */
     int(min, max) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         process.nextTick(function () {
             try {
                 return deferred.resolve(_.random(min, max));
-            }
-            catch (err) {
+            } catch (err) {
                 deferred.reject(err);
             }
             deferred.resolve((new Date()).getDate());
@@ -151,7 +151,7 @@ class FunctionContext {
      * @returns {Promise|*}
      */
     numbers(length) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         process.nextTick(function () {
             try {
                 length = length || 8;
@@ -161,14 +161,13 @@ class FunctionContext {
                 if (length > 255) {
                     return deferred.reject(new Error("Number sequence length exceeds the maximum of 255 characters."));
                 }
-                var times = Math.ceil(length / 10);
-                var res = '';
+                let times = Math.ceil(length / 10);
+                let res = '';
                 _.times(times, function () {
                     res += _.random(1000000000, 9000000000);
                 });
                 return deferred.resolve(res.substr(0, length));
-            }
-            catch (err) {
+            } catch (err) {
                 deferred.reject(err);
             }
         });
@@ -180,18 +179,17 @@ class FunctionContext {
      */
     chars(length) {
 
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         process.nextTick(function () {
             try {
                 length = length || 8;
-                var chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ";
-                var str = "";
-                for (var i = 0; i < length; i++) {
+                let chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ";
+                let str = "";
+                for (let i = 0; i < length; i++) {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }
                 deferred.resolve(str);
-            }
-            catch (err) {
+            } catch (err) {
                 return deferred.reject(err);
             }
         });
@@ -202,18 +200,17 @@ class FunctionContext {
      * @returns {Promise|*}
      */
     password(length) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         process.nextTick(function () {
             try {
                 length = length || 8;
-                var chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ",
+                let chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ",
                     str = "";
-                for (var i = 0; i < length; i++) {
+                for (let i = 0; i < length; i++) {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }
                 deferred.resolve('{clear}' + str);
-            }
-            catch (err) {
+            } catch (err) {
                 return deferred.reject(err);
             }
         });
@@ -223,40 +220,40 @@ class FunctionContext {
      * @returns {Promise|*}
      */
     user() {
-        var self = this, context = self.model.context, deferred = Q.defer();
-        var user = context.interactiveUser || context.user || {};
+        let self = this, context = self.model.context, deferred = Q.defer();
+        let user = context.interactiveUser || context.user || {};
         process.nextTick(function () {
             if (typeof user.id !== 'undefined') {
                 return deferred.resolve(user.id);
             }
-            var userModel = context.model('User'), parser, undefinedUser = null;
+            let userModel = context.model('User'), parser, undefinedUser = null;
             userModel.where('name').equal(user.name).silent().select('id').first(function (err, result) {
                 if (err) {
                     TraceUtils.log(err);
                     //try to get undefined user
                     parser = parsers['parse' + userModel.field('id').type];
-                    if (typeof parser === 'function')
+                    if (typeof parser === 'function') {
                         undefinedUser = parser(null);
+                    }
                     //set id for next calls
                     user.id = undefinedUser;
                     if (_.isNil(context.user)) {
                         context.user = user;
                     }
                     return deferred.resolve(undefinedUser);
-                }
-                else if (_.isNil(result)) {
+                } else if (_.isNil(result)) {
                     //try to get undefined user
                     parser = parsers['parse' + userModel.field('id').type];
-                    if (typeof parser === 'function')
+                    if (typeof parser === 'function') {
                         undefinedUser = parser(null);
+                    }
                     //set id for next calls
                     user.id = undefinedUser;
                     if (_.isNil(context.user)) {
                         context.user = user;
                     }
                     return deferred.resolve(undefinedUser);
-                }
-                else {
+                } else {
                     //set id for next calls
                     user.id = result.id;
                     return deferred.resolve(result.id);
@@ -274,12 +271,12 @@ class FunctionContext {
 }
 
 
-var UUID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+let UUID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
 
 function newGuidInternal() {
-    var chars = UUID_CHARS, uuid = [], i;
+    let chars = UUID_CHARS, uuid = [], i;
     // rfc4122, version 4 form
-    var r;
+    let r;
     // rfc4122 requires these characters
     uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
     uuid[14] = '4';
@@ -289,7 +286,7 @@ function newGuidInternal() {
     for (i = 0; i < 36; i++) {
         if (!uuid[i]) {
             r = 0 | Math.random()*16;
-            uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+            uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
         }
     }
     return uuid.join('');

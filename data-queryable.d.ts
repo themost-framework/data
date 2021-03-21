@@ -2,7 +2,7 @@ import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
 
 export declare class DataQueryable implements DataContextEmitter {
-    constructor(model: DataModel);
+    constructor(model?: DataModel);
     readonly model: DataModel;
     clone(): DataQueryable;
     where(attr: string): DataQueryable;
@@ -44,7 +44,7 @@ export declare class DataQueryable implements DataContextEmitter {
     min(): Promise<any>;
     max(): Promise<any>;
     average(): Promise<any>;
-    migrate(callback:(err?: Error) => void);
+    migrate(callback:(err?: Error) => void): void;
     silent(value?: boolean): DataQueryable;
     flatten(value?: boolean): DataQueryable;
     cache(value?: boolean): DataQueryable;
@@ -86,7 +86,7 @@ export declare class DataQueryable implements DataContextEmitter {
 
 export declare class DataAttributeResolver {
     orderByNestedAttribute(attr: string): any;
-    selecteNestedAttribute(attr: string): any;
+    selectNestedAttribute(attr: string): any;
     selectAggregatedAttribute(aggregation: string, attribute: string, alias: string): any;
     resolveNestedAttribute(attr: string): any;
     resolveNestedAttributeJoin(memberExpr: string): any;

@@ -5,6 +5,7 @@ import {DataModel} from "./data-model";
 import {DataObject} from "./data-object";
 
 export declare class DataObjectTag extends DataQueryable {
+    constructor(obj: DataObject | any, association: any);
     parent: DataObject;
     mapping: DataAssociationMapping;
     getBaseModel(): DataModel;
@@ -13,5 +14,5 @@ export declare class DataObjectTag extends DataQueryable {
     insert(obj: any): Promise<any>;
     remove(obj: any): Promise<any>;
     removeAll(): Promise<any>;
-    migrate(callback: (err?: Error) => void);
+    migrate(callback: (err?: Error) => void): void;
 }

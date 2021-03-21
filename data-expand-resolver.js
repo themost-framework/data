@@ -6,8 +6,8 @@
  * @private
  */
 function testSplitExpandExpr_(s) {
-    var ix = 0;
-    var paren = -1, charAt, ix1 = -1,
+    let ix = 0;
+    let paren = -1, charAt, ix1 = -1,
         isLiteral = false,
         lastSplitIndex = 0,
         matches = [],
@@ -20,27 +20,27 @@ function testSplitExpandExpr_(s) {
                 match[0] = s.substr(lastSplitIndex, ix-lastSplitIndex);
                 paren = 0;
             }
-            if (ix1==-1) { ix1 = ix; }
+            if (ix1===-1) {
+                ix1 = ix; 
+            }
             paren += 1;
-        }
-        else if ((charAt===')') && !isLiteral) {
-            if (paren>0) { paren -= 1; }
-        }
-        else if (charAt==='\'') {
+        } else if ((charAt===')') && !isLiteral) {
+            if (paren>0) {
+                paren -= 1; 
+            }
+        } else if (charAt==='\'') {
             isLiteral = !isLiteral;
-        }
-        else if ((charAt===',') && (paren ==-1)) {
+        } else if ((charAt===',') && (paren ===-1)) {
             if (match==null) {
                 matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex)]);
             }
             lastSplitIndex = ix+1;
         }
 
-        if ((ix === s.length - 1) && (paren == -1)) {
+        if ((ix === s.length - 1) && (paren === -1)) {
             matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex+1)]);
             match = null;
-        }
-        else if (paren == 0) {
+        } else if (paren === 0) {
             match = match || [ ];
             match[1] = s.substr(ix1+1, ix-ix1-1);
             matches.push(match);
@@ -64,20 +64,19 @@ class DataExpandResolver {
         if (s == null) {
             return [];
         }
-        var result = [], reOptions = /(;|^)(\$expand|\$filter|\$levels|\$orderby|\$groupby|\$select|\$top|\$skip|\$search|\$count)=(.*?)(;\$|$)/ig;
-        var matches = testSplitExpandExpr_(s);
-        for (var i = 0; i < matches.length; i++) {
-            var match = matches[i];
+        let result = [], reOptions = /(;|^)(\$expand|\$filter|\$levels|\$orderby|\$groupby|\$select|\$top|\$skip|\$search|\$count)=(.*?)(;\$|$)/ig;
+        let matches = testSplitExpandExpr_(s);
+        for (let i = 0; i < matches.length; i++) {
+            let match = matches[i];
             if (typeof match[1] === 'undefined') {
                 result.push({ name: match[0].replace(/^\s+|\s+$/, "") });
-            }
-            else {
-                var expand = {};
+            } else {
+                let expand = {};
                 expand["name"] = match[0].replace(/^\s+|\s+$/, "");
                 reOptions.lastIndex = 0;
-                var params = {};
-                var expandOptions = match[1];
-                var matchOption = reOptions.exec(expandOptions);
+                let params = {};
+                let expandOptions = match[1];
+                let matchOption = reOptions.exec(expandOptions);
                 while (matchOption) {
                     if (matchOption[3]) {
                         params[matchOption[2]] = matchOption[3];

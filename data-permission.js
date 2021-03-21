@@ -121,54 +121,54 @@ class DataPermissionEventListener {
      * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
      */
     validate(event, callback) {
-        var model = event.model;
+        let model = event.model;
         /**
          * @type {DataContext|*}
          */
-        var context = event.model.context;
-        var requestMask = 1;
-        var workspace = 1;
+        let context = event.model.context;
+        let requestMask = 1;
+        let workspace = 1;
         //ensure silent operation
         if (event.model && event.model.$silent) {
             return callback();
         }
-        if (event.state === 0)
+        if (event.state === 0) {
             requestMask = PermissionMask.Read;
-        else if (event.state === 1)
+        } else if (event.state === 1) {
             requestMask = PermissionMask.Create;
-        else if (event.state === 2)
+        } else if (event.state === 2) {
             requestMask = PermissionMask.Update;
-        else if (event.state === 4)
+        } else if (event.state === 4) {
             requestMask = PermissionMask.Delete;
-        else if (event.state === 16)
+        } else if (event.state === 16) {
             requestMask = PermissionMask.Execute;
-        else {
+        } else {
             if (event.mask) {
                 // use mask defined by event arguments
                 requestMask = event.mask;
-            }
-            else {
+            } else {
                 // throw error
                 return callback(new Error('Target object has an invalid state.'));
             }
         }
 
         // use privilege defined by event arguments
-        var privilege = model.name;
-        var parentPrivilege = null;
+        let privilege = model.name;
+        let parentPrivilege = null;
         if (event.privilege) {
             privilege = event.privilege;
         }
 
         //validate throwError
-        if (typeof event.throwError === 'undefined')
+        if (typeof event.throwError === 'undefined') {
             event.throwError = true;
+        }
         context.user = context.user || { name: 'anonymous', authenticationType: 'None' };
         //change: 2-May 2015
         //description: Use unattended execution account as an escape permission check account
-        var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
+        let authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
         if (authSettings) {
-            var unattendedExecutionAccount = authSettings.unattendedExecutionAccount;
+            let unattendedExecutionAccount = authSettings.unattendedExecutionAccount;
             if ((typeof unattendedExecutionAccount !== 'undefined'
                 || unattendedExecutionAccount != null)
                 && (unattendedExecutionAccount === context.user.name)) {
@@ -178,7 +178,7 @@ class DataPermissionEventListener {
             }
         }
         //get user key
-        var users = context.model('User'), permissions = context.model('Permission');
+        let users = context.model('User'), permissions = context.model('Permission');
         if (_.isNil(users)) {
             //do nothing
             return callback();
@@ -189,34 +189,37 @@ class DataPermissionEventListener {
         }
 
         effectiveAccounts(context, function (err, accounts) {
-            if (err) { callback(err); return; }
+            if (err) {
+                callback(err); return; 
+            }
 
-            var permEnabled = model.privileges.filter(function (x) { return !x.disabled; }, model.privileges).length > 0;
+            let permEnabled = model.privileges.filter(function (x) {
+                return !x.disabled; 
+            }, model.privileges).length > 0;
             //get all enabled privileges
-            var privileges = model.privileges.filter(function (x) { return !x.disabled && ((x.mask & requestMask) === requestMask); });
+            let privileges = model.privileges.filter(function (x) {
+                return !x.disabled && ((x.mask & requestMask) === requestMask); 
+            });
             if (privileges.length === 0) {
                 if (event.throwError) {
                     //if the target model has privileges but it has no privileges with the requested mask
                     if (permEnabled) {
                         //throw error
-                        var error = new Error('Access denied.');
+                        let error = new Error('Access denied.');
                         error.statusCode = 401;
                         return callback(error);
-                    }
-                    else {
+                    } else {
                         //do nothing
                         return callback();
                     }
-                }
-                else {
+                } else {
                     //set result to false (or true if model has no privileges at all)
                     event.result = !permEnabled;
                     //and exit
                     return callback();
                 }
-            }
-            else {
-                var cancel = false;
+            } else {
+                let cancel = false;
                 event.result = false;
                 //enumerate privileges
                 async.eachSeries(privileges, function (item, cb) {
@@ -232,9 +235,10 @@ class DataPermissionEventListener {
                                 cancel = true;
                                 event.result = true;
                                 return cb();
-                            }
-                            else if (hasOwnProperty(item, "account")) {
-                                if (accounts.findIndex(function (x) { return x.name === item.account; }) >= 0) {
+                            } else if (hasOwnProperty(item, "account")) {
+                                if (accounts.findIndex(function (x) {
+                                    return x.name === item.account; 
+                                }) >= 0) {
                                     cancel = true;
                                     event.result = true;
                                     return cb();
@@ -246,12 +250,13 @@ class DataPermissionEventListener {
                             .and('parentPrivilege').equal(null)
                             .and('target').equal('0')
                             .and('workspace').equal(workspace)
-                            .and('account').in(accounts.map(function (x) { return x.id; }))
+                            .and('account').in(accounts.map(function (x) {
+                                return x.id; 
+                            }))
                             .and('mask').bit(requestMask, requestMask).silent().count(function (err, count) {
                                 if (err) {
                                     return cb(err);
-                                }
-                                else {
+                                } else {
                                     if (count >= 1) {
                                         cancel = true;
                                         event.result = true;
@@ -259,9 +264,8 @@ class DataPermissionEventListener {
                                     return cb();
                                 }
                             });
-                    }
-                    else if (item.type === 'parent') {
-                        var mapping = model.inferMapping(item.property);
+                    } else if (item.type === 'parent') {
+                        let mapping = model.inferMapping(item.property);
                         if (!mapping) {
                             return cb();
                         }
@@ -279,12 +283,13 @@ class DataPermissionEventListener {
                                 .and('parentPrivilege').equal(parentPrivilege)
                                 .and('target').equal(event.target[mapping.childField])
                                 .and('workspace').equal(workspace)
-                                .and('account').in(accounts.map(function (x) { return x.id; }))
+                                .and('account').in(accounts.map(function (x) {
+                                    return x.id; 
+                                }))
                                 .and('mask').bit(requestMask, requestMask).silent().count(function (err, count) {
                                     if (err) {
                                         return cb(err);
-                                    }
-                                    else {
+                                    } else {
                                         if (count >= 1) {
                                             cancel = true;
                                             event.result = true;
@@ -292,24 +297,23 @@ class DataPermissionEventListener {
                                         return cb();
                                     }
                                 });
-                        }
-                        else {
+                        } else {
                             //get original value
                             model.where(model.primaryKey).equal(event.target[model.primaryKey]).select(mapping.childField).first(function (err, result) {
                                 if (err) {
                                     cb(err);
-                                }
-                                else if (result) {
+                                } else if (result) {
                                     permissions.where('privilege').equal(privilege)
                                         .and('parentPrivilege').equal(parentPrivilege)
                                         .and('target').equal(result[mapping.childField])
                                         .and('workspace').equal(workspace)
-                                        .and('account').in(accounts.map(function (x) { return x.id; }))
+                                        .and('account').in(accounts.map(function (x) {
+                                            return x.id; 
+                                        }))
                                         .and('mask').bit(requestMask, requestMask).silent().count(function (err, count) {
                                             if (err) {
                                                 return cb(err);
-                                            }
-                                            else {
+                                            } else {
                                                 if (count >= 1) {
                                                     cancel = true;
                                                     event.result = true;
@@ -317,14 +321,12 @@ class DataPermissionEventListener {
                                                 return cb();
                                             }
                                         });
-                                }
-                                else {
+                                } else {
                                     return cb();
                                 }
                             });
                         }
-                    }
-                    else if (item.type === 'item') {
+                    } else if (item.type === 'item') {
                         //if target object is a new object
                         if (requestMask === PermissionMask.Create) {
                             //do nothing
@@ -334,12 +336,13 @@ class DataPermissionEventListener {
                             .and('parentPrivilege').equal(null)
                             .and('target').equal(event.target[model.primaryKey])
                             .and('workspace').equal(workspace)
-                            .and('account').in(accounts.map(function (x) { return x.id; }))
+                            .and('account').in(accounts.map(function (x) {
+                                return x.id; 
+                            }))
                             .and('mask').bit(requestMask, requestMask).silent().count(function (err, count) {
                                 if (err) {
                                     return cb(err);
-                                }
-                                else {
+                                } else {
                                     if (count >= 1) {
                                         cancel = true;
                                         event.result = true;
@@ -347,37 +350,36 @@ class DataPermissionEventListener {
                                     return cb();
                                 }
                             });
-                    }
-                    else if (item.type === 'self') {
+                    } else if (item.type === 'self') {
                         // check if the specified privilege has account attribute
                         if (typeof item.account !== 'undefined' && item.account !== null && item.account !== '*') {
                             // if user does not have this account return
-                            if (accounts.findIndex(function (x) { return x.name === item.account; }) < 0) {
+                            if (accounts.findIndex(function (x) {
+                                return x.name === item.account; 
+                            }) < 0) {
                                 return cb();
                             }
                         }
                         if (requestMask === PermissionMask.Create) {
-                            var query = QueryUtils.query(model.viewAdapter);
-                            var fields = [], field;
+                            let query = QueryUtils.query(model.viewAdapter);
+                            let fields = [], field;
                             //cast target
-                            var name, obj = event.target;
+                            let name, obj = event.target;
                             model.attributes.forEach(function (x) {
                                 name = hasOwnProperty(obj, x.property) ? x.property : x.name;
                                 if (hasOwnProperty(obj, name)) {
-                                    var mapping = model.inferMapping(name);
+                                    let mapping = model.inferMapping(name);
                                     if (_.isNil(mapping)) {
                                         field = {};
                                         field[x.name] = { $value: obj[name] };
                                         fields.push(field);
-                                    }
-                                    else if ((mapping.associationType === 'association') && (mapping.childModel === model.name)) {
+                                    } else if ((mapping.associationType === 'association') && (mapping.childModel === model.name)) {
                                         if (typeof obj[name] === 'object' && obj[name] !== null) {
                                             //set associated key value (event.g. primary key value)
                                             field = {};
                                             field[x.name] = { $value: obj[name][mapping.parentField] };
                                             fields.push(field);
-                                        }
-                                        else {
+                                        } else {
                                             //set raw value
                                             field = {};
                                             field[x.name] = { $value: obj[name] };
@@ -393,16 +395,14 @@ class DataPermissionEventListener {
                             model.filter(item.filter, function (err, q) {
                                 if (err) {
                                     cb(err);
-                                }
-                                else {
+                                } else {
                                     //set where from DataQueryable.query
                                     query.$where = q.query.$prepared;
                                     query.$expand = q.query.$expand;
                                     model.context.db.execute(query, null, function (err, result) {
                                         if (err) {
                                             return cb(err);
-                                        }
-                                        else {
+                                        } else {
                                             if (result.length === 1) {
                                                 cancel = true;
                                                 event.result = true;
@@ -412,17 +412,17 @@ class DataPermissionEventListener {
                                     });
                                 }
                             });
-                        }
-                        else {
+                        } else {
                             //get privilege filter
                             model.filter(item.filter, function (err, q) {
                                 if (err) {
                                     return cb(err);
-                                }
-                                else {
+                                } else {
                                     //prepare query and append primary key expression
                                     q.where(model.primaryKey).equal(event.target[model.primaryKey]).silent().count(function (err, count) {
-                                        if (err) { cb(err); return; }
+                                        if (err) {
+                                            cb(err); return; 
+                                        }
                                         if (count >= 1) {
                                             cancel = true;
                                             event.result = true;
@@ -432,8 +432,7 @@ class DataPermissionEventListener {
                                 }
                             });
                         }
-                    }
-                    else {
+                    } else {
                         //do nothing (unknown permission)
                         return cb();
                     }
@@ -441,14 +440,12 @@ class DataPermissionEventListener {
                 }, function (err) {
                     if (err) {
                         return callback(err);
-                    }
-                    else {
+                    } else {
                         if (event.throwError && !event.result) {
-                            var error = new AccessDeniedError();
+                            let error = new AccessDeniedError();
                             error.model = model.name;
                             callback(error);
-                        }
-                        else {
+                        } else {
                             return callback();
                         }
                     }
@@ -471,17 +468,17 @@ class DataPermissionEventListener {
             callback();
             return;
         }
-        var model = event.model;
+        let model = event.model;
         /**
          * @type {DataContext|*}
          */
-        var context = event.model.context;
-        var requestMask = 1;
-        var workspace = 1;
+        let context = event.model.context;
+        let requestMask = 1;
+        let workspace = 1;
         // eslint-disable-next-line no-unused-vars
-        var privilege = model.name;
+        let privilege = model.name;
         // eslint-disable-next-line no-unused-vars
-        var parentPrivilege = null;
+        let parentPrivilege = null;
         //get privilege from event arguments if it's defined (event.g. the operation requests execute permission User.ChangePassword where
         // privilege=ChangePassword and parentPrivilege=User)
         if (event.privilege) {
@@ -493,38 +490,40 @@ class DataPermissionEventListener {
             parentPrivilege = model.name;
         }
         //do not check permissions if the target model has no privileges defined
-        if (model.privileges.filter(function (x) { return !x.disabled; }, model.privileges).length === 0) {
+        if (model.privileges.filter(function (x) {
+            return !x.disabled; 
+        }, model.privileges).length === 0) {
             callback(null);
             return;
         }
         //infer permission mask
         if (typeof event.mask !== 'undefined') {
             requestMask = event.mask;
-        }
-        else {
+        } else {
             if (event.query) {
                 //infer mask from query type
-                if (event.query.$select)
+                if (event.query.$select) {
                     //read permissions
                     requestMask = 1;
-                else if (event.query.$insert)
+                } else if (event.query.$insert) {
                     //create permissions
                     requestMask = 2;
-                else if (event.query.$update)
+                } else if (event.query.$update) {
                     //update permissions
                     requestMask = 4;
-                else if (event.query.$delete)
+                } else if (event.query.$delete) {
                     //delete permissions
                     requestMask = 8;
+                }
             }
         }
         //ensure context user
         context.user = context.user || { name: 'anonymous', authenticationType: 'None' };
         //change: 2-May 2015
         //description: Use unattended execution account as an escape permission check account
-        var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
+        let authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
         if (authSettings) {
-            var unattendedExecutionAccount = authSettings.unattendedExecutionAccount;
+            let unattendedExecutionAccount = authSettings.unattendedExecutionAccount;
             if ((typeof unattendedExecutionAccount !== 'undefined'
                 || unattendedExecutionAccount !== null)
                 && (unattendedExecutionAccount === context.user.name)) {
@@ -535,7 +534,7 @@ class DataPermissionEventListener {
         if (event.query) {
 
             //get user key
-            var users = context.model('User'), permissions = context.model('Permission');
+            let users = context.model('User'), permissions = context.model('Permission');
             if (_.isNil(users)) {
                 //do nothing
                 callback(null);
@@ -547,7 +546,7 @@ class DataPermissionEventListener {
                 return;
             }
             //get model privileges
-            var modelPrivileges = model.privileges || [];
+            let modelPrivileges = model.privileges || [];
             //if model has no privileges defined
             if (modelPrivileges.length === 0) {
                 //do nothing
@@ -557,7 +556,7 @@ class DataPermissionEventListener {
             }
             //tuning up operation
             //validate request mask permissions against all users privilege { mask:<requestMask>,disabled:false,account:"*" }
-            var allUsersPrivilege = modelPrivileges.find(function (x) {
+            let allUsersPrivilege = modelPrivileges.find(function (x) {
                 return (((x.mask & requestMask) === requestMask) && !x.disabled && (x.account === '*'));
             });
             if (typeof allUsersPrivilege !== 'undefined') {
@@ -568,15 +567,17 @@ class DataPermissionEventListener {
             }
 
             effectiveAccounts(context, function (err, accounts) {
-                if (err) { callback(err); return; }
+                if (err) {
+                    callback(err); return; 
+                }
                 //get all enabled privileges
-                var privileges = modelPrivileges.filter(function (x) {
+                let privileges = modelPrivileges.filter(function (x) {
                     return !x.disabled && ((x.mask & requestMask) === requestMask);
                 });
 
                 // set query lastIndex
                 event.query.$lastIndex = parseInt(event.query.$lastIndex) || 0;
-                var cancel = false, assigned = false, entity = new QueryEntity(model.viewAdapter), expand = null,
+                let cancel = false, assigned = false, entity = new QueryEntity(model.viewAdapter), expand = null,
                     perms1 = new QueryEntity(permissions.viewAdapter).as(permissions.viewAdapter + event.query.$lastIndex.toString()), expr = null;
                 async.eachSeries(privileges, function (item, cb) {
                     if (cancel) {
@@ -589,9 +590,10 @@ class DataPermissionEventListener {
                                 //get permission and exit
                                 assigned = true;
                                 return cb(new EachSeriesCancelled());
-                            }
-                            else if (hasOwnProperty(item, "account")) {
-                                if (accounts.findIndex(function (x) { return x.name === item.account; }) >= 0) {
+                            } else if (hasOwnProperty(item, "account")) {
+                                if (accounts.findIndex(function (x) {
+                                    return x.name === item.account; 
+                                }) >= 0) {
                                     assigned = true;
                                     return cb(new EachSeriesCancelled());
                                 }
@@ -601,12 +603,13 @@ class DataPermissionEventListener {
                                 and('parentPrivilege').equal(null).
                                 and('target').equal('0').
                                 and('workspace').equal(1).
-                                and('account').in(accounts.map(function (x) { return x.id; })).
+                                and('account').in(accounts.map(function (x) {
+                                    return x.id; 
+                                })).
                                 and('mask').bit(requestMask, requestMask).silent().count(function (err, count) {
                                     if (err) {
                                         cb(err);
-                                    }
-                                    else {
+                                    } else {
                                         if (count >= 1) {
                                             assigned = true;
                                             return cb(new EachSeriesCancelled());
@@ -614,41 +617,46 @@ class DataPermissionEventListener {
                                         cb();
                                     }
                                 });
-                        }
-                        else if (item.type === 'parent') {
+                        } else if (item.type === 'parent') {
                             //get field mapping
-                            var mapping = model.inferMapping(item.property);
+                            let mapping = model.inferMapping(item.property);
                             if (!mapping) {
                                 return cb();
                             }
-                            if (_.isNil(expr))
+                            if (_.isNil(expr)) {
                                 expr = QueryUtils.query();
+                            }
                             expr.where(entity.select(mapping.childField)).equal(perms1.select('target')).
                                 and(perms1.select('privilege')).equal(mapping.childModel).
                                 and(perms1.select('parentPrivilege')).equal(mapping.parentModel).
                                 and(perms1.select('workspace')).equal(workspace).
                                 and(perms1.select('mask')).bit(requestMask, requestMask).
-                                and(perms1.select('account')).in(accounts.map(function (x) { return x.id; })).prepare(true);
+                                and(perms1.select('account')).in(accounts.map(function (x) {
+                                    return x.id; 
+                                })).prepare(true);
                             assigned = true;
                             cb();
-                        }
-                        else if (item.type === 'item') {
-                            if (_.isNil(expr))
+                        } else if (item.type === 'item') {
+                            if (_.isNil(expr)) {
                                 expr = QueryUtils.query();
+                            }
                             expr.where(entity.select(model.primaryKey)).equal(perms1.select('target')).
                                 and(perms1.select('privilege')).equal(model.name).
                                 and(perms1.select('parentPrivilege')).equal(null).
                                 and(perms1.select('workspace')).equal(workspace).
                                 and(perms1.select('mask')).bit(requestMask, requestMask).
-                                and(perms1.select('account')).in(accounts.map(function (x) { return x.id; })).prepare(true);
+                                and(perms1.select('account')).in(accounts.map(function (x) {
+                                    return x.id; 
+                                })).prepare(true);
                             assigned = true;
                             cb();
-                        }
-                        else if (item.type === 'self') {
+                        } else if (item.type === 'self') {
                             // check if the specified privilege has account attribute
                             if (typeof item.account !== 'undefined' && item.account !== null && item.account !== '*') {
                                 // if user does not have this account return
-                                if (accounts.findIndex(function (x) { return x.name === item.account; }) < 0) {
+                                if (accounts.findIndex(function (x) {
+                                    return x.name === item.account; 
+                                }) < 0) {
                                     return cb();
                                 }
                             }
@@ -656,11 +664,11 @@ class DataPermissionEventListener {
                                 model.filter(item.filter, function (err, q) {
                                     if (err) {
                                         cb(err);
-                                    }
-                                    else {
+                                    } else {
                                         if (q.query.$prepared) {
-                                            if (_.isNil(expr))
+                                            if (_.isNil(expr)) {
                                                 expr = QueryUtils.query();
+                                            }
                                             expr.$where = q.query.$prepared;
                                             if (q.query.$expand) {
                                                 // combine expands
@@ -670,22 +678,18 @@ class DataPermissionEventListener {
                                             expr.prepare(true);
                                             assigned = true;
                                             cb();
-                                        }
-
-                                        else
+                                        } else {
                                             cb();
+                                        }
                                     }
                                 });
-                            }
-                            else {
+                            } else {
                                 cb();
                             }
-                        }
-                        else {
+                        } else {
                             cb();
                         }
-                    }
-                    catch (e) {
+                    } catch (e) {
                         cb(e);
                     }
                 }, function (err) {
@@ -701,13 +705,14 @@ class DataPermissionEventListener {
                         //add no record parameter
                         event.query.where(event.model.fieldOf(event.model.primaryKey)).equal(null).prepare();
                         return callback();
-                    }
-                    else if (expr) {
+                    } else if (expr) {
                         return context.model('Permission').migrate(function (err) {
-                            if (err) { return callback(err); }
-                            var q = QueryUtils.query(model.viewAdapter).select([model.primaryKey]).distinct();
+                            if (err) {
+                                return callback(err); 
+                            }
+                            let q = QueryUtils.query(model.viewAdapter).select([model.primaryKey]).distinct();
                             if (expand) {
-                                var arrExpand = [].concat(expand);
+                                let arrExpand = [].concat(expand);
                                 _.forEach(arrExpand, function (x) {
                                     q.join(x.$entity).with(x.$with);
                                 });
@@ -715,7 +720,7 @@ class DataPermissionEventListener {
                             q.join(perms1).with(expr);
                             // set static alias
                             event.query.$lastIndex += 1;
-                            var pqAlias = context.model('Permission').viewAdapter + event.query.$lastIndex.toString();
+                            let pqAlias = context.model('Permission').viewAdapter + event.query.$lastIndex.toString();
                             event.query.join(q.as(pqAlias)).with(QueryUtils.where(entity.select(model.primaryKey)).equal(new QueryEntity(pqAlias).select(model.primaryKey)));
                             return callback();
                         });
@@ -725,8 +730,7 @@ class DataPermissionEventListener {
                 });
             });
 
-        }
-        else {
+        } else {
             callback();
         }
     }
@@ -735,7 +739,7 @@ class DataPermissionEventListener {
  * @private
  * @type {string}
  */
-var ANONYMOUS_USER_CACHE_PATH = '/User/anonymous';
+let ANONYMOUS_USER_CACHE_PATH = '/User/anonymous';
 /**
  * @param {DataContext} context
  * @param {function(Error=,*=)} callback
@@ -745,8 +749,7 @@ function anonymousUser(context, callback) {
     queryUser(context, 'anonymous', function(err, result) {
         if (err) {
             callback(err);
-        }
-        else {
+        } else {
             callback(null, result || { id:null, name:'anonymous', groups:[], enabled:false});
         }
     });
@@ -763,7 +766,7 @@ function queryUser(context, username, callback) {
         if (_.isNil(context)) {
             return callback();
         }
-        var users = context.model('User');
+        let users = context.model('User');
         if (_.isNil(users)) {
             return callback();
         }
@@ -772,8 +775,7 @@ function queryUser(context, username, callback) {
         }).catch(function(err) {
             return callback(err);
         });
-    }
-    catch (err) {
+    } catch (err) {
         callback(err);
     }
 }
@@ -791,7 +793,7 @@ function effectiveAccounts(context, callback) {
     /**
      * @type {DataCacheStrategy}
      */
-    var cache = context.getConfiguration().getStrategy(DataCacheStrategy);
+    let cache = context.getConfiguration().getStrategy(DataCacheStrategy);
     /**
      * Gets or sets an object that represents the user of the current data context.
      * @property {*|{name: string, authenticationType: string}}
@@ -806,22 +808,24 @@ function effectiveAccounts(context, callback) {
         cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function() {
             return Q.nfbind(anonymousUser)(context);
         }).then(function(result) {
-            var arr = [];
+            let arr = [];
             if (result) {
                 arr.push({ "id": result.id, "name": result.name });
                 result.groups = result.groups || [];
-                result.groups.forEach(function(x) { arr.push({ "id": x.id, "name": x.name }); });
+                result.groups.forEach(function(x) {
+                    arr.push({ "id": x.id, "name": x.name }); 
+                });
             }
-            if (arr.length===0)
+            if (arr.length===0) {
                 arr.push({ id: null });
+            }
             return callback(null, arr);
         }).catch(function (err) {
             return callback(err);
         });
-    }
-    else {
+    } else {
         //try to get data from cache
-        var USER_CACHE_PATH = '/User/' + context.user.name;
+        let USER_CACHE_PATH = '/User/' + context.user.name;
 
         cache.getOrDefault(USER_CACHE_PATH, function() {
             return Q.nfbind(queryUser)(context, context.user.name);
@@ -829,19 +833,26 @@ function effectiveAccounts(context, callback) {
             return cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function() {
                 return Q.nfbind(anonymousUser)(context);
             }).then(function(anonymous) {
-                var arr = [ ];
+                let arr = [ ];
                 if (user) {
                     arr.push({ "id": user.id, "name": user.name });
-                    if (_.isArray(user.groups))
-                        user.groups.forEach(function(x) { arr.push({ "id": x.id, "name": x.name }); });
+                    if (_.isArray(user.groups)) {
+                        user.groups.forEach(function(x) {
+                            arr.push({ "id": x.id, "name": x.name }); 
+                        });
+                    }
                 }
                 if (anonymous) {
                     arr.push({ "id": anonymous.id, "name": "anonymous" });
-                    if (_.isArray(anonymous.groups))
-                        anonymous.groups.forEach(function(x) { arr.push({ "id": x.id, "name": x.name }); });
+                    if (_.isArray(anonymous.groups)) {
+                        anonymous.groups.forEach(function(x) {
+                            arr.push({ "id": x.id, "name": x.name }); 
+                        });
+                    }
                 }
-                if (arr.length===0)
+                if (arr.length===0) {
                     arr.push({ id: null });
+                }
                 return callback(null, arr);
             });
         }).catch(function (err) {

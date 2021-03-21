@@ -14,6 +14,7 @@ class DataObjectAssociationListener {
     constructor() {
         //
     }
+
     /**
      *
      * @param {DataEventArgs} event
@@ -23,16 +24,16 @@ class DataObjectAssociationListener {
         try {
             if (event.target == null) {
                 return callback();
-            }
-            else {
-                var keys = Object.keys(event.target);
-                var mappings = [];
+            } else {
+                let keys = Object.keys(event.target);
+                let mappings = [];
                 keys.forEach(function (x) {
                     if (hasOwnProperty(event.target, x) && typeof event.target[x] === 'object' && event.target[x] !== null) {
                         //try to find field mapping, if any
-                        var mapping = event.model.inferMapping(x);
-                        if (mapping && mapping.associationType === 'association' && mapping.childModel === event.model.name)
+                        let mapping = event.model.inferMapping(x);
+                        if (mapping && mapping.associationType === 'association' && mapping.childModel === event.model.name) {
                             mappings.push(mapping);
+                        }
                     }
                 });
                 async.eachSeries(mappings,
@@ -45,7 +46,8 @@ class DataObjectAssociationListener {
                             /**
                              * @type {DataField|*}
                              */
-                            var field = event.model.field(mapping.childField), childField = field.property || field.name;
+                            let field = event.model.field(mapping.childField),
+                                childField = field.property || field.name;
                             //foreign key association
                             if (typeof event.target[childField] !== 'object') {
                                 return cb();
@@ -61,27 +63,22 @@ class DataObjectAssociationListener {
                                 return cb();
                             }
                             //get associated mode
-                            var associatedModel = event.model.context.model(mapping.parentModel);
+                            let associatedModel = event.model.context.model(mapping.parentModel);
                             associatedModel.find(event.target[childField]).select(mapping.parentField).silent().flatten().take(1).list(function (err, result) {
                                 if (err) {
                                     cb(err);
-                                }
-                                else if (result == null) {
+                                } else if (result == null) {
                                     return cb(new DataError('EDATA', 'An associated object cannot be found.', null, associatedModel.name));
-                                }
-                                else if (result.total === 0) {
+                                } else if (result.total === 0) {
                                     return cb(new DataError('EDATA', 'An associated object cannot be found.', null, associatedModel.name));
-                                }
-                                else if (result.total > 1) {
+                                } else if (result.total > 1) {
                                     return cb(new DataError('EDATA', 'An associated object is defined more than once and cannot be bound.', null, associatedModel.name));
-                                }
-                                else {
+                                } else {
                                     event.target[childField][mapping.parentField] = result.value[0][mapping.parentField];
                                     cb();
                                 }
                             });
-                        }
-                        else {
+                        } else {
                             cb();
                         }
                     }, function (err) {
@@ -91,11 +88,11 @@ class DataObjectAssociationListener {
                         callback(err);
                     });
             }
-        }
-        catch (err) {
+        } catch (err) {
             callback(err);
         }
     }
+
     /**
      *
      * @param {DataEventArgs} event
@@ -105,21 +102,20 @@ class DataObjectAssociationListener {
         try {
             if (event.target == null) {
                 return callback();
-            }
-            else {
-                var keys = Object.keys(event.target);
-                var mappings = [];
+            } else {
+                let keys = Object.keys(event.target);
+                let mappings = [];
                 keys.forEach(function (x) {
                     if (hasOwnProperty(event.target, x)) {
                         /**
                          * @type DataAssociationMapping
                          */
-                        var mapping = event.model.inferMapping(x);
+                        let mapping = event.model.inferMapping(x);
                         if (mapping != null) {
-                            var attribute = event.model.getAttribute(x);
+                            let attribute = event.model.getAttribute(x);
                             // get only many-to-many associations
                             if (mapping.associationType === 'junction' && attribute.multiplicity === 'Many') {
-                                mappings.push({ 
+                                mappings.push({
                                     name: x,
                                     mapping: mapping
                                 });
@@ -136,26 +132,25 @@ class DataObjectAssociationListener {
                      * @param {function(Error=)} cb
                      */
                     function (x, cb) {
-                        var silentMode = parseBoolean(event.model.$silent);
+                        let silentMode = parseBoolean(event.model.$silent);
                         if (x.mapping.associationType === 'junction') {
-                            var obj = event.model.convert(event.target);
+                            let obj = event.model.convert(event.target);
                             /**
                              * @type {*|{deleted:Array}}
                              */
-                            var childs = obj[x.name], junction;
+                            let childs = obj[x.name], junction;
                             if (Array.isArray(childs) === false) {
                                 return cb();
                             }
                             if (x.mapping.childModel === event.model.name) {
-                                var HasParentJunction = require('./has-parent-junction').HasParentJunction;
+                                let HasParentJunction = require('./has-parent-junction').HasParentJunction;
                                 junction = new HasParentJunction(obj, x.mapping);
                                 if (event.state === 1 || event.state === 2) {
-                                    var toBeRemoved = [], toBeInserted = [];
+                                    let toBeRemoved = [], toBeInserted = [];
                                     childs.forEach(function (x) {
                                         if (x.$state === 4) {
                                             toBeRemoved.push(x);
-                                        }
-                                        else {
+                                        } else {
                                             toBeInserted.push(x);
                                         }
                                     });
@@ -170,22 +165,25 @@ class DataObjectAssociationListener {
                                             return cb();
                                         });
                                     });
-                                }
-                                else {
+                                } else {
                                     return cb();
                                 }
-                            }
-                            else if (x.mapping.parentModel === event.model.name) {
+                            } else if (x.mapping.parentModel === event.model.name) {
                                 if (event.state === 1 || event.state === 2) {
-                                    var DataObjectJunction = require('./data-object-junction').DataObjectJunction, DataObjectTag = require('./data-object-tag').DataObjectTag;
+                                    let DataObjectJunction = require('./data-object-junction').DataObjectJunction,
+                                        DataObjectTag = require('./data-object-tag').DataObjectTag;
                                     if (typeof x.mapping.childModel === 'undefined') {
                                         /**
                                          * @type {DataObjectTag}
                                          */
-                                        var tags = new DataObjectTag(obj, x.mapping);
+                                        let tags = new DataObjectTag(obj, x.mapping);
                                         return tags.silent(silentMode).all().then(function (result) {
-                                            var toBeRemoved = result.filter(function (x) { return childs.indexOf(x) < 0; });
-                                            var toBeInserted = childs.filter(function (x) { return result.indexOf(x) < 0; });
+                                            let toBeRemoved = result.filter(function (x) {
+                                                return childs.indexOf(x) < 0;
+                                            });
+                                            let toBeInserted = childs.filter(function (x) {
+                                                return result.indexOf(x) < 0;
+                                            });
                                             if (toBeRemoved.length > 0) {
                                                 return tags.silent(silentMode).remove(toBeRemoved).then(function () {
                                                     if (toBeInserted.length === 0) {
@@ -207,19 +205,17 @@ class DataObjectAssociationListener {
                                         }).catch(function (err) {
                                             return cb(err);
                                         });
-                                    }
-                                    else {
+                                    } else {
                                         junction = new DataObjectJunction(obj, x.mapping);
                                         junction.silent(silentMode).insert(childs, function (err) {
                                             if (err) {
                                                 return cb(err);
                                             }
-                                            var toBeRemoved = [], toBeInserted = [];
+                                            let toBeRemoved = [], toBeInserted = [];
                                             childs.forEach(function (x) {
                                                 if (x.$state === 4) {
                                                     toBeRemoved.push(x);
-                                                }
-                                                else {
+                                                } else {
                                                     toBeInserted.push(x);
                                                 }
                                             });
@@ -236,27 +232,25 @@ class DataObjectAssociationListener {
                                             });
                                         });
                                     }
-                                }
-                                else {
+                                } else {
                                     cb();
                                 }
-                            }
-                            else {
+                            } else {
                                 cb();
                             }
-                        }
-                        else
+                        } else {
                             cb(null);
+                        }
                     }, function (err) {
                         callback(err);
                     });
             }
-        }
-        catch (err) {
+        } catch (err) {
             callback(err);
         }
     }
 }
+
 module.exports = {
-        DataObjectAssociationListener
-    };
+    DataObjectAssociationListener
+};
