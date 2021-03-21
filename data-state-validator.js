@@ -6,11 +6,6 @@ const async = require("async");
 const {hasOwnProperty} = require('./has-own-property');
 
 /**
- * @module @themost/data/data-state-validator
- * @ignore
- */
-
-/**
  * @class
  * @constructor
  * @classdesc Validates the state of a data object. DataStateValidatorListener is one of the default listeners which are being registered for all data models.

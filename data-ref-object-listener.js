@@ -1,15 +1,14 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-var async = require('async');
-var HasParentJunction = require('./has-parent-junction').HasParentJunction;
-var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-var DataError = require('@themost/common/errors').DataError;
-var _ = require('lodash');
-var hasOwnProperty = require('./has-own-property').hasOwnProperty;
+const async = require('async');
+const {HasParentJunction} = require('./has-parent-junction');
+const {DataObjectJunction} = require('./data-object-junction');
+const {DataError} = require('@themost/common').DataError;
+const _ = require('lodash');
+const {hasOwnProperty} = require('./has-own-property');
 
 /**
  * @class
- * @constructor
  */
 class DataReferencedObjectListener {
     constructor() {
