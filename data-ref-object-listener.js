@@ -1,12 +1,5 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
+
 var async = require('async');
 var HasParentJunction = require('./has-parent-junction').HasParentJunction;
 var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
@@ -15,16 +8,44 @@ var _ = require('lodash');
 var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 
 /**
- * @module @themost/data/data-ref-object-listener
- * @ignore
- */
-
-/**
  * @class
  * @constructor
  */
-function DataReferencedObjectListener() {
-    //
+class DataReferencedObjectListener {
+    constructor() {
+        //
+    }
+    /**
+     * @param {DataEventArgs} event
+     * @param {function(Error=)} callback
+     */
+    beforeRemove(event, callback) {
+        return event.model.getReferenceMappings(false).then(function (mappings) {
+            async.eachSeries(mappings,
+                /**
+                 * @param {DataAssociationMapping} mapping
+                 * @param {Function} cb
+                 */
+                function (mapping, cb) {
+                    if (mapping.associationType === 'association') {
+                        return beforeRemoveAssociatedObjects(event, mapping, cb);
+                    }
+                    else if (mapping.associationType === 'junction' && mapping.parentModel === event.model.name) {
+                        return beforeRemoveChildConnectedObjects(event, mapping, cb);
+                    }
+                    else if (mapping.associationType === 'junction' && mapping.childModel === event.model.name) {
+                        return beforeRemoveParentConnectedObjects(event, mapping, cb);
+                    }
+                    else {
+                        return cb();
+                    }
+                }, function (err) {
+                    callback(err);
+                });
+        }).catch(function (err) {
+            return callback(err);
+        });
+    }
 }
 
 /**
@@ -174,15 +195,13 @@ function beforeRemoveParentConnectedObjects(event, mapping, callback) {
  * @param {Function} callback
  */
 function beforeRemoveChildConnectedObjects(event, mapping, callback) {
-    var context = event.model.context;
     if (mapping.associationType !== 'junction') {
         return callback(new TypeError('Invalid association type. Expected a valid junction.'));
     }
     if (mapping.parentModel !== event.model.name) {
         return callback();
     }
-    var childModel = context.model(mapping.childModel),
-        silent = event.model.$silent,
+    var silent = event.model.$silent,
         target = event.model.convert(event.target),
         parentModel =  event.model,
         parentField = parentModel.getAttribute(mapping.parentField);
@@ -228,39 +247,4 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
         });
 }
 
-/**
- * @param {DataEventArgs} event
- * @param {function(Error=)} callback
- */
-DataReferencedObjectListener.prototype.beforeRemove = function (event, callback) {
-    return event.model.getReferenceMappings(false).then(function(mappings) {
-        async.eachSeries(mappings,
-            /**
-             * @param {DataAssociationMapping} mapping
-             * @param {Function} cb
-             */
-            function(mapping, cb) {
-                if (mapping.associationType === 'association') {
-                    return beforeRemoveAssociatedObjects(event, mapping, cb);
-                }
-                else if (mapping.associationType === 'junction' && mapping.parentModel === event.model.name) {
-                    return beforeRemoveChildConnectedObjects(event, mapping, cb);
-                }
-                else if (mapping.associationType === 'junction' && mapping.childModel === event.model.name) {
-                    return beforeRemoveParentConnectedObjects(event, mapping, cb);
-                }
-                else {
-                    return cb();
-                }
-            }, function(err) {
-                callback(err);
-            });
-    }).catch(function(err) {
-        return callback(err);
-    });
-};
-
-if (typeof exports !== 'undefined')
-{
-    module.exports.DataReferencedObjectListener = DataReferencedObjectListener;
-}
+module.exports = {DataReferencedObjectListener};

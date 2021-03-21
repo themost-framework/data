@@ -4,7 +4,7 @@ const {eachSeries} = require('async');
 const {QueryUtils, QueryField, QueryFieldRef} = require('@themost/query');
 const {NotNullError, UniqueConstraintError, TraceUtils, TextUtils} = require("@themost/common");
 const { DataCacheStrategy } = require("./data-cache");
-
+const { FunctionContext } = require('./functions');
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
  */
@@ -156,7 +156,7 @@ class CalculatedValueListener {
      */
     beforeSave(event, callback) {
         //get function context
-        var functions = require('./functions'), functionContext = functions.createContext();
+        var functionContext = new FunctionContext();
         Object.assign(functionContext, event);
         functionContext.context = event.model.context;
         //find all attributes that have a default value
@@ -427,7 +427,7 @@ class DefaultValueListener {
         }
         else {
             //get function context
-            var functions = require('./functions'), functionContext = functions.createContext();
+            var functionContext = new FunctionContext();
             Object.assign(functionContext, event);
             //find all attributes that have a default value
             var attrs = event.model.attributes.filter(function (x) { return (typeof x.value !== 'undefined'); });

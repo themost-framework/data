@@ -1,15 +1,9 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
-var _ = require("lodash");
-var DataNotFoundError = require("@themost/common/errors").DataNotFoundError;
-var async = require("async");
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
+
+const _ = require("lodash");
+const {DataNotFoundError} = require("@themost/common");
+const async = require("async");
+const {hasOwnProperty} = require('./has-own-property');
 
 /**
  * @module @themost/data/data-state-validator
@@ -20,47 +14,123 @@ var async = require("async");
  * @class
  * @constructor
  * @classdesc Validates the state of a data object. DataStateValidatorListener is one of the default listeners which are being registered for all data models.
- <p>If the target data object belongs to a model which has one or more constraints, it will try to validate object's state against these constraints.
- <p>In the following example the process tries to save the favourite color of a user and passes name instead of user's identifier.
- DataStateValidatorListener will try to find a user based on the unique constraint of User model and then
- it will try to validate object's state based on the defined unique constraint of UserColor model.</p>
- <pre class="prettyprint"><code>
- // #User.json
- ...
- "constraints":[
- {
-     "description": "User name must be unique across different records.",
-     "type":"unique",
-     "fields": [ "name" ]
- }]
- ...
- </code></pre>
- <pre class="prettyprint"><code>
- // #UserColor.json
- ...
- "constraints":[
-    { "type":"unique", "fields": [ "user", "tag" ] }
- ]
- ...
- </code></pre>
- <pre class="prettyprint"><code>
- var userColor = {
-        "user": {
-            "name":"admin@example.com"
-        },
-        "color":"#FF3412",
-        "tag":"favourite"
-    };
- context.model('UserColor').save(userColor).then(function(userColor) {
-        done();
-    }).catch(function (err) {
-        done(err);
-    });
- </code></pre>
- </p>
  */
-function DataStateValidatorListener() {
-    //
+class DataStateValidatorListener {
+    constructor() {
+        //
+    }
+    /**
+     * Occurs before creating or updating a data object and validates object state.
+     * @param {DataEventArgs|*} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    beforeSave(event, callback) {
+        try {
+            if (_.isNil(event)) {
+                return callback();
+            }
+            if (_.isNil(event.state)) { event.state = 1; }
+
+            var model = event.model, target = event.target;
+            //if model or target is not defined do nothing and exit
+            if (_.isNil(model) || _.isNil(target)) {
+                return callback();
+            }
+            //get key state
+            var keyState = (model.primaryKey && hasOwnProperty(target, model.primaryKey));
+            //if target has $state property defined, set this state and exit
+            if (event.target.$state) {
+                event.state = event.target.$state;
+            }
+
+            //if object has primary key
+            else if (keyState) {
+                event.state = 2;
+            }
+            //if state is Update (2)
+            if (event.state === 2) {
+                //if key exists exit
+                if (keyState) {
+                    return callback();
+                }
+                else {
+                    return mapKey_.call(model, target, function (err) {
+                        if (err) { return callback(err); }
+                        //if object is mapped with a key exit
+                        return callback();
+                    });
+                }
+            }
+            else if (event.state === 1) {
+                if (!keyState) {
+                    return mapKey_.call(model, target, function (err, result) {
+                        if (err) { return callback(err); }
+                        if (result) {
+                            //set state to Update
+                            event.state = 2;
+                        }
+                        return callback();
+                    });
+                }
+                //otherwise do nothing
+                return callback();
+            }
+            else {
+                return callback();
+            }
+
+        }
+        catch (er) {
+            callback(er);
+        }
+    }
+    /**
+     * Occurs before removing a data object and validates object state.
+     * @param {DataEventArgs|*} event - An object that represents the event arguments passed to this operation.
+     * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
+     */
+    beforeRemove(event, callback) {
+        //validate event arguments
+        if (_.isNil(event)) { return callback(); }
+        //validate state (the default is Delete=4)
+        if (_.isNil(event.state)) { event.state = 4; }
+        var model = event.model, target = event.target;
+        //if model or target is not defined do nothing and exit
+        if (_.isNil(model) || _.isNil(target)) {
+            return callback();
+        }
+        //if object primary key is already defined
+        if (model.primaryKey && hasOwnProperty(target, model.primaryKey)) {
+            // check if object exists
+            return model.where(model.primaryKey).equal(target[model.primaryKey]).value().then(function (result) {
+                if (typeof result !== 'undefined' && result !== null) {
+                    // set state to deleted
+                    event.state = 4;
+                    // return
+                    return callback();
+                }
+                // otherwise throw error not found
+                return callback(_.assign(new DataNotFoundError('The target object cannot be found or is inaccessible.', null, model.name), {
+                    "key": target[model.primaryKey]
+                }));
+            }).catch(function (err) {
+                return callback(err);
+            });
+        }
+        mapKey_.call(model, target, function (err, result) {
+            if (err) {
+                return callback(err);
+            }
+            else if (typeof result !== 'undefined' && result !== null) {
+                //continue and exit
+                return callback();
+            }
+            else {
+                callback(new DataNotFoundError('The target object cannot be found or is inaccessible.', null, model.name));
+            }
+        });
+
+    }
 }
 /**
  * @param {*} obj
@@ -72,7 +142,7 @@ function mapKey_(obj, callback) {
     if (_.isNil(obj)) {
         return callback(new Error('Object cannot be null at this context'));
     }
-    if (self.primaryKey && obj.hasOwnProperty(self.primaryKey)) {
+    if (self.primaryKey && hasOwnProperty(obj, self.primaryKey)) {
         //already mapped
         return callback(null, true);
     }
@@ -102,14 +172,14 @@ function mapKey_(obj, callback) {
             if (_.isArray(constraint.fields)) {
                 for (var i = 0; i < constraint.fields.length; i++) {
                     var attr = constraint.fields[i];
-                    if (!obj.hasOwnProperty(attr)) {
+                    if (!hasOwnProperty(obj, attr)) {
                         return cb();
                     }
                     var parentObj = obj[attr], value = parentObj;
                     //check field mapping
                     var mapping = self.inferMapping(attr);
                     if (_.isObject(mapping) && (typeof parentObj === 'object')) {
-                        if (parentObj.hasOwnProperty(mapping.parentField)) {
+                        if (hasOwnProperty(parentObj, mapping.parentField)) {
                             fnAppendQuery(attr, parentObj[mapping.parentField]);
                         }
                         else {
@@ -166,124 +236,6 @@ function mapKey_(obj, callback) {
     });
 }
 
-/**
- * Occurs before creating or updating a data object and validates object state.
- * @param {DataEventArgs|*} event - An object that represents the event arguments passed to this operation.
- * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-DataStateValidatorListener.prototype.beforeSave = function(event, callback) {
-    try {
-        if (_.isNil(event)) {
-            return callback();
-        }
-        if (_.isNil(event.state)) {event.state = 1; }
-
-        var model = event.model, target = event.target;
-        //if model or target is not defined do nothing and exit
-        if (_.isNil(model) || _.isNil(target)) {
-            return callback();
-        }
-        //get key state
-        var keyState = (model.primaryKey && target.hasOwnProperty(model.primaryKey));
-        //if target has $state property defined, set this state and exit
-        if (event.target.$state) {
-            event.state = event.target.$state;
-        }
-        //if object has primary key
-        else if (keyState) {
-            event.state = 2;
-        }
-        //if state is Update (2)
-        if (event.state === 2) {
-            //if key exists exit
-            if (keyState) {
-                return callback();
-            }
-            else {
-                return mapKey_.call(model, target, function(err) {
-                    if (err) { return callback(err); }
-                    //if object is mapped with a key exit
-                    return callback();
-                });
-            }
-        }
-        else if (event.state === 1) {
-            if (!keyState) {
-                return mapKey_.call(model, target, function(err, result) {
-                    if (err) { return callback(err); }
-                    if (result) {
-                        //set state to Update
-                        event.state = 2;
-                    }
-                    return callback();
-                });
-            }
-            //otherwise do nothing
-            return callback();
-        }
-        else {
-            return callback();
-        }
-
-    }
-    catch(er) {
-        callback(er);
-    }
+module.exports = {
+    DataStateValidatorListener
 };
-/**
- * Occurs before removing a data object and validates object state.
- * @param {DataEventArgs|*} event - An object that represents the event arguments passed to this operation.
- * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
- */
-DataStateValidatorListener.prototype.beforeRemove = function(event, callback) {
-    //validate event arguments
-    if (_.isNil(event)) { return callback(); }
-    //validate state (the default is Delete=4)
-    if (_.isNil(event.state)) {event.state = 4; }
-    var model = event.model, target = event.target;
-    //if model or target is not defined do nothing and exit
-    if (_.isNil(model) || _.isNil(target)) {
-        return callback();
-    }
-    //if object primary key is already defined
-    if (model.primaryKey && target.hasOwnProperty(model.primaryKey)) {
-        // check if object exists
-            return model.where(model.primaryKey).equal(target[model.primaryKey]).value().then(function (result) {
-                if (typeof result !== 'undefined' && result !== null) {
-                    // set state to deleted
-                    event.state = 4;
-                    // return
-                    return callback();
-                }
-                // otherwise throw error not found
-                return callback(_.assign(new DataNotFoundError('The target object cannot be found or is inaccessible.',null, model.name), {
-                    "key": target[model.primaryKey]
-                }));
-            }).catch(function (err) {
-                return callback(err);
-            });
-    }
-    mapKey_.call(model, target, function(err, result) {
-        if (err) {
-            return callback(err);
-        }
-        else if (typeof result !== 'undefined' && result !== null) {
-            //continue and exit
-            return callback();
-        }
-        else {
-            callback(new DataNotFoundError('The target object cannot be found or is inaccessible.',null, model.name));
-        }
-    });
-
-};
-
-if (typeof exports !== 'undefined')
-{
-    module.exports = {
-        /**
-         * @constructs DataStateValidatorListener
-         */
-        DataStateValidatorListener:DataStateValidatorListener
-    };
-}

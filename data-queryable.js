@@ -600,11 +600,11 @@ function DataQueryable(model) {
             q = QueryUtils.query(m.viewAdapter);
         }
         return q;
-    }, configurable:false, enumerable:false});
+    }, configurable:true, enumerable:false});
 
     Object.defineProperty(this, 'model', { get: function() {
         return m;
-    }, configurable:false, enumerable:false});
+    }, configurable:true, enumerable:false});
     //get silent property
     if (m)
         this.silent(m.$silent);
