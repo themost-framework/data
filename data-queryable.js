@@ -5,12 +5,13 @@ const sprintf = require('sprintf').sprintf;
 const _ = require("lodash");
 const TextUtils = require("@themost/common").TextUtils;
 const mappingExtensions = require('./data-mapping-extensions');
-const {DataAssociationMapping} = require('./types');
-const {DataError} = require("@themost/common");
-const {QueryField, QueryUtils, QueryEntity} = require('@themost/query');
+const { DataAssociationMapping } = require('./types');
+const { DataError } = require("@themost/common");
+// eslint-disable-next-line no-unused-vars
+const { QueryField, QueryUtils, QueryEntity, QueryExpression } = require('@themost/query');
 const Q = require('q');
 const aliasProperty = Symbol('alias');
-const {hasOwnProperty} = require('./has-own-property');
+const { hasOwnProperty } = require('./has-own-property');
 /**
  * @class
  */
@@ -18,9 +19,9 @@ class DataAttributeResolver {
     constructor() {
     }
     orderByNestedAttribute(attr) {
-        var nestedAttribute = DataAttributeResolver.prototype.testNestedAttribute(attr);
+        let nestedAttribute = DataAttributeResolver.prototype.testNestedAttribute(attr);
         if (nestedAttribute) {
-            var matches = /^(\w+)\((\w+)\/(\w+)\)$/i.exec(nestedAttribute.name);
+            let matches = /^(\w+)\((\w+)\/(\w+)\)$/i.exec(nestedAttribute.name);
             if (matches) {
                 return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + "/" + matches[3]);
             }
@@ -32,13 +33,13 @@ class DataAttributeResolver {
         return DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
     }
     selectNestedAttribute(attr, alias) {
-        var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
+        let expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
         if (expr) {
-            if (_.isNil(alias))
+            if (_.isNil(alias)) {
                 expr.as(attr.replace(/\//g, '_'));
-
-            else
+            } else {
                 expr.as(alias);
+            }
         }
         return expr;
     }
@@ -49,20 +50,18 @@ class DataAttributeResolver {
      * @returns {*}
      */
     selectAggregatedAttribute(aggregation, attribute, alias) {
-        var self = this, result;
+        let self = this, result;
         if (DataAttributeResolver.prototype.testNestedAttribute(attribute)) {
             result = DataAttributeResolver.prototype.selectNestedAttribute.call(self, attribute, alias);
-        }
-        else {
+        } else {
             result = self.fieldOf(attribute);
         }
-        var sAlias = result.as(), name = result.getName(), expr;
+        let sAlias = result.as(), name = result.getName(), expr;
         if (sAlias) {
             expr = result[sAlias];
             result[sAlias] = {};
             result[sAlias]['$' + aggregation] = expr;
-        }
-        else {
+        } else {
             expr = result.$name;
             result[name] = {};
             result[name]['$' + aggregation] = expr;
@@ -70,22 +69,21 @@ class DataAttributeResolver {
         return result;
     }
     resolveNestedAttribute(attr) {
-        var self = this;
+        let self = this;
         if (typeof attr === 'string' && /\//.test(attr)) {
-            var member = attr.split('/'), expr, arr, obj, select;
+            let member = attr.split('/'), expr, arr, obj, select;
             //change: 18-Feb 2016
             //description: Support many to many (junction) resolving
-            var mapping = self.model.inferMapping(member[0]);
+            let mapping = self.model.inferMapping(member[0]);
             if (mapping && mapping.associationType === 'junction') {
-                var expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self.model, attr);
+                let expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self.model, attr);
                 //select field
                 select = expr1.$select;
                 //get expand
                 expr = expr1.$expand;
-            }
-            else {
+            } else {
                 // create member expression
-                var memberExpr = {
+                let memberExpr = {
                     name: attr
                 };
                 // and pass member expression
@@ -97,8 +95,7 @@ class DataAttributeResolver {
                         member = memberExpr.name.split('/');
                     }
                     select = QueryField.select(member[member.length - 1]).from(member[member.length - 2]);
-                }
-                else {
+                } else {
                     if (memberExpr.name !== attr) {
                         // get member segments again because they have been modified
                         member = memberExpr.name.split('/');
@@ -110,19 +107,18 @@ class DataAttributeResolver {
             if (expr) {
                 if (_.isNil(self.query.$expand)) {
                     self.query.$expand = expr;
-                }
-                else {
+                } else {
                     arr = [];
                     if (!_.isArray(self.query.$expand)) {
                         arr.push(self.query.$expand);
                         this.query.$expand = arr;
                     }
                     arr = [];
-                    if (_.isArray(expr))
+                    if (_.isArray(expr)) {
                         arr.push.apply(arr, expr);
-
-                    else
+                    } else {
                         arr.push(expr);
+                    }
                     arr.forEach(function (y) {
                         obj = self.query.$expand.find(function (x) {
                             if (x.$entity && x.$entity.$as) {
@@ -136,8 +132,7 @@ class DataAttributeResolver {
                     });
                 }
                 return select;
-            }
-            else {
+            } else {
                 throw new Error('Member join expression cannot be empty at this context');
             }
         }
@@ -148,29 +143,28 @@ class DataAttributeResolver {
      * @returns {*} - An object that represents a query join expression
      */
     resolveNestedAttributeJoin(memberExpr) {
-        var self = this, childField, parentField, res, expr, entity;
-        var memberExprString;
+        let self = this, childField, parentField, res, expr, entity;
+        let memberExprString;
         if (typeof memberExpr === 'string') {
             memberExprString = memberExpr;
-        }
-        else if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
+        } else if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
             memberExprString = memberExpr.name;
         }
         if (/\//.test(memberExprString)) {
             //if the specified member contains '/' e.g. user/name then prepare join
-            var arrMember = memberExprString.split('/');
-            var attrMember = self.field(arrMember[0]);
+            let arrMember = memberExprString.split('/');
+            let attrMember = self.field(arrMember[0]);
             if (_.isNil(attrMember)) {
                 throw new Error(sprintf('The target model does not have an attribute named as %s', arrMember[0]));
             }
             //search for field mapping
-            var mapping = self.inferMapping(arrMember[0]);
+            let mapping = self.inferMapping(arrMember[0]);
             if (_.isNil(mapping)) {
                 throw new Error(sprintf('The target model does not have an association defined for attribute named %s', arrMember[0]));
             }
             if (mapping.childModel === self.name && mapping.associationType === 'association') {
                 //get parent model
-                var parentModel = self.context.model(mapping.parentModel);
+                let parentModel = self.context.model(mapping.parentModel);
                 if (_.isNil(parentModel)) {
                     throw new Error(sprintf('Association parent model (%s) cannot be found.', mapping.parentModel));
                 }
@@ -183,7 +177,7 @@ class DataAttributeResolver {
                     throw new Error(sprintf('Referenced field (%s) cannot be found.', mapping.parentField));
                 }
                 // get childField.name or childField.property
-                var childFieldName = childField.property || childField.name;
+                let childFieldName = childField.property || childField.name;
                 /**
                  * store temp query expression
                  * @type QueryExpression
@@ -201,9 +195,8 @@ class DataAttributeResolver {
                 }
                 //--set active field
                 return res.$expand;
-            }
-            else if (mapping.parentModel === self.name && mapping.associationType === 'association') {
-                var childModel = self.context.model(mapping.childModel);
+            } else if (mapping.parentModel === self.name && mapping.associationType === 'association') {
+                let childModel = self.context.model(mapping.childModel);
                 if (_.isNil(childModel)) {
                     throw new Error(sprintf('Association child model (%s) cannot be found.', mapping.childModel));
                 }
@@ -216,16 +209,16 @@ class DataAttributeResolver {
                     throw new Error(sprintf('Referenced field (%s) cannot be found.', mapping.parentField));
                 }
                 // get parent entity name for this expression
-                var parentEntity = self[aliasProperty] || self.viewAdapter;
+                let parentEntity = self[aliasProperty] || self.viewAdapter;
                 // get child entity name for this expression
-                var childEntity = arrMember[0];
+                let childEntity = arrMember[0];
                 res = QueryUtils.query('Unknown').select(['*']);
                 expr = QueryUtils.query().where(QueryField.select(parentField.name).from(parentEntity)).equal(QueryField.select(childField.name).from(childEntity));
                 entity = new QueryEntity(childModel.viewAdapter).as(childEntity).left();
                 res.join(entity).with(expr);
                 if (arrMember.length === 2) {
                     // get child model member
-                    var childMember = childModel.field(arrMember[1]);
+                    let childMember = childModel.field(arrMember[1]);
                     if (childMember) {
                         // try to validate if child member has an alias or not
                         if (childMember.name !== arrMember[1]) {
@@ -238,8 +231,7 @@ class DataAttributeResolver {
                     }
                 }
                 return res.$expand;
-            }
-            else {
+            } else {
                 throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel, mapping.childModel));
             }
         }
@@ -249,12 +241,13 @@ class DataAttributeResolver {
      * @returns {*}
      */
     testAttribute(s) {
-        if (typeof s !== 'string')
+        if (typeof s !== 'string') {
             return;
+        }
         /**
          * @private
          */
-        var matches;
+        let matches;
         /**
          * attribute aggregate function with alias e.g. f(x) as a
          * @ignore
@@ -289,12 +282,13 @@ class DataAttributeResolver {
      * @returns {*}
      */
     testAggregatedNestedAttribute(s) {
-        if (typeof s !== 'string')
+        if (typeof s !== 'string') {
             return;
+        }
         /**
          * @private
          */
-        var matches;
+        let matches;
         /**
          * nested attribute aggregate function with alias e.g. f(x/b) as a
          * @ignore
@@ -333,12 +327,13 @@ class DataAttributeResolver {
      * @returns {*}
      */
     testNestedAttribute(s) {
-        if (typeof s !== 'string')
+        if (typeof s !== 'string') {
             return;
+        }
         /**
          * @private
          */
-        var matches;
+        let matches;
         /**
          * nested attribute aggregate function with alias e.g. f(x/b) as a
          * @ignore
@@ -444,13 +439,13 @@ class DataAttributeResolver {
      * @returns {*}
      */
     resolveJunctionAttributeJoin(attr) {
-        var self = this, member = attr.split("/");
+        let self = this, member = attr.split("/");
         //get the data association mapping
-        var mapping = self.inferMapping(member[0]);
+        let mapping = self.inferMapping(member[0]);
         //if mapping defines a junction between two models
         if (mapping && mapping.associationType === "junction") {
             //get field
-            var field = self.field(member[0]), entity, expr, q;
+            let field = self.field(member[0]), entity, expr, q;
             //first approach (default association adapter)
             //the underlying model is the parent model e.g. Group > Group Members
             if (mapping.parentModel === self.name) {
@@ -472,21 +467,20 @@ class DataAttributeResolver {
                     };
                 }
 
-                //return the resolved attribute for futher processing e.g. members.id
+                //return the resolved attribute for further processing e.g. members.id
                 if (member[1] === mapping.childField) {
                     return {
                         $expand: [q.$expand],
                         $select: QueryField.select(mapping.associationValueField).from(field.name)
                     };
-                }
-                else {
+                } else {
                     //get child model
-                    var childModel = self.context.model(mapping.childModel);
+                    let childModel = self.context.model(mapping.childModel);
                     if (_.isNil(childModel)) {
                         throw new DataError("EJUNC", "The associated model cannot be found.");
                     }
                     //create new join
-                    var alias = field.name + "_" + childModel.name;
+                    let alias = field.name + "_" + childModel.name;
                     entity = new QueryEntity(childModel.viewAdapter).as(alias);
                     expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
                         .equal(QueryField.select(mapping.childField).from(alias));
@@ -497,8 +491,7 @@ class DataAttributeResolver {
                         $select: QueryField.select(member[1]).from(alias)
                     };
                 }
-            }
-            else {
+            } else {
                 q = QueryUtils.query(self.viewAdapter).select(['*']);
                 //the underlying model is the child model
                 //init an entity based on association adapter (e.g. GroupMembers as groups)
@@ -515,15 +508,14 @@ class DataAttributeResolver {
                         $expand: [q.$expand],
                         $select: QueryField.select(mapping.associationObjectField).from(field.name)
                     };
-                }
-                else {
+                } else {
                     //get parent model
-                    var parentModel = self.context.model(mapping.parentModel);
+                    let parentModel = self.context.model(mapping.parentModel);
                     if (_.isNil(parentModel)) {
                         throw new DataError("EJUNC", "The associated model cannot be found.");
                     }
                     //create new join
-                    var parentAlias = field.name + "_" + parentModel.name;
+                    let parentAlias = field.name + "_" + parentModel.name;
                     entity = new QueryEntity(parentModel.viewAdapter).as(parentAlias);
                     expr = QueryUtils.query().where(QueryField.select(mapping.associationObjectField).from(field.name))
                         .equal(QueryField.select(mapping.parentField).from(parentAlias));
@@ -535,8 +527,7 @@ class DataAttributeResolver {
                     };
                 }
             }
-        }
-        else {
+        } else {
             throw new DataError("EJUNC", "The target model does not have a many to many association defined by the given attribute.", "", self.name, attr);
         }
     }
@@ -558,7 +549,7 @@ class DataQueryable {
          * @type {QueryExpression}
          * @private
          */
-        var q = null;
+        let q = null;
         /**
          * Gets or sets an array of expandable models
          * @type {Array}
@@ -574,7 +565,7 @@ class DataQueryable {
          * @type {DataModel}
          * @private
          */
-        var m = model;
+        let m = model;
         Object.defineProperty(this, 'query', {
             get: function () {
                 if (!q) {
@@ -593,15 +584,16 @@ class DataQueryable {
             }, configurable: true, enumerable: false
         });
         //get silent property
-        if (m)
+        if (m) {
             this.silent(m.$silent);
+        }
     }
     /**
      * Clones the current DataQueryable instance.
      * @returns {DataQueryable|*} - The cloned object.
      */
     clone() {
-        var result = new DataQueryable(this.model);
+        let result = new DataQueryable(this.model);
         //set view if any
         result.$view = this.$view;
         //set silent property
@@ -617,14 +609,16 @@ class DataQueryable {
         return result;
     }
     /**
-     * Ensures data queryable context and returns the current data context. This function may be overriden.
+     * Ensures data queryable context and returns the current data context. This function may be overridden.
      * @returns {DataContext}
      * @ignore
      */
     ensureContext() {
-        if (this.model !== null)
-            if (this.model.context !== null)
+        if (this.model !== null) {
+            if (this.model.context !== null) {
                 return this.model.context;
+            }
+        }
         return null;
     }
     /**
@@ -685,18 +679,19 @@ class DataQueryable {
         });
      */
     search(text) {
-        var self = this;
+        let self = this;
         // eslint-disable-next-line no-unused-vars
-        var options = { multiword: true };
-        var terms = [];
-        if (typeof text !== 'string') { return self; }
-        var re = /("(.*?)")|([^\s]+)/g;
-        var match = re.exec(text);
+        let options = { multiword: true };
+        let terms = [];
+        if (typeof text !== 'string') {
+            return self;
+        }
+        let re = /("(.*?)")|([^\s]+)/g;
+        let match = re.exec(text);
         while (match) {
             if (match[2]) {
                 terms.push(match[2]);
-            }
-            else {
+            } else {
                 terms.push(match[0]);
             }
             match = re.exec(text);
@@ -705,19 +700,22 @@ class DataQueryable {
             return self;
         }
         self.prepare();
-        var stringTypes = ["Text", "URL", "Note"];
+        let stringTypes = ["Text", "URL", "Note"];
         self.model.attributes.forEach(function (x) {
-            if (x.many) { return; }
-            var mapping = self.model.inferMapping(x.name);
+            if (x.many) {
+                return;
+            }
+            let mapping = self.model.inferMapping(x.name);
             if (mapping) {
                 if ((mapping.associationType === 'association') && (mapping.childModel === self.model.name)) {
-                    var parentModel = self.model.context.model(mapping.parentModel);
+                    let parentModel = self.model.context.model(mapping.parentModel);
                     if (parentModel) {
                         parentModel.attributes.forEach(function (z) {
                             if (stringTypes.indexOf(z.type) >= 0) {
                                 terms.forEach(function (w) {
-                                    if (!/^\s+$/.test(w))
+                                    if (!/^\s+$/.test(w)) {
                                         self.or(x.name + '/' + z.name).contains(w);
+                                    }
                                 });
                             }
                         });
@@ -726,8 +724,9 @@ class DataQueryable {
             }
             if (stringTypes.indexOf(x.type) >= 0) {
                 terms.forEach(function (y) {
-                    if (!/^\s+$/.test(y))
+                    if (!/^\s+$/.test(y)) {
                         self.or(x.name).contains(y);
+                    }
                 });
             }
         });
@@ -735,26 +734,31 @@ class DataQueryable {
         return self;
     }
     join(model) {
-        var self = this;
-        if (_.isNil(model))
+        let self = this;
+        if (_.isNil(model)) {
             return this;
+        }
         /**
          * @type {DataModel}
          */
-        var joinModel = self.model.context.model(model);
+        let joinModel = self.model.context.model(model);
         //validate joined model
-        if (_.isNil(joinModel))
+        if (_.isNil(joinModel)) {
             throw new Error(sprintf("The %s model cannot be found", model));
-        var arr = self.model.attributes.filter(function (x) { return x.type === joinModel.name; });
-        if (arr.length === 0)
+        }
+        let arr = self.model.attributes.filter(function (x) {
+            return x.type === joinModel.name;
+        });
+        if (arr.length === 0) {
             throw new Error(sprintf("An internal error occurred. The association between %s and %s cannot be found", this.model.name, model));
-        var mapping = self.model.inferMapping(arr[0].name);
-        var expr = QueryUtils.query();
+        }
+        let mapping = self.model.inferMapping(arr[0].name);
+        let expr = QueryUtils.query();
         expr.where(self.fieldOf(mapping.childField)).equal(joinModel.fieldOf(mapping.parentField));
         /**
-         * @type DataAssociationMapping
+         * @type QueryEntity
          */
-        var entity = new QueryEntity(joinModel.viewAdapter).left();
+        let entity = new QueryEntity(joinModel.viewAdapter).left();
         //set join entity (without alias and join type)
         self.select().query.join(entity).with(expr);
         return self;
@@ -763,15 +767,6 @@ class DataQueryable {
      * Prepares a logical AND expression
      * @param attr {string} - The name of field that is going to be used in this expression
      * @returns {DataQueryable}
-     * @example
-     context.model('Order').where('customer').equal(298)
-     .and('orderStatus').equal(1)
-     .list().then(function(result) {
-            //SQL: WHERE ((OrderData.customer=298) AND (OrderData.orderStatus=1)
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     and(attr) {
         if (typeof attr === 'string' && /\//.test(attr)) {
@@ -785,15 +780,6 @@ class DataQueryable {
      * Prepares a logical OR expression
      * @param attr {string} - The name of field that is going to be used in this expression
      * @returns {DataQueryable}
-     * @example
-     //((OrderData.orderStatus=1) OR (OrderData.orderStatus=2)
-     context.model('Order').where('orderStatus').equal(1)
-     .or('orderStatus').equal(2)
-     .list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     or(attr) {
         if (typeof attr === 'string' && /\//.test(attr)) {
@@ -807,15 +793,6 @@ class DataQueryable {
      * Performs an equality comparison.
      * @param obj {*} - The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders with order status equal to 1
-     context.model('Order').where('orderStatus').equal(1)
-     .list().then(function(result) {
-            //WHERE (OrderData.orderStatus=1)
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     equal(obj) {
 
@@ -826,15 +803,6 @@ class DataQueryable {
      * Performs an equality comparison.
      * @param obj {*} - The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a person with id equal to 299
-     context.model('Person').where('id').is(299)
-     .first().then(function(result) {
-            //WHERE (PersonData.id=299)
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     is(obj) {
         return this.equal(obj);
@@ -844,16 +812,6 @@ class DataQueryable {
      * Prepares a not equal comparison.
      * @param obj {*} - The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders with order status different than 1
-     context.model('Order')
-     .where('orderStatus').notEqual(1)
-     .orderByDescending('orderDate')
-     .list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     notEqual(obj) {
         this.query.notEqual(resolveValue.bind(this)(obj));
@@ -864,26 +822,6 @@ class DataQueryable {
      * Prepares a greater than comparison.
      * @param obj {*} - The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders where product price is greater than 800
-     context.model('Order')
-     .where('orderedItem/price').greaterThan(800)
-     .orderByDescending('orderDate')
-     .select('id','orderedItem/name as productName', 'orderedItem/price as productPrice', 'orderDate')
-     .take(5)
-     .list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //Results:
-     id   productName                                   productPrice  orderDate
-     ---  --------------------------------------------  ------------  -----------------------------
-     304  Apple iMac (27-Inch, 2013 Version)            1336.27       2015-11-27 23:49:17.000+02:00
-     322  Dell B1163w Mono Laser Multifunction Printer  842.86        2015-11-27 20:16:52.000+02:00
-     167  Razer Blade (2013)                            1553.43       2015-11-27 04:17:08.000+02:00
-     336  Apple iMac (27-Inch, 2013 Version)            1336.27       2015-11-26 07:25:35.000+02:00
-     89   Nvidia GeForce GTX 650 Ti Boost               1625.49       2015-11-21 17:29:21.000+02:00
      */
     greaterThan(obj) {
         this.query.greaterThan(resolveValue.bind(this)(obj));
@@ -893,17 +831,6 @@ class DataQueryable {
      * Prepares a greater than or equal comparison.
      * @param obj {*} The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders where product price is greater than or equal to 800
-     context.model('Order')
-     .where('orderedItem/price').greaterOrEqual(800)
-     .orderByDescending('orderDate')
-     .take(5)
-     .list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     greaterOrEqual(obj) {
         this.query.greaterOrEqual(resolveValue.bind(this)(obj));
@@ -914,26 +841,13 @@ class DataQueryable {
      * @param {*} value - The right operand of the express
      * @param {Number=} result - The result of a bitwise and expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of permissions for model Person and insert permission mask (2)
-     context.model('Permission')
-     //prepare bitwise AND (((PermissionData.mask & 2)=2)
-     .where('mask').bit(2)
-     .and('privilege').equal('Person')
-     .and('parentPrivilege').equal(null)
-     .list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     *
      */
     bit(value, result) {
-        if (_.isNil(result))
+        if (_.isNil(result)) {
             this.query.bit(value, value);
-
-        else
+        } else {
             this.query.bit(value, result);
+        }
         return this;
     }
     /**
@@ -1067,20 +981,6 @@ class DataQueryable {
      * Prepares a contains comparison (e.g. a string contains another string).
      * @param value {*} - The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve person where the given name contains
-     context.model('Person').select(['id','givenName','familyName'])
-     .where('givenName').contains('ex')
-     .list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //The result set of this example may be:
-     id   givenName  familyName
-     ---  ---------  ----------
-     297  Alex       Miles
-     353  Alexis     Rees
      */
     contains(value) {
         this.query.contains(value);
@@ -1090,23 +990,6 @@ class DataQueryable {
      * Prepares a not contains comparison (e.g. a string contains another string).
      * @param value {*} - The right operand of the expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve persons where the given name not contains 'ar'
-     context.model('Person').select(['id','givenName','familyName'])
-     .where('givenName').notContains('ar')
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //The result set of this example may be:
-     id   givenName  familyName
-     ---  ---------  ----------
-     257  Daisy      Lambert
-     259  Peter      French
-     261  Kylie      Jordan
-     263  Maxwell    Hall
-     265  Christian  Marshall
      */
     notContains(value) {
         this.query.notContains(value);
@@ -1117,23 +1000,6 @@ class DataQueryable {
      * @param {*} value1 - The minimum value
      * @param {*} value2 - The maximum value
      * @returns {DataQueryable}
-     * @example
-     //retrieve products where price is between 150 and 250
-     context.model('Product')
-     .where('price').between(150,250)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //The result set of this example may be:
-     id   name                                        model   price
-     ---  ------------------------------------------  ------  ------
-     367  Asus Transformer Book T100                  HD2895  224.52
-     380  Zotac Zbox Nano XS AD13 Plus                WC5547  228.05
-     384  Apple iPad Air                              ZE6015  177.44
-     401  Intel Core i7-4960X Extreme Edition         SM5853  194.61
-     440  Bose SoundLink Bluetooth Mobile Speaker II  HS5288  155.27
      */
     between(value1, value2) {
         this.query.between(resolveValue.bind(this)(value1), resolveValue.bind(this)(value2));
@@ -1143,57 +1009,13 @@ class DataQueryable {
      * Selects a field or a collection of fields of the current model.
      * @param {...string} attr  An array of fields, a field or a view name
      * @returns {DataQueryable}
-     * @example
-     //retrieve the last 5 orders
-     context.model('Order').select('id','customer','orderDate','orderedItem')
-     .orderBy('orderDate')
-     .take(5).list().then(function(result) {
-            console.table(result.records);
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     * @example
-     //retrieve the last 5 orders by getting the associated customer name and product name
-     context.model('Order').select('id','customer/description as customerName','orderDate','orderedItem/name as productName')
-     .orderBy('orderDate')
-     .take(5).list().then(function(result) {
-            console.table(result.records);
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //The result set of this example may be:
-     id   customerName         orderDate                      orderedItemName
-     ---  -------------------  -----------------------------  ----------------------------------------------------
-     46   Nicole Armstrong     2014-12-31 13:35:41.000+02:00  LaCie Blade Runner
-     288  Cheyenne Hudson      2015-01-01 13:24:21.000+02:00  Canon Pixma MG5420 Wireless Photo All-in-One Printer
-     139  Christian Whitehead  2015-01-01 23:21:24.000+02:00  Olympus OM-D E-M1
-     3    Katelyn Kelly        2015-01-02 04:42:58.000+02:00  Kobo Aura
-     59   Cheyenne Hudson      2015-01-02 10:47:53.000+02:00  Google Nexus 7 (2013)
-    
-     @example
-     //retrieve the best customers by getting the associated customer name and a count of orders made by the customer
-     context.model('Order').select('customer/description as customerName','count(id) as orderCount')
-     .orderBy('count(id)')
-     .groupBy('customer/description')
-     .take(3).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //The result set of this example may be:
-     customerName      orderCount
-     ----------------  ----------
-     Miranda Bird      19
-     Alex Miles        16
-     Isaiah Morton     16
      */
     select(attr) {
 
-        var self = this, arr, expr,
+        let self = this, arr, expr,
             arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : attr;
 
+        let field;
         if (typeof arg === 'string') {
             if (arg === "*") {
                 //delete select
@@ -1201,69 +1023,63 @@ class DataQueryable {
                 return this;
             }
             //validate field or model view
-            var field = self.model.field(arg);
+            field = self.model.field(arg);
             if (field) {
                 //validate field
                 if (field.many || (field.mapping && field.mapping.associationType === 'junction')) {
                     self.expand(field.name);
-                }
-                else {
+                } else {
                     arr = [];
                     arr.push(self.fieldOf(field.name));
                 }
-            }
-            else {
+            } else {
                 //get data view
                 self.$view = self.model.dataviews(arg);
                 //if data view was found
                 if (self.$view) {
                     arr = [];
-                    var name;
+                    let name;
                     self.$view.fields.forEach(function (x) {
                         name = x.name;
                         field = self.model.field(name);
                         //if a field with the given name exists in target model
                         if (field) {
                             //check if this field has an association mapping
-                            if (field.many || (field.mapping && field.mapping.associationType === 'junction'))
+                            if (field.many || (field.mapping && field.mapping.associationType === 'junction')) {
                                 self.expand(field.name);
-
-                            else
+                            } else {
                                 arr.push(self.fieldOf(field.name));
-                        }
-                        else {
-                            var b = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self, name);
+                            }
+                        } else {
+                            let b = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self, name);
                             if (b) {
                                 expr = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, b.aggr, b.name);
-                                if (expr) { arr.push(expr); }
-                            }
-                            else {
+                                if (expr) {
+                                    arr.push(expr);
+                                }
+                            } else {
                                 b = DataAttributeResolver.prototype.testNestedAttribute.call(self, name);
                                 if (b) {
                                     expr = DataAttributeResolver.prototype.selectNestedAttribute.call(self, b.name, x.property);
-                                    if (expr) { arr.push(expr); }
-                                }
-                                else {
+                                    if (expr) {
+                                        arr.push(expr);
+                                    }
+                                } else {
                                     b = DataAttributeResolver.prototype.testAttribute.call(self, name);
                                     if (b) {
                                         arr.push(self.fieldOf(b.name, x.property));
-                                    }
-                                    else if (/\./g.test(name)) {
+                                    } else if (/\./g.test(name)) {
                                         name = name.split('.')[0];
                                         arr.push(self.fieldOf(name));
-                                    }
-
-                                    else {
+                                    } else {
                                         arr.push(self.fieldOf(name));
                                     }
                                 }
                             }
                         }
                     });
-                }
-
-                //select a field from a joined entity
-                else {
+                } else {
+                    //select a field from a joined entity
                     expr = select_.call(self, arg);
                     if (expr) {
                         arr = arr || [];
@@ -1272,11 +1088,11 @@ class DataQueryable {
                 }
             }
             if (_.isArray(arr)) {
-                if (arr.length === 0)
+                if (arr.length === 0) {
                     arr = null;
+                }
             }
-        }
-        else {
+        } else {
             //get array of attributes
             if (_.isArray(arg)) {
                 arr = [];
@@ -1295,22 +1111,18 @@ class DataQueryable {
                                     "name": field.name,
                                     "options": field.options
                                 });
-                            }
-                            else {
+                            } else {
                                 arr.push(self.fieldOf(field.name));
                             }
-                        }
-
-                        //test nested attribute and simple attribute expression
-                        else {
+                        } else {
+                            //test nested attribute and simple attribute expression
                             expr = select_.call(self, x);
                             if (expr) {
                                 arr = arr || [];
                                 arr.push(expr);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         //validate if x is an object (QueryField)
                         arr.push(x);
                     }
@@ -1321,7 +1133,7 @@ class DataQueryable {
         if (_.isNil(arr)) {
             if (!self.query.hasFields()) {
                 // //enumerate fields
-                var fields = self.model.attributes.filter(function (x) {
+                let fields = self.model.attributes.filter(function (x) {
                     return (x.many === false) || (_.isNil(x.many)) || ((x.expandable === true) && (self.getLevels() > 0));
                 }).map(function (x) {
                     return x.property || x.name;
@@ -1331,8 +1143,7 @@ class DataQueryable {
                 }
                 return self.select.apply(self, fields);
             }
-        }
-        else {
+        } else {
             self.query.select(arr);
         }
 
@@ -1340,10 +1151,12 @@ class DataQueryable {
     }
     // noinspection JSUnusedGlobalSymbols
     dateOf(attr) {
-        if (typeof attr === 'undefined' || attr === null)
+        if (typeof attr === 'undefined' || attr === null) {
             return attr;
-        if (typeof attr !== 'string')
+        }
+        if (typeof attr !== 'string') {
             return attr;
+        }
         return this.fieldOf('date(' + attr + ')');
     }
     /**
@@ -1353,11 +1166,13 @@ class DataQueryable {
      */
     fieldOf(attr, alias) {
 
-        if (typeof attr === 'undefined' || attr === null)
+        if (typeof attr === 'undefined' || attr === null) {
             return attr;
-        if (typeof attr !== 'string')
+        }
+        if (typeof attr !== 'string') {
             return attr;
-        var matches = /(count|avg|sum|min|max)\((.*?)\)/i.exec(attr), res, field, aggr, prop;
+        }
+        let matches = /(count|avg|sum|min|max)\((.*?)\)/i.exec(attr), res, field, aggr, prop;
         if (matches) {
             //get field
             field = this.model.field(matches[2]);
@@ -1366,51 +1181,52 @@ class DataQueryable {
             //test nested attribute aggregation
             if (_.isNil(field) && /\//.test(matches[2])) {
                 //resolve nested attribute
-                var nestedAttr = DataAttributeResolver.prototype.resolveNestedAttribute.call(this, matches[2]);
+                let nestedAttr = DataAttributeResolver.prototype.resolveNestedAttribute.call(this, matches[2]);
                 //if nested attribute exists
                 if (nestedAttr) {
                     if (_.isNil(alias)) {
-                        var nestedMatches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
+                        let nestedMatches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
                         alias = _.isNil(nestedMatches) ? aggr.concat('Of_', matches[2].replace(/\//g, "_")) : nestedMatches[1];
                     }
                     /**
                      * @type {Function}
                      */
-                    var fn = QueryField[aggr];
+                    let fn = QueryField[aggr];
                     //return query field
                     return fn(nestedAttr.$name).as(alias);
                 }
             }
-            if (typeof field === 'undefined' || field === null)
+            if (typeof field === 'undefined' || field === null) {
                 throw new Error(sprintf('The specified field %s cannot be found in target model.', matches[2]));
+            }
             if (_.isNil(alias)) {
                 matches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
                 if (matches) {
                     alias = matches[1];
-                }
-                else {
+                } else {
                     alias = aggr.concat('Of', field.name);
                 }
             }
-            if (aggr === 'count')
+            if (aggr === 'count') {
                 return QueryField.count(field.name).from(this.model.viewAdapter).as(alias);
-            else if (aggr === 'avg')
+            } else if (aggr === 'avg') {
                 return QueryField.average(field.name).from(this.model.viewAdapter).as(alias);
-            else if (aggr === 'sum')
+            } else if (aggr === 'sum') {
                 return QueryField.sum(field.name).from(this.model.viewAdapter).as(alias);
-            else if (aggr === 'min')
+            } else if (aggr === 'min') {
                 return QueryField.min(field.name).from(this.model.viewAdapter).as(alias);
-            else if (aggr === 'max')
+            } else if (aggr === 'max') {
                 return QueryField.max(field.name).from(this.model.viewAdapter).as(alias);
-        }
-        else {
+            }
+        } else {
             matches = /(\w+)\((.*?)\)/i.exec(attr);
             if (matches) {
                 res = {};
                 field = this.model.field(matches[2]);
                 aggr = matches[1];
-                if (typeof field === 'undefined' || field === null)
+                if (typeof field === 'undefined' || field === null) {
                     throw new Error(sprintf('The specified field %s cannot be found in target model.', matches[2]));
+                }
                 if (_.isNil(alias)) {
                     matches = /as\s([\u0021-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
                     if (matches) {
@@ -1420,28 +1236,27 @@ class DataQueryable {
                 prop = alias || field.property || field.name;
                 res[prop] = {}; res[prop]['$' + aggr] = [QueryField.select(field.name).from(this.model.viewAdapter)];
                 return res;
-            }
-            else {
+            } else {
                 //matches expression [field] as [alias] e.g. itemType as type
                 matches = /^(\w+)\s+as\s+(.*?)$/i.exec(attr);
                 if (matches) {
                     field = this.model.field(matches[1]);
-                    if (typeof field === 'undefined' || field === null)
+                    if (typeof field === 'undefined' || field === null) {
                         throw new Error(sprintf('The specified field %s cannot be found in target model.', attr));
+                    }
                     alias = matches[2];
                     prop = alias || field.property || field.name;
                     return QueryField.select(field.name).from(this.model.viewAdapter).as(prop);
-                }
-                else {
+                } else {
                     //try to match field with expression [field] as [alias] or [nested]/[field] as [alias]
                     field = this.model.field(attr);
-                    if (typeof field === 'undefined' || field === null)
+                    if (typeof field === 'undefined' || field === null) {
                         throw new Error(sprintf('The specified field %s cannot be found in target model.', attr));
-                    var f = QueryField.select(field.name).from(this.model.viewAdapter);
+                    }
+                    let f = QueryField.select(field.name).from(this.model.viewAdapter);
                     if (alias) {
                         return f.as(alias);
-                    }
-                    else if (field.property) {
+                    } else if (field.property) {
                         return f.as(field.property);
                     }
                     return f;
@@ -1489,26 +1304,23 @@ class DataQueryable {
      HR6205        Samsung Galaxy Note 10.1 (2014 Edition)  2
      */
     groupBy(attr) {
-        var arr = [],
+        let arr = [],
             arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : attr;
         if (_.isArray(arg)) {
-            for (var i = 0; i < arg.length; i++) {
-                var x = arg[i];
+            for (let i = 0; i < arg.length; i++) {
+                let x = arg[i];
                 if (DataAttributeResolver.prototype.testNestedAttribute.call(this, x)) {
                     //nested group by
                     arr.push(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, x));
-                }
-                else {
+                } else {
                     arr.push(this.fieldOf(x));
                 }
             }
-        }
-        else {
+        } else {
             if (DataAttributeResolver.prototype.testNestedAttribute.call(this, arg)) {
                 //nested group by
                 arr.push(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, arg));
-            }
-            else {
+            } else {
                 arr.push(this.fieldOf(arg));
             }
         }
@@ -1572,14 +1384,15 @@ class DataQueryable {
      */
     first(callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             firstInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return firstInternal.call(this, callback);
         }
     }
@@ -1590,14 +1403,15 @@ class DataQueryable {
      */
     all(callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             allInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             allInternal.call(this, callback);
         }
     }
@@ -1630,85 +1444,24 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             this.query.take(n);
             return this;
-        }
-        else {
+        } else {
             takeInternal.call(this, n, callback);
         }
     }
     /**
      * Executes current query and returns a result set based on the specified paging parameters.
-     * <p>
-     *     The result is an instance of <a href="DataResultSet.html">DataResultSet</a>. The returned records may contain nested objects
-     *     based on the definition of the current model (expandable fields).
-     *     This operation is one of the common data operations on MOST Data Applications
-     *     where the affected records may have nested objects which contain the associated objects of each object.
-     * </p>
-     <pre class="prettyprint"><code>
-     {
-        "total": 242,
-        "records": [
-            ...
-            {
-                "id": 46,
-                "orderDate": "2014-12-31 13:35:41.000+02:00",
-                "orderedItem": {
-                    "id": 413,
-                    "additionalType": "Product",
-                    "category": "Storage and Networking Gear",
-                    "price": 647.13,
-                    "model": "FY8135",
-                    "releaseDate": "2015-01-15 18:07:42.000+02:00",
-                    "name": "LaCie Blade Runner",
-                    "dateCreated": "2015-11-23 14:53:04.927+02:00",
-                    "dateModified": "2015-11-23 14:53:04.934+02:00"
-                },
-                "orderNumber": "DEF193",
-                "orderStatus": {
-                    "id": 7,
-                    "name": "Problem",
-                    "alternateName": "OrderProblem",
-                    "description": "Representing that there is a problem with the order."
-                },
-                "paymentDue": "2015-01-20 13:35:41.000+02:00",
-                "paymentMethod": {
-                    "id": 7,
-                    "name": "PayPal",
-                    "alternateName": "PayPal",
-                    "description": "Payment via the PayPal payment service."
-                },
-                "additionalType": "Order",
-                "description": null,
-                "dateCreated": "2015-11-23 21:00:18.306+02:00",
-                "dateModified": "2015-11-23 21:00:18.307+02:00"
-            }
-            ...
-        ]
-    }
-     </code></pre>
-     * @param {function(Error=,DataResultSet=)=} callback - A callback function with arguments (err, result) where the first argument is the error, if any
-     * and the second argument is an object that represents a result set
-     * @returns {Promise|*} - If callback is missing returns a promise.
-     @example
-     //retrieve products list order by price
-     context.model('Product')
-     .where('category').equal('LCDs and Peripherals')
-     .orderByDescending('price')
-     .take(3).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     list(callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             listInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return listInternal.call(this, callback);
         }
     }
@@ -1724,7 +1477,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getItems() {
-        var self = this, d = Q.defer();
+        let self = this, d = Q.defer();
         process.nextTick(function () {
             delete self.query.$inlinecount;
             if ((parseInt(self.query.$take) || 0) < 0) {
@@ -1750,9 +1503,10 @@ class DataQueryable {
      */
     countOf(name, alias) {
         alias = alias || 'countOf'.concat(name);
-        var res = this.fieldOf(sprintf('count(%s)', name));
-        if (typeof alias !== 'undefined' && alias !== null)
+        let res = this.fieldOf(sprintf('count(%s)', name));
+        if (alias != null) {
             res.as(alias);
+        }
         return res;
     }
     /**
@@ -1762,9 +1516,10 @@ class DataQueryable {
      */
     sumOf(name, alias) {
         alias = alias || 'sumOf'.concat(name);
-        var res = this.fieldOf(sprintf('sum(%s)', name));
-        if (typeof alias !== 'undefined' && alias !== null)
+        let res = this.fieldOf(sprintf('sum(%s)', name));
+        if (alias != null) {
             res.as(alias);
+        }
         return res;
     }
     /**
@@ -1782,9 +1537,9 @@ class DataQueryable {
         });
      */
     count(callback) {
-        var self = this;
+        let self = this;
         if (typeof callback !== 'function') {
-            return Q.promise(function (resolve, reject) {
+            return Q.Promise(function (resolve, reject) {
                 countInternal.bind(self)(function (err, result) {
                     if (err) {
                         return reject(err);
@@ -1792,8 +1547,7 @@ class DataQueryable {
                     return resolve(result);
                 });
             });
-        }
-        else {
+        } else {
             return countInternal.bind(self)(callback);
         }
     }
@@ -1814,14 +1568,15 @@ class DataQueryable {
      */
     max(attr, callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             maxInternal.call(this, attr, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return maxInternal.call(this, attr, callback);
         }
     }
@@ -1830,26 +1585,18 @@ class DataQueryable {
      * @param {string} attr - A string that represents a field of the current model
      * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result, if any.
      * @returns {Promise|*} - If callback parameter is missing then returns a Deferred object.
-     * @example
-     //retrieve the minimum price of products sold during last month
-     context.model('Order')
-     .where('orderDate').greaterOrEqual(moment().startOf('month').toDate())
-     .min('orderedItem/price').then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     min(attr, callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             minInternal.call(this, attr, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return minInternal.call(this, attr, callback);
         }
     }
@@ -1858,26 +1605,18 @@ class DataQueryable {
      * @param {string} attr - A string that represents a field of the current model
      * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result, if any.
      * @returns {Deferred|*} - If callback parameter is missing then returns a Deferred object.
-     * @example
-     //retrieve the average price of products sold during last month
-     context.model('Order')
-     .where('orderDate').greaterOrEqual(moment().startOf('month').toDate())
-     .average('orderedItem/price').then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     average(attr, callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             averageInternal_.call(this, attr, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return averageInternal_.call(this, attr, callback);
         }
     }
@@ -1886,7 +1625,7 @@ class DataQueryable {
      * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
      */
     migrate(callback) {
-        var self = this;
+        let self = this;
         try {
             //ensure context
             self.ensureContext();
@@ -1894,12 +1633,10 @@ class DataQueryable {
                 self.model.migrate(function (err) {
                     callback(err);
                 });
-            }
-            else {
+            } else {
                 callback();
             }
-        }
-        catch (e) {
+        } catch (e) {
             callback(e);
         }
 
@@ -1931,8 +1668,7 @@ class DataQueryable {
         this.$silent = false;
         if (typeof value === 'undefined') {
             this.$silent = true;
-        }
-        else {
+        } else {
             this.$silent = value;
         }
         return this;
@@ -1963,8 +1699,7 @@ class DataQueryable {
         this.$asArray = false;
         if (typeof value === 'undefined') {
             this.$asArray = true;
-        }
-        else {
+        } else {
             this.$asArray = value;
         }
         return this;
@@ -1982,8 +1717,7 @@ class DataQueryable {
         }
         if (typeof value === 'undefined') {
             return this.query.data[name];
-        }
-        else {
+        } else {
             this.query.data[name] = value;
         }
         return this;
@@ -2009,70 +1743,18 @@ class DataQueryable {
      * @param {...string|*} attr - A param array of strings which represents the field or the array of fields that are going to be expanded.
      * If attr is missing then all the previously defined expandable fields will be removed.
      * @returns {DataQueryable}
-     * @example
-     //retrieve an order and expand customer field
-     context.model('Order')
-     //note: the field [orderedItem] is defined as expandable in model definition and it will produce a nested object for each order
-     .select('id','orderedItem','customer')
-     .expand('customer')
-     .where('id').equal(46)
-     .first().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //Result:
-     {
-        "id": 46,
-        "orderedItem": {
-            "id": 413,
-            "additionalType": "Product",
-            "category": "Storage and Networking Gear",
-            "price": 647.13,
-            "model": "FY8135",
-            "releaseDate": "2015-01-15 18:07:42.000+02:00",
-            "name": "LaCie Blade Runner",
-            "dateCreated": "2015-11-23 14:53:04.927+02:00",
-            "dateModified": "2015-11-23 14:53:04.934+02:00"
-        },
-        "customer": {
-            "id": 317,
-            "additionalType": "Person",
-            "alternateName": null,
-            "description": "Nicole Armstrong",
-            "image": "https://s3.amazonaws.com/uifaces/faces/twitter/zidoway/128.jpg",
-            "dateCreated": "2015-11-23 14:52:57.886+02:00",
-            "dateModified": "2015-11-23 14:52:57.917+02:00"
-        }
-    }
-     @example //retrieve an order and do not expand customer field
-     {
-        "id": 46,
-        "orderedItem": {
-            "id": 413,
-            "additionalType": "Product",
-            "category": "Storage and Networking Gear",
-            "price": 647.13,
-            "model": "FY8135",
-            "releaseDate": "2015-01-15 18:07:42.000+02:00",
-            "name": "LaCie Blade Runner",
-            "dateCreated": "2015-11-23 14:53:04.927+02:00",
-            "dateModified": "2015-11-23 14:53:04.934+02:00"
-        },
-        "customer": 317
-    }
      */
     expand(attr) {
 
-        var self = this,
+        let self = this,
             arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : [attr];
-        var expanded;
+        let expanded;
         if (_.isNil(arg)) {
             delete self.$expand;
-        }
-        else {
-            if (!_.isArray(this.$expand))
+        } else {
+            if (!_.isArray(this.$expand)) {
                 self.$expand = [];
+            }
             _.forEach(arg, function (x) {
                 if (_.isNil(x)) {
                     return;
@@ -2085,24 +1767,21 @@ class DataQueryable {
                         if (_.isObject(x.options)) {
                             if (typeof expanded === 'string') {
                                 //remove expand as string
-                                var ix = self.$expand.indexOf(expanded);
+                                let ix = self.$expand.indexOf(expanded);
                                 self.$expand.splice(ix, 1);
                                 //push expand as object with options
                                 self.$expand.push(x);
-                            }
-                            else if (typeof expanded === 'object') {
+                            } else if (typeof expanded === 'object') {
                                 //ensure expand options
                                 expanded.options = expanded.options || {};
                                 //assign options to expand.options
                                 _.assign(expanded.options, x.options);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         self.$expand.push(x);
                     }
-                }
-                else {
+                } else {
                     throw new Error("Expand option may be a string or a named object.");
                 }
             });
@@ -2114,22 +1793,19 @@ class DataQueryable {
             return false;
         }
 
-        var expand = attr;
+        let expand = attr;
         if (typeof attr === 'string') {
             expand = attr;
-        }
-        else if (typeof attr.name === "string") {
+        } else if (typeof attr.name === "string") {
             expand = attr.name;
         }
 
         return _.find(this.$expand, function (x) {
             if (typeof x === 'string') {
                 return x === expand;
-            }
-            else if (x instanceof DataAssociationMapping) {
+            } else if (x instanceof DataAssociationMapping) {
                 return x === expand;
-            }
-            else if (typeof x.name === "string") {
+            } else if (typeof x.name === "string") {
                 return x.name === expand;
             }
             return false;
@@ -2140,23 +1816,6 @@ class DataQueryable {
      * @param {boolean=} value - If the value is true the result will contain only flat objects -without any nested associated object-,
      * even if model definition contains expandable fields. If value is missing, the default parameter is true
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders
-     context.model('Order')
-     .flatten()
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //Results:
-     id  customer  orderStatus  paymentMethod
-     --  --------  -----------  -------------
-     1   299       5            6
-     2   337       7            5
-     3   309       3            3
-     4   257       2            4
-     5   285       5            2
      */
     flatten(value) {
 
@@ -2164,8 +1823,7 @@ class DataQueryable {
             //delete expandable data (if any)
             delete this.$expand;
             this.$flatten = true;
-        }
-        else {
+        } else {
             delete this.$flatten;
         }
         if (this.$flatten) {
@@ -2177,17 +1835,6 @@ class DataQueryable {
      * Prepares an addition (e.g. ([field] + 4))
      * @param {number|*} x - The
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of products
-     context.model('Product')
-     .select('id','name', 'price')
-     //perform ((ProductData.price + 100)>300)
-     .where('price').add(100).lowerThan(300)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     add(x) {
         this.query.add(x); return this;
@@ -2196,16 +1843,6 @@ class DataQueryable {
      * Prepares a subtraction (e.g. ([field] - 4))
      * @param {number|*} x
      * @returns {DataQueryable}
-     //retrieve a list of orders
-     context.model('Product')
-     .select('id','name', 'price')
-     //perform ((ProductData.price - 50)<150)
-     .where('price').subtract(50).lowerThan(150)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     subtract(x) {
         this.query.subtract(x); return this;
@@ -2214,17 +1851,6 @@ class DataQueryable {
      * Prepares a multiplication (e.g. ([field] * 0.2))
      * @param {number} x
      * @returns {DataQueryable}
-     @example
-     //retrieve a list of orders
-     context.model('Product')
-     .select('id','name', 'price')
-     //perform ((ProductData.price * 0.2)<50)
-     .where('price').multiply(0.2).lowerThan(50)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     multiply(x) {
         this.query.multiply(x); return this;
@@ -2233,17 +1859,6 @@ class DataQueryable {
      * Prepares a division (e.g. ([field] / 0.2))
      * @param {number} x
      * @returns {DataQueryable}
-     @example
-     //retrieve a list of orders
-     context.model('Product')
-     .select('id','name', 'price')
-     //perform ((ProductData.price / 0.8)>500)
-     .where('price').divide(0.8).greaterThan(500)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     divide(x) {
         this.query.divide(x); return this;
@@ -2261,21 +1876,6 @@ class DataQueryable {
      * @param {number} start - The position where to start the extraction. First character is at index 0
      * @param {number=} length - The number of characters to extract
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of persons
-     context.model('Person')
-     .select('givenName')
-     .where('givenName').substr(0,4).equal('Alex')
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //Results:
-     givenName
-     ---------
-     Alex
-     Alexis
      */
     substr(start, length) {
         this.query.substr(start, length); return this;
@@ -2284,24 +1884,6 @@ class DataQueryable {
      * Prepares an indexOf comparison
      * @param {string} s The string to search for
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of persons
-     context.model('Person')
-     .select('givenName')
-     .where('givenName').indexOf('a').equal(1)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //Results:
-     givenName
-     ---------
-     Daisy
-     Maxwell
-     Mackenzie
-     Zachary
-     Mason
      */
     indexOf(s) {
         this.query.indexOf(s); return this;
@@ -2324,24 +1906,6 @@ class DataQueryable {
     /**
      * Prepares a string length expression
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of persons
-     context.model('Person')
-     .select('givenName')
-     .where('givenName').length().equal(5)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
-     @example //Results:
-     givenName
-     ---------
-     Daisy
-     Peter
-     Kylie
-     Colin
-     Lydia
      */
     length() {
         this.query.length(); return this;
@@ -2349,16 +1913,6 @@ class DataQueryable {
     /**
      * Prepares an expression by getting the date only value of a datetime field
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders
-     context.model('Order')
-     .select('id','paymentDue', 'orderDate')
-     .where('orderDate').getDate().equal('2015-01-16')
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     getDate() {
         this.query.getDate(); return this;
@@ -2366,15 +1920,6 @@ class DataQueryable {
     /**
      * Prepares an expression by getting the year of a datetime field
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders made during 2015
-     context.model('Order')
-     .where('orderDate').getYear().equal(2015)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     getYear() {
         this.query.getYear(); return this;
@@ -2382,15 +1927,6 @@ class DataQueryable {
     /**
      * Prepares an expression by getting the year of a datetime field
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders made during 2015
-     context.model('Order')
-     .where('orderDate').getYear().equal(2015)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     getFullYear() {
         this.query.getYear(); return this;
@@ -2398,17 +1934,6 @@ class DataQueryable {
     /**
      * Prepares an expression by getting the month (from 1 to 12) of a datetime field.
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders made during October 2015
-     context.model('Order')
-     .where('orderDate').getYear().equal(2015)
-     .and('orderDate').getMonth().equal(10)
-      .take(5).list().then(function(result) {
-            console.table(result.records);
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     getMonth() {
         this.query.getMonth(); return this;
@@ -2417,17 +1942,6 @@ class DataQueryable {
     /**
      * Prepares an expression by getting the day of the month of a datetime field
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of orders
-     context.model('Order')
-     .where('orderDate').getYear().equal(2015)
-     .and('orderDate').getMonth().equal(1)
-     .and('orderDate').getDay().equal(16)
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     getDay() {
         this.query.getDay(); return this;
@@ -2480,15 +1994,6 @@ class DataQueryable {
     /**
      * Prepares a lower case string comparison
      * @returns {DataQueryable}
-     * @example
-     //retrieve a list of persons
-     context.model('Person')
-     .where('givenName').toLocaleLowerCase().equal('alexis')
-     .take(5).list().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     toLowerCase() {
         return this.toLocaleLowerCase();
@@ -2511,27 +2016,18 @@ class DataQueryable {
      * Executes the underlying query and a single value.
      * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
      * @returns {Promise|*}
-     * @example
-     //retrieve the full name (description) of a person
-     context.model('Person')
-     .where('user').equal(330)
-     .select('description')
-     .value().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     value(callback) {
         if (typeof callback !== 'function') {
-            var d = Q.defer();
+            let d = Q.defer();
             valueInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err);
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return valueInternal.call(this, callback);
         }
     }
@@ -2541,17 +2037,6 @@ class DataQueryable {
      * If the value is greater than 1 then the nested objects may contain other nested objects and so on.
      * @param {Number=} value - A number which represents the number of levels which are going to be used in expandable attributes.
      * @returns {DataQueryable}
-     * @example
-     //get orders, expand customer and get customer's nested objects if any.
-     context.model('Order')
-     .orderByDescending('dateCreated)
-     .expand('customer')
-     .levels(2)
-     .getItems().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     levels(value) {
         /**
@@ -2561,9 +2046,8 @@ class DataQueryable {
         this.$levels = 1;
         if (typeof value === 'undefined') {
             this.$levels = 1;
-        }
-        else if (typeof value === 'number') {
-            this.$levels = parseInt(value);
+        } else if (typeof value === 'number') {
+            this.$levels = value;
         }
         //set flatten property (backward compatibility issue)
         this.$flatten = (this.$levels < 1);
@@ -2582,21 +2066,6 @@ class DataQueryable {
     /**
      * Converts a DataQueryable instance to an object which is going to be used as parameter in DataQueryable.expand() method
      *  @param {String} attr - A string which represents the attribute of a model which is going to be expanded with the options specified in this instance of DataQueryable.
-     *
-     *  @example
-     //get customer and customer orders with options (e.g. select specific attributes and sort orders by order date)
-     context.model("Person")
-     .search("Daisy")
-     .expand(context.model("Order").select("id", "customer","orderStatus", "orderDate", "orderedItem").levels(2).orderByDescending("orderDate").take(10).toExpand("orders"))
-     .take(3)
-     .getItems()
-     .then(function (result) {
-            console.log(JSON.stringify(result));
-            done();
-        }).catch(function (err) {
-        done(err);
-    });
-     *
      */
     toExpand(attr) {
         if ((typeof attr === 'string') && (attr.length > 0)) {
@@ -2612,7 +2081,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getItem() {
-        var self = this, d = Q.defer();
+        let self = this, d = Q.defer();
         process.nextTick(function () {
             self.first().then(function (result) {
                 return d.resolve(result);
@@ -2627,7 +2096,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getTypedItem() {
-        var self = this;
+        let self = this;
         return Q.Promise(function (resolve, reject) {
             self.first().then(function (result) {
                 return resolve(self.model.convert(result));
@@ -2641,7 +2110,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getTypedItems() {
-        var self = this, d = Q.defer();
+        let self = this, d = Q.defer();
         process.nextTick(function () {
             self.getItems().then(function (result) {
                 return d.resolve(self.model.convert(result));
@@ -2656,7 +2125,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getTypedList() {
-        var self = this, d = Q.defer();
+        let self = this, d = Q.defer();
         process.nextTick(function () {
             self.list().then(function (result) {
                 result.value = self.model.convert(result.value.slice(0));
@@ -2691,13 +2160,12 @@ class DataQueryable {
  * @returns {*}
  */
 function resolveValue(obj) {
-    var self = this;
+    let self = this;
     if (typeof obj === 'string' && /^\$it\//.test(obj)) {
-        var attr = obj.replace(/^\$it\//,'');
+        let attr = obj.replace(/^\$it\//, '');
         if (DataAttributeResolver.prototype.testNestedAttribute(attr)) {
             return DataAttributeResolver.prototype.resolveNestedAttribute.call(self, attr);
-        }
-        else {
+        } else {
             attr = DataAttributeResolver.prototype.testAttribute(attr);
             if (attr) {
                 return self.fieldOf(attr.name);
@@ -2714,25 +2182,22 @@ function resolveValue(obj) {
  * @private
  */
 function select_(arg) {
-    var self = this;
-    if (typeof arg === 'string' && arg.length===0) {
+    let self = this;
+    if (typeof arg === 'string' && arg.length === 0) {
         return;
     }
-    var a = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self,arg);
+    let a = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self, arg);
     if (a) {
-        return DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, a.aggr , a.name, a.property);
-    }
-    else {
-        a = DataAttributeResolver.prototype.testNestedAttribute.call(self,arg);
+        return DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, a.aggr, a.name, a.property);
+    } else {
+        a = DataAttributeResolver.prototype.testNestedAttribute.call(self, arg);
         if (a) {
             return DataAttributeResolver.prototype.selectNestedAttribute.call(self, a.name, a.property);
-        }
-        else {
-            a = DataAttributeResolver.prototype.testAttribute.call(self,arg);
+        } else {
+            a = DataAttributeResolver.prototype.testAttribute.call(self, arg);
             if (a) {
                 return self.fieldOf(a.name, a.property);
-            }
-            else {
+            } else {
                 return self.fieldOf(arg);
             }
         }
@@ -2752,17 +2217,17 @@ function select_(arg) {
  * @param {Function} callback
  */
 function firstInternal(callback) {
-    var self = this;
-    callback = callback || function() {};
-    self.skip(0).take(1, function(err, result) {
+    let self = this;
+    callback = callback || function () { };
+    self.skip(0).take(1, function (err, result) {
         if (err) {
             callback(err);
-        }
-        else {
-            if (result.length>0)
+        } else {
+            if (result.length > 0) {
                 callback(null, result[0]);
-            else
+            } else {
                 callback(null);
+            }
         }
     });
 }
@@ -2775,7 +2240,7 @@ function firstInternal(callback) {
  * @param {Function} callback
  */
 function allInternal(callback) {
-    var self = this;
+    let self = this;
     //remove skip and take
     delete this.query.$skip;
     delete this.query.$take;
@@ -2783,7 +2248,7 @@ function allInternal(callback) {
     if (!self.query.hasFields()) {
         self.select();
     }
-    callback = callback || function() {};
+    callback = callback || function () { };
     //execute select
     execute_.call(self, callback);
 }
@@ -2797,15 +2262,15 @@ function allInternal(callback) {
  * @returns {*} - A collection of objects that meet the query provided
  */
 function takeInternal(n, callback) {
-    var self = this;
+    let self = this;
     self.query.take(n);
-    callback = callback || function() {};
+    callback = callback || function () { };
     //validate already selected fields
     if (!self.query.hasFields()) {
         self.select();
     }
     //execute select
-    execute_.call(self,callback);
+    execute_.call(self, callback);
 }
 
 
@@ -2817,40 +2282,36 @@ function takeInternal(n, callback) {
  * @param {Function} callback
  */
 function listInternal(callback) {
-    var self = this;
+    let self = this;
     try {
-        callback = callback || function() {};
+        callback = callback || function () { };
         //ensure take attribute
-        var take = self.query.$take || 25;
+        let take = self.query.$take || 25;
         //ensure that fields are already selected (or select all)
         self.select();
 
         //take objects
-        self.take(take, function(err, result)
-        {
+        self.take(take, function (err, result) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 /**
                  * @type {DataQueryable|*}
                  */
-                var q1 = self.clone();
+                let q1 = self.clone();
                 // get count of records
-                q1.count(function(err, total) {
+                q1.count(function (err, total) {
                     if (err) {
                         callback(err);
-                    }
-                    else {
+                    } else {
                         //and finally create result set
-                        var res = { total: total, skip: parseInt(self.query.$skip) || 0 , value: (result || []) };
+                        let res = { total: total, skip: parseInt(self.query.$skip) || 0, value: (result || []) };
                         callback(null, res);
                     }
                 });
             }
         });
-    }
-    catch(e) {
+    } catch (e) {
         callback(e);
     }
 }
@@ -2864,10 +2325,10 @@ function listInternal(callback) {
  * @returns {*} - A collection of objects that meet the query provided
  */
 function countInternal(callback) {
-    var self = this;
-    callback = callback || function() {};
+    let self = this;
+    callback = callback || function () { };
     //clone query
-    var cloned = self.clone();
+    let cloned = self.clone();
     cloned.query.count("__count__");
     if (cloned.query.hasFields() === false) {
         cloned.select();
@@ -2875,15 +2336,16 @@ function countInternal(callback) {
     if (hasOwnProperty(cloned.query, '$order')) {
         delete cloned.query.$order;
     }
-    return  execute_.bind(cloned)(function(err, result) {
+    return execute_.bind(cloned)(function (err, result) {
         if (err) {
             return callback(err);
         }
-        var value = null;
+        let value = null;
         if (_.isArray(result)) {
             //get first value
-            if (result.length>0)
+            if (result.length > 0) {
                 value = result[0]["__count__"];
+            }
         }
         return callback(null, value);
     });
@@ -2897,11 +2359,13 @@ function countInternal(callback) {
  * @param {Function} callback
  */
 function maxInternal(attr, callback) {
-    var self = this;
+    let self = this;
     delete self.query.$skip;
-    var field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'max', attr);
-    self.select([field]).flatten().value(function(err, result) {
-        if (err) { return callback(err); }
+    let field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'max', attr);
+    self.select(field).flatten().value(function (err, result) {
+        if (err) {
+            return callback(err);
+        }
         callback(null, result)
     });
 }
@@ -2914,11 +2378,13 @@ function maxInternal(attr, callback) {
  * @param {Function} callback
  */
 function minInternal(attr, callback) {
-    var self = this;
+    let self = this;
     delete self.query.$skip;
-    var field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'min', attr);
-    self.select([field]).flatten().value(function(err, result) {
-        if (err) { return callback(err); }
+    let field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'min', attr);
+    self.select(field).flatten().value(function (err, result) {
+        if (err) {
+            return callback(err);
+        }
         callback(null, result)
     });
 }
@@ -2931,11 +2397,13 @@ function minInternal(attr, callback) {
  * @param {Function} callback
  */
 function averageInternal_(attr, callback) {
-    var self = this;
+    let self = this;
     delete self.query.$skip;
-    var field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'avg', attr);
-    self.select([field]).flatten().value(function(err, result) {
-        if (err) { return callback(err); }
+    let field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'avg', attr);
+    self.select(field).flatten().value(function (err, result) {
+        if (err) {
+            return callback(err);
+        }
         callback(null, result)
     });
 }
@@ -2947,50 +2415,58 @@ function averageInternal_(attr, callback) {
  * @param {Function} callback
  * @private
  */
- function execute_(callback) {
-    var self = this;
-    self.migrate(function(err) {
-        if (err) { callback(err); return; }
+function execute_(callback) {
+    let self = this;
+    self.migrate(function (err) {
+        if (err) {
+            callback(err); return;
+        }
+        let event;
         try {
-            var event = { model:self.model, query:self.query, type:'select' };
-            var flatten = self.$flatten || (self.getLevels()===0);
+            event = { model: self.model, query: self.query, type: 'select' };
+            let flatten = self.$flatten || (self.getLevels() === 0);
             if (!flatten) {
                 //get expandable fields
-                var expandables = self.model.attributes.filter(function(x) { return x.expandable; });
+                let expandables = self.model.attributes.filter(function (x) {
+                    return x.expandable;
+                });
                 //get selected fields
-                var selected = self.query.$select[self.model.viewAdapter];
+                let selected = self.query.$select[self.model.viewAdapter];
                 if (_.isArray(selected)) {
                     //remove hidden fields
-                    var hiddens = self.model.attributes.filter(function(x) { return x.hidden; });
-                    if (hiddens.length>0) {
-                        for (var i = 0; i < selected.length; i++) {
+                    let hiddens = self.model.attributes.filter(function (x) {
+                        return x.hidden;
+                    });
+                    if (hiddens.length > 0) {
+                        let x;
+                        for (let i = 0; i < selected.length; i++) {
                             /**
                              * @type {QueryField}
                              */
-                            var x = selected[i] instanceof QueryField ? selected[i] : new QueryField(selected[i]);
-                            var hiddenField = hiddens.find(function(y) {
+                            x = selected[i] instanceof QueryField ? selected[i] : new QueryField(selected[i]);
+                            let hiddenField = hiddens.find(function (y) {
                                 return x.getName() === y.name;
                             });
                             if (hiddenField) {
                                 selected.splice(i, 1);
-                                i-=1;
+                                i -= 1;
                             }
                         }
                     }
                     //expand fields
-                    if (expandables.length>0) {
-                        selected.forEach(function(x) {
+                    if (expandables.length > 0) {
+                        selected.forEach(function (x) {
                             //get field
-                            var field = expandables.find(function(y) {
-                                var f = x instanceof QueryField ? x : new QueryField(x);
+                            let field = expandables.find(function (y) {
+                                let f = x instanceof QueryField ? x : new QueryField(x);
                                 return f.getName() === y.name;
                             });
                             //add expandable models
                             if (field) {
-                                var mapping = self.model.inferMapping(field.name);
+                                let mapping = self.model.inferMapping(field.name);
                                 if (mapping) {
-                                    self.$expand = self.$expand || [ ];
-                                    var expand1 = self.$expand.find(function(x) {
+                                    self.$expand = self.$expand || [];
+                                    let expand1 = self.$expand.find(function (x) {
                                         return x.name === field.name;
                                     });
                                     if (typeof expand1 === 'undefined') {
@@ -3003,33 +2479,36 @@ function averageInternal_(attr, callback) {
                     }
                 }
             }
-        }
-        catch(err) {
+        } catch (err) {
             return callback(err);
         }
 
         //merge view filter. if any
         if (self.$view) {
-            return self.model.filter({ $filter: self.$view.filter, $order:self.$view.order, $group:self.$view.group }, function(err, q) {
+            return self.model.filter({ $filter: self.$view.filter, $order: self.$view.order, $group: self.$view.group }, function (err, q) {
                 if (err) {
-                    if (err) { callback(err); }
-                }
-                else {
+                    if (err) {
+                        callback(err);
+                    }
+                } else {
                     //prepare current filter
                     if (q.query.$prepared) {
-                        if (event.query.$where)
+                        if (event.query.$where) {
                             event.query.prepare();
+                        }
                         event.query.$where = q.query.$prepared;
                     }
-                    if (q.query.$group)
-                    //replace group fields
+                    if (q.query.$group) {
+                        //replace group fields
                         event.query.$group = q.query.$group;
+                    }
                     //add order fields
                     if (q.query.$order) {
                         if (_.isArray(event.query.$order)) {
-                            q.query.$order.forEach(function(x) { event.query.$order.push(x); });
-                        }
-                        else {
+                            q.query.$order.forEach(function (x) {
+                                event.query.$order.push(x);
+                            });
+                        } else {
                             event.query.$order = q.query.$order;
                         }
                     }
@@ -3037,8 +2516,7 @@ function averageInternal_(attr, callback) {
                     return finalExecuteInternal_.call(self, event, callback);
                 }
             });
-        }
-        else {
+        } else {
             //execute query
             return finalExecuteInternal_.call(self, event, callback);
         }
@@ -3051,39 +2529,52 @@ function averageInternal_(attr, callback) {
  * @param {*} event
  * @param {Function} callback
  */
- function finalExecuteInternal_(event, callback) {
-    var self = this, context = self.ensureContext();
+function finalExecuteInternal_(event, callback) {
+    let self = this, context = self.ensureContext();
     //pass data queryable to event
     event.emitter = this;
-    var afterListenerCount = self.model.listeners('after.execute').length;
-    self.model.emit('before.execute', event, function(err) {
+    let afterListenerCount = self.model.listeners('after.execute').length;
+    self.model.emit('before.execute', event, function (err) {
         if (err) {
             callback(err);
-        }
-        else {
+        } else {
             //if command has been completed, do not execute the command against the underlying database
             if (typeof event['result'] !== 'undefined') {
                 //call after execute
-                var result = event['result'];
-                return afterExecute_.call(self, result, function(err, result) {
-                    if (err) { return callback(err); }
-                    if (afterListenerCount===0) { return callback(null, result); }
+                let result = event['result'];
+                return afterExecute_.call(self, result, function (err, result) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    if (afterListenerCount === 0) {
+                        return callback(null, result);
+                    }
                     //raise after execute event
-                    self.model.emit('after.execute', event, function(err) {
-                        if (err) { return callback(err); }
+                    self.model.emit('after.execute', event, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
                         callback(null, result);
                     });
                 });
             }
-            context.db.execute(event.query, null, function(err, result) {
-                if (err) { return callback(err); }
-                afterExecute_.call(self, result, function(err, result) {
-                    if (err) { return callback(err); }
-                    if (afterListenerCount===0) { return callback(null, result); }
+            context.db.execute(event.query, null, function (err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                afterExecute_.call(self, result, function (err, result) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    if (afterListenerCount === 0) {
+                        return callback(null, result);
+                    }
                     //raise after execute event
                     event.result = result;
-                    self.model.emit('after.execute', event, function(err) {
-                        if (err) { return callback(err); }
+                    self.model.emit('after.execute', event, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
                         callback(null, result);
                     });
                 });
@@ -3100,94 +2591,92 @@ function averageInternal_(attr, callback) {
  * @private
  */
 function afterExecute_(result, callback) {
-    var self = this;
-    var field;
+    let self = this;
+    let field;
     if (self.query.$count) {
         return callback(null, result);
     }
     if (self.$expand) {
         //get distinct values
 
-        var expands = _.intersectionBy(_.reverse(self.$expand), function(x) {
-           if (typeof x === 'string') {
-               return x;
-           }
-           else if (x instanceof DataAssociationMapping) {
+        let expands = _.intersectionBy(_.reverse(self.$expand), function (x) {
+            if (typeof x === 'string') {
                 return x;
-           }
-           else if (typeof x.name === "string") {
-               return x.name;
-           }
-           return x;
+            } else if (x instanceof DataAssociationMapping) {
+                return x;
+            } else if (typeof x.name === "string") {
+                return x.name;
+            }
+            return x;
         });
 
         //expands = self.$expand.distinct(function(x) { return x; });
-        async.eachSeries(expands, function(expand, cb) {
-
+        async.eachSeries(expands, function (expand, cb) {
+            let mapping = null;
+            /**
+             * get mapping
+             * @type {DataAssociationMapping|*}
+             */
+            let options = {};
             try {
-                /**
-                 * get mapping
-                 * @type {DataAssociationMapping|*}
-                 */
-                var mapping = null, options = { };
                 if (expand instanceof DataAssociationMapping) {
                     mapping = expand;
                     if (typeof expand.select !== 'undefined' && expand.select !== null) {
-                        if (typeof expand.select === 'string')
+                        if (typeof expand.select === 'string') {
                             options["$select"] = expand.select;
-                        else if (_.isArray(expand.select))
+                        } else if (_.isArray(expand.select)) {
                             options["$select"] = expand.select.join(",");
+                        }
                     }
                     //get expand options
                     if (typeof expand.options !== 'undefined' && expand.options !== null) {
                         _.assign(options, expand.options);
                     }
-                }
-                else {
+                } else {
                     //get mapping from expand attribute
-                    var expandAttr;
+                    let expandAttr;
                     if (typeof expand === 'string') {
                         //get expand attribute as string
                         expandAttr = expand;
-                    }
-                    else if ((typeof expand === 'object') && hasOwnProperty(expand, 'name')) {
+                    } else if ((typeof expand === 'object') && hasOwnProperty(expand, 'name')) {
                         //get expand attribute from Object.name property
                         expandAttr = expand.name;
                         //get expand options
                         if (typeof expand.options !== 'undefined' && expand.options !== null) {
                             options = expand.options;
                         }
-                    }
-                    else {
+                    } else {
                         //invalid expand parameter
                         return callback(new Error("Invalid expand option. Expected string or a named object."));
                     }
                     field = self.model.field(expandAttr);
-                    if (typeof field === 'undefined')
-                        field = self.model.attributes.find(function(x) { return x.type===expandAttr });
+                    if (typeof field === 'undefined') {
+                        field = self.model.attributes.find(function (x) {
+                            return x.type === expandAttr
+                        });
+                    }
                     if (field) {
                         mapping = self.model.inferMapping(field.name);
-                        if (expands.find(function(x) {
-                                return (x.parentField === mapping.parentField) &&
-                                    (x.parentModel === mapping.parentModel) &&
-                                    (x.childField === mapping.childField) &&
-                                    (x.childModel === mapping.childModel)
-                            })) {
+                        if (expands.find(function (x) {
+                            return (x.parentField === mapping.parentField) &&
+                                (x.parentModel === mapping.parentModel) &&
+                                (x.childField === mapping.childField) &&
+                                (x.childModel === mapping.childModel)
+                        })) {
                             return cb();
                         }
                         if (mapping) {
                             mapping.refersTo = mapping.refersTo || field.name;
                             if (_.isObject(mapping.options)) {
                                 _.assign(options, mapping.options);
-                            }
-                            else if (_.isArray(mapping.select) && mapping.select.length>0) {
+                            } else if (_.isArray(mapping.select) && mapping.select.length > 0) {
                                 options['$select'] = mapping.select.join(",");
                             }
                             // check data view attribute mapping options
                             if (self.$view) {
                                 // get view field
-                                var re = new RegExp('^' + expand.name + '$', 'ig');
-                                var viewField = self.$view.fields.find(function(x) {
+                                let re = new RegExp('^' + expand.name + '$', 'ig');
+                                let viewField = self.$view.fields.find(function (x) {
                                     return re.test(x.name);
                                 });
                                 // if view field has mapping options
@@ -3201,8 +2690,7 @@ function afterExecute_(result, callback) {
                 }
                 if (options instanceof DataQueryable) {
                     // do nothing
-                }
-                else {
+                } else {
                     //set default $top option to -1 (backward compatibility issue)
                     if (!hasOwnProperty(options, "$top")) {
                         options["$top"] = -1;
@@ -3214,66 +2702,58 @@ function afterExecute_(result, callback) {
                         }
                     }
                 }
-            }
-            catch(e) {
+            } catch (e) {
                 return cb(e);
             }
 
             if (mapping) {
                 //clone mapping
-                var thisMapping = _.assign({}, mapping);
+                let thisMapping = _.assign({}, mapping);
                 thisMapping.options = options;
-                if (mapping.associationType==='association' || mapping.associationType==='junction') {
-                    if ((mapping.parentModel===self.model.name) && (mapping.associationType==='association')) {
+                if (mapping.associationType === 'association' || mapping.associationType === 'junction') {
+                    if ((mapping.parentModel === self.model.name) && (mapping.associationType === 'association')) {
                         return mappingExtensions.extend(thisMapping).for(self).getAssociatedChilds_v1(result)
-                            .then(function() {
+                            .then(function () {
                                 return cb();
-                            }).catch(function(err) {
+                            }).catch(function (err) {
                                 return cb(err);
                             });
-                    }
-                    else if (mapping.childModel===self.model.name && mapping.associationType==='junction') {
+                    } else if (mapping.childModel === self.model.name && mapping.associationType === 'junction') {
                         return mappingExtensions.extend(thisMapping).for(self).getParents_v1(result)
-                            .then(function() {
+                            .then(function () {
                                 return cb();
-                        }).catch(function(err) {
-                           return cb(err);
-                        });
-                    }
-                    else if (mapping.parentModel===self.model.name && mapping.associationType==='junction') {
+                            }).catch(function (err) {
+                                return cb(err);
+                            });
+                    } else if (mapping.parentModel === self.model.name && mapping.associationType === 'junction') {
                         return mappingExtensions.extend(thisMapping).for(self).getChilds_v1(result)
-                            .then(function() {
+                            .then(function () {
                                 return cb();
-                            }).catch(function(err) {
+                            }).catch(function (err) {
                                 return cb(err);
                             });
-                    }
-                    else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
+                    } else if ((mapping.childModel === self.model.name) && (mapping.associationType === 'association')) {
                         return mappingExtensions.extend(thisMapping).for(self).getAssociatedParents_v1(result)
-                            .then(function() {
+                            .then(function () {
                                 return cb();
-                            }).catch(function(err) {
+                            }).catch(function (err) {
                                 return cb(err);
                             });
                     }
-                }
-                else {
+                } else {
                     return cb(new Error("Not yet implemented"));
                 }
-            }
-            else {
+            } else {
                 return cb(new DataError("EASSOC", sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
             }
-        }, function(err) {
+        }, function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 toArrayCallback.call(self, result, callback);
             }
         });
-    }
-    else {
+    } else {
         toArrayCallback.call(self, result, callback);
     }
 }
@@ -3286,35 +2766,34 @@ function afterExecute_(result, callback) {
  */
 function toArrayCallback(result, callback) {
     try {
-        var self = this;
+        let self = this;
         if (self.$asArray) {
             if (typeof self.query === 'undefined') {
                 return callback(null, result);
             }
-            var fields = self.query.fields();
-            if (_.isArray(fields)===false) {
+            let fields = self.query.fields();
+            if (_.isArray(fields) === false) {
                 return callback(null, result);
             }
-            if (fields.length===1) {
-                var arr = [];
-                result.forEach(function(x) {
-                    if (_.isNil(x))
+            if (fields.length === 1) {
+                let arr = [];
+                result.forEach(function (x) {
+                    if (_.isNil(x)) {
                         return;
-                    var key = Object.keys(x)[0];
-                    if (x[key])
+                    }
+                    let key = Object.keys(x)[0];
+                    if (x[key]) {
                         arr.push(x[key]);
+                    }
                 });
                 return callback(null, arr);
-            }
-            else {
+            } else {
                 return callback(null, result);
             }
-        }
-        else {
+        } else {
             return callback(null, result);
         }
-    }
-    catch (e) {
+    } catch (e) {
         return callback(e);
     }
 }
@@ -3337,11 +2816,17 @@ function valueInternal(callback) {
     if (_.isNil(this.query.$select)) {
         this.select(this.model.primaryKey);
     }
-    firstInternal.call(this, function(err, result) {
-        if (err) { return callback(err); }
-        if (_.isNil(result)) { return callback(); }
-        var key = Object.keys(result)[0];
-        if (typeof key === 'undefined') { return callback(); }
+    firstInternal.call(this, function (err, result) {
+        if (err) {
+            return callback(err);
+        }
+        if (_.isNil(result)) {
+            return callback();
+        }
+        let key = Object.keys(result)[0];
+        if (typeof key === 'undefined') {
+            return callback();
+        }
         callback(null, result[key]);
     });
 }

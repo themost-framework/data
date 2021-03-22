@@ -49,7 +49,7 @@ export declare class DataConfiguration {
     constructor(configPath: string);
     static getCurrent(): DataConfiguration;
     static setCurrent(config: DataConfiguration): DataConfiguration;
-    static getNamedConfiguration(name: string);
+    static getNamedConfiguration(name: string): DataConfiguration;
 
 }
 export declare class DataConfigurationStrategy extends ConfigurationStrategy{

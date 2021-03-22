@@ -1,32 +1,32 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-var _ = require('lodash');
-var Symbol = require('symbol');
-var TraceUtils = require('@themost/common').TraceUtils;
-var path = require("path");
-var pluralize = require('pluralize');
-var Args = require('@themost/common').Args;
-var ConfigurationBase = require('@themost/common').ConfigurationBase;
-var ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
-var PathUtils = require('@themost/common').PathUtils;
-var RandomUtils = require('@themost/common').RandomUtils;
-var AbstractMethodError = require('@themost/common').AbstractMethodError;
-var DataCacheStrategy = require('./data-cache').DataCacheStrategy;
-var DefaultDataCacheStrategy = require('./data-cache').DefaultDataCacheStrategy;
-var hasOwnProperty = require('./has-own-property').hasOwnProperty;
-var ModuleLoader = require('./module-loader').ModuleLoader;
-var DefaultModuleLoader = require('./module-loader').DefaultModuleLoader;
+let _ = require('lodash');
+let Symbol = require('symbol');
+let TraceUtils = require('@themost/common').TraceUtils;
+let path = require("path");
+let pluralize = require('pluralize');
+let Args = require('@themost/common').Args;
+let ConfigurationBase = require('@themost/common').ConfigurationBase;
+let ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
+let PathUtils = require('@themost/common').PathUtils;
+let RandomUtils = require('@themost/common').RandomUtils;
+let AbstractMethodError = require('@themost/common').AbstractMethodError;
+let DataCacheStrategy = require('./data-cache').DataCacheStrategy;
+let DefaultDataCacheStrategy = require('./data-cache').DefaultDataCacheStrategy;
+let hasOwnProperty = require('./has-own-property').hasOwnProperty;
+let ModuleLoader = require('./module-loader').ModuleLoader;
+let DefaultModuleLoader = require('./module-loader').DefaultModuleLoader;
 
-var modelsProperty = Symbol('models');
-var modelPathProperty = Symbol('modelPath');
-var filesProperty = Symbol('files');
-var dataTypesProperty = Symbol('dataTypes');
-var adapterTypesProperty =  Symbol('adapterTypes');
-var currentConfiguration = Symbol('current');
-var namedConfigurations = Symbol('namedConfigurations');
+let modelsProperty = Symbol('models');
+let modelPathProperty = Symbol('modelPath');
+let filesProperty = Symbol('files');
+let dataTypesProperty = Symbol('dataTypes');
+let adapterTypesProperty =  Symbol('adapterTypes');
+let currentConfiguration = Symbol('current');
+let namedConfigurations = Symbol('namedConfigurations');
 
 function interopRequireDefault(path) {
-    var obj = require(path);
+    let obj = require(path);
     return obj && obj.__esModule ? obj['default'] : obj;
 }
 
@@ -37,8 +37,9 @@ function interopRequireDefault(path) {
  * @private
  */
 function _dasherize(s) {
-    if (_.isString(s))
+    if (_.isString(s)) {
         return _.trim(s).replace(/[_\s]+/g, '-').replace(/([A-Z])/g, '-$1').replace(/-+/g, '-').replace(/^-/,'').toLowerCase();
+    }
     return s;
 }
 
@@ -289,7 +290,7 @@ class DataConfiguration extends ConfigurationBase {
         return DataConfiguration[currentConfiguration];
     }
     /**
-     * @param DataConfiguration config
+     * @param {DataConfiguration} config
      * @returns {DataConfiguration}
      */
     static setCurrent(config) {
@@ -312,8 +313,9 @@ class DataConfiguration extends ConfigurationBase {
         if (_.isNil(DataConfiguration[namedConfigurations])) {
             DataConfiguration[namedConfigurations] = {};
         }
-        if (typeof DataConfiguration[namedConfigurations][name] !== 'undefined')
+        if (typeof DataConfiguration[namedConfigurations][name] !== 'undefined') {
             return DataConfiguration[namedConfigurations][name];
+        }
         DataConfiguration[namedConfigurations][name] = new DataConfiguration();
         return DataConfiguration[namedConfigurations][name];
     }
@@ -359,15 +361,15 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
             this.getConfiguration().setSourceAt('settings/auth', new AuthSettingsConfiguration());
         }
 
-        var configAdapterTypes = this.getConfiguration().getSourceAt('adapterTypes');
+        let configAdapterTypes = this.getConfiguration().getSourceAt('adapterTypes');
         this[adapterTypesProperty] = {};
-        var self = this;
+        let self = this;
         //configure adapter types
         _.forEach(configAdapterTypes, function (x) {
             //first of all validate module
             x.invariantName = x.invariantName || 'unknown';
             x.name = x.name || 'Unknown Data Adapter';
-            var valid = false, adapterModule;
+            let valid = false, adapterModule;
             if (x.type) {
                 try {
                     if (/^@themost\//.test(x.type)) {
@@ -379,9 +381,9 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                              * @type string[]
                              */
                             // eslint-disable-next-line node/no-unsupported-features/node-builtins
-                            var paths = require.resolve.paths(x.type);
+                            let paths = require.resolve.paths(x.type);
                             //get execution
-                            var path1 = self.getConfiguration().getExecutionPath();
+                            let path1 = self.getConfiguration().getExecutionPath();
                             //loop directories to parent (like classic require)
                             while (path1) {
                                 //if path does not exist in paths collection
@@ -395,34 +397,29 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                                     }
                                     //otherwise get parent path
                                     path1 = path.resolve(path1, '..');
-                                }
-                                else {
+                                } else {
                                     //path already exists in paths collection, so break loop
                                     break;
                                 }
                             }
-                            var adapterModulePath = require.resolve(x.type, {
+                            let adapterModulePath = require.resolve(x.type, {
                                 paths: paths
                             });
                             adapterModule = require(adapterModulePath);
-                        }
-                        else {
+                        } else {
                             adapterModule = require(x.type);
                         }
-                    }
-                    else {
+                    } else {
                         adapterModule = require(x.type);
                     }
 
                     if (typeof adapterModule.createInstance === 'function') {
                         valid = true;
-                    }
-                    else {
+                    } else {
                         //adapter type does not export a createInstance(options) function
                         TraceUtils.log("The specified data adapter type (%s) does not have the appropriate constructor. Adapter type cannot be loaded.", x.invariantName);
                     }
-                }
-                catch (err) {
+                } catch (err) {
                     //catch error
                     TraceUtils.error(err);
                     //and log a specific error for this adapter type
@@ -436,8 +433,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                         createInstance: adapterModule.createInstance
                     };
                 }
-            }
-            else {
+            } else {
                 TraceUtils.log("The specified data adapter type (%s) does not have a type defined. Adapter type cannot be loaded.", x.invariantName);
             }
         });
@@ -452,15 +448,15 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                     return this[dataTypesProperty];
                 }
                 //get data types from configuration file
+                let dataTypes;
                 try {
-                    var dataTypes = require(path.join(this.getConfiguration().getConfigurationPath(), 'dataTypes.json'));
+                    dataTypes = require(path.join(this.getConfiguration().getConfigurationPath(), 'dataTypes.json'));
                     if (_.isNil(dataTypes)) {
                         TraceUtils.log('Data: Application data types are empty. The default data types will be loaded instead.');
                         dataTypes = require('./dataTypes.json');
-                    }
-                    else {
+                    } else {
                         //append default data types which are not defined in application data types
-                        var defaultDataTypes = require('./dataTypes.json');
+                        let defaultDataTypes = require('./dataTypes.json');
                         //enumerate default data types and replace or append application specific data types
                         _.forEach(_.keys(defaultDataTypes), function (key) {
                             if (hasOwnProperty(dataTypes, key)) {
@@ -469,24 +465,20 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                                         //replace data type due to lower version
                                         dataTypes[key] = defaultDataTypes[key];
                                     }
-                                }
-                                else {
+                                } else {
                                     //replace data type due to invalid version
                                     dataTypes[key] = defaultDataTypes[key];
                                 }
-                            }
-                            else {
+                            } else {
                                 //append data type
                                 dataTypes[key] = defaultDataTypes[key];
                             }
                         });
                     }
-                }
-                catch (err) {
+                } catch (err) {
                     if (err.code === 'MODULE_NOT_FOUND') {
                         TraceUtils.log('Data: Application specific data types are missing. The default data types will be loaded instead.');
-                    }
-                    else {
+                    } else {
                         TraceUtils.log('Data: An error occurred while loading application data types.');
                         throw err;
                     }
@@ -556,7 +548,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
         /**
          * @type {SchemaLoaderStrategy}
          */
-        var schemaLoader = this.getConfiguration().getStrategy(SchemaLoaderStrategy);
+        let schemaLoader = this.getConfiguration().getStrategy(SchemaLoaderStrategy);
         return schemaLoader.getModelDefinition(name);
     }
     /**
@@ -568,7 +560,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
         /**
          * @type {SchemaLoaderStrategy}
          */
-        var schemaLoader = this.getConfiguration().getStrategy(SchemaLoaderStrategy);
+        let schemaLoader = this.getConfiguration().getStrategy(SchemaLoaderStrategy);
         schemaLoader.setModelDefinition(data);
         return this;
     }
@@ -584,7 +576,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
      * @returns DataConfigurationStrategy - An instance of DataConfiguration class which represents the current data configuration
      */
     static getCurrent() {
-        var configuration = ConfigurationBase.getCurrent();
+        let configuration = ConfigurationBase.getCurrent();
         if (!configuration.hasStrategy(DataConfigurationStrategy)) {
             configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
         }
@@ -625,11 +617,11 @@ class SchemaLoaderStrategy extends ConfigurationStrategy {
      */
     getModelDefinition(name) {
         Args.notString(name, 'Model name');
-        var result = this[modelsProperty][name];
+        let result = this[modelsProperty][name];
         if (typeof result !== 'undefined') {
             return result;
         }
-        var re = new RegExp('^' + name + '$', 'ig');
+        let re = new RegExp('^' + name + '$', 'ig');
         result = _.find(_.keys(this[modelsProperty]), function (x) {
             return re.test(x);
         });
@@ -682,7 +674,7 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
         /**
          * @type {DefaultSchemaLoaderStrategyOptions}
          */
-        var schemaOptions = config.getSourceAt('settings/schema');
+        let schemaOptions = config.getSourceAt('settings/schema');
         /**
          * set default options
          * @type {DefaultSchemaLoaderStrategyOptions}
@@ -708,13 +700,13 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
      */
     readSync() {
         // load native fs module
-        var nativeFsModule = 'fs';
-        var modelPath = this.getModelPath();
-        var fs = require(nativeFsModule);
-        var files = [];
+        let nativeFsModule = 'fs';
+        let modelPath = this.getModelPath();
+        let fs = require(nativeFsModule);
+        let files = [];
         // read directory
         if (typeof fs.readdirSync === 'function') {
-            var dirExists = true;
+            let dirExists = true;
             if (typeof fs.existsSync === 'function') {
                 dirExists = fs.existsSync(modelPath);
             }
@@ -735,7 +727,7 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
     /**
      * Sets the directory of model definitions.
      * @param {string} p
-     * @returns {DefaultSchemaLoaderStrategy}
+     * @returns {this}
      */
     setModelPath(p) {
         this[modelPathProperty] = p;
@@ -747,22 +739,23 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
      * @returns {*}
      */
     getModelDefinition(name) {
-        var getModelDefinitionSuper = super.getModelDefinition;
-        var i;
-        if (typeof name !== 'string')
+        let getModelDefinitionSuper = super.getModelDefinition;
+        let i;
+        if (typeof name !== 'string') {
             return;
+        }
         //exclude registered data types
         if (this.getConfiguration().getStrategy(DataConfigurationStrategy).hasDataType(name)) {
             return;
         }
-        var modelDefinition = getModelDefinitionSuper.bind(this)(name);
+        let modelDefinition = getModelDefinitionSuper.bind(this)(name);
         //first of all try to find if model definition is already in cache
         if (modelDefinition) {
             //and return it
             return modelDefinition;
         }
         // hold singular name of
-        var singularName;
+        let singularName;
         if (this.options.usePlural && pluralize.isPlural(name)) {
             // try to find model based on singular name
             singularName = pluralize.singular(name);
@@ -781,17 +774,16 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
         /**
          * @type Array<string>
          */
-        var files = this[filesProperty];
+        let files = this[filesProperty];
         if (files.length === 0) {
             return;
         }
-        var modelPath = this.getModelPath();
-        var searchName;
+        let modelPath = this.getModelPath();
+        let searchName;
         if (singularName) {
             // search for singular name also e.g. ^(User|Users)\.json$
             searchName = new RegExp('^(' + singularName + '|' + name + ')\\.json$', 'i');
-        }
-        else {
+        } else {
             // otherwise search for name e.g. ^User\.json$
             searchName = new RegExp('^' + name + '\\.json$', 'i');
         }
@@ -799,9 +791,9 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
             searchName.lastIndex = 0;
             if (searchName.test(files[i])) {
                 //build model file path
-                var finalPath = PathUtils.join(modelPath, files[i]);
+                let finalPath = PathUtils.join(modelPath, files[i]);
                 //get model
-                var result = require(finalPath);
+                let result = require(finalPath);
                 //set definition
                 this.setModelDefinition(result);
                 //and finally return this definition
@@ -830,7 +822,7 @@ class DefaultSchemaLoaderStrategy extends FileSchemaLoaderStrategy {
          * get loaders from configuration
          * @type {DefaultSchemaLoaderStrategyOptions}
          */
-        var schemaOptions = config.getSourceAt('settings/schema');
+        let schemaOptions = config.getSourceAt('settings/schema');
         /**
          * prepare options
          * @type {DefaultSchemaLoaderStrategyOptions}
@@ -839,31 +831,30 @@ class DefaultSchemaLoaderStrategy extends FileSchemaLoaderStrategy {
             usePlural: true
         }, schemaOptions);
         // set loaders
-        var thisArg = this;
+        let thisArg = this;
         // if configuration has a collection of loaders
         if (this.options.loaders && this.options.loaders.length) {
             // get module loader service
-            var moduleLoader = config.getStrategy(ModuleLoader);
+            let moduleLoader = config.getStrategy(ModuleLoader);
             if (moduleLoader == null) {
                 moduleLoader = new DefaultModuleLoader(config.getExecutionPath());
             }
             // enumerate loader types
             _.forEach(this.options.loaders, function (x) {
                 // if loader has a hash e.g. ./lib/index#AnotherLoader
-                var hashIndex = x.loaderType.indexOf('#');
+                let hashIndex = x.loaderType.indexOf('#');
                 if (hashIndex > -1) {
                     // get loader module
-                    var typeModule = moduleLoader.require(x.loaderType.substr(0, hashIndex));
+                    let typeModule = moduleLoader.require(x.loaderType.substr(0, hashIndex));
                     // get loader constructor
-                    var typeCtor = x.loaderType.substr(hashIndex + 1, x.loaderType.length - hashIndex);
+                    let typeCtor = x.loaderType.substr(hashIndex + 1, x.loaderType.length - hashIndex);
                     // if module exports loader constructor
                     if (hasOwnProperty(typeModule, typeCtor)) {
-                        var LoaderCtor = typeModule[typeCtor];
+                        let LoaderCtor = typeModule[typeCtor];
                         // add loader to collection
                         thisArg.loaders.push(new LoaderCtor(config));
                     }
-                }
-                else {
+                } else {
                     // simply add module to collection of loaders
                     // we assume that module exports the required methods
                     // and acts like an instance of SchemaLoader class
@@ -880,9 +871,9 @@ class DefaultSchemaLoaderStrategy extends FileSchemaLoaderStrategy {
      */
     getModelDefinition(name) {
         // get super class method
-        var getModelDefinitionSuper = super.getModelDefinition;
+        let getModelDefinitionSuper = super.getModelDefinition;
         // execute method
-        var model = getModelDefinitionSuper.bind(this)(name);
+        let model = getModelDefinitionSuper.bind(this)(name);
         // if model is missing
         if (model == null) {
             // try to load model from alternative loaders if any
@@ -891,7 +882,7 @@ class DefaultSchemaLoaderStrategy extends FileSchemaLoaderStrategy {
                     /**
                      * @type {SchemaLoaderStrategy}
                      */
-                    var loader = this.loaders[i];
+                    let loader = this.loaders[i];
                     // try to get model
                     model = loader.getModelDefinition(name);
                     // if model exists
@@ -945,60 +936,52 @@ class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
      */
     resolve(model) {
         Args.notNull(model, 'Model');
-        var dataObjectClassProperty = 'DataObjectClass';
+        let dataObjectClassProperty = 'DataObjectClass';
         // get data object class from the given model
-        var DataObjectClass = model.DataObjectClass;
+        let DataObjectClass = model.DataObjectClass;
         // if DataObjectClass is a constructor
         if (typeof DataObjectClass === 'function') {
             return DataObjectClass;
         }
         //get model definition
-        var modelDefinition = this.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition(model.name);
+        let modelDefinition = this.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition(model.name);
         if (typeof model.classPath === 'string') {
             if (/^\.\//.test(model.classPath)) {
                 modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(this.getConfiguration().getExecutionPath(), model.classPath));
-            }
-            else {
+            } else {
                 modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(model.classPath);
             }
-        }
-        else {
+        } else {
             //try to find module by using capitalize naming convention
             // e.g. OrderDetail -> OrderDetailModel.js
-            var classPath = PathUtils.join(this.getConfiguration().getExecutionPath(), 'models', model.name.concat('Model'));
+            let classPath = PathUtils.join(this.getConfiguration().getExecutionPath(), 'models', model.name.concat('Model'));
             try {
                 modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
-            }
-            catch (err) {
+            } catch (err) {
                 if (err.code === 'MODULE_NOT_FOUND') {
                     try {
                         //try to find module by using dasherize naming convention
                         // e.g. OrderDetail -> order-detail-model.js
                         classPath = PathUtils.join(this.getConfiguration().getExecutionPath(), 'models', _.dasherize(model.name).concat('-model'));
                         modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
-                    }
-                    catch (err) {
+                    } catch (err) {
                         if (err.code === 'MODULE_NOT_FOUND') {
                             if (_.isNil(model['inherits'])) {
                                 if (_.isNil(model['implements'])) {
                                     //use default DataObject class
                                     modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault('./data-object').DataObject;
-                                }
-                                else {
+                                } else {
                                     //use implemented data model class
                                     modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.context.model(model['implements']));
                                 }
-                            }
-                            else {
+                            } else {
                                 modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.base());
                             }
-                        }
-                        else {
+                        } else {
                             throw err;
                         }
                     }
-                }
-                else {
+                } else {
                     throw err;
                 }
             }

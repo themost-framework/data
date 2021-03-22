@@ -5,6 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "experimentalDecorators": true,
     "declarationDir": "./dist",
     "sourceMap": true,
     "noImplicitAny": true,
