@@ -1,4 +1,4 @@
-import {DataModel, EdmMapping, DataContext} from '../index';
+import {DataModel, EdmMapping, DataContext, DataObject} from '../index';
 import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
 
@@ -57,6 +57,16 @@ describe('DataModel', () => {
         const items = await model.getItems();
         expect(items).toBeInstanceOf(Array);
         expect(items.length).toBeGreaterThan(0);
+    });
+
+    it('should get typed items', async () => {
+        // load by class
+        let model = context.model(Employee);
+        const items = await model.getTypedItems();
+        expect(items).toBeInstanceOf(Array);
+        expect(items.length).toBeGreaterThan(0);
+        const first = items[0];
+        expect(first).toBeInstanceOf(DataObject);
     });
 
     it('should get item', async () => {

@@ -140,6 +140,7 @@ export declare class DataField {
     multiplicity?: string;
     indexed?: boolean;
     size?: number;
+    hidden?:boolean;
 }
 
 export declare class DataEventArgs {

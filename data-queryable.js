@@ -1,15 +1,12 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
 const async = require('async');
-const sprintf = require('sprintf').sprintf;
 const _ = require("lodash");
-const TextUtils = require("@themost/common").TextUtils;
+const {TextUtils, DataError} = require("@themost/common");
 const mappingExtensions = require('./data-mapping-extensions');
 const { DataAssociationMapping } = require('./types');
-const { DataError } = require("@themost/common");
 // eslint-disable-next-line no-unused-vars
 const { QueryField, QueryUtils, QueryEntity, QueryExpression } = require('@themost/query');
-const Q = require('q');
 const aliasProperty = Symbol('alias');
 const { hasOwnProperty } = require('./has-own-property');
 /**
@@ -121,8 +118,12 @@ class DataAttributeResolver {
                     }
                     arr.forEach(function (y) {
                         obj = self.query.$expand.find(function (x) {
-                            if (x.$entity && x.$entity.$as) {
-                                return (x.$entity.$as === y.$entity.$as);
+                            /**
+                             * @type {{$as:string}}
+                             */
+                            const entity = x.$entity;
+                            if (entity && entity.$as) {
+                                return (entity.$as === y.$entity.$as);
                             }
                             return false;
                         });
@@ -155,26 +156,26 @@ class DataAttributeResolver {
             let arrMember = memberExprString.split('/');
             let attrMember = self.field(arrMember[0]);
             if (_.isNil(attrMember)) {
-                throw new Error(sprintf('The target model does not have an attribute named as %s', arrMember[0]));
+                throw new DataError('E_ASSOCIATION', 'The specified field cannot be found', null, self.name, arrMember[0]);
             }
             //search for field mapping
             let mapping = self.inferMapping(arrMember[0]);
             if (_.isNil(mapping)) {
-                throw new Error(sprintf('The target model does not have an association defined for attribute named %s', arrMember[0]));
+                throw new DataError('E_ASSOCIATION', 'The target model does not have an association defined for the specified attribute', null, self.name, arrMember[0]);
             }
             if (mapping.childModel === self.name && mapping.associationType === 'association') {
                 //get parent model
                 let parentModel = self.context.model(mapping.parentModel);
                 if (_.isNil(parentModel)) {
-                    throw new Error(sprintf('Association parent model (%s) cannot be found.', mapping.parentModel));
+                    throw new DataError('E_ASSOCIATION', 'Association parent model cannot be found.', null, mapping.parentModel);
                 }
                 childField = self.field(mapping.childField);
                 if (_.isNil(childField)) {
-                    throw new Error(sprintf('Association field (%s) cannot be found.', mapping.childField));
+                    throw new DataError('E_ASSOCIATION', 'Association field cannot be found.', null, self.name, mapping.childField);
                 }
                 parentField = parentModel.field(mapping.parentField);
                 if (_.isNil(parentField)) {
-                    throw new Error(sprintf('Referenced field (%s) cannot be found.', mapping.parentField));
+                    throw new DataError('E_FIELD', 'Referenced field cannot be found.', null, parentModel.name, mapping.parentField);
                 }
                 // get childField.name or childField.property
                 let childFieldName = childField.property || childField.name;
@@ -198,15 +199,15 @@ class DataAttributeResolver {
             } else if (mapping.parentModel === self.name && mapping.associationType === 'association') {
                 let childModel = self.context.model(mapping.childModel);
                 if (_.isNil(childModel)) {
-                    throw new Error(sprintf('Association child model (%s) cannot be found.', mapping.childModel));
+                    throw new DataError('E_ASSOCIATION', 'Association child model cannot be found.', null, self.name, mapping.parentField);
                 }
                 childField = childModel.field(mapping.childField);
                 if (_.isNil(childField)) {
-                    throw new Error(sprintf('Association field (%s) cannot be found.', mapping.childField));
+                    throw new DataError('E_ASSOCIATION', 'Association child field cannot be found.', null, childModel.name, mapping.childField);
                 }
                 parentField = self.field(mapping.parentField);
                 if (_.isNil(parentField)) {
-                    throw new Error(sprintf('Referenced field (%s) cannot be found.', mapping.parentField));
+                    throw new DataError('E_FIELD', 'Referenced field cannot be found.', null, self.name, mapping.parentField);
                 }
                 // get parent entity name for this expression
                 let parentEntity = self[aliasProperty] || self.viewAdapter;
@@ -232,7 +233,12 @@ class DataAttributeResolver {
                 }
                 return res.$expand;
             } else {
-                throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel, mapping.childModel));
+                const err1 = new DataError('E_ASSOCIATION', 'The association type is not supported for filtering, grouping or sorting data.');
+                Object.assign(err1, {
+                    parentModel: mapping.parentModel,
+                    childModel: mapping.childModel
+                })
+                throw err1;
             }
         }
     }
@@ -477,7 +483,7 @@ class DataAttributeResolver {
                     //get child model
                     let childModel = self.context.model(mapping.childModel);
                     if (_.isNil(childModel)) {
-                        throw new DataError("EJUNC", "The associated model cannot be found.");
+                        throw new DataError("E_JUNCTION", "The associated model cannot be found.", null, mapping.childModel);
                     }
                     //create new join
                     let alias = field.name + "_" + childModel.name;
@@ -512,7 +518,7 @@ class DataAttributeResolver {
                     //get parent model
                     let parentModel = self.context.model(mapping.parentModel);
                     if (_.isNil(parentModel)) {
-                        throw new DataError("EJUNC", "The associated model cannot be found.");
+                        throw new DataError("E_JUNCTION", "The associated model cannot be found.", null, mapping.parentModel);
                     }
                     //create new join
                     let parentAlias = field.name + "_" + parentModel.name;
@@ -528,7 +534,7 @@ class DataAttributeResolver {
                 }
             }
         } else {
-            throw new DataError("EJUNC", "The target model does not have a many to many association defined by the given attribute.", "", self.name, attr);
+            throw new DataError("E_JUNCTION", "The target model does not have a many to many association defined by the given attribute.", null, self.name, attr);
         }
     }
 }
@@ -735,7 +741,7 @@ class DataQueryable {
     }
     join(model) {
         let self = this;
-        if (_.isNil(model)) {
+        if (model == null) {
             return this;
         }
         /**
@@ -743,14 +749,18 @@ class DataQueryable {
          */
         let joinModel = self.model.context.model(model);
         //validate joined model
-        if (_.isNil(joinModel)) {
-            throw new Error(sprintf("The %s model cannot be found", model));
+        if (joinModel == null) {
+            throw new DataError('E_MODEL', 'The specified model cannot be found', null, model);
         }
         let arr = self.model.attributes.filter(function (x) {
             return x.type === joinModel.name;
         });
         if (arr.length === 0) {
-            throw new Error(sprintf("An internal error occurred. The association between %s and %s cannot be found", this.model.name, model));
+            const err1 = new DataError('E_ASSOCIATION', 'An association between two models cannot be found', null, this.model.name);
+            Object.assign(err1, {
+                associationModel: model
+            });
+            throw err1;
         }
         let mapping = self.model.inferMapping(arr[0].name);
         let expr = QueryUtils.query();
@@ -1196,8 +1206,8 @@ class DataQueryable {
                     return fn(nestedAttr.$name).as(alias);
                 }
             }
-            if (typeof field === 'undefined' || field === null) {
-                throw new Error(sprintf('The specified field %s cannot be found in target model.', matches[2]));
+            if (field == null) {
+                throw new DataError('E_FIELD', 'The specified field cannot be found in target model.', null, this.model.name, matches[2]);
             }
             if (_.isNil(alias)) {
                 matches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
@@ -1224,8 +1234,8 @@ class DataQueryable {
                 res = {};
                 field = this.model.field(matches[2]);
                 aggr = matches[1];
-                if (typeof field === 'undefined' || field === null) {
-                    throw new Error(sprintf('The specified field %s cannot be found in target model.', matches[2]));
+                if (field == null) {
+                    throw new DataError('E_FIELD', 'The specified field cannot be found in target model.', null, this.model.name, matches[2]);
                 }
                 if (_.isNil(alias)) {
                     matches = /as\s([\u0021-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
@@ -1241,8 +1251,8 @@ class DataQueryable {
                 matches = /^(\w+)\s+as\s+(.*?)$/i.exec(attr);
                 if (matches) {
                     field = this.model.field(matches[1]);
-                    if (typeof field === 'undefined' || field === null) {
-                        throw new Error(sprintf('The specified field %s cannot be found in target model.', attr));
+                    if (field == null) {
+                        throw new DataError('E_FIELD', 'The specified field cannot be found in target model.', null, this.model.name, attr);
                     }
                     alias = matches[2];
                     prop = alias || field.property || field.name;
@@ -1250,8 +1260,8 @@ class DataQueryable {
                 } else {
                     //try to match field with expression [field] as [alias] or [nested]/[field] as [alias]
                     field = this.model.field(attr);
-                    if (typeof field === 'undefined' || field === null) {
-                        throw new Error(sprintf('The specified field %s cannot be found in target model.', attr));
+                    if (field == null) {
+                        throw new DataError('E_FIELD', 'The specified field cannot be found in target model.', null, this.model.name, attr);
                     }
                     let f = QueryField.select(field.name).from(this.model.viewAdapter);
                     if (alias) {
@@ -1383,17 +1393,18 @@ class DataQueryable {
         });
      */
     first(callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            firstInternal.call(this, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = firstInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject){
+                return executeFunc(function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
         } else {
-            return firstInternal.call(this, callback);
+            return executeFunc(callback);
         }
     }
     /**
@@ -1402,18 +1413,18 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     all(callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            allInternal.call(this, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = allInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject){
+                return executeFunc(function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
-        } else {
-            allInternal.call(this, callback);
         }
+        return executeFunc(callback);
     }
     /**
      * Prepares a paging operation by skipping the specified number of records
@@ -1452,18 +1463,19 @@ class DataQueryable {
      * Executes current query and returns a result set based on the specified paging parameters.
      */
     list(callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            listInternal.call(this, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = listInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                return executeFunc(function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(result);
+                });
             });
-            return d.promise;
-        } else {
-            return listInternal.call(this, callback);
         }
+        // otherwise call method with callback
+        return listInternal.call(this, callback);
     }
     /**
      * Executes current query and returns a result set based on the specified paging parameters.
@@ -1477,24 +1489,23 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getItems() {
-        let self = this, d = Q.defer();
-        process.nextTick(function () {
-            delete self.query.$inlinecount;
-            if ((parseInt(self.query.$take) || 0) < 0) {
-                delete self.query.$take;
-                delete self.query.$skip;
+        const thisArg = this;
+        return new Promise(function(resolve, reject){
+            delete thisArg.query.$inlinecount;
+            if ((parseInt(thisArg.query.$take) || 0) < 0) {
+                delete thisArg.query.$take;
+                delete thisArg.query.$skip;
             }
-            if (!self.query.hasFields()) {
-                self.select();
+            if (!thisArg.query.hasFields()) {
+                thisArg.select();
             }
-            execute_.call(self, function (err, result) {
+            execute_.call(thisArg, function (err, result) {
                 if (err) {
-                    return d.reject(err);
+                    return reject(err);
                 }
-                return d.resolve(result);
+                return resolve(result);
             });
         });
-        return d.promise;
     }
     /**
      * @param {string} name
@@ -1503,7 +1514,7 @@ class DataQueryable {
      */
     countOf(name, alias) {
         alias = alias || 'countOf'.concat(name);
-        let res = this.fieldOf(sprintf('count(%s)', name));
+        let res = this.fieldOf(`count(${name})`);
         if (alias != null) {
             res.as(alias);
         }
@@ -1516,7 +1527,7 @@ class DataQueryable {
      */
     sumOf(name, alias) {
         alias = alias || 'sumOf'.concat(name);
-        let res = this.fieldOf(sprintf('sum(%s)', name));
+        let res = this.fieldOf(`sum(${name})`);
         if (alias != null) {
             res.as(alias);
         }
@@ -1526,59 +1537,40 @@ class DataQueryable {
      * Executes the query against the current model and returns the count of items found.
      * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result, if any.
      * @returns {Promise|*} - If callback parameter is missing then returns a Deferred object.
-     * @example
-     //retrieve the number of a product's orders
-     context.model('Order')
-     .where('orderedItem').equal(302)
-     .count().then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     count(callback) {
-        let self = this;
-        if (typeof callback !== 'function') {
-            return Q.Promise(function (resolve, reject) {
-                countInternal.bind(self)(function (err, result) {
+        const executeFunc = countInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function (resolve, reject) {
+                return executeFunc(function (err, result) {
                     if (err) {
                         return reject(err);
                     }
                     return resolve(result);
                 });
             });
-        } else {
-            return countInternal.bind(self)(callback);
         }
+        return executeFunc(callback);
     }
     /**
      * Executes the query against the current model and returns the maximum value of the given attribute.
      * @param {string} attr - A string that represents a field of the current model
      * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result, if any.
      * @returns {Promise|*} - If callback parameter is missing then returns a Deferred object.
-     * @example
-     //retrieve the maximum price of products sold during last month
-     context.model('Order')
-     .where('orderDate').greaterOrEqual(moment().startOf('month').toDate())
-     .max('orderedItem/price').then(function(result) {
-            done(null, result);
-        }).catch(function(err) {
-            done(err);
-        });
      */
     max(attr, callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            maxInternal.call(this, attr, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = maxInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                return executeFunc(attr, function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
-        } else {
-            return maxInternal.call(this, attr, callback);
         }
+        return executeFunc(attr, callback);
     }
     /**
      * Executes the query against the current model and returns the average value of the given attribute.
@@ -1587,18 +1579,18 @@ class DataQueryable {
      * @returns {Promise|*} - If callback parameter is missing then returns a Deferred object.
      */
     min(attr, callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            minInternal.call(this, attr, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = minInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                return executeFunc(attr, function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
-        } else {
-            return minInternal.call(this, attr, callback);
         }
+        return executeFunc(attr, callback);
     }
     /**
      * Executes the query against the current model and returns the average value of the given attribute.
@@ -1607,18 +1599,18 @@ class DataQueryable {
      * @returns {Deferred|*} - If callback parameter is missing then returns a Deferred object.
      */
     average(attr, callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            averageInternal_.call(this, attr, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = averageInternal_.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                return executeFunc(attr, function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
-        } else {
-            return averageInternal_.call(this, attr, callback);
         }
+        return executeFunc(attr, callback);
     }
     /**
      * Migrates the underlying data model
@@ -2018,18 +2010,18 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     value(callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            valueInternal.call(this, function (err, result) {
-                if (err) {
-                    return d.reject(err);
-                }
-                d.resolve(result);
+        const executeFunc = valueInternal.bind(this);
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                return executeFunc(function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
-        } else {
-            return valueInternal.call(this, callback);
         }
+        return executeFunc(callback);
     }
     /**
      * Sets the number of levels of the expandable attributes.
@@ -2081,28 +2073,16 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getItem() {
-        let self = this, d = Q.defer();
-        process.nextTick(function () {
-            self.first().then(function (result) {
-                return d.resolve(result);
-            }).catch(function (err) {
-                return d.reject(err);
-            });
-        });
-        return d.promise;
+        return this.first();
     }
     /**
      * Gets an instance of DataObject by executing the defined query.
      * @returns {Promise|*}
      */
     getTypedItem() {
-        let self = this;
-        return Q.Promise(function (resolve, reject) {
-            self.first().then(function (result) {
-                return resolve(self.model.convert(result));
-            }).catch(function (err) {
-                return reject(err);
-            });
+        let thisArg = this;
+        return thisArg.first().then(function(result) {
+            return thisArg.model.convert(result);
         });
     }
     /**
@@ -2110,31 +2090,21 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getTypedItems() {
-        let self = this, d = Q.defer();
-        process.nextTick(function () {
-            self.getItems().then(function (result) {
-                return d.resolve(self.model.convert(result));
-            }).catch(function (err) {
-                return d.reject(err);
-            });
+        const thisArg = this;
+        return this.getItems().then(function(result) {
+            return thisArg.model.convert(result);
         });
-        return d.promise;
     }
     /**
      * Gets a result set that contains a collection of DataObject instances by executing the defined query.
-     * @returns {Promise|*}
+     * @returns {Promise<ListResult>}
      */
     getTypedList() {
-        let self = this, d = Q.defer();
-        process.nextTick(function () {
-            self.list().then(function (result) {
-                result.value = self.model.convert(result.value.slice(0));
-                return d.resolve(result);
-            }).catch(function (err) {
-                return d.reject(err);
-            });
+        const thisArg = this;
+        return thisArg.list().then(function(result) {
+            result.value = thisArg.model.convert(result.value.slice(0));
+            return result;
         });
-        return d.promise;
     }
     /**
      * Executes the specified query and returns all objects which satisfy the specified criteria.
@@ -2612,11 +2582,11 @@ function afterExecute_(result, callback) {
 
         //expands = self.$expand.distinct(function(x) { return x; });
         async.eachSeries(expands, function (expand, cb) {
-            let mapping = null;
             /**
-             * get mapping
-             * @type {DataAssociationMapping|*}
+             *
+             * @type {DataAssociationMapping}
              */
+            let mapping = null;
             let options = {};
             try {
                 if (expand instanceof DataAssociationMapping) {
@@ -2744,7 +2714,11 @@ function afterExecute_(result, callback) {
                     return cb(new Error("Not yet implemented"));
                 }
             } else {
-                return cb(new DataError("EASSOC", sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
+                const err1 = new DataError("E_ASSOCIATION", 'Data association mapping cannot be found or the association between these two models is defined more than once', null, self.model.name);
+                Object.assign(err1, {
+                    association: expand
+                });
+                return cb(err1);
             }
         }, function (err) {
             if (err) {

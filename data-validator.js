@@ -1,8 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
 const _ = require('lodash');
-const sprintf = require('sprintf');
-const LangUtils = require('@themost/common/utils').LangUtils;
+const { LangUtils } = require('@themost/common');
 const { DataConfigurationStrategy } = require('./data-configuration');
 const { hasOwnProperty } = require('./has-own-property');
 
@@ -86,7 +85,7 @@ class PatternValidator extends DataValidator {
             }
 
             return {
-                code: "EPATTERN",
+                code: "E_PATTERN",
                 "message": message,
                 "innerMessage": innerMessage
             };
@@ -124,14 +123,14 @@ class MinLengthValidator extends DataValidator {
             if (val.length < this.minLength) {
 
                 let innerMessage = null;
-                let message = sprintf.sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
+                let message = this.message || MinLengthValidator.DefaultMessage;
                 if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                     innerMessage = message;
-                    message = sprintf.sprintf(this.getContext().translate(this.message || MinLengthValidator.DefaultMessage), this.minLength);
+                    message = this.getContext().translate(this.message || MinLengthValidator.DefaultMessage);
                 }
 
                 return {
-                    code: "EMINLEN",
+                    code: "E_MIN_LEN",
                     minLength: this.minLength,
                     message: message,
                     innerMessage: innerMessage
@@ -142,7 +141,7 @@ class MinLengthValidator extends DataValidator {
     }
 }
 
-MinLengthValidator.DefaultMessage = "The value is too short. It should have %s characters or more.";
+MinLengthValidator.DefaultMessage = "The value is too short.";
 
 
 /**
@@ -169,16 +168,15 @@ class MaxLengthValidator extends DataValidator {
             return;
         }
 
-        let innerMessage = null, message = sprintf.sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
+        let innerMessage = null, message = this.message || MaxLengthValidator.DefaultMessage;
         if (this.getContext() && (typeof this.getContext().translate === 'function')) {
             innerMessage = message;
-            message = sprintf.sprintf(this.getContext().translate(this.message || MaxLengthValidator.DefaultMessage), this.maxLength);
+            message = this.getContext().translate(message);
         }
-
         if (hasOwnProperty(val, 'length')) {
             if (val.length > this.maxLength) {
                 return {
-                    code: "EMAXLEN",
+                    code: "E_MAX_LEN",
                     maxLength: this.maxLength,
                     message: message,
                     innerMessage: innerMessage
@@ -188,7 +186,7 @@ class MaxLengthValidator extends DataValidator {
     }
 }
 
-MaxLengthValidator.DefaultMessage = "The value is too long. It should have %s characters or fewer.";
+MaxLengthValidator.DefaultMessage = "The value is too long.";
 
 
 /**
@@ -216,14 +214,13 @@ class MinValueValidator extends DataValidator {
         }
         if (val < this.minValue) {
 
-            let innerMessage = null, message = sprintf.sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
+            let innerMessage = null, message = this.message || MinValueValidator.DefaultMessage;
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = sprintf.sprintf(this.getContext().translate(this.message || MinValueValidator.DefaultMessage), this.minValue);
+                message = this.getContext().translate(this.message || MinValueValidator.DefaultMessage);
             }
-
             return {
-                code: "EMINVAL",
+                code: "E_MIN_VAL",
                 minValue: this.minValue,
                 message: message,
                 innerMessage: innerMessage
@@ -233,7 +230,7 @@ class MinValueValidator extends DataValidator {
 }
 
 
-MinValueValidator.DefaultMessage = "The value should be greater than or equal to %s.";
+MinValueValidator.DefaultMessage = "The value should be greater than or equal from the required value.";
 /**
  * @class
  * @param {number|Date|*} max - A value which represents the maximum value
@@ -259,14 +256,14 @@ class MaxValueValidator extends DataValidator {
         }
         if (val > this.maxValue) {
 
-            let innerMessage = null, message = sprintf.sprintf(this.message || MaxValueValidator.DefaultMessage, this.maxValue);
+            let innerMessage = null, message = this.message || MaxValueValidator.DefaultMessage;
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = sprintf.sprintf(this.getContext().translate(this.message || MaxValueValidator.DefaultMessage), this.maxValue);
+                message = this.getContext().translate(this.message || MaxValueValidator.DefaultMessage);
             }
 
             return {
-                code: "EMAXVAL",
+                code: "E_MAX_VAL",
                 maxValue: this.maxValue,
                 message: message,
                 innerMessage: innerMessage
@@ -276,7 +273,7 @@ class MaxValueValidator extends DataValidator {
 }
 
 
-MaxValueValidator.DefaultMessage = "The value should be lower or equal to %s.";
+MaxValueValidator.DefaultMessage = "The value should be lower or equal with the specified value.";
 /**
  * @class
  * @param {number|Date|*} min - A value which represents the minimum value
@@ -318,10 +315,10 @@ class RangeValidator extends DataValidator {
             maxValidation = maxValidator.validateSync(val);
         }
         if (minValidator && maxValidator && (minValidation || maxValidation)) {
-            let innerMessage = null, message = sprintf.sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
+            let innerMessage = null, message = this.message || RangeValidator.DefaultMessage;
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = sprintf.sprintf(this.getContext().translate(this.message || RangeValidator.DefaultMessage), this.minValue, this.maxValue);
+                message = this.getContext().translate(this.message || RangeValidator.DefaultMessage);
             }
             return {
                 code: "ERANGE",
@@ -337,7 +334,7 @@ class RangeValidator extends DataValidator {
     }
 }
 
-RangeValidator.DefaultMessage = "The value should be between %s to %s.";
+RangeValidator.DefaultMessage = "The value should be between the specified values.";
 /**
  * @class
  * @param {string|*} type - The data type which is going to be used for data validation
@@ -505,7 +502,7 @@ class RequiredValidator extends DataValidator {
             }
 
             return {
-                code: "EREQUIRED",
+                code: "E_REQUIRED",
                 message: message,
                 innerMessage: innerMessage
             };

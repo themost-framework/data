@@ -1,6 +1,14 @@
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
 
+declare type DataQueryableCallback = (err?: Error, res?: any) => void;
+
+declare interface ListResult {
+    total?: number;
+    skip?: number;
+    value: Array<any>;
+}
+
 export declare class DataQueryable implements DataContextEmitter {
     constructor(model?: DataModel);
     readonly model: DataModel;
@@ -36,8 +44,8 @@ export declare class DataQueryable implements DataContextEmitter {
     getItems(): Promise<Array<any>>;
     getTypedItem(): Promise<any>;
     getTypedItems(): Promise<Array<any>>;
-    getList(): Promise<any>;
-    getTypedList(): Promise<any>;
+    getList(): Promise<ListResult>;
+    getTypedList(): Promise<ListResult>;
     getAllItems(): Promise<Array<any>>;
     count(): Promise<number>;
     value(): Promise<any>;

@@ -59,7 +59,7 @@ export declare class RangeValidator extends DataValidator {
 }
 
 export declare class DataTypeValidator extends DataValidator {
-    constructor(type: string);
+    constructor(type: string | any);
     type: string;
     message?: string;
     validateSync(val:any): DataValidationResult;

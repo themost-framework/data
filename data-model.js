@@ -3,7 +3,8 @@
 const _ = require("lodash");
 const pluralize = require("pluralize");
 const async = require('async');
-const {QueryUtils, OpenDataParser} = require('@themost/query');
+// eslint-disable-next-line no-unused-vars
+const {QueryUtils, OpenDataParser, QueryExpression, QueryField} = require('@themost/query');
 const {parsers, DataModelMigration} = require('./types');
 const {DataAssociationMapping} = require('./types');
 const { NotNullConstraintListener, UniqueConstraintListener,
@@ -17,7 +18,6 @@ const {DataQueryable, DataAttributeResolver} = require('./data-queryable');
 const {DataObjectAssociationListener} = require('./data-associations');
 const {DataModelView} = require('./data-model-view');
 const {DataFilterResolver} = require('./data-filter-resolver');
-const Q = require("q");
 const {SequentialEventEmitter, TraceUtils, DataError, ModuleLoaderStrategy} = require("@themost/common");
 const {DataConfigurationStrategy, ModelClassLoaderStrategy} = require('./data-configuration');
 const {DataPermissionEventListener} = require('./data-permission');
@@ -247,9 +247,8 @@ class DataModel extends SequentialEventEmitter {
                         //set one-to-many attribute (based on a naming convention)
                         if (typeof strategy.dataTypes[x.type] === 'undefined') {
                             x.many = pluralize.isPlural(x.name) || (x.mapping && x.mapping.associationType === 'junction');
-                        } else
-                        //otherwise set one-to-many attribute to false
-                        {
+                        } else {
+                            //otherwise set one-to-many attribute to false
                             x.many = false;
                         }
                     }
@@ -504,7 +503,14 @@ class DataModel extends SequentialEventEmitter {
         if (typeof callback === 'function') {
             return filterInternal.bind(this)(params, callback);
         } else {
-            return Q.nbind(filterInternal, this)(params);
+            return new Promise(function(resolve, reject) {
+                filterInternal(params, function(err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
+            });
         }
     }
     /**
@@ -730,8 +736,9 @@ class DataModel extends SequentialEventEmitter {
          */
         let DataObjectTypeCtor = self.getDataObjectType();
 
+        let src;
         if (_.isArray(obj)) {
-            var arr = [], src;
+            let arr = [];
             obj.forEach(function (x) {
                 if (typeof x !== 'undefined' && x != null) {
                     let o = new DataObjectTypeCtor();
@@ -878,7 +885,7 @@ class DataModel extends SequentialEventEmitter {
     save(obj, callback) {
         let self = this;
         if (typeof callback === 'undefined') {
-            return Q.Promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 return save_.bind(self)(obj, function (err) {
                     if (err) {
                         return reject(err);
@@ -904,7 +911,7 @@ class DataModel extends SequentialEventEmitter {
             if (err) {
                 return callback(err); 
             }
-            //otherwise return the calucated state
+            // otherwise return state
             callback(null, e.state);
         });
     }
@@ -928,17 +935,18 @@ class DataModel extends SequentialEventEmitter {
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
      */
     update(obj, callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            update_.call(this, obj, function (err, result) {
-                if (err) {
-                    return d.reject(err); 
-                }
-                d.resolve(result);
-            });
-            return d.promise;
+        const thisArg = this;
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                return update_.call(thisArg, obj, function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
+            })
         } else {
-            return update_.call(this, obj, callback);
+            return update_.call(thisArg, obj, callback);
         }
     }
     /**
@@ -948,17 +956,18 @@ class DataModel extends SequentialEventEmitter {
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
      */
     insert(obj, callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            insert_.call(this, obj, function (err, result) {
-                if (err) {
-                    return d.reject(err); 
-                }
-                d.resolve(result);
+        const thisArg = this;
+        if (typeof callback === 'undefined') {
+            return new Promise(function (resolve, reject) {
+                insert_.call(thisArg, obj, function (err, result) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(result);
+                });
             });
-            return d.promise;
         } else {
-            return insert_.call(this, obj, callback);
+            return insert_.call(thisArg, obj, callback);
         }
     }
     /**
@@ -966,27 +975,20 @@ class DataModel extends SequentialEventEmitter {
      * @param obj {*|Array} The item or the array of items to delete
      * @param callback {Function=} - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
      * @returns {Promise<T>|*} - If callback parameter is missing then returns a Promise object.
-     * @example
-     //remove group (Sales)
-     var group = { "name":"Sales" };
-     context.model("Group").remove(group).then(function() {
-            done();
-        }).catch(function(err) {
-            done(err);
-        });
      */
     remove(obj, callback) {
-        if (typeof callback !== 'function') {
-            let d = Q.defer();
-            remove_.call(this, obj, function (err, result) {
-                if (err) {
-                    return d.reject(err); 
-                }
-                d.resolve(result);
+        const thisArg = this;
+        if (typeof callback === 'undefined') {
+            return new Promise(function(resolve, reject) {
+                remove_.call(thisArg, obj, function (err, result) {
+                    if (err) {
+                        return reject(err); 
+                    }
+                    resolve(result);
+                });
             });
-            return d.promise;
         } else {
-            return remove_.call(this, obj, callback);
+            return remove_.call(thisArg, obj, callback);
         }
     }
     /**
@@ -1328,12 +1330,9 @@ class DataModel extends SequentialEventEmitter {
                 conf[mappingsProperty][name] = result;
                 //and finally return the newly created DataAssociationMapping object
                 return result;
-            }
-
-
-            //2. super model has a junction (many-to-many association) with another model
-            //(where super model is the child or the parent model)
-            else if (mapping.associationType === 'junction') {
+            } else if (mapping.associationType === 'junction') {
+                //2. super model has a junction (many-to-many association) with another model
+                //(where super model is the child or the parent model)
                 //create a new cloned association
                 result = new DataAssociationMapping(mapping);
                 if (superTypes.indexOf(mapping.childModel) >= 0) {
@@ -1374,17 +1373,18 @@ class DataModel extends SequentialEventEmitter {
      * @returns {Promise|*} - If callback parameter is missing then returns a Promise object.
      */
     validateForUpdate(obj, callback) {
+        const thisArg = this;
         if (typeof callback !== 'function') {
-            let d = Q.defer();
-            validate_.call(this, obj, 2, function (err, result) {
-                if (err) {
-                    return d.reject(err); 
-                }
-                d.resolve(result);
+            return new Promise(function(resolve, reject) {
+                return validate_.call(thisArg, obj, 2, function (err, result) {
+                    if (err) {
+                        return reject(err); 
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
         } else {
-            return validate_.call(this, obj, callback);
+            return validate_.call(thisArg, obj, callback);
         }
     }
     /**
@@ -1396,17 +1396,18 @@ class DataModel extends SequentialEventEmitter {
      <p>Read more about data validation <a href="DataValidationListener.html">here</a></p>
      */
     validateForInsert(obj, callback) {
+        const thisArg = this;
         if (typeof callback !== 'function') {
-            let d = Q.defer();
-            validate_.call(this, obj, 1, function (err, result) {
-                if (err) {
-                    return d.reject(err); 
-                }
-                d.resolve(result);
+            return new Promise(function(resolve, reject) {
+                return validate_.call(thisArg, obj, 1, function (err, result) {
+                    if (err) {
+                        return reject(err); 
+                    }
+                    return resolve(result);
+                });
             });
-            return d.promise;
         } else {
-            return validate_.call(this, obj, callback);
+            return validate_.call(thisArg, obj, callback);
         }
     }
     /**
@@ -1425,75 +1426,71 @@ class DataModel extends SequentialEventEmitter {
      * @returns {Promise|*}
      */
     getSubTypes() {
-        let self = this;
-        let d = Q.defer();
-        process.nextTick(function () {
-            let migrations = self.context.model("Migration");
-            if (_.isNil(migrations)) {
-                return d.resolve([]);
+        let thisArg = this;
+        return new Promise(function(resolve, reject){
+            let migrations = thisArg.context.model("Migration");
+            if (migrations == null) {
+                return resolve([]);
             }
             migrations.silent()
                 .select("model")
                 .groupBy("model")
                 .all().then(function (result) {
-                    let conf = self.context.getConfiguration().getStrategy(DataConfigurationStrategy), arr = [];
+                    let conf = thisArg.context.getConfiguration().getStrategy(DataConfigurationStrategy), arr = [];
                     result.forEach(function (x) {
                         let m = conf.getModelDefinition(x.model);
-                        if (m && m.inherits === self.name) {
+                        if (m && m.inherits === thisArg.name) {
                             arr.push(m.name);
                         }
                     });
-                    return d.resolve(arr);
+                    return resolve(arr);
                 }).catch(function (err) {
-                    return d.reject(err);
+                    return reject(err);
                 });
         });
-        return d.promise;
     }
     /**
      * @param {boolean=} deep
      * @returns {Promise}
      */
     getReferenceMappings(deep) {
-        let self = this,
-            context = self.context;
-        deep = (typeof deep === 'undefined') ? true : parsers.parseBoolean(deep);
-        let d = Q.defer();
-        process.nextTick(function () {
-            let referenceMappings = [], name = self.name, attributes;
-            let migrations = self.context.model("Migration");
-            if (_.isNil(migrations)) {
-                return d.resolve([]);
+        let thisArg = this;
+        let context = thisArg.context;
+        const deepArg = (typeof deep === 'undefined') ? true : parsers.parseBoolean(deep);
+        return new Promise(function(resolve, reject) {
+            let referenceMappings = [], name = thisArg.name, attributes;
+            let migrations = thisArg.context.model("Migration");
+            if (migrations == null) {
+                return resolve([]);
             }
             migrations.silent()
                 .select("model")
                 .groupBy("model")
                 .all().then(function (result) {
-                    _.forEach(result, function (x) {
+                    result.forEach(function (x) {
                         let m = context.model(x.model);
-                        if (_.isNil(m)) {
+                        if (m == null) {
                             return;
                         }
-                        if (deep) {
+                        if (deepArg) {
                             attributes = m.attributes;
                         } else {
-                            attributes = _.filter(m.attributes, function (a) {
+                            attributes = m.attributes.filter(function (a) {
                                 return a.model === m.name;
                             });
                         }
-                        _.forEach(attributes, function (y) {
+                        attributes.forEach(function (y) {
                             let mapping = m.inferMapping(y.name);
                             if (mapping && ((mapping.parentModel === name) || (mapping.childModel === name && mapping.associationType === 'junction'))) {
                                 referenceMappings.push(_.assign(mapping, { refersTo: y.name }));
                             }
                         });
                     });
-                    return d.resolve(referenceMappings);
+                    return resolve(referenceMappings);
                 }).catch(function (err) {
-                    return d.reject(err);
+                    return reject(err);
                 });
         });
-        return d.promise;
     }
     /**
      * Gets an attribute of this data model.
@@ -1515,51 +1512,21 @@ class DataModel extends SequentialEventEmitter {
      * @returns {Promise|*}
      */
     getTypedItems() {
-        let self = this,
-            d = Q.defer();
-        process.nextTick(function () {
-            let q = new DataQueryable(self);
-            q.getTypedItems().then(function (result) {
-                return d.resolve(result);
-            }).catch(function (err) {
-                return d.reject(err);
-            });
-        });
-        return d.promise;
+        return new DataQueryable(this).getTypedItems();
     }
     /**
      * Gets a collection of DataObject instances by executing the defined query.
      * @returns {Promise|*}
      */
     getItems() {
-        let self = this,
-            d = Q.defer();
-        process.nextTick(function () {
-            let q = new DataQueryable(self);
-            q.getItems().then(function (result) {
-                return d.resolve(result);
-            }).catch(function (err) {
-                return d.reject(err);
-            });
-        });
-        return d.promise;
+        return new DataQueryable(this).getItems();
     }
     /**
      * Gets a result set that contains a collection of DataObject instances by executing the defined query.
      * @returns {Promise|*}
      */
     getTypedList() {
-        let self = this,
-            d = Q.defer();
-        process.nextTick(function () {
-            let q = new DataQueryable(self);
-            q.getTypedList().then(function (result) {
-                return d.resolve(result);
-            }).catch(function (err) {
-                return d.reject(err);
-            });
-        });
-        return d.promise;
+        return new DataQueryable(this).getTypedList();
     }
 
 }
@@ -1864,9 +1831,8 @@ function convertInternal_(obj) {
             //get parser for this type
             parser = thisParsers['parse'.concat(x.type)];
             //if a parser exists
-            if (typeof parser === 'function')
-            //parse value
-            {
+            if (typeof parser === 'function') {
+                //parse value
                 obj[x.name] = parser(value);
             } else {
                 //get mapping
@@ -1952,13 +1918,11 @@ function cast_(obj, state) {
                 if (_.isNil(mapping)) {
                     result[x.name] = obj[name];
                 } else if (mapping.associationType==='association') {
-                    if (typeof obj[name] === 'object' && obj[name] !== null)
-                    //set associated key value (e.g. primary key value)
-                    {
+                    if (typeof obj[name] === 'object' && obj[name] !== null) {
+                        //set associated key value (e.g. primary key value)
                         result[x.name] = obj[name][mapping.parentField];
-                    } else
-                    //set raw value
-                    {
+                    } else {
+                        //set raw value
                         result[x.name] = obj[name];
                     }
                 }
@@ -2013,13 +1977,11 @@ function castForValidation_(obj, state) {
                 if (_.isNil(mapping)) {
                     result[x.name] = obj[name];
                 } else if ((mapping.associationType==='association') && (mapping.childModel===self.name)) {
-                    if ((typeof obj[name] === 'object') && (obj[name] !== null))
-                    //set associated key value (e.g. primary key value)
-                    {
+                    if ((typeof obj[name] === 'object') && (obj[name] !== null)) {
+                        //set associated key value (e.g. primary key value)
                         result[x.name] = obj[name][mapping.parentField];
-                    } else
-                    //set raw value
-                    {
+                    } else {
+                        //set raw value
                         result[x.name] = obj[name];
                     }
                 }
@@ -2168,12 +2130,11 @@ function saveSingleObject_(obj, callback) {
         self.removeListener('before.save', UniqueConstraintListener.prototype.beforeSave);
         self.removeListener('before.save', DataObjectAssociationListener.prototype.beforeSave);
         self.removeListener('before.save', DataNestedObjectListener.prototype.beforeSave);
+        //invoke callback with error
         if (err) {
-            //invoke callback with error
-            callback.call(self, err);
-        }
-        //otherwise execute save operation
-        else {
+            return callback.call(self, err);
+        } else {
+            //otherwise execute save operation
             //save base object if any
             saveBaseObject_.call(self, e.target, function(err, result) {
                 if (err) {
@@ -2181,9 +2142,8 @@ function saveSingleObject_(obj, callback) {
                     return;
                 }
                 //if result is defined
-                if (result!==undefined)
-                //sync original object
-                {
+                if (result!==undefined) {
+                    //sync original object
                     _.assign(e.target, result);
                 }
                 //get db context
@@ -2191,9 +2151,8 @@ function saveSingleObject_(obj, callback) {
                 //create insert query
                 let target = self.cast(e.target, e.state);
                 let q = null, key = target[self.primaryKey];
-                if (e.state===1)
-                //create insert statement
-                {
+                if (e.state===1) {
+                    //create insert statement
                     q = QueryUtils.insert(target).into(self.sourceAdapter);
                 } else {
                     //create update statement

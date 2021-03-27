@@ -1,7 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 // eslint-disable-next-line no-unused-vars
 const {Args, ConfigurationBase} = require('@themost/common');
-const sprintf = require('sprintf').sprintf;
 const Q = require('q');
 const pluralize = require('pluralize');
 const _ = require('lodash');
@@ -452,7 +451,7 @@ class EntityTypeConfiguration {
 
         let p = {
             "name": name,
-            "type": (multiplicity === "Many") ? sprintf("Collection(%s)", type) : type
+            "type": (multiplicity === "Many") ? `Collection(${type})` : type
         };
         if ((multiplicity === EdmMultiplicity.ZeroOrOne) || (multiplicity === EdmMultiplicity.Many)) {
             p.nullable = true;
@@ -988,7 +987,7 @@ function schemaToEdmDocument(schema) {
                     let returnType = action.returnType;
                     if (action.returnCollectionType) {
                         returnType = action.returnCollectionType;
-                        returnTypeElement.setAttribute("Type", sprintf("Collection(%s)", returnType));
+                        returnTypeElement.setAttribute("Type", `Collection(${returnType})`);
                     } else {
                         returnTypeElement.setAttribute("Type", returnType);
                     }
@@ -1022,7 +1021,7 @@ function schemaToEdmDocument(schema) {
                     let returnType = func.returnType;
                     if (func.returnCollectionType) {
                         returnType = func.returnCollectionType;
-                        returnTypeElement.setAttribute("Type", sprintf("Collection(%s)", returnType));
+                        returnTypeElement.setAttribute("Type", `Collection(${returnType})`);
                     } else {
                         returnTypeElement.setAttribute("Type", returnType);
                     }

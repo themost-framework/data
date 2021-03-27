@@ -1,7 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
 const {parsers} = require('./types');
-const sprintf = require('sprintf');
 const {TraceUtils} = require('@themost/common');
 // eslint-disable-next-line no-unused-vars
 const moment = require('moment');
@@ -77,8 +76,8 @@ class FunctionContext {
                 callback(err);
             }
         } else {
-            console.log(sprintf.sprintf('Cannot evaluate %s.', expr1));
-            callback(new Error('Cannot evaluate expression.'));
+            TraceUtils.error('Cannot evaluate expression.', expr1);
+            return callback(new Error('Cannot evaluate expression.'));
         }
 
     }

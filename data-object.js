@@ -1,6 +1,5 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-const sprintf = require('sprintf').sprintf;
 const _ = require("lodash");
 const {DataObjectJunction} = require('./data-object-junction');
 const {DataObjectTag} = require('./data-object-tag');
@@ -29,7 +28,7 @@ function save_(context, callback) {
     //get current application
     let model = self.getModel();
     if (_.isNil(model)) {
-        return callback.call(self, new DataError('EMODEL', 'Data model cannot be found.'));
+        return callback.call(self, new DataError('E_MODEL', 'Data model cannot be found.'));
     }
     let i;
     //register before listeners
@@ -59,7 +58,7 @@ function remove_(context, callback) {
     //get current application
     let model = self.getModel();
     if (_.isNil(model)) {
-        return callback.call(self, new DataError('EMODEL', 'Data model cannot be found.'));
+        return callback.call(self, new DataError('E_MODEL', 'Data model cannot be found.'));
     }
     //register before listeners
     let beforeListeners = self.listeners('before.remove');
@@ -512,7 +511,7 @@ class DataObject extends SequentialEventEmitter {
                         });
                     } else {
                         if (model.constraints.length === 0) {
-                            callback(new Error(sprintf('The value of property [%s] cannot be retrieved. The target data model has no constraints defined.', name)));
+                            callback(new DataError('E_VALUE', 'A value cannot be retrieved. The target data model has no constraints defined.', null, model.name , name));
                         } else {
                             let arr = model.constraints.filter(function (x) {
                                 let valid = true;
@@ -529,7 +528,7 @@ class DataObject extends SequentialEventEmitter {
                                 return valid;
                             });
                             if (arr.length === 0) {
-                                callback(new Error(sprintf('The value of property [%s] cannot be retrieved. The target data model has constraints but the required properties are missing.', name)));
+                                callback(new DataError('E_VALUE', 'A value cannot be retrieved. The target data model has constraints but the required properties are missing.', null, model.name, name));
                             } else {
                                 //get first constraint
                                 let constraint = arr[0], q = null;
@@ -587,7 +586,7 @@ class DataObject extends SequentialEventEmitter {
     query(attr) {
         let mapping = this.getModel().inferMapping(attr);
         if (_.isNil(mapping)) {
-            new DataError('EASSOCIATION', 'The given attribute does not define an association of any type.'); 
+            new DataError('E_ASSOCIATION', 'The given attribute does not define an association of any type.');
         }
         return this.property(attr);
     }

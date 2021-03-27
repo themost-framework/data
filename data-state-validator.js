@@ -38,10 +38,8 @@ class DataStateValidatorListener {
             //if target has $state property defined, set this state and exit
             if (event.target.$state) {
                 event.state = event.target.$state;
-            }
-
+            } else if (keyState) {
             //if object has primary key
-            else if (keyState) {
                 event.state = 2;
             }
             //if state is Update (2)
@@ -174,11 +172,12 @@ function mapKey_(obj, callback) {
             };
             if (_.isArray(constraint.fields)) {
                 for (let i = 0; i < constraint.fields.length; i++) {
-                    var attr = constraint.fields[i];
+                    let attr = constraint.fields[i];
                     if (!hasOwnProperty(obj, attr)) {
                         return cb();
                     }
-                    var parentObj = obj[attr], value = parentObj;
+                    let parentObj = obj[attr];
+                    let value = parentObj;
                     //check field mapping
                     let mapping = self.inferMapping(attr);
                     if (_.isObject(mapping) && (typeof parentObj === 'object')) {
