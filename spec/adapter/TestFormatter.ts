@@ -50,7 +50,7 @@ export class TestFormatter extends SqlFormatter {
         };
     }
 
-    escapeName(name) {
+    escapeName(name: string) {
         if (typeof name === 'string')
             return name.replace(/(\w+)/ig, this.settings.nameFormat);
         return name;
@@ -62,7 +62,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {boolean=} unquoted - An optional value that indicates whether the resulted string will be quoted or not.
      * returns {string} - The equivalent SQL string value
      */
-    escape(value, unquoted) {
+    escape(value: any, unquoted?: boolean) {
         if (typeof value === 'boolean') {
             return value ? '1' : '0';
         }
@@ -88,7 +88,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {Date|*} val
      * @returns {string}
      */
-    escapeDate(val) {
+    escapeDate(val: Date) {
         const year = val.getFullYear();
         const month = zeroPad(val.getMonth() + 1, 2);
         const day = zeroPad(val.getDate(), 2);
@@ -108,7 +108,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {string} p1 The string to search for
      * @returns {string}
      */
-    $indexof(p0, p1) {
+    $indexof(p0: any, p1: any) {
         return `(INSTR(${this.escape(p0, false)},${this.escape(p1, false)})-1)`;
     }
 
@@ -119,7 +119,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {string} p1 The string to search for
      * @returns {string}
      */
-    $indexOf(p0, p1) {
+    $indexOf(p0: any, p1: any) {
         return `(INSTR(${this.escape(p0, false)},${this.escape(p1, false)})-1)`;
     }
 
@@ -129,7 +129,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {*} p1 The string to search for
      * @returns {string}
      */
-    $text(p0, p1) {
+    $text(p0: any, p1: any) {
         return `(INSTR(${this.escape(p0, false)},${this.escape(p1, false)})-1)>=0`;
     }
 
@@ -138,7 +138,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {*} p0 The source string or field
      * @param {*} p1 The string to search for
      */
-    $regex(p0, p1) {
+    $regex(p0: any, p1: any) {
         //escape expression
         let s1 = this.escape(p1, true);
         //implement starts with equivalent for LIKE T-SQL
@@ -162,7 +162,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {*} p1
      * @returns {string}
      */
-    $concat(p0, p1) {
+    $concat(p0: any, p1: any) {
         return `(IFNULL(${this.escape(p0, false)},\'\') || IFNULL(${this.escape(p1, false)},\'\'))`;
     }
 
@@ -173,7 +173,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {Number=} length The length of the resulted string
      * @returns {string}
      */
-    $substring(p0, pos, length) {
+    $substring(p0: any, pos: number, length?: number) {
         if (length) {
             return `SUBSTR(${this.escape(p0, false)},${pos + 1},${length})`;
         }
@@ -187,7 +187,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {Number=} length The length of the resulted string
      * @returns {string}
      */
-    $substr(p0, pos, length) {
+    $substr(p0: any, pos: number, length?: number) {
         if (length) {
             return `SUBSTR(${this.escape(p0, false)},${pos + 1},${length})`;
         }
@@ -199,63 +199,63 @@ export class TestFormatter extends SqlFormatter {
      * @param {*} p0
      * @returns {string}
      */
-    $length(p0) {
+    $length(p0: any) {
         return `LENGTH(${this.escape(p0, false)})`;
     }
 
-    $ceiling(p0) {
+    $ceiling(p0: any) {
         return `CEIL(${this.escape(p0, false)})`;
     }
 
-    $startswith(p0, p1) {
+    $startswith(p0: any, p1: any) {
         return `LIKE('${this.escape(p1, true)}%',${this.escape(p0, false)})`;
     }
 
-    $contains(p0, p1) {
+    $contains(p0: any, p1: any) {
         return `LIKE('%${this.escape(p1, true)}%',${this.escape(p0, false)})`;
     }
 
-    $endswith(p0, p1) {
+    $endswith(p0: any, p1: any) {
         return `LIKE('%${this.escape(p1, true)}',${this.escape(p0, false)})`;
     }
 
-    $day(p0) {
+    $day(p0: any) {
         return `CAST(strftime('%d', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $dayOfMonth(p0) {
+    $dayOfMonth(p0: any) {
         return `CAST(strftime('%d', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $month(p0) {
+    $month(p0: any) {
         return `CAST(strftime('%m', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $year(p0) {
+    $year(p0: any) {
         return `CAST(strftime('%Y', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $hour(p0) {
+    $hour(p0: any) {
         return `CAST(strftime('%H', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $minute(p0) {
+    $minute(p0: any) {
         return `CAST(strftime('%M', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $minutes(p0) {
+    $minutes(p0: any) {
         return `CAST(strftime('%M', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $second(p0) {
+    $second(p0: any) {
         return `CAST(strftime('%S', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $seconds(p0) {
+    $seconds(p0: any) {
         return `CAST(strftime('%S', ${this.escape(p0, false)}) AS INTEGER)`;
     }
 
-    $date(p0) {
+    $date(p0: any) {
         return `date(${this.escape(p0, false)})`;
     }
 }

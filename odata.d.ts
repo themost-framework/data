@@ -41,7 +41,7 @@ export declare class EdmMultiplicity {
     static One: string;
     static Unknown: string;
     static ZeroOrOne: string;
-    static parse(value: string);
+    static parse(value: string): string;
 }
 
 
@@ -53,17 +53,17 @@ export declare class EntitySetKind {
 }
 
 export class EdmMapping {
-    static entityType(name: string);
-    static action(name: string, returnType: any);
-    static func(name: string, returnType: any);
-    static param(name: string, type: string, nullable?: boolean, fromBody?: boolean);
-    static navigationProperty(name: string, type: string, multiplicity: string);
-    static property(name: string, type: string, nullable?: boolean);
+    static entityType(name: string): any;
+    static action(name: string, returnType: any): any;
+    static func(name: string, returnType: any): any;
+    static param(name: string, type: string, nullable?: boolean, fromBody?: boolean): any;
+    static navigationProperty(name: string, type: string, multiplicity: string): any;
+    static property(name: string, type: string, nullable?: boolean): any;
     static hasOwnAction(obj: any, name: string): Function;
     static hasOwnNavigationProperty(obj: any, name: string): any;
     static hasOwnFunction(obj: any, name: string): Function;
-    static getOwnFunctions(obj): Array<Function>;
-    static getOwnActions(obj): Array<Function>;
+    static getOwnFunctions(obj: any): Array<Function>;
+    static getOwnActions(obj: any): Array<Function>;
 }
 
 export declare interface ProcedureParameter {
@@ -154,7 +154,7 @@ export declare class EntitySetConfiguration {
     kind: string;
     url: string;
     readonly entityType: EntityTypeConfiguration;
-    hasUrl(url: string);
+    hasUrl(url: string): any;
     getUrl(): string;
     getBuilder(): any;
     getEntityTypePropertyList(): Map<string, EntityTypeProperty>;
@@ -162,10 +162,10 @@ export declare class EntitySetConfiguration {
     getEntityTypeIgnoredPropertyList():Array<string>;
     getEntityTypeNavigationProperty(name: string, deep?: boolean): EntityTypeNavigationProperty;
     getEntityTypeNavigationPropertyList(): Map<string, EntityTypeNavigationProperty>;
-    hasContextLink(contextLinkFunc: (context: DataContext) => string);
-    hasIdLink(idLinkFunc: (context: DataContext) => string);
-    hasReadLink(readLinkFunc: (context: DataContext) => string);
-    hasEditLink(editLinkFunc: (context: DataContext) => string);
+    hasContextLink(contextLinkFunc: (context: DataContext) => string): any;
+    hasIdLink(idLinkFunc: (context: DataContext) => string): any;
+    hasReadLink(readLinkFunc: (context: DataContext) => string): any;
+    hasEditLink(editLinkFunc: (context: DataContext) => string): any;
     mapInstance(context: DataContext, any: any): any;
     mapInstanceSet(context: DataContext, any: any): any;
     mapInstanceProperty(context: DataContext, any: any): any;
@@ -198,8 +198,8 @@ export declare class ODataModelBuilder {
     getEdm(): Promise<SchemaConfiguration>;
     clean(all?: boolean): ODataModelBuilder;
     getEdmDocument(): Promise<any>;
-    hasContextLink(contextLinkFunc: (context: DataContext) => string);
-    hasJsonFormatter(jsonFormatterFunc: (context: DataContext, entitySet: EntitySetConfiguration, instance: any, options?: ModelBuilderJsonFormatterOptions)=> any);
+    hasContextLink(contextLinkFunc: (context: DataContext) => string): any;
+    hasJsonFormatter(jsonFormatterFunc: (context: DataContext, entitySet: EntitySetConfiguration, instance: any, options?: ModelBuilderJsonFormatterOptions)=> any): any;
 }
 
 export declare class EntityDataContext extends DataContext {
