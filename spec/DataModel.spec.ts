@@ -20,6 +20,15 @@ class EmployeeModel {
     public Notes?: string;
 }
 
+class Product {
+    public ProductID?: number;
+    public ProductName?: string;
+    public Supplier?: any;
+    public Category?: any;
+    public Unit?: string;
+    public Price?: number;
+}
+
 describe('DataModel', () => {
     let app: TestApplication;
     let context: DataContext;
@@ -74,6 +83,12 @@ describe('DataModel', () => {
         let item: Employee = await context.model(Employee).where('EmployeeID').equal(1).getItem();
         expect(item).toBeTruthy();
         expect(item.EmployeeID).toBe(1);
+    });
+
+    it('should get item by a nested object', async () => {
+        let items = await context.model(Product)
+            .where('Supplier/SupplierName').equal('Exotic Liquid').getItems();
+        expect(items.length).toBeGreaterThan(0);
     });
 
 });
