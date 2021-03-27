@@ -188,6 +188,13 @@ class DataAttributeResolver {
                     .from(self[aliasProperty] || self.viewAdapter))
                     .equal(QueryField.select(mapping.parentField).from(childFieldName));
                 entity = new QueryEntity(parentModel.viewAdapter).as(childFieldName).left();
+                // add a reference to the underlying data model for further processing
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: parentModel.name
+                });
                 res.join(entity).with(expr);
                 if (arrMember.length > 2) {
                     parentModel[aliasProperty] = mapping.childField;
@@ -216,6 +223,13 @@ class DataAttributeResolver {
                 res = QueryUtils.query('Unknown').select(['*']);
                 expr = QueryUtils.query().where(QueryField.select(parentField.name).from(parentEntity)).equal(QueryField.select(childField.name).from(childEntity));
                 entity = new QueryEntity(childModel.viewAdapter).as(childEntity).left();
+                // add a reference to the underlying data model for further processing
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: childModel.name
+                });
                 res.join(entity).with(expr);
                 if (arrMember.length === 2) {
                     // get child model member

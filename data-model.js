@@ -25,6 +25,7 @@ const {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 const {hasOwnProperty} = require('./has-own-property');
 const mappingsProperty = Symbol('mappings');
 const {DataStateValidatorListener} = require('./data-state-validator');
+const {DataNestedQueryableListener} = require('./data-nested-queryable-listener');
 
 /**
  * @this DataModel
@@ -992,7 +993,21 @@ class DataModel extends SequentialEventEmitter {
         }
     }
     /**
-     * Performing an automatic migration of current data model based on the current model's definition.
+     * Performs an automatic migration of this model
+     */
+    migrateAsync() {
+        const thisArg = this;
+        return new Promise(function(resolve, reject) {
+            return thisArg.migrate(function(err) {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve();
+            });
+        });
+    }
+    /**
+     * Performs an automatic migration of this model
      * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
      */
     migrate(callback) {
@@ -1574,6 +1589,8 @@ function registerContextListeners() {
     if (this.caching==='always' || this.caching==='conditional') {
         this.on('after.execute', DataCachingListener.prototype.afterExecute);
     }
+
+    this.on('before.execute', DataNestedQueryableListener.prototype.beforeExecute);
 
     //migration listeners
     this.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);

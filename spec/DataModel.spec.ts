@@ -89,6 +89,24 @@ describe('DataModel', () => {
         let items = await context.model(Product)
             .where('Supplier/SupplierName').equal('Exotic Liquid').getItems();
         expect(items.length).toBeGreaterThan(0);
+
+        items = await context.model(Product)
+            .where('Supplier/SupplierName').equal('Exotic Liquid')
+            .and('Category/CategoryName').equal('Condiments')
+            .expand('Category', 'Supplier')
+            .getItems();
+        expect(items.length).toBeGreaterThan(0);
+        items.forEach((item) => {
+            expect(item.Supplier.SupplierName).toBe('Exotic Liquid');
+            expect(item.Category.CategoryName).toBe('Condiments');
+        });
+    });
+
+    fit('should get item by querying object', async () => {
+        let item = await context.model('Category')
+            .where('Products/ProductName').equal('Northwoods Cranberry Sauce').getItem();
+        expect(item).toBeTruthy();
+        expect(item.CategoryName).toBe('Condiments');
     });
 
 });

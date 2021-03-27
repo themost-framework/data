@@ -23,6 +23,17 @@
             "type": "Text",
             "nullable": false,
             "size": 255
+        },
+        {
+            "name": "Products",
+            "type": "Product",
+            "many": true,
+            "mapping": {
+                "parentModel": "Category",
+                "parentField": "CategoryID",
+                "childModel": "Product",
+                "childField": "Category"
+            }
         }
     ],
     "seed": [
