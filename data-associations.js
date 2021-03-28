@@ -68,11 +68,11 @@ class DataObjectAssociationListener {
                                 if (err) {
                                     cb(err);
                                 } else if (result == null) {
-                                    return cb(new DataError('EDATA', 'An associated object cannot be found.', null, associatedModel.name));
+                                    return cb(new DataError('E_DATA', 'An associated object cannot be found.', null, associatedModel.name));
                                 } else if (result.total === 0) {
-                                    return cb(new DataError('EDATA', 'An associated object cannot be found.', null, associatedModel.name));
+                                    return cb(new DataError('E_DATA', 'An associated object cannot be found.', null, associatedModel.name));
                                 } else if (result.total > 1) {
-                                    return cb(new DataError('EDATA', 'An associated object is defined more than once and cannot be bound.', null, associatedModel.name));
+                                    return cb(new DataError('E_DATA', 'An associated object is defined more than once and cannot be bound.', null, associatedModel.name));
                                 } else {
                                     event.target[childField][mapping.parentField] = result.value[0][mapping.parentField];
                                     cb();

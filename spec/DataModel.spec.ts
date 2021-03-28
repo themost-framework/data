@@ -102,7 +102,7 @@ describe('DataModel', () => {
         });
     });
 
-    fit('should get item by querying object', async () => {
+    it('should get item by querying child object', async () => {
         let item = await context.model('Category')
             .where('Products/ProductName').equal('Northwoods Cranberry Sauce').getItem();
         expect(item).toBeTruthy();

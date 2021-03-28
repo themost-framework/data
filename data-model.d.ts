@@ -18,6 +18,7 @@ export declare class DataModel extends SequentialEventEmitter{
     constraints?: Array<any>;
     views?: Array<any>;
     privileges?: Array<any>;
+    seed?: Array<any>;
     context: DataContext;
     readonly sourceAdapter?: string;
     readonly viewAdapter?: string;

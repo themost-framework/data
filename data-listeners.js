@@ -1,7 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
 const {eachSeries} = require('async');
-const {QueryUtils, QueryField, QueryFieldRef} = require('@themost/query');
+// eslint-disable-next-line no-unused-vars
+const {QueryUtils, QueryField, QueryFieldRef, QueryExpression} = require('@themost/query');
 const {NotNullError, UniqueConstraintError, TraceUtils, TextUtils} = require("@themost/common");
 const { DataCacheStrategy } = require("./data-cache");
 const { FunctionContext } = require('./functions');
@@ -570,13 +571,13 @@ class DataModelSeedListener {
      * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
      */
     afterUpgrade(event, callback) {
-        let self = event.model;
+        let thisModel = event.model;
         try {
             /**
              * Gets items to be seeded
              * @type {Array}
              */
-            let items = self['seed'];
+            let items = thisModel.seed;
             //if model has an array of items to be seeded
             if (Array.isArray(items)) {
                 if (items.length === 0) {
@@ -584,22 +585,22 @@ class DataModelSeedListener {
                     return callback();
                 }
                 //try to insert items if model does not have any record
-                self.asQueryable().silent().flatten().count(function (err, count) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
+                return thisModel.asQueryable().silent().flatten().count().then(function(count) {
                     //if model has no data
                     if (count === 0) {
                         //set items state to new
                         items.forEach(function (x) {
-                            x.$state = 1; 
+                            x.$state = 1;
                         });
-                        self.silent().save(items, callback);
+                        return thisModel.silent().save(items).then(function() {
+                            return callback();
+                        });
                     } else {
                         //model was already seeded
                         return callback();
                     }
+                }).catch(function(err) {
+                    return callback(err);
                 });
             } else {
                 //do nothing and exit
