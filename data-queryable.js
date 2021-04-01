@@ -3,7 +3,7 @@
 const async = require('async');
 const _ = require("lodash");
 const {TextUtils, DataError} = require("@themost/common");
-const mappingExtensions = require('./data-mapping-extensions');
+const { DataMappingExtensions } = require('./data-mapping-extensions');
 const { DataAssociationMapping } = require('./types');
 // eslint-disable-next-line no-unused-vars
 const { QueryField, QueryUtils, QueryEntity, QueryExpression } = require('@themost/query');
@@ -2696,28 +2696,28 @@ function afterExecute_(result, callback) {
                 thisMapping.options = options;
                 if (mapping.associationType === 'association' || mapping.associationType === 'junction') {
                     if ((mapping.parentModel === self.model.name) && (mapping.associationType === 'association')) {
-                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedChilds_v1(result)
+                        return DataMappingExtensions.extend(thisMapping).for(self).getAssociatedChildren(result)
                             .then(function () {
                                 return cb();
                             }).catch(function (err) {
                                 return cb(err);
                             });
                     } else if (mapping.childModel === self.model.name && mapping.associationType === 'junction') {
-                        return mappingExtensions.extend(thisMapping).for(self).getParents_v1(result)
+                        return DataMappingExtensions.extend(thisMapping).for(self).getParents(result)
                             .then(function () {
                                 return cb();
                             }).catch(function (err) {
                                 return cb(err);
                             });
                     } else if (mapping.parentModel === self.model.name && mapping.associationType === 'junction') {
-                        return mappingExtensions.extend(thisMapping).for(self).getChilds_v1(result)
+                        return DataMappingExtensions.extend(thisMapping).for(self).getChildren(result)
                             .then(function () {
                                 return cb();
                             }).catch(function (err) {
                                 return cb(err);
                             });
                     } else if ((mapping.childModel === self.model.name) && (mapping.associationType === 'association')) {
-                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedParents_v1(result)
+                        return DataMappingExtensions.extend(thisMapping).for(self).getAssociatedParents(result)
                             .then(function () {
                                 return cb();
                             }).catch(function (err) {

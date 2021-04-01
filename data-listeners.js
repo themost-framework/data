@@ -2,7 +2,8 @@
 
 const {eachSeries} = require('async');
 // eslint-disable-next-line no-unused-vars
-const {QueryUtils, QueryField, QueryFieldRef, QueryExpression} = require('@themost/query');
+const {QueryUtils, QueryField, QueryExpression} = require('@themost/query');
+const {QueryFieldRef} = require('@themost/query/query');
 const {NotNullError, UniqueConstraintError, TraceUtils, TextUtils} = require("@themost/common");
 const { DataCacheStrategy } = require("./data-cache");
 const { FunctionContext } = require('./functions');

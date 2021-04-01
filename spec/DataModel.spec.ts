@@ -109,4 +109,18 @@ describe('DataModel', () => {
         expect(item.CategoryName).toBe('Condiments');
     });
 
+    fit('should use many-to-many association', async () => {
+        let item = await context.model('Group')
+            .where('Name').equal('Administrators')
+            .expand('Members')
+            .getItem();
+        expect(item).toBeTruthy();
+        expect(item.Members).toBeTruthy();
+        item = await context.model('User')
+            .where('Name').equal('admin@example.com')
+            .expand('Groups')
+            .getItem();
+        expect(item).toBeTruthy();
+    });
+
 });

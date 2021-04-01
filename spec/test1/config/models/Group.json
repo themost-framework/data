@@ -7,6 +7,30 @@
     "inherits": "Account",
     "version": "1.0",
     "fields": [
-
+        {
+            "name": "Members",
+            "type": "User",
+            "many": true,
+            "mapping": {
+                "associationAdapter": "GroupMembers",
+                "associationType": "junction",
+                "associationObjectField": "Group",
+                "associationValueField": "Member",
+                "parentModel": "Group",
+                "parentField": "ID",
+                "childModel": "User",
+                "childField": "ID"
+            }
+        }
+    ],
+    "seed": [
+        {
+            "ID": 1,
+            "Name": "Administrators"
+        },
+        {
+            "ID": 2,
+            "Name": "Users"
+        }
     ]
 }

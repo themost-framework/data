@@ -15,6 +15,7 @@
         },
         {
             "name": "Groups",
+            "type": "Group",
             "many": true,
             "mapping": {
                 "associationAdapter": "GroupMembers",
@@ -26,6 +27,17 @@
                 "childModel": "User",
                 "childField": "ID"
             }
+        }
+    ],
+    "seed": [
+        {
+            "Name": "admin@example.com",
+            "Groups": [
+                {
+                    "ID": 1,
+                    "Name": "Administrators"
+                }
+            ]
         }
     ]
 }
