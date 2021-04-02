@@ -17,14 +17,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themost-framework/themost.git"
+    "url": "git+https://github.com/themost-framework/themost-data.git"
   },
   "author": "Kyriakos Barbounakis <k.barbounakis@gmail.com>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/themost-framework/themost/issues"
+    "url": "https://github.com/themost-framework/themost-data/issues"
   },
-  "homepage": "https://github.com/themost-framework/themost#readme",
+  "homepage": "https://github.com/themost-framework/themost-data#readme",
   "dependencies": {
     "async": "0.2.10",
     "lodash": "^4.17.15",
