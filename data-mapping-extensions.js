@@ -307,7 +307,8 @@ class DataMappingExtensions {
                                 q.silent();
                             }
                             //join parents
-                            q.query.join(_queryable.query.as("j0"))
+                            const subQuery = _queryable.clone().select(mapping.parentField).query.as('j0');
+                            q.query.join(subQuery)
                                 .with(QueryUtils.where(new QueryEntity(thisArg.getChildModel().viewAdapter).select(mapping.childField))
                                     .equal(new QueryEntity("j0").select(mapping.parentField)));
                             q.prepare();

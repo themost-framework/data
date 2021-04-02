@@ -1,0 +1,78 @@
+{
+    "name": "AuthScope",
+    "id": 635016,
+    "title": "AuthScopes",
+    "hidden": true,
+    "sealed": false,
+    "abstract": false,
+    "version": "1.1",
+    "caching": "conditional",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/id",
+            "name": "id",
+            "title": "ID",
+            "description": "The identifier of the item.",
+            "type": "Counter",
+            "nullable": false,
+            "primary": true
+        },
+        {
+            "@id": "http://schema.org/name",
+            "name": "name",
+            "title": "Name",
+            "description": "The name of the item.",
+            "nullable": false,
+            "type": "Text",
+            "indexed": true,
+            "validation": {
+                "pattern": "^[a-zA-Z0-9.\\-+_]+$",
+                "patternMessage": "Scope name may contain only numeric or alphanumeric characters. It also may contain one or more of the following characters: ._+-"
+            }
+        },
+        {
+            "@id": "http://schema.org/description",
+            "name": "description",
+            "title": "Description",
+            "nullable": false,
+            "description": "A description of the item.",
+            "type": "Text"
+        },
+        {
+            "@id": "http://schema.org/url",
+            "name": "url",
+            "title": "Url",
+            "description": "URL of the item.",
+            "type": "URL"
+        }
+    ],
+    "constraints": [
+        {
+            "description": "Scope name must be unique",
+            "type": "unique",
+            "fields": ["name"]
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ],
+    "seed": [
+        {
+            "name":"profile",
+            "description":"Show user profile"
+        }
+    ]
+}
