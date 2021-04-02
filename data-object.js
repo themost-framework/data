@@ -1,12 +1,12 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-const _ = require("lodash");
+const _ = require('lodash');
 const {DataObjectJunction} = require('./data-object-junction');
 const {DataObjectTag} = require('./data-object-tag');
 const {HasManyAssociation} = require('./has-many-association');
 const {HasOneAssociation} = require('./has-one-association');
 const {HasParentJunction} = require('./has-parent-junction');
-const {SequentialEventEmitter, DataError} = require("@themost/common");
+const {SequentialEventEmitter, DataError} = require('@themost/common');
 const { hasOwnProperty } = require('./has-own-property');
 
 const selectorsProperty = Symbol('selectors');
@@ -643,7 +643,7 @@ class DataObject extends SequentialEventEmitter {
             try {
                 let model = self.getModel();
                 let attr = self.getModel().attributes.find(function (x) {
-                    return x.name === "additionalType"; 
+                    return x.name === 'additionalType'; 
                 });
                 if (typeof attr === 'undefined') {
                     return resolve();

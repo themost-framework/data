@@ -69,10 +69,10 @@ class DataExpandResolver {
         for (let i = 0; i < matches.length; i++) {
             let match = matches[i];
             if (typeof match[1] === 'undefined') {
-                result.push({ name: match[0].replace(/^\s+|\s+$/, "") });
+                result.push({ name: match[0].replace(/^\s+|\s+$/, '') });
             } else {
                 let expand = {};
-                expand["name"] = match[0].replace(/^\s+|\s+$/, "");
+                expand['name'] = match[0].replace(/^\s+|\s+$/, '');
                 reOptions.lastIndex = 0;
                 let params = {};
                 let expandOptions = match[1];

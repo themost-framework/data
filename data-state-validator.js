@@ -1,8 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-const _ = require("lodash");
-const {DataNotFoundError} = require("@themost/common");
-const async = require("async");
+const _ = require('lodash');
+const {DataNotFoundError} = require('@themost/common');
+const async = require('async');
 const {hasOwnProperty} = require('./has-own-property');
 
 /**
@@ -110,7 +110,7 @@ class DataStateValidatorListener {
                 }
                 // otherwise throw error not found
                 return callback(_.assign(new DataNotFoundError('The target object cannot be found or is inaccessible.', null, model.name), {
-                    "key": target[model.primaryKey]
+                    'key': target[model.primaryKey]
                 }));
             }).catch(function (err) {
                 return callback(err);
@@ -194,7 +194,7 @@ function mapKey_(obj, callback) {
                                 });
                             if (parentConstraint) {
                                 parentConstraint.fields.forEach(function(x) {
-                                    fnAppendQuery(attr + "/" + x, parentObj[x]);
+                                    fnAppendQuery(attr + '/' + x, parentObj[x]);
                                 });
                             } else {
                                 fnAppendQuery(attr, null);

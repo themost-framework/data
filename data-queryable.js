@@ -1,8 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
 const async = require('async');
-const _ = require("lodash");
-const {TextUtils, DataError} = require("@themost/common");
+const _ = require('lodash');
+const {TextUtils, DataError} = require('@themost/common');
 const { DataMappingExtensions } = require('./data-mapping-extensions');
 const { DataAssociationMapping } = require('./types');
 // eslint-disable-next-line no-unused-vars
@@ -20,11 +20,11 @@ class DataAttributeResolver {
         if (nestedAttribute) {
             let matches = /^(\w+)\((\w+)\/(\w+)\)$/i.exec(nestedAttribute.name);
             if (matches) {
-                return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + "/" + matches[3]);
+                return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + '/' + matches[3]);
             }
             matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\)$/i.exec(nestedAttribute.name);
             if (matches) {
-                return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + "/" + matches[3] + "/" + matches[4]);
+                return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + '/' + matches[3] + '/' + matches[4]);
             }
         }
         return DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
@@ -459,11 +459,11 @@ class DataAttributeResolver {
      * @returns {*}
      */
     resolveJunctionAttributeJoin(attr) {
-        let self = this, member = attr.split("/");
+        let self = this, member = attr.split('/');
         //get the data association mapping
         let mapping = self.inferMapping(member[0]);
         //if mapping defines a junction between two models
-        if (mapping && mapping.associationType === "junction") {
+        if (mapping && mapping.associationType === 'junction') {
             //get field
             let field = self.field(member[0]), entity, expr, q;
             //first approach (default association adapter)
@@ -497,10 +497,10 @@ class DataAttributeResolver {
                     //get child model
                     let childModel = self.context.model(mapping.childModel);
                     if (_.isNil(childModel)) {
-                        throw new DataError("E_JUNCTION", "The associated model cannot be found.", null, mapping.childModel);
+                        throw new DataError('E_JUNCTION', 'The associated model cannot be found.', null, mapping.childModel);
                     }
                     //create new join
-                    let alias = field.name + "_" + childModel.name;
+                    let alias = field.name + '_' + childModel.name;
                     entity = new QueryEntity(childModel.viewAdapter).as(alias);
                     expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
                         .equal(QueryField.select(mapping.childField).from(alias));
@@ -532,10 +532,10 @@ class DataAttributeResolver {
                     //get parent model
                     let parentModel = self.context.model(mapping.parentModel);
                     if (_.isNil(parentModel)) {
-                        throw new DataError("E_JUNCTION", "The associated model cannot be found.", null, mapping.parentModel);
+                        throw new DataError('E_JUNCTION', 'The associated model cannot be found.', null, mapping.parentModel);
                     }
                     //create new join
-                    let parentAlias = field.name + "_" + parentModel.name;
+                    let parentAlias = field.name + '_' + parentModel.name;
                     entity = new QueryEntity(parentModel.viewAdapter).as(parentAlias);
                     expr = QueryUtils.query().where(QueryField.select(mapping.associationObjectField).from(field.name))
                         .equal(QueryField.select(mapping.parentField).from(parentAlias));
@@ -548,7 +548,7 @@ class DataAttributeResolver {
                 }
             }
         } else {
-            throw new DataError("E_JUNCTION", "The target model does not have a many to many association defined by the given attribute.", null, self.name, attr);
+            throw new DataError('E_JUNCTION', 'The target model does not have a many to many association defined by the given attribute.', null, self.name, attr);
         }
     }
 }
@@ -720,7 +720,7 @@ class DataQueryable {
             return self;
         }
         self.prepare();
-        let stringTypes = ["Text", "URL", "Note"];
+        let stringTypes = ['Text', 'URL', 'Note'];
         self.model.attributes.forEach(function (x) {
             if (x.many) {
                 return;
@@ -1041,7 +1041,7 @@ class DataQueryable {
 
         let field;
         if (typeof arg === 'string') {
-            if (arg === "*") {
+            if (arg === '*') {
                 //delete select
                 delete self.query.$select;
                 return this;
@@ -1132,8 +1132,8 @@ class DataQueryable {
                         if (field) {
                             if (field.many || (field.mapping && field.mapping.associationType === 'junction')) {
                                 self.expand({
-                                    "name": field.name,
-                                    "options": field.options
+                                    'name': field.name,
+                                    'options': field.options
                                 });
                             } else {
                                 arr.push(self.fieldOf(field.name));
@@ -1210,7 +1210,7 @@ class DataQueryable {
                 if (nestedAttr) {
                     if (_.isNil(alias)) {
                         let nestedMatches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
-                        alias = _.isNil(nestedMatches) ? aggr.concat('Of_', matches[2].replace(/\//g, "_")) : nestedMatches[1];
+                        alias = _.isNil(nestedMatches) ? aggr.concat('Of_', matches[2].replace(/\//g, '_')) : nestedMatches[1];
                     }
                     /**
                      * @type {Function}
@@ -1788,7 +1788,7 @@ class DataQueryable {
                         self.$expand.push(x);
                     }
                 } else {
-                    throw new Error("Expand option may be a string or a named object.");
+                    throw new Error('Expand option may be a string or a named object.');
                 }
             });
         }
@@ -1802,7 +1802,7 @@ class DataQueryable {
         let expand = attr;
         if (typeof attr === 'string') {
             expand = attr;
-        } else if (typeof attr.name === "string") {
+        } else if (typeof attr.name === 'string') {
             expand = attr.name;
         }
 
@@ -1811,7 +1811,7 @@ class DataQueryable {
                 return x === expand;
             } else if (x instanceof DataAssociationMapping) {
                 return x === expand;
-            } else if (typeof x.name === "string") {
+            } else if (typeof x.name === 'string') {
                 return x.name === expand;
             }
             return false;
@@ -2080,7 +2080,7 @@ class DataQueryable {
                 options: this
             };
         }
-        throw new Error("Invalid parameter. Expected not empty string.");
+        throw new Error('Invalid parameter. Expected not empty string.');
     }
     /**
      * Executes the specified query and returns the first object which satisfy the specified criteria.
@@ -2313,7 +2313,7 @@ function countInternal(callback) {
     callback = callback || function () { };
     //clone query
     let cloned = self.clone();
-    cloned.query.count("__count__");
+    cloned.query.count('__count__');
     if (cloned.query.hasFields() === false) {
         cloned.select();
     }
@@ -2328,7 +2328,7 @@ function countInternal(callback) {
         if (_.isArray(result)) {
             //get first value
             if (result.length > 0) {
-                value = result[0]["__count__"];
+                value = result[0]['__count__'];
             }
         }
         return callback(null, value);
@@ -2588,7 +2588,7 @@ function afterExecute_(result, callback) {
                 return x;
             } else if (x instanceof DataAssociationMapping) {
                 return x;
-            } else if (typeof x.name === "string") {
+            } else if (typeof x.name === 'string') {
                 return x.name;
             }
             return x;
@@ -2607,9 +2607,9 @@ function afterExecute_(result, callback) {
                     mapping = expand;
                     if (typeof expand.select !== 'undefined' && expand.select !== null) {
                         if (typeof expand.select === 'string') {
-                            options["$select"] = expand.select;
+                            options['$select'] = expand.select;
                         } else if (_.isArray(expand.select)) {
-                            options["$select"] = expand.select.join(",");
+                            options['$select'] = expand.select.join(',');
                         }
                     }
                     //get expand options
@@ -2631,7 +2631,7 @@ function afterExecute_(result, callback) {
                         }
                     } else {
                         //invalid expand parameter
-                        return callback(new Error("Invalid expand option. Expected string or a named object."));
+                        return callback(new Error('Invalid expand option. Expected string or a named object.'));
                     }
                     field = self.model.field(expandAttr);
                     if (typeof field === 'undefined') {
@@ -2654,7 +2654,7 @@ function afterExecute_(result, callback) {
                             if (_.isObject(mapping.options)) {
                                 _.assign(options, mapping.options);
                             } else if (_.isArray(mapping.select) && mapping.select.length > 0) {
-                                options['$select'] = mapping.select.join(",");
+                                options['$select'] = mapping.select.join(',');
                             }
                             // check data view attribute mapping options
                             if (self.$view) {
@@ -2676,13 +2676,13 @@ function afterExecute_(result, callback) {
                     // do nothing
                 } else {
                     //set default $top option to -1 (backward compatibility issue)
-                    if (!hasOwnProperty(options, "$top")) {
-                        options["$top"] = -1;
+                    if (!hasOwnProperty(options, '$top')) {
+                        options['$top'] = -1;
                     }
                     //set default $levels option to 1 (backward compatibility issue)
-                    if (!hasOwnProperty(options, "$levels")) {
+                    if (!hasOwnProperty(options, '$levels')) {
                         if (typeof self.$levels === 'number') {
-                            options["$levels"] = self.getLevels() - 1;
+                            options['$levels'] = self.getLevels() - 1;
                         }
                     }
                 }
@@ -2725,10 +2725,10 @@ function afterExecute_(result, callback) {
                             });
                     }
                 } else {
-                    return cb(new Error("Not yet implemented"));
+                    return cb(new Error('Not yet implemented'));
                 }
             } else {
-                const err1 = new DataError("E_ASSOCIATION", 'Data association mapping cannot be found or the association between these two models is defined more than once', null, self.model.name);
+                const err1 = new DataError('E_ASSOCIATION', 'Data association mapping cannot be found or the association between these two models is defined more than once', null, self.model.name);
                 Object.assign(err1, {
                     association: expand
                 });

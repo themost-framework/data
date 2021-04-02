@@ -2,7 +2,7 @@ import { DataContext } from '../index';
 import { DataApplication } from '../index';
 import { resolve } from 'path';
 
-fdescribe('DataQueryable', () => {
+describe('DataQueryable', () => {
     let app: DataApplication;
     let context: DataContext;
     beforeAll((done) => {
@@ -22,7 +22,7 @@ fdescribe('DataQueryable', () => {
         return done();
     });
 
-    fit('should use DataModel.expand(string) for many-to-many association', async () => {
+    it('should use DataModel.expand(string) for many-to-many association', async () => {
         let item = await context.model('Group')
             .where('name').equal('Administrators')
             .silent()

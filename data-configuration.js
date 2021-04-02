@@ -3,7 +3,7 @@
 let _ = require('lodash');
 let Symbol = require('symbol');
 let TraceUtils = require('@themost/common').TraceUtils;
-let path = require("path");
+let path = require('path');
 let pluralize = require('pluralize');
 let Args = require('@themost/common').Args;
 let ConfigurationBase = require('@themost/common').ConfigurationBase;
@@ -305,8 +305,8 @@ class DataConfiguration extends ConfigurationBase {
         if (_.isNil(name)) {
             return DataConfiguration.getCurrent();
         }
-        Args.notString(name, "Configuration Name");
-        Args.notEmpty(name, "Configuration name");
+        Args.notString(name, 'Configuration Name');
+        Args.notEmpty(name, 'Configuration name');
         if (/^current$/i.test(name)) {
             return DataConfiguration.getCurrent();
         }
@@ -343,7 +343,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
 
         if (!config.hasStrategy(DataCacheStrategy)) {
             //process is running under node js
-            if (typeof process !== "undefined" && process.nextTick) {
+            if (typeof process !== 'undefined' && process.nextTick) {
                 //add default cache strategy (using node-cache)
                 config.useStrategy(DataCacheStrategy, DefaultDataCacheStrategy);
             }
@@ -417,13 +417,13 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                         valid = true;
                     } else {
                         //adapter type does not export a createInstance(options) function
-                        TraceUtils.log("The specified data adapter type (%s) does not have the appropriate constructor. Adapter type cannot be loaded.", x.invariantName);
+                        TraceUtils.log('The specified data adapter type (%s) does not have the appropriate constructor. Adapter type cannot be loaded.', x.invariantName);
                     }
                 } catch (err) {
                     //catch error
                     TraceUtils.error(err);
                     //and log a specific error for this adapter type
-                    TraceUtils.log("The specified data adapter type (%s) cannot be instantiated. Adapter type cannot be loaded.", x.invariantName);
+                    TraceUtils.log('The specified data adapter type (%s) cannot be instantiated. Adapter type cannot be loaded.', x.invariantName);
                 }
                 if (valid) {
                     //register adapter
@@ -434,7 +434,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                     };
                 }
             } else {
-                TraceUtils.log("The specified data adapter type (%s) does not have a type defined. Adapter type cannot be loaded.", x.invariantName);
+                TraceUtils.log('The specified data adapter type (%s) does not have a type defined. Adapter type cannot be loaded.', x.invariantName);
             }
         });
 
@@ -595,17 +595,17 @@ class SchemaLoaderStrategy extends ConfigurationStrategy {
         super(config);
         this[modelsProperty] = {};
         this.setModelDefinition({
-            "name": "Migration", "title": "Data Model Migrations", "id": 14,
-            "source": "migrations", "view": "migrations", "hidden": true, "sealed": true,
-            "fields": [
-                { "name": "id", "type": "Counter", "primary": true },
-                { "name": "appliesTo", "type": "Text", "size": 180, "nullable": false },
-                { "name": "model", "type": "Text", "size": 120 },
-                { "name": "description", "type": "Text", "size": 512 },
-                { "name": "version", "type": "Text", "size": 40, "nullable": false }
+            'name': 'Migration', 'title': 'Data Model Migrations', 'id': 14,
+            'source': 'migrations', 'view': 'migrations', 'hidden': true, 'sealed': true,
+            'fields': [
+                { 'name': 'id', 'type': 'Counter', 'primary': true },
+                { 'name': 'appliesTo', 'type': 'Text', 'size': 180, 'nullable': false },
+                { 'name': 'model', 'type': 'Text', 'size': 120 },
+                { 'name': 'description', 'type': 'Text', 'size': 512 },
+                { 'name': 'version', 'type': 'Text', 'size': 40, 'nullable': false }
             ],
-            "constraints": [
-                { "type": "unique", "fields": ["appliesTo", "version"] }
+            'constraints': [
+                { 'type': 'unique', 'fields': ['appliesTo', 'version'] }
             ]
         });
 
@@ -634,11 +634,11 @@ class SchemaLoaderStrategy extends ConfigurationStrategy {
      */
     setModelDefinition(data) {
         if (data == null) {
-            throw new Error("Invalid model definition. Expected object.");
+            throw new Error('Invalid model definition. Expected object.');
         }
         if (typeof data === 'object') {
             if (typeof data.name === 'undefined' || data.name === null) {
-                throw new Error("Invalid model definition. Expected model name.");
+                throw new Error('Invalid model definition. Expected model name.');
             }
             this[modelsProperty][data.name] = data;
         }

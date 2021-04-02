@@ -28,6 +28,7 @@
     "no-var": "error",
     "curly": "error",
     "brace-style": ["error", "1tbs"],
-    "indent": ["error", 4]
+    "indent": ["error", 4],
+    "quotes": ["warn", "single"]
   }
 }

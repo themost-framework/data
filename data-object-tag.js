@@ -5,7 +5,7 @@ const {QueryField, QueryUtils} = require('@themost/query');
 const _ = require('lodash');
 const Q = require('q');
 const {DataAssociationMapping} = require('./types');
-const {DataObjectJunction} = require("./data-object-junction");
+const {DataObjectJunction} = require('./data-object-junction');
 const {DataQueryable} = require('./data-queryable');
 
 /**
@@ -85,45 +85,45 @@ class DataObjectTag extends DataQueryable {
                         objectFieldType = 'Integer'; 
                     }
                     definition = {
-                        "name": self.mapping.associationAdapter,
-                        "hidden": true,
-                        "source": self.mapping.associationAdapter,
-                        "view": self.mapping.associationAdapter,
-                        "version": "1.0",
-                        "fields": [
+                        'name': self.mapping.associationAdapter,
+                        'hidden': true,
+                        'source': self.mapping.associationAdapter,
+                        'view': self.mapping.associationAdapter,
+                        'version': '1.0',
+                        'fields': [
                             {
-                                "name": "id",
-                                "type": "Counter",
-                                "nullable": false,
-                                "primary": true
+                                'name': 'id',
+                                'type': 'Counter',
+                                'nullable': false,
+                                'primary': true
                             },
                             {
-                                "name": associationObjectField,
-                                "type": objectFieldType,
-                                "nullable": false,
-                                "many": false,
-                                "indexed": true
+                                'name': associationObjectField,
+                                'type': objectFieldType,
+                                'nullable': false,
+                                'many': false,
+                                'indexed': true
                             },
                             {
-                                "name": associationValueField,
-                                "type": refersToType,
-                                "nullable": false,
-                                "many": false,
-                                "indexed": true
+                                'name': associationValueField,
+                                'type': refersToType,
+                                'nullable': false,
+                                'many': false,
+                                'indexed': true
                             }
                         ],
-                        "constraints": [
-                            { "type": "unique", "fields": [associationObjectField, associationValueField] }
+                        'constraints': [
+                            { 'type': 'unique', 'fields': [associationObjectField, associationValueField] }
                         ],
-                        "privileges": self.mapping.privileges || [
+                        'privileges': self.mapping.privileges || [
                             {
-                                "mask": 15,
-                                "type": "global"
+                                'mask': 15,
+                                'type': 'global'
                             },
                             {
-                                "mask": 15,
-                                "type": "global",
-                                "account": "Administrators"
+                                'mask': 15,
+                                'type': 'global',
+                                'account': 'Administrators'
                             }
                         ]
                     };
@@ -308,8 +308,8 @@ class DataObjectTag extends DataQueryable {
     }
 }
 
-DataObjectTag.DEFAULT_OBJECT_FIELD = "object";
-DataObjectTag.DEFAULT_VALUE_FIELD = "value";
+DataObjectTag.DEFAULT_OBJECT_FIELD = 'object';
+DataObjectTag.DEFAULT_VALUE_FIELD = 'value';
 
 /**
  * @this DataObjectTag
@@ -363,7 +363,7 @@ function clear_(callback) {
         if (err) {
             return callback(err);
         }
-        self.getBaseModel().silent(self.$silent).where(self.getObjectField()).equal(self.parent[self.mapping.parentField]).select("id").getAllItems().then(function(result) {
+        self.getBaseModel().silent(self.$silent).where(self.getObjectField()).equal(self.parent[self.mapping.parentField]).select('id').getAllItems().then(function(result) {
             if (result.length===0) {
                 return callback(); 
             }

@@ -5,7 +5,7 @@ const {TraceUtils} = require('@themost/common');
 // eslint-disable-next-line no-unused-vars
 const moment = require('moment');
 const _ = require('lodash');
-const Q = require("q");
+const Q = require('q');
 
 /**
  * @class
@@ -55,9 +55,9 @@ class FunctionContext {
             let expr2eval;
             //check parameters (match[3])
             if (match[3].length === 0) {
-                expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2(); });");
+                expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, '(function() { return this.$2(); });');
             } else {
-                expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2($3); });");
+                expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, '(function() { return this.$2($3); });');
             }
             //evaluate expression
             try {
@@ -155,10 +155,10 @@ class FunctionContext {
             try {
                 length = length || 8;
                 if (length < 0) {
-                    return deferred.reject(new Error("Number sequence length must be greater than zero."));
+                    return deferred.reject(new Error('Number sequence length must be greater than zero.'));
                 }
                 if (length > 255) {
-                    return deferred.reject(new Error("Number sequence length exceeds the maximum of 255 characters."));
+                    return deferred.reject(new Error('Number sequence length exceeds the maximum of 255 characters.'));
                 }
                 let times = Math.ceil(length / 10);
                 let res = '';
@@ -182,8 +182,8 @@ class FunctionContext {
         process.nextTick(function () {
             try {
                 length = length || 8;
-                let chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ";
-                let str = "";
+                let chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ';
+                let str = '';
                 for (let i = 0; i < length; i++) {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }
@@ -203,8 +203,8 @@ class FunctionContext {
         process.nextTick(function () {
             try {
                 length = length || 8;
-                let chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ",
-                    str = "";
+                let chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ',
+                    str = '';
                 for (let i = 0; i < length; i++) {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }

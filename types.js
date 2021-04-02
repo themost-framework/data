@@ -1,5 +1,5 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
-const { SequentialEventEmitter, AbstractClassError, AbstractMethodError } = require("@themost/common");
+const { SequentialEventEmitter, AbstractClassError, AbstractMethodError } = require('@themost/common');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -402,22 +402,22 @@ const PrivilegeType = {
      * Self Privilege (self).
      * @type {string}
      */
-    Self: "self",
+    Self: 'self',
     /**
      * Parent Privilege (parent)
      * @type {string}
      */
-    Parent: "parent",
+    Parent: 'parent',
     /**
      * Item Privilege (child)
      * @type {string}
      */
-    Item: "item",
+    Item: 'item',
     /**
      * Global Privilege (global)
      * @type {string}
      */
-    Global: "global"
+    Global: 'global'
 };
 
 /**

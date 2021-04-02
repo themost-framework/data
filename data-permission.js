@@ -2,10 +2,10 @@
 
 const {QueryEntity, QueryUtils} = require('@themost/query');
 const async = require('async');
-const {AccessDeniedError} = require("@themost/common");
-const {DataConfigurationStrategy} = require("./data-configuration");
-const _ = require("lodash");
-const {DataCacheStrategy} = require("./data-cache");
+const {AccessDeniedError} = require('@themost/common');
+const {DataConfigurationStrategy} = require('./data-configuration');
+const _ = require('lodash');
+const {DataCacheStrategy} = require('./data-cache');
 const Q = require('q');
 const {hasOwnProperty} = require('./has-own-property');
 
@@ -235,7 +235,7 @@ class DataPermissionEventListener {
                                 cancel = true;
                                 event.result = true;
                                 return cb();
-                            } else if (hasOwnProperty(item, "account")) {
+                            } else if (hasOwnProperty(item, 'account')) {
                                 if (accounts.findIndex(function (x) {
                                     return x.name === item.account; 
                                 }) >= 0) {
@@ -590,7 +590,7 @@ class DataPermissionEventListener {
                                 //get permission and exit
                                 assigned = true;
                                 return cb(new EachSeriesCancelled());
-                            } else if (hasOwnProperty(item, "account")) {
+                            } else if (hasOwnProperty(item, 'account')) {
                                 if (accounts.findIndex(function (x) {
                                     return x.name === item.account; 
                                 }) >= 0) {
@@ -770,7 +770,7 @@ function queryUser(context, username, callback) {
         if (_.isNil(users)) {
             return callback();
         }
-        users.where('name').equal(username).silent().select('id','name').expand("groups").getTypedItem().then(function(result) {
+        users.where('name').equal(username).silent().select('id','name').expand('groups').getTypedItem().then(function(result) {
             return callback(null, result);
         }).catch(function(err) {
             return callback(err);
@@ -810,10 +810,10 @@ function effectiveAccounts(context, callback) {
         }).then(function(result) {
             let arr = [];
             if (result) {
-                arr.push({ "id": result.id, "name": result.name });
+                arr.push({ 'id': result.id, 'name': result.name });
                 result.groups = result.groups || [];
                 result.groups.forEach(function(x) {
-                    arr.push({ "id": x.id, "name": x.name }); 
+                    arr.push({ 'id': x.id, 'name': x.name }); 
                 });
             }
             if (arr.length===0) {
@@ -835,18 +835,18 @@ function effectiveAccounts(context, callback) {
             }).then(function(anonymous) {
                 let arr = [ ];
                 if (user) {
-                    arr.push({ "id": user.id, "name": user.name });
+                    arr.push({ 'id': user.id, 'name': user.name });
                     if (_.isArray(user.groups)) {
                         user.groups.forEach(function(x) {
-                            arr.push({ "id": x.id, "name": x.name }); 
+                            arr.push({ 'id': x.id, 'name': x.name }); 
                         });
                     }
                 }
                 if (anonymous) {
-                    arr.push({ "id": anonymous.id, "name": "anonymous" });
+                    arr.push({ 'id': anonymous.id, 'name': 'anonymous' });
                     if (_.isArray(anonymous.groups)) {
                         anonymous.groups.forEach(function(x) {
-                            arr.push({ "id": x.id, "name": x.name }); 
+                            arr.push({ 'id': x.id, 'name': x.name }); 
                         });
                     }
                 }

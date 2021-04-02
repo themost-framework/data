@@ -118,12 +118,12 @@ class HasParentJunction extends DataQueryable {
                         title: adapter,
                         sealed: false,
                         hidden: true,
-                        type: "hidden",
+                        type: 'hidden',
                         source: adapter,
                         view: adapter,
                         version: '1.0',
                         fields: [
-                            {name: "id", type: "Counter", primary: true},
+                            {name: 'id', type: 'Counter', primary: true},
                             {
                                 name: associationObjectField,
                                 indexed: true,
@@ -134,20 +134,20 @@ class HasParentJunction extends DataQueryable {
                         ],
                         constraints: [
                             {
-                                description: "The relation between two objects must be unique.",
-                                type: "unique",
+                                description: 'The relation between two objects must be unique.',
+                                type: 'unique',
                                 fields: [associationObjectField, associationValueField]
                             }
                         ],
-                        "privileges": self.mapping.privileges || [
+                        'privileges': self.mapping.privileges || [
                             {
-                                "mask": 15,
-                                "type": "global"
+                                'mask': 15,
+                                'type': 'global'
                             },
                             {
-                                "mask": 15,
-                                "type": "global",
-                                "account": "Administrators"
+                                'mask': 15,
+                                'type': 'global',
+                                'account': 'Administrators'
                             }
                         ]
                     };
@@ -159,7 +159,7 @@ class HasParentJunction extends DataQueryable {
                         return mapping && mapping.associationAdapter === adapter;
                     });
                     if (attribute) {
-                        if (attribute && (attribute.multiplicity === "ZeroOrOne" || attribute.multiplicity === "One")) {
+                        if (attribute && (attribute.multiplicity === 'ZeroOrOne' || attribute.multiplicity === 'One')) {
                             modelDefinition.constraints[0].fields = [associationObjectField];
                         }
                     }

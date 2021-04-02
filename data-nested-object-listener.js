@@ -2,7 +2,7 @@
 
 const {remove} = require('lodash');
 const {QueryUtils} = require('@themost/query');
-const {eachSeries} = require("async");
+const {eachSeries} = require('async');
 const {DataError} = require('@themost/common');
 const {hasOwnProperty} = require('./has-own-property');
 /**
@@ -91,7 +91,7 @@ function beforeSaveMany_(attr, event, callback) {
     //if nested object is not an array
     if (!Array.isArray(nestedObj)) {
         //throw exception
-        return callback(new DataError("EJUNCT","Invalid argument type. Expected array.",null, event.model.name, name));
+        return callback(new DataError('E_JUNCTION','Invalid argument type. Expected array.',null, event.model.name, name));
     }
     //if nested array does not have any data
     if (nestedObj.length===0) {
@@ -492,7 +492,7 @@ function afterSaveMany_(attr, event, callback) {
     //if nested object is not an array
     if (!Array.isArray(nestedArr)) {
         //throw exception
-        return callback(new DataError("EASSOCIATION","Invalid argument type. Expected array.",null, event.model.name, name));
+        return callback(new DataError('EASSOCIATION','Invalid argument type. Expected array.',null, event.model.name, name));
     }
     //get mapping
     let mapping = event.model.inferMapping(attr.name);

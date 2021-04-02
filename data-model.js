@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-const _ = require("lodash");
-const pluralize = require("pluralize");
+const _ = require('lodash');
+const pluralize = require('pluralize');
 const async = require('async');
 // eslint-disable-next-line no-unused-vars
 const {QueryUtils, OpenDataParser, QueryExpression, QueryField} = require('@themost/query');
@@ -12,13 +12,13 @@ const { NotNullConstraintListener, UniqueConstraintListener,
     DataCachingListener, DataModelCreateViewListener,
     DataModelSeedListener } = require('./data-listeners');
 const { DataTypeValidator, MaxLengthValidator, RequiredValidator, DataValidatorListener} = require('./data-validator');
-const {DataNestedObjectListener} = require("./data-nested-object-listener");
-const {DataReferencedObjectListener} = require("./data-ref-object-listener");
+const {DataNestedObjectListener} = require('./data-nested-object-listener');
+const {DataReferencedObjectListener} = require('./data-ref-object-listener');
 const {DataQueryable, DataAttributeResolver} = require('./data-queryable');
 const {DataObjectAssociationListener} = require('./data-associations');
 const {DataModelView} = require('./data-model-view');
 const {DataFilterResolver} = require('./data-filter-resolver');
-const {SequentialEventEmitter, TraceUtils, DataError, ModuleLoaderStrategy} = require("@themost/common");
+const {SequentialEventEmitter, TraceUtils, DataError, ModuleLoaderStrategy} = require('@themost/common');
 const {DataConfigurationStrategy, ModelClassLoaderStrategy} = require('./data-configuration');
 const {DataPermissionEventListener} = require('./data-permission');
 const {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
@@ -63,12 +63,12 @@ function inferTagMapping(field) {
     let parentField = self.primaryKey;
     // mapping attributes
     let mapping = _.assign({}, {
-        "associationType": "junction",
-        "associationAdapter": associationAdapter,
-        "cascade": "delete",
-        "parentModel": self.name,
-        "parentField": parentField,
-        "refersTo": field.name
+        'associationType': 'junction',
+        'associationAdapter': associationAdapter,
+        'cascade': 'delete',
+        'parentModel': self.name,
+        'parentField': parentField,
+        'refersTo': field.name
     }, field.mapping);
     // and return
     return new DataAssociationMapping(mapping);
@@ -83,7 +83,7 @@ function getImplementedModel() {
         return null;
     }
     if (typeof this.context === 'undefined' || this.context === null) {
-        throw new Error("The underlying data context cannot be empty.");
+        throw new Error('The underlying data context cannot be empty.');
     }
     return this.context.model(this['implements']);
 }
@@ -338,11 +338,11 @@ class DataModel extends SequentialEventEmitter {
                             if (typeof primaryKey === 'undefined') {
                                 //add primary key field
                                 primaryKey = _.assign({}, x, {
-                                    "type": x.type === 'Counter' ? 'Integer' : x.type,
-                                    "model": self.name,
-                                    "indexed": true,
-                                    "value": null,
-                                    "calculation": null
+                                    'type': x.type === 'Counter' ? 'Integer' : x.type,
+                                    'model': self.name,
+                                    'indexed': true,
+                                    'value': null,
+                                    'calculation': null
                                 });
                                 delete primaryKey.value;
                                 delete primaryKey.calculation;
@@ -715,7 +715,7 @@ class DataModel extends SequentialEventEmitter {
             return null;
         }
         if (typeof this.context === 'undefined' || this.context === null) {
-            throw new Error("The underlying data context cannot be empty.");
+            throw new Error('The underlying data context cannot be empty.');
         }
         return this.context.model(this.inherits);
     }
@@ -1038,7 +1038,7 @@ class DataModel extends SequentialEventEmitter {
         });
 
         if ((fields === null) || (fields.length === 0)) {
-            throw new Error("Migration is not valid for this model. The model has no fields.");
+            throw new Error('Migration is not valid for this model. The model has no fields.');
         }
         let migration = new DataModelMigration();
         migration.add = _.map(fields, function (x) {
@@ -1049,7 +1049,7 @@ class DataModel extends SequentialEventEmitter {
         migration.model = self.name;
         migration.description = `${this.title} migration (version ${migration.version})`;
         if (context === null) {
-            throw new Error("The underlying data context cannot be empty.");
+            throw new Error('The underlying data context cannot be empty.');
         }
 
         //get all related models
@@ -1078,12 +1078,12 @@ class DataModel extends SequentialEventEmitter {
                     }
                 }
                 migration.indexes.push({
-                    name: "INDEX_" + migration.appliesTo.toUpperCase() + "_" + x.name.toUpperCase(),
+                    name: 'INDEX_' + migration.appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
                     columns: [x.name]
                 });
             } else if (x.indexed === true) {
                 migration.indexes.push({
-                    name: "INDEX_" + migration.appliesTo.toUpperCase() + "_" + x.name.toUpperCase(),
+                    name: 'INDEX_' + migration.appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
                     columns: [x.name]
                 });
             }
@@ -1209,10 +1209,10 @@ class DataModel extends SequentialEventEmitter {
         })[0];
         if (_.isNil(view)) {
             return _.assign(new DataModelView(self), {
-                "name": "default",
-                "title": "Default View",
-                "fields": self.attributes.map(function (x) {
-                    return { "name": x.name };
+                'name': 'default',
+                'title': 'Default View',
+                'fields': self.attributes.map(function (x) {
+                    return { 'name': x.name };
                 })
             });
         }
@@ -1228,7 +1228,7 @@ class DataModel extends SequentialEventEmitter {
         let self = this;
         //ensure model cached mappings
         let conf = self.context.model(self.name);
-        if (typeof conf === "undefined" || conf === null) {
+        if (typeof conf === 'undefined' || conf === null) {
             return;
         }
         if (_.isNil(conf[mappingsProperty])) {
@@ -1275,13 +1275,13 @@ class DataModel extends SequentialEventEmitter {
         if (mapping.associationType === 'junction' && typeof mapping.associationObjectField === 'undefined') {
             // todo: remove this rule and use always "object" as association object field (solve backward compatibility issues)
             // set default object field
-            mapping.associationObjectField = "parentId";
+            mapping.associationObjectField = 'parentId';
             if (mapping.refersTo && mapping.parentModel === self.name) {
                 // get type
                 let refersTo = self.getAttribute(mapping.refersTo);
                 // validate data object tag association
                 if (refersTo && self.context.getConfiguration().getStrategy(DataConfigurationStrategy).hasDataType(refersTo.type)) {
-                    mapping.associationObjectField = "object";
+                    mapping.associationObjectField = 'object';
                 }
             }
         }
@@ -1301,13 +1301,13 @@ class DataModel extends SequentialEventEmitter {
         if (mapping.associationType === 'junction' && typeof mapping.associationValueField === 'undefined') {
             // todo: remove this rule and use always "value" as association value field (solve backward compatibility issues)
             // set default object field
-            mapping.associationValueField = "valueId";
+            mapping.associationValueField = 'valueId';
             if (mapping.refersTo && mapping.parentModel === self.name) {
                 // get type
                 let refersToAttr = self.getAttribute(mapping.refersTo);
                 // validate data object tag association
                 if (refersToAttr && self.context.getConfiguration().getStrategy(DataConfigurationStrategy).hasDataType(refersToAttr.type)) {
-                    mapping.associationValueField = "value";
+                    mapping.associationValueField = 'value';
                 }
             }
         }
@@ -1339,7 +1339,7 @@ class DataModel extends SequentialEventEmitter {
                     result.parentModel = self.name;
                 } else {
                     //this is an exception
-                    throw new DataError("EMAP", "An inherited data association cannot be mapped.");
+                    throw new DataError('EMAP', 'An inherited data association cannot be mapped.');
                 }
                 //cache mapping
                 conf[mappingsProperty][name] = result;
@@ -1358,7 +1358,7 @@ class DataModel extends SequentialEventEmitter {
                     result.parentModel = self.name;
                 } else {
                     //this is an exception
-                    throw new DataError("EMAP", "An inherited data association cannot be mapped.");
+                    throw new DataError('EMAP', 'An inherited data association cannot be mapped.');
                 }
                 //cache mapping
                 conf[mappingsProperty][name] = result;
@@ -1443,13 +1443,13 @@ class DataModel extends SequentialEventEmitter {
     getSubTypes() {
         let thisArg = this;
         return new Promise(function(resolve, reject){
-            let migrations = thisArg.context.model("Migration");
+            let migrations = thisArg.context.model('Migration');
             if (migrations == null) {
                 return resolve([]);
             }
             migrations.silent()
-                .select("model")
-                .groupBy("model")
+                .select('model')
+                .groupBy('model')
                 .all().then(function (result) {
                     let conf = thisArg.context.getConfiguration().getStrategy(DataConfigurationStrategy), arr = [];
                     result.forEach(function (x) {
@@ -1474,13 +1474,13 @@ class DataModel extends SequentialEventEmitter {
         const deepArg = (typeof deep === 'undefined') ? true : parsers.parseBoolean(deep);
         return new Promise(function(resolve, reject) {
             let referenceMappings = [], name = thisArg.name, attributes;
-            let migrations = thisArg.context.model("Migration");
+            let migrations = thisArg.context.model('Migration');
             if (migrations == null) {
                 return resolve([]);
             }
             migrations.silent()
-                .select("model")
-                .groupBy("model")
+                .select('model')
+                .groupBy('model')
                 .all().then(function (result) {
                     result.forEach(function (x) {
                         let m = context.model(x.model);
@@ -1687,14 +1687,14 @@ function filterInternal(params, callback) {
         }
         if (DataAttributeResolver.prototype.testNestedAttribute.call(self,member)) {
             try {
-                let member1 = member.split("/"),
+                let member1 = member.split('/'),
                     mapping = self.inferMapping(member1[0]),
                     expr;
                 if (mapping && mapping.associationType === 'junction') {
                     let expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, member);
                     expr = expr1.$expand;
                     //replace member expression
-                    member = expr1.$select.$name.replace(/\./g,"/");
+                    member = expr1.$select.$name.replace(/\./g,'/');
                 } else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
                 }
@@ -1814,7 +1814,7 @@ function filterInternal(params, callback) {
                     }
                     if (expand) {
 
-                        let resolver = require("./data-expand-resolver");
+                        let resolver = require('./data-expand-resolver');
                         let matches = resolver.testExpandExpression(expand);
                         if (matches && matches.length>0) {
                             q.expand.apply(q, matches);
@@ -1920,7 +1920,7 @@ function cast_(obj, state) {
             author:k.barbounakis@gmail.com
             description:exclude non editable attributes on update operation
              */
-            return (state===2) ? (hasOwnProperty(y, "editable") ? y.editable : true) : true;
+            return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
         }).forEach(function(x) {
             name = hasOwnProperty(obj, x.property) ? x.property : x.name;
             if (hasOwnProperty(obj, name)) {
@@ -1986,7 +1986,7 @@ function castForValidation_(obj, state) {
              author:k.barbounakis@gmail.com
              description:exclude non editable attributes on update operation
              */
-            return (state===2) ? (hasOwnProperty(y, "editable") ? y.editable : true) : true;
+            return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
         }).forEach(function(x) {
             name = hasOwnProperty(obj, x.property) ? x.property : x.name;
             if (hasOwnProperty(obj, name)) {
@@ -2613,7 +2613,7 @@ function validate_(obj, state, callback) {
             (x.readonly && (typeof x.value!=='undefined') && state===1) ||
             (x.readonly && (typeof x.calculation!=='undefined') && state===1);
     }).filter(function(y) {
-        return (state===2) ? (hasOwnProperty(y, "editable") ? y.editable : true) : true;
+        return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
     });
 
     /**
@@ -2653,7 +2653,7 @@ function validate_(obj, state, callback) {
             }
             if (typeof validatorModule.createInstance !== 'function') {
                 TraceUtils.debug(`Data validator module (${attr.validation.type}) does not export createInstance() method.`);
-                return cb(new Error("Invalid data validator type."));
+                return cb(new Error('Invalid data validator type.'));
             }
             arrValidators.push(validatorModule.createInstance(attr));
         }
@@ -2690,7 +2690,7 @@ function validate_(obj, state, callback) {
                 if (typeof validator.validateSync === 'function') {
                     validationResult = validator.validateSync(value);
                     if (validationResult) {
-                        return cb(new DataError(validationResult.code || "EVALIDATE",validationResult.message, validationResult.innerMessage, self.name, attr.name));
+                        return cb(new DataError(validationResult.code || 'EVALIDATE',validationResult.message, validationResult.innerMessage, self.name, attr.name));
                     } else {
                         return cb();
                     }
@@ -2700,13 +2700,13 @@ function validate_(obj, state, callback) {
                             return cb(err);
                         }
                         if (validationResult) {
-                            return cb(new DataError(validationResult.code || "EVALIDATE",validationResult.message, validationResult.innerMessage, self.name, attr.name));
+                            return cb(new DataError(validationResult.code || 'EVALIDATE',validationResult.message, validationResult.innerMessage, self.name, attr.name));
                         }
                         return cb();
                     });
                 } else {
                     TraceUtils.debug(`Data validator (${attr.validation.type}) does not have either validate() or validateSync() methods.`);
-                    return cb(new Error("Invalid data validator type."));
+                    return cb(new Error('Invalid data validator type.'));
                 }
             } catch(err) {
                 return cb(err);

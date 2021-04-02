@@ -29,30 +29,30 @@ class EdmType {
 
 }
 
-EdmType.EdmBinary = "Edm.Binary";
-EdmType.EdmBoolean="Edm.Boolean";
-EdmType.EdmByte="Edm.Byte";
-EdmType.EdmDate="Edm.Date";
-EdmType.EdmDateTimeOffset="Edm.DateTimeOffset";
-EdmType.EdmDouble="Edm.Double";
-EdmType.EdmDecimal="Edm.Decimal";
-EdmType.EdmDuration="Edm.Duration";
-EdmType.EdmGuid="Edm.Guid";
-EdmType.EdmInt16="Edm.Int16";
-EdmType.EdmInt32="Edm.Int32";
-EdmType.EdmInt64="Edm.Int64";
-EdmType.EdmSByte="Edm.SByte";
-EdmType.EdmSingle="Edm.Single";
-EdmType.EdmStream="Edm.Stream";
-EdmType.EdmString="Edm.String";
-EdmType.EdmTimeOfDay="Edm.TimeOfDay";
+EdmType.EdmBinary = 'Edm.Binary';
+EdmType.EdmBoolean='Edm.Boolean';
+EdmType.EdmByte='Edm.Byte';
+EdmType.EdmDate='Edm.Date';
+EdmType.EdmDateTimeOffset='Edm.DateTimeOffset';
+EdmType.EdmDouble='Edm.Double';
+EdmType.EdmDecimal='Edm.Decimal';
+EdmType.EdmDuration='Edm.Duration';
+EdmType.EdmGuid='Edm.Guid';
+EdmType.EdmInt16='Edm.Int16';
+EdmType.EdmInt32='Edm.Int32';
+EdmType.EdmInt64='Edm.Int64';
+EdmType.EdmSByte='Edm.SByte';
+EdmType.EdmSingle='Edm.Single';
+EdmType.EdmStream='Edm.Stream';
+EdmType.EdmString='Edm.String';
+EdmType.EdmTimeOfDay='Edm.TimeOfDay';
 /**
  * @static
  * @param {*} type
  * @returns {string}
  */
 EdmType.CollectionOf = function(type) {
-    return "Collection(" + type + ")";
+    return 'Collection(' + type + ')';
 };
 /**
  * @static
@@ -69,10 +69,10 @@ EdmType.IsCollection = function(type) {
 class EdmMultiplicity {
 
 }
-EdmMultiplicity.Many = "Many";
-EdmMultiplicity.One = "One";
-EdmMultiplicity.Unknown = "Unknown";
-EdmMultiplicity.ZeroOrOne = "ZeroOrOne";
+EdmMultiplicity.Many = 'Many';
+EdmMultiplicity.One = 'One';
+EdmMultiplicity.Unknown = 'Unknown';
+EdmMultiplicity.ZeroOrOne = 'ZeroOrOne';
 /**
  * @param {string} value
  * @returns {string|*}
@@ -90,16 +90,16 @@ EdmMultiplicity.parse = function(value) {
 
 class EntitySetKind {
     static EntitySet() {
-        return "EntitySet";
+        return 'EntitySet';
     }
     static Singleton() {
-        return "Singleton";
+        return 'Singleton';
     }
     static FunctionImport() {
-        return "FunctionImport";
+        return 'FunctionImport';
     }
     static ActionImport() {
-        return "ActionImport";
+        return 'ActionImport';
     }
 }
 
@@ -143,9 +143,9 @@ class ProcedureConfiguration {
      * @param {boolean=} fromBody
      */
     parameter(name, type, nullable, fromBody) {
-        Args.notString(name, "Action parameter name");
-        Args.notString(type, "Action parameter type");
-        let findRe = new RegExp("^" + name + "$", "ig");
+        Args.notString(name, 'Action parameter name');
+        Args.notString(type, 'Action parameter type');
+        let findRe = new RegExp('^' + name + '$', 'ig');
         let p = _.find(this.parameters, function (x) {
             return findRe.test(x.name);
         });
@@ -153,10 +153,10 @@ class ProcedureConfiguration {
             p.type = type;
         } else {
             this.parameters.push({
-                "name": name,
-                "type": type,
-                "nullable": _.isBoolean(nullable) ? nullable : false,
-                "fromBody": fromBody
+                'name': name,
+                'type': type,
+                'nullable': _.isBoolean(nullable) ? nullable : false,
+                'fromBody': fromBody
             });
         }
         return this;
@@ -219,7 +219,7 @@ class EntityCollectionConfiguration {
         }
         a = new ActionConfiguration(name);
         //add current entity as parameter
-        a.parameter("bindingParameter", "Collection(" + this[entityTypeProperty].name + ")", true);
+        a.parameter('bindingParameter', 'Collection(' + this[entityTypeProperty].name + ')', true);
         a.isBound = true;
         this.actions.push(a);
         return a;
@@ -233,7 +233,7 @@ class EntityCollectionConfiguration {
         if (_.isEmpty(name)) {
             return;
         }
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         return _.find(this.actions, function (x) {
             return findRe.test(x.name);
         });
@@ -251,7 +251,7 @@ class EntityCollectionConfiguration {
         }
         a = new FunctionConfiguration(name);
         a.isBound = true;
-        a.parameter("bindingParameter", "Collection(" + this[entityTypeProperty].name + ")", true);
+        a.parameter('bindingParameter', 'Collection(' + this[entityTypeProperty].name + ')', true);
         //add current entity as parameter
         this.functions.push(a);
         return a;
@@ -265,7 +265,7 @@ class EntityCollectionConfiguration {
         if (_.isEmpty(name)) {
             return;
         }
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         return _.find(this.functions, function (x) {
             return findRe.test(x.name);
         });
@@ -287,11 +287,11 @@ function getOwnPropertyNames(obj) {
     }
     if (typeof obj === 'function') {
         //remove caller
-        let index = ownPropertyNames.indexOf("caller");
+        let index = ownPropertyNames.indexOf('caller');
         if (index>=0) {
             ownPropertyNames.splice(index,1);
         }
-        index = ownPropertyNames.indexOf("arguments");
+        index = ownPropertyNames.indexOf('arguments');
         if (index>=0) {
             ownPropertyNames.splice(index,1);
         }
@@ -337,7 +337,7 @@ class EntityTypeConfiguration {
          * @returns EntityTypeConfiguration
          */
     derivesFrom(name) {
-        Args.notString(name, "Entity type name");
+        Args.notString(name, 'Entity type name');
         this.baseType = name;
         return this;
     }
@@ -357,7 +357,7 @@ class EntityTypeConfiguration {
         }
         a = new ActionConfiguration(name);
         //add current entity as parameter
-        a.parameter("bindingParameter", this.name);
+        a.parameter('bindingParameter', this.name);
         a.isBound = true;
         this.actions.push(a);
         return a;
@@ -371,7 +371,7 @@ class EntityTypeConfiguration {
         if (_.isEmpty(name)) {
             return;
         }
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         return _.find(this.actions, function (x) {
             return findRe.test(x.name);
         });
@@ -389,7 +389,7 @@ class EntityTypeConfiguration {
         }
         a = new FunctionConfiguration(name);
         a.isBound = true;
-        a.parameter("bindingParameter", this.name);
+        a.parameter('bindingParameter', this.name);
         //add current entity as parameter
         this.functions.push(a);
         return a;
@@ -403,7 +403,7 @@ class EntityTypeConfiguration {
         if (_.isEmpty(name)) {
             return;
         }
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         return _.find(this.functions, function (x) {
             return findRe.test(x.name);
         });
@@ -416,21 +416,21 @@ class EntityTypeConfiguration {
          * @returns EntityTypeConfiguration
          */
     addProperty(name, type, nullable) {
-        Args.notString(name, "Property name");
+        Args.notString(name, 'Property name');
         let exists = _.findIndex(this.property, function (x) {
             return x.name === name;
         });
         if (exists < 0) {
             let p = {
-                "name": name,
-                "type": type,
-                "nullable": _.isBoolean(nullable) ? nullable : true
+                'name': name,
+                'type': type,
+                'nullable': _.isBoolean(nullable) ? nullable : true
             };
             this.property.push(p);
         } else {
             _.assign(this.property[exists], {
-                "type": type,
-                "nullable": _.isBoolean(nullable) ? nullable : true
+                'type': type,
+                'nullable': _.isBoolean(nullable) ? nullable : true
             });
         }
         return this;
@@ -444,14 +444,14 @@ class EntityTypeConfiguration {
          * @returns EntityTypeConfiguration
          */
     addNavigationProperty(name, type, multiplicity) {
-        Args.notString(name, "Property name");
+        Args.notString(name, 'Property name');
         let exists = _.findIndex(this.navigationProperty, function (x) {
             return x.name === name;
         });
 
         let p = {
-            "name": name,
-            "type": (multiplicity === "Many") ? `Collection(${type})` : type
+            'name': name,
+            'type': (multiplicity === 'Many') ? `Collection(${type})` : type
         };
         if ((multiplicity === EdmMultiplicity.ZeroOrOne) || (multiplicity === EdmMultiplicity.Many)) {
             p.nullable = true;
@@ -471,7 +471,7 @@ class EntityTypeConfiguration {
          * @returns {EntityTypeConfiguration}
          */
     removeNavigationProperty(name) {
-        Args.notString(name, "Property name");
+        Args.notString(name, 'Property name');
         let hasProperty = _.findIndex(this.property, function (x) {
             return x.name === name;
         });
@@ -486,7 +486,7 @@ class EntityTypeConfiguration {
          * @returns {EntityTypeConfiguration}
          */
     ignore(name) {
-        Args.notString(name, "Property name");
+        Args.notString(name, 'Property name');
         let hasProperty = _.findIndex(this.ignoredProperty, function (x) {
             return x.name === name;
         });
@@ -503,7 +503,7 @@ class EntityTypeConfiguration {
          * @returns {EntityTypeConfiguration}
          */
     removeProperty(name) {
-        Args.notString(name, "Property name");
+        Args.notString(name, 'Property name');
         let hasProperty = _.findIndex(this.property, function (x) {
             return x.name === name;
         });
@@ -519,7 +519,7 @@ class EntityTypeConfiguration {
          * @returns {EntityTypeConfiguration}
          */
     removeKey(name) {
-        Args.notString(name, "Key name");
+        Args.notString(name, 'Key name');
         if (this.key && Array.isArray(this.key.propertyRef)) {
             let hasKeyIndex = _.findIndex(this.key.propertyRef, function (x) {
                 return x.name === name;
@@ -543,7 +543,7 @@ class EntityTypeConfiguration {
         this.key = {
             propertyRef: [
                 {
-                    "name": name
+                    'name': name
                 }
             ]
         };
@@ -562,7 +562,7 @@ class EntityTypeConfiguration {
             let contextLink = this.getBuilder().getContextLink(context);
             if (contextLink) {
                 return _.assign({
-                    "@odata.context": contextLink + '#' + this.name
+                    '@odata.context': contextLink + '#' + this.name
                 }, any);
             }
         }
@@ -584,13 +584,13 @@ class EntityTypeConfiguration {
                     contextLink += context.request.url.replace(builder.serviceRoot, '');
                 }
                 return {
-                    "@odata.context": contextLink,
-                    "value": any
+                    '@odata.context': contextLink,
+                    'value': any
                 };
             }
         }
         return {
-            "value": any
+            'value': any
         };
     }
     // noinspection JSUnusedGlobalSymbols
@@ -605,24 +605,24 @@ class EntityTypeConfiguration {
         if (context) {
             let contextLink = this.getBuilder().getContextLink(context);
             if (contextLink) {
-                result["@odata.context"] = contextLink + '#' + this.name;
+                result['@odata.context'] = contextLink + '#' + this.name;
             }
         }
         //search for total property for backward compatibility issues
-        if (hasOwnProperty(any, "total") && /^\+?\d+$/.test(any["total"])) {
-            result["@odata.count"] = parseInt(any["total"]);
+        if (hasOwnProperty(any, 'total') && /^\+?\d+$/.test(any['total'])) {
+            result['@odata.count'] = parseInt(any['total']);
         }
-        if (hasOwnProperty(any, "count") && /^\+?\d+$/.test(any["count"])) {
-            result["@odata.count"] = parseInt(any["count"]);
+        if (hasOwnProperty(any, 'count') && /^\+?\d+$/.test(any['count'])) {
+            result['@odata.count'] = parseInt(any['count']);
         }
-        result["value"] = [];
+        result['value'] = [];
         if (Array.isArray(any)) {
-            result["value"] = any;
+            result['value'] = any;
         } else if (Array.isArray(any.records)) {
             //search for records property for backward compatibility issues
-            result["value"] = any.records;
+            result['value'] = any.records;
         } else if (Array.isArray(any.value)) {
-            result["value"] = any.value;
+            result['value'] = any.value;
         }
         return result;
     }
@@ -677,7 +677,7 @@ class EntitySetConfiguration {
                 let builderContextLink = thisBuilder.getContextLink(context);
                 if (builderContextLink) {
                     //add hash for entity set
-                    return builderContextLink + "#" + this.name;
+                    return builderContextLink + '#' + this.name;
                 }
             });
 
@@ -722,7 +722,7 @@ class EntitySetConfiguration {
          * @returns {*}
          */
     getEntityTypeProperty(name, deep) {
-        let re = new RegExp("^" + name + "$", "ig");
+        let re = new RegExp('^' + name + '$', 'ig');
         let p = _.find(this.entityType.property, function (x) {
             return re.test(x.name);
         });
@@ -763,7 +763,7 @@ class EntitySetConfiguration {
          * @returns {*}
          */
     getEntityTypeNavigationProperty(name, deep) {
-        let re = new RegExp("^" + name + "$", "ig");
+        let re = new RegExp('^' + name + '$', 'ig');
         let p = _.find(this.entityType.navigationProperty, function (x) {
             return re.test(x.name);
         });
@@ -850,7 +850,7 @@ class EntitySetConfiguration {
             let contextLink = this.getContextLink(context);
             if (contextLink) {
                 return _.assign({
-                    "@odata.context": contextLink + '/$entity'
+                    '@odata.context': contextLink + '/$entity'
                 }, any);
             }
         }
@@ -872,13 +872,13 @@ class EntitySetConfiguration {
                     contextLink += context.request.url.replace(builder.serviceRoot, '');
                 }
                 return {
-                    "@odata.context": contextLink,
-                    "value": any
+                    '@odata.context': contextLink,
+                    'value': any
                 };
             }
         }
         return {
-            "value": any
+            'value': any
         };
     }
     // noinspection JSUnusedGlobalSymbols
@@ -893,26 +893,26 @@ class EntitySetConfiguration {
         if (context) {
             let contextLink = this.getContextLink(context);
             if (contextLink) {
-                result["@odata.context"] = contextLink;
+                result['@odata.context'] = contextLink;
             }
         }
         //search for total property for backward compatibility issues
-        if (hasOwnProperty(any, "total") && /^\+?\d+$/.test(any["total"])) {
-            result["@odata.count"] = parseInt(any["total"]);
-        } else if (hasOwnProperty(any, "count") && /^\+?\d+$/.test(any["count"])) {
-            result["@odata.count"] = parseInt(any["count"]);
+        if (hasOwnProperty(any, 'total') && /^\+?\d+$/.test(any['total'])) {
+            result['@odata.count'] = parseInt(any['total']);
+        } else if (hasOwnProperty(any, 'count') && /^\+?\d+$/.test(any['count'])) {
+            result['@odata.count'] = parseInt(any['count']);
         }
-        if (hasOwnProperty(any, "skip") && /^\+?\d+$/.test(any["skip"])) {
-            result["@odata.skip"] = parseInt(any["skip"]);
+        if (hasOwnProperty(any, 'skip') && /^\+?\d+$/.test(any['skip'])) {
+            result['@odata.skip'] = parseInt(any['skip']);
         }
-        result["value"] = [];
+        result['value'] = [];
         if (Array.isArray(any)) {
-            result["value"] = any;
+            result['value'] = any;
         } else if (Array.isArray(any.records)) {
             //search for records property for backward compatibility issues
-            result["value"] = any.records;
+            result['value'] = any.records;
         } else if (Array.isArray(any.value)) {
-            result["value"] = any.value;
+            result['value'] = any.value;
         }
         return result;
     }
@@ -943,15 +943,15 @@ class SingletonConfiguration extends EntitySetConfiguration {
  */
 function schemaToEdmDocument(schema) {
     let doc = new XDocument();
-    let rootElement = doc.createElement("edmx:Edmx");
-    rootElement.setAttribute("xmlns:edmx", "http://docs.oasis-open.org/odata/ns/edmx");
-    rootElement.setAttribute("Version","4.0");
+    let rootElement = doc.createElement('edmx:Edmx');
+    rootElement.setAttribute('xmlns:edmx', 'http://docs.oasis-open.org/odata/ns/edmx');
+    rootElement.setAttribute('Version','4.0');
     doc.appendChild(rootElement);
-    let dataServicesElement = doc.createElement("edmx:DataServices");
-    let schemaElement = doc.createElement("Schema");
-    schemaElement.setAttribute("xmlns", "http://docs.oasis-open.org/odata/ns/edm");
+    let dataServicesElement = doc.createElement('edmx:DataServices');
+    let schemaElement = doc.createElement('Schema');
+    schemaElement.setAttribute('xmlns', 'http://docs.oasis-open.org/odata/ns/edm');
     if (schema.namespace) {
-        schemaElement.setAttribute("Namespace", schema.namespace);
+        schemaElement.setAttribute('Namespace', schema.namespace);
     }
     let actionElements = [], functionElements = [];
     //append edmx:DataServices > Schema
@@ -965,33 +965,33 @@ function schemaToEdmDocument(schema) {
 
             //search for bound actions
             _.forEach(entityType.actions.concat(entityType.collection.actions), function(action) {
-                let actionElement = doc.createElement("Action");
-                actionElement.setAttribute("Name", action.name);
-                actionElement.setAttribute("IsBound", true);
+                let actionElement = doc.createElement('Action');
+                actionElement.setAttribute('Name', action.name);
+                actionElement.setAttribute('IsBound', true);
                 if (action.isComposable) {
-                    actionElement.setAttribute("IsComposable", action.isComposable);
+                    actionElement.setAttribute('IsComposable', action.isComposable);
                 }
                 _.forEach(action.parameters, function(parameter) {
-                    let paramElement =  doc.createElement("Parameter");
-                    paramElement.setAttribute("Name", parameter.name);
-                    paramElement.setAttribute("Type", parameter.type);
+                    let paramElement =  doc.createElement('Parameter');
+                    paramElement.setAttribute('Name', parameter.name);
+                    paramElement.setAttribute('Type', parameter.type);
                     let nullable = _.isBoolean(parameter.nullable) ? parameter.nullable : false;
                     if (!nullable) {
-                        paramElement.setAttribute("Nullable", nullable);
+                        paramElement.setAttribute('Nullable', nullable);
                     }
                     //append Action > Parameter
                     actionElement.appendChild(paramElement)
                 });
                 if (action.returnType || action.returnCollectionType) {
-                    let returnTypeElement =  doc.createElement("ReturnType");
+                    let returnTypeElement =  doc.createElement('ReturnType');
                     let returnType = action.returnType;
                     if (action.returnCollectionType) {
                         returnType = action.returnCollectionType;
-                        returnTypeElement.setAttribute("Type", `Collection(${returnType})`);
+                        returnTypeElement.setAttribute('Type', `Collection(${returnType})`);
                     } else {
-                        returnTypeElement.setAttribute("Type", returnType);
+                        returnTypeElement.setAttribute('Type', returnType);
                     }
-                    returnTypeElement.setAttribute("Nullable", true);
+                    returnTypeElement.setAttribute('Nullable', true);
                     actionElement.appendChild(returnTypeElement);
                 }
                 actionElements.push(actionElement);
@@ -999,44 +999,44 @@ function schemaToEdmDocument(schema) {
 
             //search for bound functions
             _.forEach(entityType.functions.concat(entityType.collection.functions), function(func) {
-                let functionElement = doc.createElement("Function");
-                functionElement.setAttribute("Name", func.name);
-                functionElement.setAttribute("IsBound", true);
+                let functionElement = doc.createElement('Function');
+                functionElement.setAttribute('Name', func.name);
+                functionElement.setAttribute('IsBound', true);
                 if (func.isComposable) {
-                    functionElement.setAttribute("IsComposable", func.isComposable);
+                    functionElement.setAttribute('IsComposable', func.isComposable);
                 }
                 _.forEach(func.parameters, function(parameter) {
-                    let paramElement =  doc.createElement("Parameter");
-                    paramElement.setAttribute("Name", parameter.name);
-                    paramElement.setAttribute("Type", parameter.type);
+                    let paramElement =  doc.createElement('Parameter');
+                    paramElement.setAttribute('Name', parameter.name);
+                    paramElement.setAttribute('Type', parameter.type);
                     let nullable = _.isBoolean(parameter.nullable) ? parameter.nullable : false;
                     if (!nullable) {
-                        paramElement.setAttribute("Nullable", nullable);
+                        paramElement.setAttribute('Nullable', nullable);
                     }
                     //append Function > Parameter
                     functionElement.appendChild(paramElement)
                 });
                 if (func.returnType || func.returnCollectionType) {
-                    let returnTypeElement =  doc.createElement("ReturnType");
+                    let returnTypeElement =  doc.createElement('ReturnType');
                     let returnType = func.returnType;
                     if (func.returnCollectionType) {
                         returnType = func.returnCollectionType;
-                        returnTypeElement.setAttribute("Type", `Collection(${returnType})`);
+                        returnTypeElement.setAttribute('Type', `Collection(${returnType})`);
                     } else {
-                        returnTypeElement.setAttribute("Type", returnType);
+                        returnTypeElement.setAttribute('Type', returnType);
                     }
-                    returnTypeElement.setAttribute("Nullable", true);
+                    returnTypeElement.setAttribute('Nullable', true);
                     functionElement.appendChild(returnTypeElement);
                 }
                 functionElements.push(functionElement);
             });
 
             //create element Schema > EntityType
-            let entityTypeElement = doc.createElement("EntityType");
-            entityTypeElement.setAttribute("Name", entityType.name);
-            entityTypeElement.setAttribute("OpenType", true);
+            let entityTypeElement = doc.createElement('EntityType');
+            entityTypeElement.setAttribute('Name', entityType.name);
+            entityTypeElement.setAttribute('OpenType', true);
             if (entityType.baseType) {
-                entityTypeElement.setAttribute("BaseType", entityType.baseType);
+                entityTypeElement.setAttribute('BaseType', entityType.baseType);
             }
 
             if (entityType.implements) {
@@ -1050,7 +1050,7 @@ function schemaToEdmDocument(schema) {
                 let keyElement = doc.createElement('Key');
                 _.forEach(entityType.key.propertyRef, function(key) {
                     let keyRefElement = doc.createElement('PropertyRef');
-                    keyRefElement.setAttribute("Name",key.name);
+                    keyRefElement.setAttribute('Name',key.name);
                     keyElement.appendChild(keyRefElement);
                 });
                 entityTypeElement.appendChild(keyElement);
@@ -1058,10 +1058,10 @@ function schemaToEdmDocument(schema) {
             //enumerate properties
             _.forEach(entityType.property, function(x) {
                 let propertyElement = doc.createElement('Property');
-                propertyElement.setAttribute("Name",x.name);
-                propertyElement.setAttribute("Type",x.type);
+                propertyElement.setAttribute('Name',x.name);
+                propertyElement.setAttribute('Type',x.type);
                 if (_.isBoolean(x.nullable) && (x.nullable===false)) {
-                    propertyElement.setAttribute("Nullable",false);
+                    propertyElement.setAttribute('Nullable',false);
                 }
                 // add annotations
                 if (x.immutable) {
@@ -1081,10 +1081,10 @@ function schemaToEdmDocument(schema) {
             //enumerate navigation properties
             _.forEach(entityType.navigationProperty, function(x) {
                 let propertyElement = doc.createElement('NavigationProperty');
-                propertyElement.setAttribute("Name",x.name);
-                propertyElement.setAttribute("Type",x.type);
+                propertyElement.setAttribute('Name',x.name);
+                propertyElement.setAttribute('Type',x.type);
                 if (!x.nullable) {
-                    propertyElement.setAttribute("Nullable",false);
+                    propertyElement.setAttribute('Nullable',false);
                 }
                 if (x.immutable) {
                     let immutableAnnotation = doc.createElement('Annotation');
@@ -1114,8 +1114,8 @@ function schemaToEdmDocument(schema) {
     });
 
     //create Schema > EntityContainer
-    let entityContainerElement = doc.createElement("EntityContainer");
-    entityContainerElement.setAttribute("Name", schema.entityContainer.name || "DefaultContainer");
+    let entityContainerElement = doc.createElement('EntityContainer');
+    entityContainerElement.setAttribute('Name', schema.entityContainer.name || 'DefaultContainer');
 
     _.forEach(schema.entityContainer.entitySet,
         /**
@@ -1123,13 +1123,13 @@ function schemaToEdmDocument(schema) {
          */
         function(child) {
             let childElement = doc.createElement(child.kind);
-            childElement.setAttribute("Name", child.name);
+            childElement.setAttribute('Name', child.name);
             if ((child.kind === EntitySetKind.EntitySet) || (child.kind === EntitySetKind.Singleton)) {
-                childElement.setAttribute("EntityType", child.entityType.name);
+                childElement.setAttribute('EntityType', child.entityType.name);
             }
-            let childAnnotation = doc.createElement("Annotation");
-            childAnnotation.setAttribute("Term", "Org.OData.Core.V1.ResourcePath");
-            childAnnotation.setAttribute("String", child.getUrl());
+            let childAnnotation = doc.createElement('Annotation');
+            childAnnotation.setAttribute('Term', 'Org.OData.Core.V1.ResourcePath');
+            childAnnotation.setAttribute('String', child.getUrl());
             childElement.appendChild(childAnnotation);
             //append Schema > EntityContainer > (EntitySet, Singleton, FunctionImport)
             entityContainerElement.appendChild(childElement);
@@ -1175,9 +1175,9 @@ class ODataModelBuilder {
                     //set context link builder function
                     self.hasContextLink(function (context) {
                         let req = context.request;
-                        let p = /\/$/g.test(serviceRoot_) ? serviceRoot_ + "$metadata" : serviceRoot_ + "/" + "$metadata";
+                        let p = /\/$/g.test(serviceRoot_) ? serviceRoot_ + '$metadata' : serviceRoot_ + '/' + '$metadata';
                         if (req) {
-                            return (req.protocol || "http") + "://" + req.headers.host + p;
+                            return (req.protocol || 'http') + '://' + req.headers.host + p;
                         }
                         return p;
                     });
@@ -1227,7 +1227,7 @@ class ODataModelBuilder {
          */
     getSingleton(name) {
         Args.notString(name, 'Singleton Name');
-        let re = new RegExp("^" + name + "$", "ig");
+        let re = new RegExp('^' + name + '$', 'ig');
         return _.find(this[entityContainerProperty], function (x) {
             return re.test(x.name) && x.kind === EntitySetKind.Singleton;
         });
@@ -1237,7 +1237,7 @@ class ODataModelBuilder {
          * @returns {SingletonConfiguration|*}
          */
     hasSingleton(name) {
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         return _.findIndex(this[entityContainerProperty], function (x) {
             return findRe.test(x.name) && x.kind === EntitySetKind.Singleton;
         }) >= 0;
@@ -1248,7 +1248,7 @@ class ODataModelBuilder {
          * @returns {boolean}
          */
     hasEntitySet(name) {
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         return _.findIndex(this[entityContainerProperty], function (x) {
             return findRe.test(x.name) && x.kind === EntitySetKind.EntitySet;
         }) >= 0;
@@ -1272,7 +1272,7 @@ class ODataModelBuilder {
      * @returns {boolean}
      */
     removeEntitySet(name) {
-        let findRe = new RegExp("^" + name + "$", "ig");
+        let findRe = new RegExp('^' + name + '$', 'ig');
         let index = _.findIndex(this[entityContainerProperty], function (x) {
             return findRe.test(x.name) && x.kind === EntitySetKind.EntitySet;
         });
@@ -1289,7 +1289,7 @@ class ODataModelBuilder {
          */
     getEntitySet(name) {
         Args.notString(name, 'EntitySet Name');
-        let re = new RegExp("^" + name + "$", "ig");
+        let re = new RegExp('^' + name + '$', 'ig');
         return _.find(this[entityContainerProperty], function (x) {
             return re.test(x.name) && x.kind === EntitySetKind.EntitySet;
         });
@@ -1301,7 +1301,7 @@ class ODataModelBuilder {
          */
     getEntityTypeEntitySet(entityName) {
         Args.notString(entityName, 'Entity Name');
-        let re = new RegExp("^" + entityName + "$", "ig");
+        let re = new RegExp('^' + entityName + '$', 'ig');
         return _.find(this[entityContainerProperty], function (x) {
             return x.entityType && re.test(x.entityType.name);
         });
@@ -1338,8 +1338,8 @@ class ODataModelBuilder {
                 let schema = {
                     entityType: [],
                     entityContainer: {
-                        "name": "DefaultContainer",
-                        "entitySet": []
+                        'name': 'DefaultContainer',
+                        'entitySet': []
                     }
                 };
                 //get entity types by excluding ignored entities
@@ -1371,8 +1371,8 @@ class ODataModelBuilder {
         let schema = {
             entityType: [],
             entityContainer: {
-                "name": "DefaultContainer",
-                "entitySet": []
+                'name': 'DefaultContainer',
+                'entitySet': []
             }
         };
         //get entity types by excluding ignored entities
@@ -1525,7 +1525,7 @@ ODataModelBuilder.prototype.jsonFormatter = function(context, entitySet, instanc
     let result = {};
     if (defaults.addContextAttribute) {
         _.assign(result, {
-            "@odata.context":self.getContextLink(context).concat("$metadata#", entitySet.name)
+            '@odata.context':self.getContextLink(context).concat('$metadata#', entitySet.name)
         });
     }
     if (Array.isArray(instance)) {
@@ -1533,13 +1533,13 @@ ODataModelBuilder.prototype.jsonFormatter = function(context, entitySet, instanc
             return singleJsonFormatter(x);
         });
         _.assign(result, {
-            "value":value
+            'value':value
         });
     } else if (_.isObject(instance)) {
         value = singleJsonFormatter(instance);
         if (defaults.addContextAttribute) {
             _.assign(result, {
-                "@odata.context":self.getContextLink(context).concat("$metadata#", entitySet.name, "/$entity")
+                '@odata.context':self.getContextLink(context).concat('$metadata#', entitySet.name, '/$entity')
             });
         }
         _.assign(result, value);
@@ -1667,7 +1667,7 @@ class ODataConventionModelBuilder extends ODataModelBuilder {
                         //find data type
                         let dataType = strategy.dataTypes[x.type];
                         //add property
-                        let edmType = _.isObject(dataType) ? (hasOwnProperty(dataType, "edmtype") ? dataType["edmtype"] : "Edm." + x.type) : x.type;
+                        let edmType = _.isObject(dataType) ? (hasOwnProperty(dataType, 'edmtype') ? dataType['edmtype'] : 'Edm.' + x.type) : x.type;
                         modelEntityType.addProperty(name, edmType, hasOwnProperty(x, 'nullable') ? x.nullable : true);
                         if (x.primary) {
                             modelEntityType.hasKey(name, edmType);
@@ -1758,7 +1758,7 @@ class ODataConventionModelBuilder extends ODataModelBuilder {
                 //add link function
                 if (typeof self.getContextLink === 'function') {
                     modelEntitySet.hasContextLink(function (context) {
-                        return self.getContextLink(context).concat("$metadata#", modelEntitySet.name);
+                        return self.getContextLink(context).concat('$metadata#', modelEntitySet.name);
                     });
                 }
                 //add id link
@@ -1769,7 +1769,7 @@ class ODataConventionModelBuilder extends ODataModelBuilder {
                             if (_.isNil(instance[primaryKey.name])) {
                                 return;
                             }
-                            return self.getContextLink(context).concat(modelEntitySet.name, "(", instance[primaryKey.name], ")");
+                            return self.getContextLink(context).concat(modelEntitySet.name, '(', instance[primaryKey.name], ')');
                         });
                     }
                 }
@@ -1781,7 +1781,7 @@ class ODataConventionModelBuilder extends ODataModelBuilder {
                             if (_.isNil(instance[primaryKey.name])) {
                                 return;
                             }
-                            return self.getContextLink(context).concat(modelEntitySet.name, "(", instance[primaryKey.name], ")");
+                            return self.getContextLink(context).concat(modelEntitySet.name, '(', instance[primaryKey.name], ')');
                         });
                     }
                 }
@@ -2044,9 +2044,9 @@ EdmMapping.action = function (name, returnType) {
         }
         if (typeof target === 'function') {
             //bound to collection
-            action.parameter("bindingParameter",EdmType.CollectionOf(target.entityTypeDecorator || target.name));
+            action.parameter('bindingParameter',EdmType.CollectionOf(target.entityTypeDecorator || target.name));
         } else {
-            action.parameter("bindingParameter",target.entityTypeDecorator || target.constructor.name);
+            action.parameter('bindingParameter',target.entityTypeDecorator || target.constructor.name);
         }
         descriptor.value.actionDecorator = action;
         return descriptor;
@@ -2085,9 +2085,9 @@ EdmMapping.func = function (name, returnType) {
         }
         if (typeof target === 'function') {
             //bound to collection
-            func.parameter("bindingParameter",EdmType.CollectionOf(target.entityTypeDecorator || target.name));
+            func.parameter('bindingParameter',EdmType.CollectionOf(target.entityTypeDecorator || target.name));
         } else {
-            func.parameter("bindingParameter",target.entityTypeDecorator || target.constructor.name);
+            func.parameter('bindingParameter',target.entityTypeDecorator || target.constructor.name);
         }
         descriptor.value.functionDecorator = func;
         return descriptor;
@@ -2162,9 +2162,9 @@ EdmMapping.navigationProperty = function(name, type, multiplicity) {
             propMultiplicity = EdmMultiplicity.parse(multiplicity) || EdmMultiplicity.Unknown;
         }
         descriptor.value.navigationPropertyDecorator =  {
-            "name": name,
-            "type": type,
-            "multiplicity": propMultiplicity
+            'name': name,
+            'type': type,
+            'multiplicity': propMultiplicity
         };
     }
 };
@@ -2183,9 +2183,9 @@ EdmMapping.property = function(name, type, nullable) {
     }
     return function (target, key, descriptor) {
         descriptor.value.propertyDecorator =  {
-            "name": name,
-            "type": type,
-            "nullable": _.isBoolean(nullable) ? nullable : false
+            'name': name,
+            'type': type,
+            'nullable': _.isBoolean(nullable) ? nullable : false
         };
     }
 };
@@ -2202,7 +2202,7 @@ EdmMapping.hasOwnAction = function(obj, name) {
     if (typeof obj !== 'object' && typeof obj !== 'function') {
         return;
     }
-    let re = new RegExp("^" + name + "$", "ig");
+    let re = new RegExp('^' + name + '$', 'ig');
     let functionName = _.find(getOwnPropertyNames(obj), function(x) {
         return (typeof obj[x] === 'function') && (instanceOf(obj[x].actionDecorator, ActionConfiguration)) && re.test(obj[x].actionDecorator.name);
     });
@@ -2222,7 +2222,7 @@ EdmMapping.hasOwnNavigationProperty = function(obj, name) {
     if (typeof obj !== 'object' && typeof obj !== 'function') {
         return;
     }
-    let re = new RegExp("^" + name + "$", "ig");
+    let re = new RegExp('^' + name + '$', 'ig');
     let functionName = _.find(getOwnPropertyNames(obj), function(x) {
         return (typeof obj[x] === 'function') && (typeof obj[x].navigationPropertyDecorator === 'object')  && re.test(obj[x].navigationPropertyDecorator.name);
     });
@@ -2242,7 +2242,7 @@ EdmMapping.hasOwnFunction = function(obj, name) {
     if (typeof obj !== 'object' && typeof obj !== 'function') {
         return;
     }
-    let re = new RegExp("^" + name + "$", "ig");
+    let re = new RegExp('^' + name + '$', 'ig');
     let functionName = _.find(getOwnPropertyNames(obj), function(x) {
         return (typeof obj[x] === 'function') && (instanceOf(obj[x].functionDecorator, FunctionConfiguration)) && re.test(obj[x].functionDecorator.name);
     });

@@ -4,8 +4,8 @@ const {eachSeries} = require('async');
 // eslint-disable-next-line no-unused-vars
 const {QueryUtils, QueryField, QueryExpression} = require('@themost/query');
 const {QueryFieldRef} = require('@themost/query/query');
-const {NotNullError, UniqueConstraintError, TraceUtils, TextUtils} = require("@themost/common");
-const { DataCacheStrategy } = require("./data-cache");
+const {NotNullError, UniqueConstraintError, TraceUtils, TextUtils} = require('@themost/common');
+const { DataCacheStrategy } = require('./data-cache');
 const { FunctionContext } = require('./functions');
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
@@ -125,7 +125,7 @@ class UniqueConstraintListener {
                             if (constraint.description) {
                                 er = new UniqueConstraintError(constraint.description, null, event.model.name);
                             } else {
-                                er = new UniqueConstraintError("Object already exists. A unique constraint violated.", null, event.model.name);
+                                er = new UniqueConstraintError('Object already exists. A unique constraint violated.', null, event.model.name);
                             }
                             TraceUtils.debug(er);
                             return cb(er);
@@ -260,7 +260,7 @@ class DataCachingListener {
                 dataCache = event.emitter.data('cache');
             }
             // if caching is enabled and cache attribute is defined
-            if (typeof dataCache === "boolean" && dataCache === false) {
+            if (typeof dataCache === 'boolean' && dataCache === false) {
                 return callback();
             }
             //validate conditional caching
@@ -347,7 +347,7 @@ class DataCachingListener {
                 dataCache = event.emitter.data('cache');
             }
             // if caching is enabled and cache attribute is defined
-            if (typeof dataCache === "boolean" && dataCache === false) {
+            if (typeof dataCache === 'boolean' && dataCache === false) {
                 return callback();
             }
             //validate conditional caching

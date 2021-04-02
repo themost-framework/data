@@ -156,11 +156,11 @@ class DataMappingExtensions {
                             let junctionQuery = QueryUtils.query(junction.getBaseModel().name).select([mapping.associationObjectField, mapping.associationValueField])
                                 .join(subQuery)
                                 .with(QueryUtils.where(new QueryEntity(junction.getBaseModel().name).select(mapping.associationObjectField))
-                                    .equal(new QueryEntity("j0").select(mapping.parentField)));
+                                    .equal(new QueryEntity('j0').select(mapping.parentField)));
                             //append join statement with sub-query
-                            q.query.join(junctionQuery.as("g0"))
+                            q.query.join(junctionQuery.as('g0'))
                                 .with(QueryUtils.where(new QueryEntity(childModel.viewAdapter).select(mapping.childField))
-                                    .equal(new QueryEntity("g0").select(mapping.associationValueField)));
+                                    .equal(new QueryEntity('g0').select(mapping.associationValueField)));
 
                             //inherit silent mode
                             if (_queryable.$silent)  {
@@ -278,7 +278,7 @@ class DataMappingExtensions {
                         }
                         let parentField = thisArg.getParentModel().field(mapping.parentField);
                         if (parentField == null) {
-                            return reject("The specified field cannot be found on parent model");
+                            return reject('The specified field cannot be found on parent model');
                         }
                         let keyField = parentField.property || parentField.name;
                         let values = _.intersection(_.map(_.filter(arr, function(x) {
@@ -296,7 +296,7 @@ class DataMappingExtensions {
                             }
                             let childField = thisArg.getChildModel().field(mapping.childField);
                             if (childField == null) {
-                                return reject("The specified field cannot be found on child model");
+                                return reject('The specified field cannot be found on child model');
                             }
                             let foreignKeyField = childField.property || childField.name;
                             if (typeof q.$levels === 'undefined') {
@@ -313,7 +313,7 @@ class DataMappingExtensions {
                             const subQuery = _queryable.clone().select(mapping.parentField).query.as('j0');
                             q.query.join(subQuery)
                                 .with(QueryUtils.where(new QueryEntity(thisArg.getChildModel().viewAdapter).select(mapping.childField))
-                                    .equal(new QueryEntity("j0").select(mapping.parentField)));
+                                    .equal(new QueryEntity('j0').select(mapping.parentField)));
                             q.prepare();
                             //final execute query
                             return q.getItems().then(function(childs) {

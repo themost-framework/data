@@ -64,7 +64,7 @@ class DataFilterResolver {
         if (culture) {
             return callback(null, culture.substr(0, 2));
         } else {
-            return callback(null, "en");
+            return callback(null, 'en');
         }
     }
 }
