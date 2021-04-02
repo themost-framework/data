@@ -76,9 +76,11 @@ class DataMappingExtensions {
                             if (err) {
                                 return reject(err);
                             }
+                            // clone queryable
+                            const subQuery = _queryable.clone().select(mapping.childField).query.as('j0');
                             //get junction sub-query
                             let junctionQuery = QueryUtils.query(junction.getBaseModel().name).select([mapping.associationObjectField, mapping.associationValueField])
-                                .join(_queryable.query.as('j0'))
+                                .join(subQuery)
                                 .with(QueryUtils.where(new QueryEntity(junction.getBaseModel().name).select(mapping.associationValueField))
                                     .equal(new QueryEntity('j0').select(mapping.childField)));
                             if (!q.query.hasFields()) {
@@ -148,9 +150,11 @@ class DataMappingExtensions {
                             if (!q.query.hasFields()) {
                                 q.select();
                             }
+                            // clone queryable
+                            const subQuery = _queryable.clone().select(mapping.parentField).query.as('j0');
                             //get junction sub-query
                             let junctionQuery = QueryUtils.query(junction.getBaseModel().name).select([mapping.associationObjectField, mapping.associationValueField])
-                                .join(_queryable.query.as("j0"))
+                                .join(subQuery)
                                 .with(QueryUtils.where(new QueryEntity(junction.getBaseModel().name).select(mapping.associationObjectField))
                                     .equal(new QueryEntity("j0").select(mapping.parentField)));
                             //append join statement with sub-query
@@ -220,11 +224,12 @@ class DataMappingExtensions {
                             if (typeof q.query.$select === 'undefined') {
                                 q.select();
                             }
+                            const subQuery = _queryable.clone().select(mapping.childField).query.as('j0');
                             q.query
                                 .distinct(true)
-                                .join(_queryable.query.as('j0'))
+                                .join(subQuery)
                                 .with(QueryUtils.where(new QueryEntity(thisArg.getParentModel().viewAdapter).select(mapping.parentField))
-                                    .equal(new QueryEntity("j0").select(mapping.childField)));
+                                    .equal(new QueryEntity('j0').select(mapping.childField)));
                             //inherit silent mode
                             if (_queryable.$silent)  {
                                 q.silent();
@@ -294,8 +299,6 @@ class DataMappingExtensions {
                                 return reject("The specified field cannot be found on child model");
                             }
                             let foreignKeyField = childField.property || childField.name;
-                            //Important Backward compatibility issue (<1.8.0)
-                            //Description: if $levels parameter is not defined then set the default value to 0.
                             if (typeof q.$levels === 'undefined') {
                                 q.$levels = 0;
                             }

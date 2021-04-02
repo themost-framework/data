@@ -22,9 +22,10 @@ fdescribe('DataQueryable', () => {
         return done();
     });
 
-    it('should use many-to-many association', async () => {
+    fit('should use DataModel.expand(string) for many-to-many association', async () => {
         let item = await context.model('Group')
             .where('name').equal('Administrators')
+            .silent()
             .expand('members')
             .getItem();
         expect(item).toBeTruthy();
@@ -50,13 +51,47 @@ fdescribe('DataQueryable', () => {
         expect(list.value).toBeTruthy();
     });
 
-    it('should get children without selecting foreign key', async () => {
+    it('should use DataModel.expand(string)', async () => {
         let list = await context.model('Person').asQueryable()
             .select('id','familyName', 'givenName')
             .expand('orders')
             .silent().skip(5).take(5).getList();
         expect(list).toBeTruthy();
         expect(list.value).toBeTruthy();
+    });
+
+    it('should use DataModel.expand(string)', async () => {
+        let list = await context.model('Order').asQueryable()
+            .expand('customer')
+            .silent().take(10).getList();
+        expect(list).toBeTruthy();
+        expect(list.value).toBeTruthy();
+
+        await expectAsync(
+            context.model('Order').asQueryable()
+                .expand('missingAttribute')
+                .silent().take(10).getItems()
+        ).toBeRejected();
+
+    });
+
+    it('should use DataModel.expand(object)', async () => {
+        let list = await context.model('Order')
+            .where('customer').notEqual(null)
+            .expand({
+                name: 'customer',
+                options: {
+                    $select:'id,familyName,givenName'
+                }
+            })
+            .silent().take(10).getList();
+        expect(list).toBeTruthy();
+        expect(list.value).toBeTruthy();
+        list.value.forEach((item) => {
+            expect(item.customer).toBeTruthy();
+            const actual = Object.keys(item.customer).length;
+            expect(actual).toBe(3);
+        });
     });
 
 });

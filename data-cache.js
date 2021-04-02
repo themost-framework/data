@@ -47,13 +47,6 @@ class DataCache extends SequentialEventEmitter {
      * Removes a cached value.
      * @param {string} key - A string that represents the key of the cached value
      * @param {function(Error=)=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
-     *
-     * @example
-     var d = require("most-data");
-     //try to find article with id 100 in cache
-     d.cache.current.remove('/Article/100', function(err) {
-        done(err);
-     };
      */
     remove(key, callback) {
         let self = this;
@@ -70,12 +63,6 @@ class DataCache extends SequentialEventEmitter {
      * Flush all cached data.
      * @param {function(Error=)=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
      *
-     * @example
-     var d = require("most-data");
-     //try to find article with id 100 in cache
-     d.cache.current.removeAll(function(err) {
-        done(err);
-     };
      */
     removeAll(callback) {
         let self = this;
@@ -95,12 +82,6 @@ class DataCache extends SequentialEventEmitter {
      * @param {*} value - The value to be cached
      * @param {number=} ttl - A TTL in seconds. This parameter is optional.
      * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred and the second argument will return true on success.
-     *
-     * @example
-     var d = require("most-data");
-     d.cache.current.add('/User/100', { "id":100,"name":"user1@example.com","description":"User #1" }, 1200, function(err) {
-        done(err);
-     });
      */
     add(key, value, ttl, callback) {
         let self = this;
@@ -152,13 +133,6 @@ class DataCache extends SequentialEventEmitter {
      * Gets a cached value defined by the given key.
      * @param {string|*} key - A string that represents the key of the cached value
      * @param {function(Error=,*=)} callback - A callback function where the first argument will contain the Error object if an error occurred and the second argument will contain the result.
-     *
-     * @example
-     var d = require("most-data");
-     //try to find article with id 100 in cache
-     d.cache.current.get('/Article/100', function(err, result) {
-        done(err,result);
-     };
      */
     get(key, callback) {
         let self = this;
