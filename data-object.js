@@ -314,22 +314,6 @@ class DataObject extends SequentialEventEmitter {
      * The ":new" selector checks whether current data object is new or not. The ":live" selector checks whether current data object already exists or not.
      * @param {string} selector - A string that represents an already registered selector
      * @returns {Promise<T>|*}
-     * @example
-     //retrieve a user, and execute :live selector
-     var users = context.model('User');
-     users.where('name').equal('admin@example.com')
-     .getTypedItem().then(function(user) {
-            user.is(":live").then(function(result) {
-                if (result) {
-                    console.log('User already exists');
-                }
-                done();
-            }).catch(function(err) {
-                done(null, err);
-            });
-        }).catch(function(err) {
-            done(err);
-        });
      */
     is(selector) {
         if (!/^:\w+$/.test(selector)) {
@@ -375,7 +359,7 @@ class DataObject extends SequentialEventEmitter {
         //validate relation based on the given name
         let model = self.$$model, field = model.field(name);
         if (_.isNil(field)) {
-            er = new Error('The specified field cannot be found.'); er.code = 'EDATA';
+            er = new Error('The specified field cannot be found.'); er.code = 'E_DATA';
             throw er;
         }
         let mapping = model.inferMapping(field.name);
@@ -454,7 +438,7 @@ class DataObject extends SequentialEventEmitter {
                 return new HasParentJunction(self, mapping);
             }
         } else {
-            er = new Error('The association which is specified for the given field is not implemented.'); er.code = 'EDATA';
+            er = new Error('The association which is specified for the given field is not implemented.'); er.code = 'E_DATA';
             throw er;
         }
     }
@@ -531,7 +515,11 @@ class DataObject extends SequentialEventEmitter {
                                 callback(new DataError('E_VALUE', 'A value cannot be retrieved. The target data model has constraints but the required properties are missing.', null, model.name, name));
                             } else {
                                 //get first constraint
-                                let constraint = arr[0], q = null;
+                                let constraint = arr[0];
+                                /**
+                                 * @type {DataQueryable}
+                                 */
+                                let q = null;
                                 for (let i = 0; i < constraint.fields.length; i++) {
                                     let attr = constraint.fields[i];
                                     let value = self[attr];
@@ -541,7 +529,7 @@ class DataObject extends SequentialEventEmitter {
                                         q.and(attr).equal(value);
                                     }
                                 }
-                                q.select([name]).first(function (err, result) {
+                                q.select(name).first(function (err, result) {
                                     if (err) {
                                         callback(err); return; 
                                     }
@@ -584,10 +572,6 @@ class DataObject extends SequentialEventEmitter {
      * @returns {DataQueryable}
      */
     query(attr) {
-        let mapping = this.getModel().inferMapping(attr);
-        if (_.isNil(mapping)) {
-            new DataError('E_ASSOCIATION', 'The given attribute does not define an association of any type.');
-        }
         return this.property(attr);
     }
     /**

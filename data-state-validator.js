@@ -159,7 +159,7 @@ function mapKey_(obj, callback) {
             /**
              * @type {DataQueryable}
              */
-            let q;
+            let q = null;
             let fnAppendQuery = function(attr, value) {
                 if (_.isNil(value)) {
                     value = null;
@@ -204,7 +204,7 @@ function mapKey_(obj, callback) {
                         fnAppendQuery(attr, value);
                     }
                 }
-                if (_.isNil(q)) {
+                if (q == null) {
                     cb();
                 } else {
                     q.silent().flatten().select(self.primaryKey).value(function(err, result) {

@@ -81,7 +81,7 @@ function beforeRemoveAssociatedObjects(event, mapping, callback) {
                     if (count>0) {
                         mapping.cascade = mapping.cascade || 'none';
                         if (mapping.cascade === 'none') {
-                            return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,childModel.name, childField.name));
+                            return callback(new DataError('E_FOREIGN_KEY','Cannot remove an entity since it is being referenced by another entity.',null,childModel.name, childField.name));
                         } else if (mapping.cascade === 'null' || mapping.cascade === 'default') {
                             return childModel.where(mapping.childField).equal(target[mapping.parentField])
                                 .select(childModel.primaryKey, childModel.childField)
@@ -113,7 +113,7 @@ function beforeRemoveAssociatedObjects(event, mapping, callback) {
                                     });
                                 });
                         } else {
-                            return callback(new DataError('EATTR', 'Invalid cascade action', childModel.name, childField.name));
+                            return callback(new DataError('E_ATTRIBUTE', 'Invalid cascade action', childModel.name, childField.name));
                         }
                     } else {
                         return callback();
@@ -162,13 +162,13 @@ function beforeRemoveParentConnectedObjects(event, mapping, callback) {
                         if (items.length === 0) {
                             return callback();
                         }
-                        return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,childModel.name, childField.name));
+                        return callback(new DataError('E_FOREIGN_KEY','Cannot remove an entity since it is being referenced by another entity.',null,childModel.name, childField.name));
                     } else if (mapping.cascade === 'delete'  || mapping.cascade === 'null' || mapping.cascade === 'default') {
                         return baseModel.silent(silent).remove(items).then(function() {
                             return callback();
                         });
                     } else {
-                        return callback(new DataError('EATTR', 'Invalid cascade action', childModel.name, childField.name));
+                        return callback(new DataError('E_ATTRIBUTE', 'Invalid cascade action', childModel.name, childField.name));
                     }
 
                 }).catch(function(err) {
@@ -216,7 +216,7 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
                         if (items.length===0) {
                             return callback();
                         }
-                        return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,parentModel.name, parentField.name));
+                        return callback(new DataError('E_FOREIGN_KEY','Cannot remove an entity since it is being referenced by another entity.',null,parentModel.name, parentField.name));
                     } else if (mapping.cascade === 'delete'  || mapping.cascade === 'null' || mapping.cascade === 'default') {
                         if (items.length===0) {
                             return callback();
@@ -225,7 +225,7 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
                             return callback();
                         });
                     } else {
-                        return callback(new DataError('EATTR', 'Invalid cascade action', parentModel.name, parentField.name));
+                        return callback(new DataError('E_ATTRIBUTE', 'Invalid cascade action', parentModel.name, parentField.name));
                     }
                 }).catch(function(err) {
                     return callback(err);

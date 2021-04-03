@@ -138,8 +138,8 @@ class DataObjectAssociationListener {
                             /**
                              * @type {*|{deleted:Array}}
                              */
-                            let childs = obj[x.name], junction;
-                            if (Array.isArray(childs) === false) {
+                            let children = obj[x.name], junction;
+                            if (Array.isArray(children) === false) {
                                 return cb();
                             }
                             if (x.mapping.childModel === event.model.name) {
@@ -147,7 +147,7 @@ class DataObjectAssociationListener {
                                 junction = new HasParentJunction(obj, x.mapping);
                                 if (event.state === 1 || event.state === 2) {
                                     let toBeRemoved = [], toBeInserted = [];
-                                    childs.forEach(function (x) {
+                                    children.forEach(function (x) {
                                         if (x.$state === 4) {
                                             toBeRemoved.push(x);
                                         } else {
@@ -179,9 +179,9 @@ class DataObjectAssociationListener {
                                         let tags = new DataObjectTag(obj, x.mapping);
                                         return tags.silent(silentMode).all().then(function (result) {
                                             let toBeRemoved = result.filter(function (x) {
-                                                return childs.indexOf(x) < 0;
+                                                return children.indexOf(x) < 0;
                                             });
-                                            let toBeInserted = childs.filter(function (x) {
+                                            let toBeInserted = children.filter(function (x) {
                                                 return result.indexOf(x) < 0;
                                             });
                                             if (toBeRemoved.length > 0) {
@@ -207,12 +207,12 @@ class DataObjectAssociationListener {
                                         });
                                     } else {
                                         junction = new DataObjectJunction(obj, x.mapping);
-                                        junction.silent(silentMode).insert(childs, function (err) {
+                                        junction.silent(silentMode).insert(children, function (err) {
                                             if (err) {
                                                 return cb(err);
                                             }
                                             let toBeRemoved = [], toBeInserted = [];
-                                            childs.forEach(function (x) {
+                                            children.forEach(function (x) {
                                                 if (x.$state === 4) {
                                                     toBeRemoved.push(x);
                                                 } else {

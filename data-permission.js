@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-const {QueryEntity, QueryUtils} = require('@themost/query');
+const {QueryEntity, QueryUtils, QueryExpression} = require('@themost/query');
 const async = require('async');
 const {AccessDeniedError} = require('@themost/common');
 const {DataConfigurationStrategy} = require('./data-configuration');

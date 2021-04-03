@@ -168,9 +168,9 @@ class DataModel extends SequentialEventEmitter {
             }, set: function (value) {
                 context_ = value;
                 if (_.isNil(context_)) {
-                    unregisterContextListeners.bind(this)();
+                    unregisterContextListeners(this);
                 } else {
-                    registerContextListeners.bind(this)();
+                    registerContextListeners(this);
                 }
             }, enumerable: false, configurable: false
         });
@@ -1547,64 +1547,69 @@ class DataModel extends SequentialEventEmitter {
 }
 
 /**
- * @this DataModel
+ * Clears context event listeners
+ * @param {DataModel} thisModel
  * @private
  */
-function unregisterContextListeners() {
+function unregisterContextListeners(thisModel) {
     //unregister event listeners
-    this.removeAllListeners('before.save');
-    this.removeAllListeners('after.save');
-    this.removeAllListeners('before.remove');
-    this.removeAllListeners('after.remove');
-    this.removeAllListeners('before.execute');
-    this.removeAllListeners('after.execute');
-    this.removeAllListeners('after.upgrade');
+    thisModel.removeAllListeners('before.save');
+    thisModel.removeAllListeners('after.save');
+    thisModel.removeAllListeners('before.remove');
+    thisModel.removeAllListeners('after.remove');
+    thisModel.removeAllListeners('before.execute');
+    thisModel.removeAllListeners('after.execute');
+    thisModel.removeAllListeners('after.upgrade');
 }
 /**
- * @this DataModel
+ * Registers context event listeners
+ * @param {DataModel} thisModel
  * @private
  */
-function registerContextListeners() {
+function registerContextListeners(thisModel) {
+
+    // forcibly clear context listeners
+    unregisterContextListeners(thisModel);
 
     //description: change default max listeners (10) to 64 in order to avoid node.js message
     // for reaching the maximum number of listeners
     //author: k.barbounakis@gmail.com
-    if (typeof this.setMaxListeners === 'function') {
-        this.setMaxListeners(64);
+    if (typeof thisModel.setMaxListeners === 'function') {
+        thisModel.setMaxListeners(64);
     }
     
     //1. State validator listener
-    this.on('before.save', DataStateValidatorListener.prototype.beforeSave);
-    this.on('before.remove', DataStateValidatorListener.prototype.beforeRemove);
+    thisModel.on('before.save', DataStateValidatorListener.prototype.beforeSave);
+    thisModel.on('before.remove', DataStateValidatorListener.prototype.beforeRemove);
     //2. Default values Listener
-    this.on('before.save', DefaultValueListener.prototype.beforeSave);
+    thisModel.on('before.save', DefaultValueListener.prototype.beforeSave);
     //3. Calculated values listener
-    this.on('before.save', CalculatedValueListener.prototype.beforeSave);
+    thisModel.on('before.save', CalculatedValueListener.prototype.beforeSave);
 
     //register before execute caching
-    if (this.caching==='always' || this.caching==='conditional') {
-        this.on('before.execute', DataCachingListener.prototype.beforeExecute);
+    if (thisModel.caching==='always' || thisModel.caching==='conditional') {
+        thisModel.on('before.execute', DataCachingListener.prototype.beforeExecute);
     }
     //register after execute caching
-    if (this.caching==='always' || this.caching==='conditional') {
-        this.on('after.execute', DataCachingListener.prototype.afterExecute);
+    if (thisModel.caching==='always' || thisModel.caching==='conditional') {
+        thisModel.on('after.execute', DataCachingListener.prototype.afterExecute);
     }
 
-    this.on('before.execute', DataNestedQueryableListener.prototype.beforeExecute);
+    thisModel.on('before.execute', DataNestedQueryableListener.prototype.beforeExecute);
 
     //migration listeners
-    this.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);
-    this.on('after.upgrade',DataModelSeedListener.prototype.afterUpgrade);
+    thisModel.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);
+    thisModel.on('after.upgrade',DataModelSeedListener.prototype.afterUpgrade);
 
     //get module loader
     /**
      * @type {ModuleLoaderStrategy|*}
      */
-    let moduleLoader = this.context.getConfiguration().getStrategy(ModuleLoaderStrategy);
+    let moduleLoader = thisModel.context.getConfiguration().getStrategy(ModuleLoaderStrategy);
     //register configuration listeners
-    if (this.eventListeners) {
-        for (let i = 0; i < this.eventListeners.length; i++) {
-            let listener = this.eventListeners[i];
+    if (thisModel.eventListeners) {
+        for (let i = 0; i < thisModel.eventListeners.length; i++) {
+            let listener = thisModel.eventListeners[i];
             //get listener type (e.g. type: require('./custom-listener.js'))
             if (listener.type && !listener.disabled) {
                 /**
@@ -1620,37 +1625,37 @@ function registerContextListeners() {
 
                 //if listener exports beforeSave function then register this as before.save event listener
                 if (typeof dataEventListener.beforeSave === 'function') {
-                    this.on('before.save', dataEventListener.beforeSave);
+                    thisModel.on('before.save', dataEventListener.beforeSave);
                 }
                 //if listener exports afterSave then register this as after.save event listener
                 if (typeof dataEventListener.afterSave === 'function') {
-                    this.on('after.save', dataEventListener.afterSave);
+                    thisModel.on('after.save', dataEventListener.afterSave);
                 }
                 //if listener exports beforeRemove then register this as before.remove event listener
                 if (typeof dataEventListener.beforeRemove === 'function') {
-                    this.on('before.remove', dataEventListener.beforeRemove);
+                    thisModel.on('before.remove', dataEventListener.beforeRemove);
                 }
                 //if listener exports afterRemove then register this as after.remove event listener
                 if (typeof dataEventListener.afterRemove === 'function') {
-                    this.on('after.remove', dataEventListener.afterRemove);
+                    thisModel.on('after.remove', dataEventListener.afterRemove);
                 }
                 //if listener exports beforeExecute then register this as before.execute event listener
                 if (typeof dataEventListener.beforeExecute === 'function') {
-                    this.on('before.execute', dataEventListener.beforeExecute);
+                    thisModel.on('before.execute', dataEventListener.beforeExecute);
                 }
                 //if listener exports afterExecute then register this as after.execute event listener
                 if (typeof dataEventListener.afterExecute === 'function') {
-                    this.on('after.execute', dataEventListener.afterExecute);
+                    thisModel.on('after.execute', dataEventListener.afterExecute);
                 }
                 //if listener exports afterUpgrade then register this as after.upgrade event listener
                 if (typeof dataEventListener.afterUpgrade === 'function') {
-                    this.on('after.upgrade', dataEventListener.afterUpgrade);
+                    thisModel.on('after.upgrade', dataEventListener.afterUpgrade);
                 }
             }
         }
     }
     //before execute
-    this.on('before.execute', DataPermissionEventListener.prototype.beforeExecute);
+    thisModel.on('before.execute', DataPermissionEventListener.prototype.beforeExecute);
 
 }
 

@@ -1,21 +1,19 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2021, THEMOST LP All rights reserved
 
-let _ = require('lodash');
-let Symbol = require('symbol');
-let TraceUtils = require('@themost/common').TraceUtils;
-let path = require('path');
-let pluralize = require('pluralize');
-let Args = require('@themost/common').Args;
-let ConfigurationBase = require('@themost/common').ConfigurationBase;
-let ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
-let PathUtils = require('@themost/common').PathUtils;
-let RandomUtils = require('@themost/common').RandomUtils;
-let AbstractMethodError = require('@themost/common').AbstractMethodError;
-let DataCacheStrategy = require('./data-cache').DataCacheStrategy;
-let DefaultDataCacheStrategy = require('./data-cache').DefaultDataCacheStrategy;
-let hasOwnProperty = require('./has-own-property').hasOwnProperty;
-let ModuleLoader = require('./module-loader').ModuleLoader;
-let DefaultModuleLoader = require('./module-loader').DefaultModuleLoader;
+const _ = require('lodash');
+const path = require('path');
+const pluralize = require('pluralize');
+const {Args,
+    TraceUtils,
+    ConfigurationBase,
+    ConfigurationStrategy,
+    PathUtils,
+    RandomUtils,
+    AbstractMethodError,
+} = require('@themost/common');
+const {DataCacheStrategy, DefaultDataCacheStrategy} = require('./data-cache');
+const {hasOwnProperty} = require('./has-own-property');
+const {ModuleLoader, DefaultModuleLoader} = require('./module-loader');
 
 let modelsProperty = Symbol('models');
 let modelPathProperty = Symbol('modelPath');
@@ -27,6 +25,7 @@ let namedConfigurations = Symbol('namedConfigurations');
 
 function interopRequireDefault(path) {
     let obj = require(path);
+    // noinspection JSUnresolvedVariable
     return obj && obj.__esModule ? obj['default'] : obj;
 }
 
