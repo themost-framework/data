@@ -53,7 +53,7 @@ class DefaultDataContext extends DataContext {
             //otherwise load database options from configuration
             let strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
             let adapter = strategy.adapters.find(function (x) {
-                return x["default"];
+                return x['default'];
             });
             if (adapter == null) {
                 er = new Error('The default data adapter is missing.'); er.code = 'EADAPTER';

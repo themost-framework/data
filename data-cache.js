@@ -2,7 +2,7 @@
 
 const {LangUtils, Args, SequentialEventEmitter, AbstractMethodError, ConfigurationStrategy} = require('@themost/common')
 const {hasOwnProperty} = require('./has-own-property');
-const currentProperty = Symbol("current");
+const currentProperty = Symbol('current');
 const CACHE_ABSOLUTE_EXPIRATION = 1200;
 
 /**
@@ -35,7 +35,7 @@ class DataCache extends SequentialEventEmitter {
                 callback();
                 return;
             }
-            let NodeCache = require("node-cache");
+            let NodeCache = require('node-cache');
             this.rawCache = new NodeCache();
             this.initialized = true;
             callback();
@@ -250,7 +250,7 @@ class DataCacheStrategy extends ConfigurationStrategy {
 class DefaultDataCacheStrategy extends DataCacheStrategy {
     constructor(config) {
         super(config);
-        let NodeCache = require("node-cache");
+        let NodeCache = require('node-cache');
         let expiration = CACHE_ABSOLUTE_EXPIRATION;
         let absoluteExpiration = LangUtils.parseInt(config.getSourceAt('settings/cache/absoluteExpiration'));
         if (absoluteExpiration > 0) {
