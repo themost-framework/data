@@ -1253,7 +1253,7 @@ function schemaToEdmDocument(schema) {
                 if (x.immutable) {
                     var immutableAnnotation = doc.createElement('Annotation');
                     immutableAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Immutable');
-                    immutableAnnotation.setAttribute('Tag', 'true');
+                    immutableAnnotation.setAttribute('Bool', 'true');
                     propertyElement.appendChild(immutableAnnotation);
                 }
                 if (x.computed) {
@@ -1275,13 +1275,13 @@ function schemaToEdmDocument(schema) {
                 if (x.immutable) {
                     var immutableAnnotation = doc.createElement('Annotation');
                     immutableAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Immutable');
-                    immutableAnnotation.setAttribute('Tag', 'true');
+                    immutableAnnotation.setAttribute('Bool', 'true');
                     propertyElement.appendChild(immutableAnnotation);
                 }
                 if (x.computed) {
                     var computedAnnotation = doc.createElement('Annotation');
                     computedAnnotation.setAttribute('Term', 'Org.OData.Core.V1.Computed');
-                    computedAnnotation.setAttribute('Tag', 'true');
+                    computedAnnotation.setAttribute('Bool', 'true');
                     propertyElement.appendChild(computedAnnotation);
                 }
                 entityTypeElement.appendChild(propertyElement);
