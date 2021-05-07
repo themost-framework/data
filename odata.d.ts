@@ -91,6 +91,7 @@ export declare interface EntityContainerConfiguration {
 
 export declare interface SchemaConfiguration {
     namespace?: string;
+    alias?: string;
     entityType: Array<EntityTypeConfiguration>;
     entityContainer: EntityContainerConfiguration;
 }
@@ -183,6 +184,7 @@ export declare interface ModelBuilderJsonFormatterOptions {
 export declare class ODataModelBuilder {
     constructor(configuration: ConfigurationBase);
     serviceRoot: string;
+    defaultNamespace: string;
     getEntity(name: string): EntityTypeConfiguration;
     addEntity(name: string): EntityTypeConfiguration;
     addSingleton(entityType: string, name: string): SingletonConfiguration;
