@@ -29,6 +29,23 @@
             "nullable": false
         }
     ],
+    "privileges": [
+        {
+            "type": "global",
+            "mask": 15
+        },
+        {
+            "account": "Administrators",
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "account": "Customers",
+            "mask": 1,
+            "type": "parent",
+            "property": "Order"
+        }
+    ],
     "seed": [
         {
             "OrderDetailID": 1,

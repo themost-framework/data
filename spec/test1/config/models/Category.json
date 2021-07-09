@@ -2,24 +2,22 @@
     "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
     "title": "Categories",
     "name": "Category",
-    "source": "Categories",
-    "view": "Categories",
     "version": "1.0",
     "fields": [
         {
-            "name": "CategoryID",
+            "name": "id",
             "type": "Integer",
             "nullable": false,
             "primary": true
         },
         {
-            "name": "CategoryName",
+            "name": "name",
             "type": "Text",
             "nullable": false,
             "size": 255
         },
         {
-            "name": "Description",
+            "name": "description",
             "type": "Text",
             "nullable": false,
             "size": 255
@@ -27,44 +25,44 @@
     ],
     "seed": [
         {
-            "CategoryID": 1,
-            "CategoryName": "Beverages",
-            "Description": "Soft drinks, coffees, teas, beers, and ales"
+            "id": 1,
+            "name": "Beverages",
+            "description": "Soft drinks, coffees, teas, beers, and ales"
         },
         {
-            "CategoryID": 2,
-            "CategoryName": "Condiments",
-            "Description": "Sweet and savory sauces, relishes, spreads, and seasonings"
+            "id": 2,
+            "name": "Condiments",
+            "description": "Sweet and savory sauces, relishes, spreads, and seasonings"
         },
         {
-            "CategoryID": 3,
-            "CategoryName": "Confections",
-            "Description": "Desserts, candies, and sweet breads"
+            "id": 3,
+            "name": "Confections",
+            "description": "Desserts, candies, and sweet breads"
         },
         {
-            "CategoryID": 4,
-            "CategoryName": "Dairy Products",
-            "Description": "Cheeses"
+            "id": 4,
+            "name": "Dairy Products",
+            "description": "Cheeses"
         },
         {
-            "CategoryID": 5,
-            "CategoryName": "Grains/Cereals",
-            "Description": "Breads, crackers, pasta, and cereal"
+            "id": 5,
+            "name": "Grains/Cereals",
+            "description": "Breads, crackers, pasta, and cereal"
         },
         {
-            "CategoryID": 6,
-            "CategoryName": "Meat/Poultry",
-            "Description": "Prepared meats"
+            "id": 6,
+            "name": "Meat/Poultry",
+            "description": "Prepared meats"
         },
         {
-            "CategoryID": 7,
-            "CategoryName": "Produce",
-            "Description": "Dried fruit and bean curd"
+            "id": 7,
+            "name": "Produce",
+            "description": "Dried fruit and bean curd"
         },
         {
-            "CategoryID": 8,
-            "CategoryName": "Seafood",
-            "Description": "Seaweed and fish"
+            "id": 8,
+            "name": "Seafood",
+            "description": "Seaweed and fish"
         }
     ]
 }

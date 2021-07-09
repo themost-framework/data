@@ -2,24 +2,22 @@
     "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
     "title": "Shippers",
     "name": "Shipper",
-    "source": "Shippers",
-    "view": "Shippers",
     "version": "1.0",
     "fields": [
         {
-            "name": "ShipperID",
+            "name": "id",
             "type": "Integer",
             "nullable": false,
             "primary": true,
             "value":"javascript:return this.newid();"
         },
         {
-            "name": "ShipperName",
+            "name": "name",
             "type": "Text",
             "size": 255
         },
         {
-            "name": "Phone",
+            "name": "phone",
             "type": "Text",
             "size": 255
         }
@@ -28,25 +26,25 @@
         {
             "type": "unique",
             "fields": [
-                "ShipperName"
+                "name"
             ]
         }
     ],
     "seed": [
         {
-            "ShipperID": 1,
-            "ShipperName": "Speedy Express",
-            "Phone": "(503) 555-9831"
+            "id": 1,
+            "name": "Speedy Express",
+            "phone": "(503) 555-9831"
         },
         {
-            "ShipperID": 2,
-            "ShipperName": "United Package",
-            "Phone": "(503) 555-3199"
+            "id": 2,
+            "name": "United Package",
+            "phone": "(503) 555-3199"
         },
         {
-            "ShipperID": 3,
-            "ShipperName": "Federal Shipping",
-            "Phone": "(503) 555-9931"
+            "id": 3,
+            "name": "Federal Shipping",
+            "phone": "(503) 555-9931"
         }
     ]
 }

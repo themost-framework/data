@@ -1,0 +1,93 @@
+{
+  "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+  "@id": "https://universis.io/schemas/Permission",
+  "name": "Permission",
+  "title": "Permission",
+  "hidden": true,
+  "caching": "always",
+  "sealed": false,
+  "abstract": false,
+  "version": "1.1",
+  "fields": [
+    {
+      "name": "id",
+      "description": "The identifier of this item.",
+      "type": "Counter",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "privilege",
+      "description": "The privilege where this permission refers",
+      "type": "Text",
+      "size": 80,
+      "nullable": false
+    },
+    {
+      "name": "parentPrivilege",
+      "description": "The parent privilege of this permission, if any",
+      "type": "Text",
+      "size": 80,
+      "nullable": true
+    },
+    {
+      "name": "workspace",
+      "description": "The workspace where this permission belongs",
+      "type": "Integer",
+      "nullable": false,
+      "value": "javascript:return 1;"
+    },
+    {
+      "name": "account",
+      "description": "The account which is related with this permission.",
+      "type": "Account",
+      "nullable": false
+    },
+    {
+      "name": "target",
+      "description": "The target object.",
+      "type": "Text",
+      "size": 128,
+      "nullable": true,
+      "value": "javascript:return '0';"
+    },
+    {
+      "name": "mask",
+      "title": "Mask",
+      "description": "The permission mask.",
+      "type": "Integer",
+      "nullable": false
+    }
+  ],
+  "constraints": [
+    {
+      "description": "An object permission must be unique.",
+      "type": "unique",
+      "fields": [
+        "privilege",
+        "parentPrivilege",
+        "workspace",
+        "account",
+        "target"
+      ]
+    }
+  ],
+  "privileges": [
+    {
+      "mask": 15,
+      "type": "global"
+    }
+  ],
+  "seed": [
+    {
+        "privilege": "Customer",
+        "parentPrivilege": null,
+        "workspace": "1",
+        "account": {
+          "name": "Administrators"
+        },
+        "target": "0",
+        "mask": 15
+    }
+  ]
+}

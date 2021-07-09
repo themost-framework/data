@@ -3,21 +3,21 @@ import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
 
 class Employee {
-    public EmployeeID?: number;
-    public LastName?: string;
-    public FirstName?: string;
-    public BirthDate?: Date;
-    public Photo?: string;
-    public Notes?: string;
+    public id?: number;
+    public lastName?: string;
+    public firstName?: string;
+    public birthDate?: Date;
+    public photo?: string;
+    public notes?: string;
 }
 @EdmMapping.entityType('Employee')
 class EmployeeModel {
-    public EmployeeID?: number;
-    public LastName?: string;
-    public FirstName?: string;
-    public BirthDate?: Date;
-    public Photo?: string;
-    public Notes?: string;
+    public id?: number;
+    public lastName?: string;
+    public firstName?: string;
+    public birthDate?: Date;
+    public photo?: string;
+    public notes?: string;
 }
 
 describe('DataModel', () => {
@@ -61,9 +61,9 @@ describe('DataModel', () => {
 
     it('should get item', async () => {
         // load by class
-        let item: Employee = await context.model(Employee).where('EmployeeID').equal(1).getItem();
+        let item: Employee = await context.model(Employee).where('id').equal(1).getItem();
         expect(item).toBeTruthy();
-        expect(item.EmployeeID).toBe(1);
+        expect(item.id).toBe(1);
     });
 
 });
