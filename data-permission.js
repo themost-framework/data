@@ -752,19 +752,23 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             });
                     }
                     else if (item.type==='parent') {
-                        //get field mapping
-                        var mapping = model.inferMapping(item.property);
-                        if (!mapping) {
-                            return cb();
-                        }
-                        if (_.isNil(expr))
+                        // get nested attribute query
+                        var q = context.model(model.name).select(item.property);
+                        // get query field
+                        var select = q.query.$select[model.viewAdapter][0];
+                        if (expr == null) {
                             expr = QueryUtils.query();
-                        expr.where(entity.select(mapping.childField)).equal(perms1.select('target')).
-                            and(perms1.select('privilege')).equal(mapping.childModel).
-                            and(perms1.select('parentPrivilege')).equal(mapping.parentModel).
-                            and(perms1.select('workspace')).equal(workspace).
-                            and(perms1.select('mask')).bit(requestMask,requestMask).
-                            and(perms1.select('account')).in(accounts.map(function(x) { return x.id; })).prepare(true);
+                        }
+                        // get nested 
+                        if (q.query.$expand != null) {
+                            expr.$expand = [].concat(q.query.$expand);
+                        }
+                        expr.where(select).equal(perms1.select('target'))
+                            .and(perms1.select('privilege')).equal(model.name)
+                            .and(perms1.select('parentPrivilege')).equal(item.property)
+                            .and(perms1.select('workspace')).equal(workspace)
+                            .and(perms1.select('mask')).bit(requestMask,requestMask)
+                            .and(perms1.select('account')).in(accounts.map(function(x) { return x.id; })).prepare(true);
                         assigned=true;
                         cb();
                     }
@@ -848,6 +852,11 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             });
                         }
                         q.join(perms1).with(expr);
+                        if (expr.$expand) {
+                            expr.$expand.forEach(function(x) {
+                                q.join(x.$entity).with(x.$with);
+                            });
+                        }
                         // set static alias
                         event.query.$lastIndex += 1;
                         var pqAlias = context.model('Permission').viewAdapter + event.query.$lastIndex.toString();

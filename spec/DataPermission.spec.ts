@@ -38,7 +38,7 @@ describe('DataModel', () => {
             "user": {
                 "name": "maria.anders@example.com"
             }
-        })
+        });
         // update customer information
         await context.model('Customer').silent().save({
             id: 1,
@@ -50,6 +50,34 @@ describe('DataModel', () => {
         expect(customer).toBeTruthy();
         customer = await context.model('Customer').where('id').equal(2).getItem();
         expect(customer).toBeFalsy();
+    });
+
+    fit('should use parent nested privilege', async () => {
+        await context.model('Group').silent().save({
+            "name": "Customers"
+        });
+        await context.model('User').silent().save({
+            "name": "maria.anders@example.com",
+            "groups": [
+                {
+                    "name": "Customers"
+                }
+            ]
+        });
+        Object.assign(context, {
+            "user": {
+                "name": "maria.anders@example.com"
+            }
+        });
+        // update customer information
+        await context.model('Customer').silent().save({
+            id: 1,
+            User: {
+                name: 'maria.anders@example.com'
+            }
+        });
+        await context.model('Order').getItems();
+        const items = await await context.model('OrderDetail').asQueryable().getItem();
     });
 
 });

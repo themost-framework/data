@@ -2,8 +2,6 @@
     "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
     "title": "Orders",
     "name": "Order",
-    "source": "Orders",
-    "view": "Orders",
     "version": "1.0",
     "fields": [
         {
@@ -32,6 +30,23 @@
             "name": "shipper",
             "type": "Shipper",
             "nullable": false
+        }
+    ],
+    "privileges": [
+        {
+            "type": "global",
+            "mask": 15
+        },
+        {
+            "account": "Administrators",
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "account": "Customers",
+            "mask": 1,
+            "type": "parent",
+            "property": "customer"
         }
     ],
     "seed": [
