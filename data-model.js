@@ -2392,6 +2392,21 @@ DataModel.prototype.migrate = function(callback)
         callback(err);
     });
 };
+/**
+ * Performing an automatic migration of current data model.
+ * @returns Promise<void>
+ */
+DataModel.prototype.migrateAsync = function() {
+    const self = this;
+    return new Promise(function(resolve, reject) {
+        self.migrate(function(err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+};
 
 /**
  * Gets an instance of DataField class which represents the primary key of this model.
