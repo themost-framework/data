@@ -52,12 +52,12 @@ describe('DataModel', () => {
         expect(customer).toBeFalsy();
     });
 
-    fit('should use parent nested privilege', async () => {
+    it('should use parent nested privilege', async () => {
         await context.model('Group').silent().save({
             "name": "Customers"
         });
         await context.model('User').silent().save({
-            "name": "maria.anders@example.com",
+            "name": "Yang.Wang@example.com",
             "groups": [
                 {
                     "name": "Customers"
@@ -66,18 +66,52 @@ describe('DataModel', () => {
         });
         Object.assign(context, {
             "user": {
-                "name": "maria.anders@example.com"
+                "name": "Yang.Wang@example.com"
             }
         });
         // update customer information
         await context.model('Customer').silent().save({
-            id: 1,
+            id: 14,
             User: {
-                name: 'maria.anders@example.com'
+                name: 'Yang.Wang@example.com'
             }
         });
-        await context.model('Order').getItems();
-        const items = await await context.model('OrderDetail').asQueryable().getItem();
+        // add permission
+        await context.model('Permission').silent().save({
+            privilege: 'Order',
+            parentPrivilege: 'customer',
+            target: 14,
+            account: {
+                name: 'Yang.Wang@example.com'
+            },
+            mask: 1
+        });
+        // add permission
+        await context.model('Permission').silent().save({
+            privilege: 'OrderDetail',
+            parentPrivilege: 'order/customer',
+            target: 14,
+            account: {
+                name: 'Yang.Wang@example.com'
+            },
+            mask: 1
+        });
+        let existingItems = await context.model('Order').where('customer').equal(14).silent().getItems();
+        let items = await context.model('Order').getItems();
+        expect(items).toBeTruthy();
+        expect(items.length).toBeTruthy();
+        items.forEach((element) => {
+            expect(existingItems.find((item) => {
+                return item.id === element.id;
+            })).toBeTruthy();
+        });
+        items = await context.model('OrderDetail').asQueryable().getItems();
+        existingItems = await context.model('OrderDetail').where('order/customer').equal(14).silent().getItems();
+        items.forEach((element) => {
+            expect(existingItems.find((item) => {
+                return item.id === element.id;
+            })).toBeTruthy();
+        });
     });
 
 });
