@@ -39,7 +39,7 @@ var mappingsProperty = Symbol('mappings');
 var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
 var DataField = require('./types').DataField;
 var ZeroOrOneMultiplicityListener = require('./zero-or-one-multiplicity').ZeroOrOneMultiplicityListener;
-
+var DataNestedQueryableListener = require('./data-nested-queryable-listener').DataNestedQueryableListener;
 /**
  * @this DataModel
  * @param {DataField} field
@@ -627,6 +627,8 @@ function unregisterContextListeners() {
     if (this.caching==='always' || this.caching==='conditional') {
         this.on('after.execute', DataCachingListener.prototype.afterExecute);
     }
+
+    this.on('before.execute', DataNestedQueryableListener.prototype.beforeExecute);
 
     //migration listeners
     this.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);
