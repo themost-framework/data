@@ -50,8 +50,12 @@ describe('DataNestedQueryableListener', () => {
 
     it('should use nested query', async () => {
         const context = app.createContext();
-        const items = await context.model('Action').where('actionStatus/alternateName').equal('CompletedActionStatus').silent().getItems();
-        expect(items).toBeTruthy();
+        let Actions = context.model('Action');
+        const beforeExecute = DataNestedQueryableListener.prototype.beforeExecute;
+        Actions.removeListener('before.execute', beforeExecute);
+        await expectAsync(Actions.where('actionStatus/alternateName').equal('CompletedActionStatus').silent().getItems()).toBeRejected();
+        Actions = context.model('Action');
+        await expectAsync(Actions.where('actionStatus/alternateName').equal('CompletedActionStatus').silent().getItems()).toBeResolved();
     });
 
 });
