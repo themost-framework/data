@@ -215,6 +215,13 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
                 return [].concat(res.$expand).concat(expr);
             }
+            // add a reference to the underlying data model for further processing
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: parentModel.name
+            });
             //--set active field
             return res.$expand;
         }
@@ -253,6 +260,12 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                     }
                 }
             }
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: childModel.name
+            });
             return res.$expand;
         }
         else {
