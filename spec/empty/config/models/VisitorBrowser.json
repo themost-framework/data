@@ -1,0 +1,60 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "VisitorBrowser",
+    "title": "VisitorBrowsers",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "2.1",
+    "implements": "Enumeration",
+    "fields": [
+        {
+            "name": "color",
+            "title": "Color",
+            "description": "A color associated with this item.",
+            "type": "Text"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        }
+    ],
+    "seed": [
+        {
+            "name": "Chrome",
+            "color": "#f56954"
+        },
+        {
+            "name": "IE",
+            "color": "#00a65a"
+        },
+        {
+            "name": "FireFox",
+            "color": "#f39c12"
+        },
+        {
+            "name": "Safari",
+            "color": "#00c0ef"
+        },
+        {
+            "name": "Opera",
+            "color": "#3c8dbc"
+        },
+        {
+            "name": "Navigator",
+            "color": "#d2d6de"
+        }
+    ]
+}

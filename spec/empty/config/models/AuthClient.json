@@ -1,0 +1,110 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "AuthClient",
+    "title": "AuthClients",
+    "hidden": true,
+    "sealed": false,
+    "abstract": false,
+    "version": "1.1",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/client_id",
+            "name": "client_id",
+            "title": "Client ID",
+            "description": "The authorization server issues the registered client a client identifier -- a unique string representing the registration information provided by the client.",
+            "type": "Text",
+            "nullable": false,
+            "primary": true,
+            "value": "javascript:return this.numbers(16);"
+        },
+        {
+            "@id": "http://schema.org/name",
+            "name": "name",
+            "title": "Name",
+            "description": "The name of the item.",
+            "type": "Text",
+            "nullable": false
+        },
+        {
+            "@id": "https://themost.io/schemas/client_secret",
+            "name": "client_secret",
+            "title": "Client Secret",
+            "description": "The authorization server issues the registered client a client secret -- a string representing a secret which is going to be used to authorize a registered client.",
+            "type": "Text",
+            "nullable": false,
+            "value": "javascript:return this.chars(32);"
+        },
+        {
+            "@id": "https://themost.io/schemas/redirect_uri",
+            "name": "redirect_uri",
+            "title": "Redirection URI",
+            "description": "A redirection URI to which the authorization server will send the user-agent back once access is granted (or denied)",
+            "type": "Text",
+            "nullable": false
+        },
+        {
+            "@id": "https://themost.io/schemas/grant_type",
+            "name": "grant_type",
+            "title": "Grant Types",
+            "description": "A grant type is a string representing the grant type issued by the authorization server for this client.",
+            "type": "Text",
+            "nullable": false,
+            "value": "javascript:return 'code';"
+        },
+        {
+            "@id": "https://themost.io/schemas/scopes",
+            "name": "scopes",
+            "title": "Authorization Scopes",
+            "description": "A collection of authorization scopes which are associated with this client",
+            "type": "AuthScope",
+            "many": true,
+            "mapping": {
+                "associationAdapter": "AuthClientScopes",
+                "associationObjectField": "client",
+                "associationValueField": "scope",
+                "parentModel": "AuthClient",
+                "parentField": "client_id",
+                "childModel": "AuthScope",
+                "childField": "id",
+                "associationType": "junction",
+                "cascade": "delete",
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    }
+                ]
+            }
+        }
+    ],
+    "seed": [
+        {
+            "name": "Test Api Server",
+            "client_id": "9165351833584149",
+            "client_secret": "hTgqFBUhCfHs/quf/wnoB+UpDSfUusKA",
+            "redirect_uri": "http://localhost:3000/*",
+            "scopes": [
+                {
+                    "name": "profile"
+                }
+            ],
+            "grant_type": "code,password,client_credentials"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ]
+}

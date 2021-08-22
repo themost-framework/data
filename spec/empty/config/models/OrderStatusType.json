@@ -1,0 +1,79 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "OrderStatusType",
+    "title": "OrderStatusTypes",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "2.2",
+    "caching": "always",
+    "implements": "Enumeration",
+    "fields": [
+        {
+            "name": "color",
+            "title": "Color",
+            "description": "A color associated with this item.",
+            "type": "Text"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        }
+    ],
+    "seed": [
+        {
+            "name": "Delivered",
+            "alternateName": "OrderDelivered",
+            "description": "Representing the successful delivery of an order."
+        },
+        {
+            "name": "Cancelled",
+            "alternateName": "OrderCancelled",
+            "description": "Representing the cancellation of an order."
+        },
+        {
+            "name": "In Transit",
+            "alternateName": "OrderInTransit",
+            "description": "Representing that an order is in transit."
+        },
+        {
+            "name": "Payment Due",
+            "alternateName": "OrderPaymentDue",
+            "description": "Representing that payment is due on an order."
+        },
+        {
+            "name": "Pickup",
+            "alternateName": "OrderPickup",
+            "description": "Representing availability of an order for pickup."
+        },
+        {
+            "name": "Processing",
+            "alternateName": "OrderProcessing",
+            "description": "Representing that an order is being processed."
+        },
+        {
+            "id": 7,
+            "name": "Problem",
+            "alternateName": "OrderProblem",
+            "description": "Representing that there is a problem with the order."
+        },
+        {
+            "id": 8,
+            "name": "Returned",
+            "alternateName": "OrderReturned",
+            "description": "Representing that an order has been returned."
+        }
+    ]
+}
