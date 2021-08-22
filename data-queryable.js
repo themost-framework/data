@@ -210,11 +210,6 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 .equal(QueryField.select(mapping.parentField).from(childFieldName));
             entity = new QueryEntity(parentModel.viewAdapter).as(childFieldName).left();
             res.join(entity).with(expr);
-            if (arrMember.length>2) {
-                parentModel[aliasProperty] = mapping.childField;
-                expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
-                return [].concat(res.$expand).concat(expr);
-            }
             // add a reference to the underlying data model for further processing
             Object.defineProperty(entity, 'model', {
                 configurable: true,
@@ -222,6 +217,11 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 writable: true,
                 value: parentModel.name
             });
+            if (arrMember.length>2) {
+                parentModel[aliasProperty] = mapping.childField;
+                expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
+                return [].concat(res.$expand).concat(expr);
+            }
             //--set active field
             return res.$expand;
         }
