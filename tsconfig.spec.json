@@ -4,6 +4,7 @@
     "target": "esnext",
     "module": "commonjs",
     "moduleResolution": "node",
+    "experimentalDecorators": true,
     "resolveJsonModule": true,
     "declarationDir": "./dist",
     "sourceMap": true,
