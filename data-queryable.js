@@ -246,7 +246,20 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             expr = QueryUtils.query().where(QueryField.select(parentField.name).from(parentEntity)).equal(QueryField.select(childField.name).from(childEntity));
             entity = new QueryEntity(childModel.viewAdapter).as(childEntity).left();
             res.join(entity).with(expr);
-            if (arrMember.length === 2) {
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: childModel.name
+            });
+            if (arrMember.length>2) {
+                // set joined entity alias
+                childModel[aliasProperty] = childEntity;
+                // resolve additional joins
+                expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(childModel, arrMember.slice(1).join('/'));
+                // concat and return joins
+                return [].concat(res.$expand).concat(expr);
+            } else {
                 // get child model member
                 var childMember = childModel.field(arrMember[1]);
                 if (childMember) {
@@ -260,12 +273,6 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                     }
                 }
             }
-            Object.defineProperty(entity, 'model', {
-                configurable: true,
-                enumerable: false,
-                writable: true,
-                value: childModel.name
-            });
             return res.$expand;
         }
         else {

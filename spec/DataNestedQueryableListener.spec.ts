@@ -64,4 +64,10 @@ describe('DataNestedQueryableListener', () => {
         await expectAsync(Orders.where('customer/gender/alternateName').equal('Female').silent().getItems()).toBeResolved();
     });
 
+    fit('should use nested one-to-many query', async () => {
+        const context = app.createContext();
+        let People = context.model('Person');
+        await expectAsync(People.where('orders/orderStatus/alternateName').equal('OrderProblem').silent().getItems()).toBeResolved();
+    });
+
 });
