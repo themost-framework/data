@@ -25,6 +25,10 @@ class DataNestedQueryableListener {
              * @type {{ $entity:{ model:string }} | Array<{ $entity:{ model:string }}>}
              */
             const expand = query.$expand;
+            // exit if expand is null or undefined
+            if (expand == null) {
+                return Promise.resolve();
+            }
             if (Array.isArray(expand)) {
                 const sources = expand.map(function(item) {
                     if (item.$entity && item.$entity.model) {
