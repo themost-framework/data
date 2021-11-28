@@ -2,6 +2,9 @@
 var {eachSeries} = require('async');
 var {parsers} = require('./types');
 var {DataError} = require('@themost/common');
+var {HasParentJunction} = require('./has-parent-junction');
+var {DataObjectJunction} = require('./data-object-junction');
+var {DataObjectTag} = require('./data-object-tag');
 var parseBoolean = parsers.parseBoolean;
 
 class DataObjectAssociationError extends DataError {
@@ -113,18 +116,17 @@ class DataObjectAssociationListener {
             else {
                 var keys = Object.keys(event.target);
                 var mappings = [];
-                keys.forEach(function(x) {
-                    if (Object.prototype.hasOwnProperty.call(event.target, x)) {
-                        
+                keys.forEach(function(key) {
+                    if (Object.prototype.hasOwnProperty.call(event.target, key)) {
                         /**
                          * @type DataAssociationMapping
                          */
-                        var mapping = event.model.inferMapping(x);
+                        var mapping = event.model.inferMapping(key);
                         if (mapping != null) {
-                            var attribute = event.model.getAttribute(x);
+                            var attribute = event.model.getAttribute(key);
                             // get only many-to-many associations
                             if (mapping.associationType==='junction' && attribute.multiplicity === 'Many') {
-                                mappings.push({ name:x, mapping:mapping });
+                                mappings.push({ name:key, mapping:mapping });
                             }
                         }
                     }
@@ -146,12 +148,12 @@ class DataObjectAssociationListener {
                             /**
                              * @type {*|{deleted:Array}}
                              */
-                            var childs = obj[x.name], junction;
+                            var childs = obj[x.name]
+                            var junction;
                             if (!Array.isArray(childs)) { 
                                 return cb(); 
                             }
                             if (x.mapping.childModel===event.model.name) {
-                                var HasParentJunction = require('./has-parent-junction').HasParentJunction;
                                 junction = new HasParentJunction(obj, x.mapping);
                                 if (event.state===1 || event.state===2) {
                                     var toBeRemoved = [], toBeInserted = [];
@@ -174,13 +176,8 @@ class DataObjectAssociationListener {
                                 else  {
                                     return cb();
                                 }
-                            }
-                            else if (x.mapping.parentModel===event.model.name) {
-    
+                            } else if (x.mapping.parentModel===event.model.name) {
                                 if (event.state===1 || event.state===2) {
-                                    var DataObjectJunction = require('./data-object-junction').DataObjectJunction,
-                                        DataObjectTag = require('./data-object-tag').DataObjectTag;
-    
                                     if (typeof x.mapping.childModel === 'undefined') {
                                         /**
                                          * @type {DataObjectTag}
@@ -221,9 +218,13 @@ class DataObjectAssociationListener {
                                                 }
                                             });
                                             junction.silent(silentMode).insert(toBeInserted, function(err) {
-                                                if (err) { return cb(err); }
+                                                if (err) {
+                                                    return cb(err);
+                                                }
                                                 junction.silent(silentMode).remove(toBeRemoved, function(err) {
-                                                    if (err) { return cb(err); }
+                                                    if (err) { 
+                                                        return cb(err);
+                                                    }
                                                     return cb();
                                                 });
                                             });
@@ -237,10 +238,9 @@ class DataObjectAssociationListener {
                             else {
                                 cb();
                             }
+                        } else {
+                            cb();
                         }
-                        else
-                            cb(null);
-    
                     }, function(err) {
                         callback(err);
                     });
