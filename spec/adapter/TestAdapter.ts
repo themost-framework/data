@@ -77,7 +77,7 @@ export class TestAdapter {
      * @returns {Promise<*>}
      */
     openAsync() {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             return this.open( (err: any) => {
                 if (err) {
                    return reject(err);
@@ -108,7 +108,7 @@ export class TestAdapter {
      * @returns {Promise<*>}
      */
     closeAsync() {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             return this.close( err => {
                 if (err) {
                     return reject(err);
@@ -264,7 +264,7 @@ export class TestAdapter {
      * @returns {Promise<void>}
      */
     executeInTransactionAsync(transactionFunc) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
            this.executeInTransaction((cb) => {
                transactionFunc.bind(this)().then(() => {
                    return cb();
@@ -497,7 +497,7 @@ export class TestAdapter {
      * @param {MemoryAdapterMigration} migration
      */
     migrateAsync(migration) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             return this.migrate(migration, (err) => {
                 if (err) {
                     return reject(err);
@@ -773,7 +773,7 @@ export class TestAdapter {
              * @returns {Promise<void>}
              */
             dropAsync() {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     return this.drop( error => {
                         if (error) {
                             return reject(error);
@@ -816,7 +816,7 @@ export class TestAdapter {
              * @returns {Promise<void>}
              */
             createAsync(query) {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     return this.create(query, error => {
                         if (error) {
                             return reject(error);
@@ -1116,7 +1116,7 @@ export class TestAdapter {
                         if (error) {
                             return reject(error);
                         }
-                        return resolve();
+                        return resolve(null);
                     });
                 });
             },
@@ -1149,7 +1149,7 @@ export class TestAdapter {
                         if (error) {
                             return reject(error);
                         }
-                        return resolve();
+                        return resolve(null);
                     });
                 });
             },

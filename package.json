@@ -17,17 +17,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themost-framework/themost.git"
+    "url": "git+https://github.com/themost-framework/data.git"
   },
   "author": "Kyriakos Barbounakis <k.barbounakis@gmail.com>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/themost-framework/themost/issues"
+    "url": "https://github.com/themost-framework/data/issues"
   },
-  "homepage": "https://github.com/themost-framework/themost#readme",
+  "homepage": "https://github.com/themost-framework/data#readme",
   "dependencies": {
     "async": "0.2.10",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "moment": "^2.19.3",
     "node-cache": "^1.1.0",
     "object-hash": "^1.3.1",
@@ -46,7 +46,6 @@
     "@types/sql.js": "^1.4.0",
     "jasmine": "^3.6.4",
     "jasmine-spec-reporter": "^6.0.0",
-    "npm-install-peers": "^1.2.2",
     "sql.js": "^1.4.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
