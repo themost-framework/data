@@ -550,7 +550,7 @@ LangUtils.inherits(DataModel, SequentialEventEmitter);
  * Gets a boolean which indicates whether data model is in silent mode or not
  */
 DataModel.prototype.isSilent = function() {
-    return this.$silent;
+    return types.parsers.parseBoolean(this.$silent);
 };
 
 /**

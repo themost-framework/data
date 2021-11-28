@@ -1,5 +1,5 @@
 import { TestApplication } from './TestApplication';
-import { DataContext } from '../index';
+import { DataContext, DataObjectAssociationError } from '../index';
 import { resolve } from 'path';
 import { TestUtils } from './adapter/TestUtils';
 
@@ -46,7 +46,7 @@ describe('DataObjectAssociationListener', () => {
                 seller: -1
             }
             await expectAsync(context.model('Offer').save(newOffer))
-                .toBeRejectedWithError('An associated object cannot be found.');
+                .toBeRejectedWithError(new DataObjectAssociationError().message);
             newOffer = {
                     itemOffered: {
                         name: 'Samsung Galaxy S4'
@@ -78,8 +78,36 @@ describe('DataObjectAssociationListener', () => {
             await expectAsync(context.model('Offer').save(newOffer))
             .toBeResolved();
         });
-        
-        
-        
+    });
+    it('should use silent mode', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             let newOffer: any = {
+                itemOffered: {
+                    name: 'Samsung Galaxy S4'
+                },
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31'),
+                seller: -1
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer))
+                .toBeRejectedWithError(new DataObjectAssociationError().message);
+                newOffer = {
+                    itemOffered: {
+                        name: 'Samsung Galaxy S4'
+                    },
+                    price: 999,
+                    validFrom: new Date('2021-12-20'),
+                    validThrough: new Date('2021-12-31'),
+                    seller: {
+                        email: 'caitlyn.barber@example.com'
+                    }
+                }
+                await expectAsync(context.model('Offer').silent().save(newOffer))
+                .toBeResolved();
+        });
     });
 });
