@@ -11,7 +11,7 @@ spec/
 .env
 
 # ide
-.idea
 .vscode
+.theia
+.idea
 .DS_Store
-jsconfig.json
