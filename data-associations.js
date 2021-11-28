@@ -28,12 +28,14 @@ class DataObjectAssociationListener {
             }
             var keys = Object.keys(event.target);
             var mappings = [];
-            keys.forEach(function(x) {
-                if (Object.prototype.hasOwnProperty.call(event.target, x) && event.target[x] !== null) {
+            keys.forEach(function(key) {
+                if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] !== null) {
                         //try to find field mapping, if any
-                        var mapping = event.model.inferMapping(x);
-                        if (mapping && mapping.associationType==='association' && mapping.childModel===event.model.name)
-                            mappings.push(mapping);
+                        var mapping = event.model.inferMapping(key);
+                        if (mapping && mapping.associationType === 'association' &&
+                            mapping.childModel===event.model.name) {
+                                mappings.push(mapping);
+                            }
                 }
             });
             return eachSeries(mappings,
