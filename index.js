@@ -113,5 +113,7 @@ module.exports.NotNullConstraintListener = _data_listeners.NotNullConstraintList
 module.exports.UniqueConstraintListener = _data_listeners.UniqueConstraintListener;
 
 module.exports.DataObjectAssociationListener = _data_associations.DataObjectAssociationListener;
+module.exports.DataObjectAssociationError = _data_associations.DataObjectAssociationError;
+module.exports.DataObjectMultiAssociationError = _data_associations.DataObjectMultiAssociationError;
 
 module.exports.DataApplication = _data_application.DataApplication;
