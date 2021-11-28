@@ -1,4 +1,17 @@
+# node
 node_modules
-.DS_Store
+
+# github
 .github/
+
+# test
 spec/
+
+# dotenv
+.env
+
+# ide
+.idea
+.vscode
+.DS_Store
+jsconfig.json
