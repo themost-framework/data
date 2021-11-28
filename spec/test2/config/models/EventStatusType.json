@@ -1,0 +1,65 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "EventStatusType",
+    "title": "EventStatusTypes",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "implements": "Enumeration",
+    "version": "2.0",
+    "fields": [
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ],
+    "seed": [
+        {
+            "name": "Created",
+            "alternateName": "created",
+            "description": "The event has been initialized but has not yet been scheduled."
+        },
+        {
+            "name": "Scheduled",
+            "alternateName": "scheduled",
+            "description": "The event has been scheduled and is waiting to start."
+        },
+        {
+            "name": "Started",
+            "alternateName": "started",
+            "description": "The event has been successfully started."
+        },
+        {
+            "name": "Cancelled",
+            "alternateName": "cancelled",
+            "description": "The event has been cancelled."
+        },
+        {
+            "name": "Paused",
+            "alternateName": "paused",
+            "description": "The event has been paused."
+        },
+        {
+            "name": "Completed",
+            "alternateName": "completed",
+            "description": "The event has been successfully completed."
+        },
+        {
+            "name": "Rescheduled",
+            "alternateName": "rescheduled",
+            "description": "The event has been rescheduled and is waiting to start."
+        }
+    ]
+}

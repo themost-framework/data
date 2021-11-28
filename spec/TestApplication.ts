@@ -41,14 +41,18 @@ export class TestApplication extends IApplication {
                 'default':true,
                 "options": {
                 }
-            }
+            },
         ]);
         // use data configuration strategy
         this._configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
     }
 
     createContext(): DataContext {
-        const context = new NamedDataContext('test-storage');
+        const adapters = this._configuration.getSourceAt('adapters');
+        const adapter: { name: string; invariantName: string; default: boolean } = adapters.find((item: any)=> {
+            return item.default;
+        });
+        const context = new NamedDataContext(adapter.name);
         context.getConfiguration = () => {
             return this._configuration;
         };

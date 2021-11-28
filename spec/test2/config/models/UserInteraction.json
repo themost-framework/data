@@ -1,0 +1,19 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "UserInteraction",
+    "title": "UserInteractions",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "2.0",
+    "inherits": "Event",
+    "fields": [
+
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ]
+}
