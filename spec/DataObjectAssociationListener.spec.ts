@@ -110,4 +110,53 @@ describe('DataObjectAssociationListener', () => {
                 .toBeResolved();
         });
     });
+    it('should use tags', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             const Products = context.model('Product');
+            let product = await Products.where('name').equal('Nintendo 2DS').getItem();
+            expect(product).toBeTruthy();
+            Object.assign(product, {
+                keywords: [
+                    "Online",
+                    "Games",
+                    "Console"
+                ]
+            });
+            await expectAsync(Products.save(product)).toBeRejected();
+            Object.assign(context, {
+                user: {
+                    name: 'alexis.rees@example.com'
+                }
+             });
+             await expectAsync(Products.save(product)).toBeResolved();
+             product = await Products.where('name').equal('Nintendo 2DS')
+                .expand('keywords')
+                .getItem();
+            expect(product).toBeTruthy();
+            expect(product.keywords.length).toBe(3);
+            product.keywords.splice(0, 1);
+            await Products.save(product);
+            product = await Products.where('name').equal('Nintendo 2DS')
+                .expand('keywords')
+                .getItem();
+            expect(product).toBeTruthy();
+            expect(product.keywords.length).toBe(2);
+
+            product = await Products.where('model').equal('ZE2956')
+                .getItem();
+            Object.assign(product, {
+                keywords: [
+                    "Monitor",
+                    "Games"
+                ]
+            });
+            await Products.save(product);
+            const products = await Products.where('keywords/value')
+                .equal('Games').getItems();
+            expect(products.length).toBe(2);
+        });
+    });
 });
