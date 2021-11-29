@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jasmine",
-    "install-peers": "npm-install-peers"
+    "install-peers": "add-peers"
   },
   "peerDependencies": {
     "@themost/common": ">= 2.5.2 < 3",
@@ -37,6 +37,7 @@
     "symbol": "^0.3.1"
   },
   "devDependencies": {
+    "@themost/peers": "^1.0.1",
     "@types/core-js": "^2.5.0",
     "@types/jasmine": "^3.6.4",
     "@types/lodash": "^4.14.149",

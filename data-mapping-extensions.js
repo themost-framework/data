@@ -8,9 +8,7 @@
  */
 ///
 var _ = require('lodash');
-var QueryUtils = require('@themost/query/utils').QueryUtils;
-var QueryEntity = require('@themost/query/query').QueryEntity;
-var QueryField = require('@themost/query/query').QueryField;
+var {QueryUtils, QueryEntity, QueryField} = require('@themost/query');
 var Q = require('q');
 
 
@@ -201,40 +199,40 @@ var mappingExtensions = {
              */
             getChilds_v1: function(items) {
                 var thisArg = this;
-                var deferred = Q.defer();
-                process.nextTick(function() {
-                    if (_.isNil(items)) {
-                        return deferred.resolve();
+                return Q.Promise((resolve, reject) => {
+                    if (items == null) {
+                        return resolve();
                     }
-                    var arr = _.isArray(items) ? items : [items];
-                    if (arr.length === 0) {
-                        return deferred.resolve();
+                    var arrItems = Array.isArray(items) ? items : [items];
+                    if (arrItems.length === 0) {
+                        return resolve();
                     }
-                    if (_.isNil(thisQueryable)) {
-                        return deferred.reject('The underlying data queryable cannot be empty at this context.');
+                    if (thisQueryable == null) {
+                        return reject('The underlying data queryable cannot be empty at this context.');
                     }
                     if ((mapping.parentModel !== thisQueryable.model.name) || (mapping.associationType!=='junction')) {
-                        return deferred.resolve();
+                        return resolve();
                     }
-                    var values = arr.filter(function(x) {
+                    var values = arrItems.filter(function(x) {
                         return (typeof x[mapping.parentField]!=='undefined') && (x[mapping.parentField]!=null);
                     }).map(function(x) {
                         return x[mapping.parentField];
                     });
-                    if (_.isNil(mapping.childModel)) {
+                    if (mapping.childModel == null) {
                         var DataObjectTag = require('./data-object-tag').DataObjectTag;
-                        junction = new DataObjectTag(thisQueryable.model.convert({ }), mapping);
-                        return junction.getBaseModel().where("object").in(values).flatten().silent().select("object", "value").all().then(function(items) {
-                            arr.forEach(function(x) {
-                                x[mapping.refersTo] = items.filter(function(y) {
-                                    return y["object"]===x[mapping.parentField];
-                                }).map(function (y) {
-                                    return y.value;
+                        junction = new DataObjectTag(thisQueryable.model.convert({}), mapping);
+                        var objectField = junction.getObjectField();
+                        var valueField = junction.getValueField();
+                        return junction.getBaseModel().where(objectField).in(values)
+                            .flatten().silent().select(objectField, valueField).getAllItems().then(function(items) {
+                                arrItems.forEach(function(parent) {
+                                    parent[mapping.refersTo] = items.filter(function(item) {
+                                        return item[objectField] === parent[mapping.parentField];
+                                    }).map(function(item) {
+                                        return item.value;
+                                    });
                                 });
-                            });
-                            return deferred.resolve();
-                        }).catch(function (err) {
-                            return deferred.reject(err);
+                                return resolve();
                         });
                     }
                     //create a dummy object
@@ -248,7 +246,7 @@ var mappingExtensions = {
                         var childModel = thisArg.getChildModel();
                         childModel.filter(mapping.options, function(err, q) {
                             if (err) {
-                                return deferred.reject(err);
+                                return reject(err);
                             }
                             q.prepare();
                             //Important Backward compatibility issue (<1.8.0)
@@ -269,16 +267,16 @@ var mappingExtensions = {
                             var refersTo = thisQueryable.model.getAttribute(mapping.refersTo);
                             q.getItems().then(function(childs) {
                                 //if result contains only one item
-                                if (arr.length === 1) {
+                                if (arrItems.length === 1) {
                                     if (refersTo && (refersTo.multiplicity === 'ZeroOrOne' || refersTo.multiplicity === 'One')) {
-                                        arr[0][mapping.refersTo] = childs[0] != null ? childs[0] : null;
-                                        return deferred.resolve();
+                                        arrItems[0][mapping.refersTo] = childs[0] != null ? childs[0] : null;
+                                        return resolve();
                                     }
-                                    arr[0][mapping.refersTo] = childs;
-                                    return deferred.resolve();
+                                    arrItems[0][mapping.refersTo] = childs;
+                                    return resolve();
                                 }
                                 //otherwise loop result array
-                                arr.forEach(function(x) {
+                                arrItems.forEach(function(x) {
                                     //get parent (key value)
                                     var parentValue = x[mapping.parentField];
                                     //get parent(s)
@@ -296,16 +294,15 @@ var mappingExtensions = {
                                     }
                                     
                                 });
-                                return deferred.resolve();
+                                return resolve();
                             }).catch(function(err) {
-                                return deferred.reject(err);
+                                return reject(err);
                             });
                         });
                     }).catch(function (err) {
-                        return deferred.reject(err);
+                        return reject(err);
                     });
                 });
-                return deferred.promise;
             },
             /**
              * @param {*} items
