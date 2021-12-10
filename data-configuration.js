@@ -32,6 +32,17 @@ var currentConfiguration = Symbol('current');
 var namedConfigurations = Symbol('namedConfigurations');
 
 function interopRequireDefault(path) {
+    const hashIndex = path.indexOf('#');
+    if (hashIndex > 0) {
+        var modulePath = path.substr(0, hashIndex);
+        var memberName = path.substr(hashIndex + 1);
+        var module = require(modulePath);
+        if (Object.prototype.hasOwnProperty.call(module, memberName)) {
+            return module[memberName];
+        } else {
+            throw new Error('Module exported member not found');
+        }
+    }
     var obj = require(path);
     return obj && obj.__esModule ? obj['default'] : obj;
 }
@@ -988,11 +999,11 @@ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     if (typeof DataObjectClass === 'function') {
         return DataObjectClass;
     }
-    //get model definition
+    // get model definition
     var modelDefinition = this.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition(model.name);
     if (typeof model.classPath === 'string') {
         if (/^\.\//.test(model.classPath)) {
-            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(this.getConfiguration().getExecutionPath(),model.classPath));
+            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(this.getConfiguration().getExecutionPath(), model.classPath));
         }
         else {
             modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(model.classPath);
@@ -1001,7 +1012,7 @@ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     else {
         //try to find module by using capitalize naming convention
         // e.g. OrderDetail -> OrderDetailModel.js
-        var classPath = PathUtils.join(this.getConfiguration().getExecutionPath(),'models',model.name.concat('Model'));
+        var classPath = PathUtils.join(this.getConfiguration().getExecutionPath(),'models', model.name.concat('Model'));
         try {
             modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
         }
@@ -1015,14 +1026,14 @@ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
                 }
                 catch(err) {
                     if (err.code === 'MODULE_NOT_FOUND') {
-                        if (_.isNil(model['inherits'])) {
-                            if (_.isNil(model['implements'])) {
+                        if (model.inherits == null) {
+                            if (model.implements == null) {
                                 //use default DataObject class
                                 modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault('./data-object').DataObject;
                             }
                             else {
                                 //use implemented data model class
-                                modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.context.model(model['implements']));
+                                modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.context.model(model.implements));
                             }
                         }
                         else {

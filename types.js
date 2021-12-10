@@ -351,6 +351,53 @@ DataContext.prototype.getConfiguration = function() {
 DataContext.prototype.finalize = function(callback) {
     throw new AbstractMethodError();
 };
+/**
+ * Finalizes data context
+ * @returns {Promise<void>}
+ */
+DataContext.prototype.finalizeAsync = function() {
+    const self = this;
+    return new Promise(function(resolve, reject) {
+        return self.finalize(function(err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+}
+/**
+ * 
+ * @param {function():Promise<void>} func 
+ * @returns {Promise<void>}
+ */
+DataContext.prototype.executeInTransactionAsync = function(func) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        // start transaction
+        return self.db.executeInTransaction(function(cb) {
+            try {
+                func().then(function() {
+                    // commit
+                    return cb();
+                }).catch( function(err) {
+                    // rollback
+                    return cb(err);
+                });
+            }
+            catch (err) {
+                return cb(err);
+            }
+        }, function(err) {
+            if (err) {
+                return reject(err);
+            }
+            // end transaction
+            return resolve();
+        });
+    });
+}
+
 LangUtils.inherits(DataContext, SequentialEventEmitter);
 
 /**

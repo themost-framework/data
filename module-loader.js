@@ -32,6 +32,29 @@ function ModuleLoader() {
 ModuleLoader.prototype.require = function(modulePath) {
     throw new Error('Class does not implement inherited abstract method.');
 };
+/**
+ * @param {string} anyPath
+ * @returns { {path: string, member: string} }
+ */
+ModuleLoader.parseRequire = function(anyPath) {
+    if (anyPath == null) {
+        throw new Error('Module path must be a string');
+    }
+    var hashIndex = anyPath.indexOf('#');
+    // if path does not contain hash
+    if (hashIndex < 0) {
+        // return only path
+        return {
+            path: anyPath
+        };
+    }
+    // otherwise, split the given path and return path and member
+    // e.g. { path: './my-module', member: 'MyClass' }
+    return {
+        path: anyPath.substr(0, hashIndex),
+        member: anyPath.substr(hashIndex + 1)
+    }
+};
 
 /**
  * @class

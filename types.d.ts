@@ -64,29 +64,18 @@ export declare class DataAdapter {
 }
 
 export declare class DataContext extends SequentialEventEmitter {
-    /**
-     *
-     * @param {*} name
-     * @returns {DataModel}
-     */
-    model(name:any):DataModel
+    
+    model(name:any): DataModel
 
-    /**
-     *
-     */
-    db:DataAdapter;
+    db: DataAdapter;
 
-    /**
-     *
-     * @returns {ConfigurationBase}
-     */
-    getConfiguration():ConfigurationBase;
+    getConfiguration(): ConfigurationBase;
 
-    /**
-     *
-     * @param {(err?: Error) => void} callback
-     */
-    finalize(callback?:(err?:Error) => void);
+    finalize(callback?:(err?:Error) => void): void;
+
+    finalizeAsync(): Promise<void>;
+
+    executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
 }
 
 export declare class DataContextEmitter {
