@@ -32,6 +32,17 @@ var currentConfiguration = Symbol('current');
 var namedConfigurations = Symbol('namedConfigurations');
 
 function interopRequireDefault(path) {
+    const hashIndex = path.indexOf('#');
+    if (hashIndex > 0) {
+        var modulePath = path.substr(0, hashIndex);
+        var memberName = path.substr(hashIndex + 1);
+        var module = require(modulePath);
+        if (Object.prototype.hasOwnProperty.call(module, memberName)) {
+            return module[memberName];
+        } else {
+            throw new Error('Module exported member not found');
+        }
+    }
     var obj = require(path);
     return obj && obj.__esModule ? obj['default'] : obj;
 }
@@ -964,10 +975,6 @@ ModelClassLoaderStrategy.prototype.resolve = function(model) {
     throw new AbstractMethodError();
 };
 
-ModelClassLoaderStrategy.prototype.require = function(anyPath) {
-    var memberAndModule = ModuleLoader.parseRequire(anyPath);
-}
-
 /**
  * @class
  * @constructor
@@ -992,8 +999,7 @@ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     if (typeof DataObjectClass === 'function') {
         return DataObjectClass;
     }
-
-    //get model definition
+    // get model definition
     var modelDefinition = this.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition(model.name);
     if (typeof model.classPath === 'string') {
         if (/^\.\//.test(model.classPath)) {
