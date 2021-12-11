@@ -1,0 +1,75 @@
+{
+    "@id": "https://themost.io/schemas/AccessToken",
+    "name": "AccessToken",
+    "title": "AccessTokens",
+    "description": "Access tokens are credentials used to access protected resources.",
+    "hidden": true,
+    "sealed": false,
+    "abstract": false,
+    "version": "1.7",
+    "caching": "conditional",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/access_token",
+            "name": "access_token",
+            "title": "Access Token",
+            "description": "An  access token is a string representing an authorization issued to the client.",
+            "type": "Text",
+            "nullable": false,
+            "primary": true,
+            "value": "javascript:return this.chars(128);"
+        },
+        {
+            "@id": "https://themost.io/schemas/client_id",
+            "name": "client_id",
+            "title": "Client ID",
+            "description": "The authorization server issues the registered client a client identifier -- a unique string representing the registration information provided by the client.",
+            "type": "Text",
+            "nullable": false,
+            "indexed": true
+        },
+        {
+            "@id": "https://themost.io/schemas/user_id",
+            "name": "user_id",
+            "title": "User ID",
+            "description": "An alphanumeric sequence of characters which represents the identifier of a user (an email address or user name etc).",
+            "type": "Text",
+            "nullable": false,
+            "indexed": true
+        },
+        {
+            "@id": "https://themost.io/schemas/expires",
+            "description": "The expiration date and time of this access token.",
+            "name": "expires",
+            "title": "Expires",
+            "type": "DateTime",
+            "nullable": true
+        },
+        {
+            "@id": "https://themost.io/schemas/refresh_token",
+            "name": "refresh_token",
+            "title": "Refresh Token",
+            "description": "Refresh tokens are issued to the client by the authorization server and are used to obtain a new access token when the current access token becomes invalid or expires.",
+            "type": "Text",
+            "value": "javascript:return this.chars(128);"
+        },
+        {
+            "@id": "https://themost.io/schemas/scope",
+            "name": "scope",
+            "title": "Scope",
+            "description": "Scope is used to limit the authorization granted to the client by the resource owner.",
+            "type": "Text"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ]
+}

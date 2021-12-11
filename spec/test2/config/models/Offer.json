@@ -1,0 +1,71 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "@id": "http://schema.org/Offer",
+    "name": "Offer",
+    "title": "Offers",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "2.1",
+    "inherits": "Intangible",
+    "fields": [
+        {
+            "@id": "http://schema.org/price",
+            "name": "price",
+            "title": "Price",
+            "description": "The price of the product.",
+            "type": "Number"
+        },
+        {
+            "@id": "http://schema.org/validFrom",
+            "name": "validFrom",
+            "title": "validFrom",
+            "description": "The date when the item becomes valid.",
+            "type": "DateTime"
+        },
+        {
+            "@id": "http://schema.org/validThrough",
+            "name": "validThrough",
+            "title": "validThrough",
+            "description": "The date after when the item is not valid. For example the end of an offer, salary period, or a period of opening hours.",
+            "type": "DateTime"
+        },
+        {
+            "@id": "http://schema.org/seller",
+            "name": "seller",
+            "title": "seller",
+            "description": "An entity which offers (sells / leases / lends / loans) the services / goods.  A seller may also be a provider.",
+            "type": "Person"
+        },
+        {
+            "@id": "http://schema.org/offeredBy",
+            "name": "offeredBy",
+            "title": "offeredBy",
+            "description": "A pointer to the organization or person making the offer.",
+            "type": "Organization"
+        },
+        {
+            "@id": "http://schema.org/itemOffered",
+            "name": "itemOffered",
+            "title": "itemOffered",
+            "description": "The item being offered.",
+            "type": "Product"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "Users"
+        },
+        {
+            "mask": 1,
+            "type": "item"
+        }
+    ]
+}

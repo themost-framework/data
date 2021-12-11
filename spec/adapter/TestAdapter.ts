@@ -2,6 +2,7 @@ import initSqlJs from 'sql.js';
 import {SqlUtils, QueryExpression, QueryField} from '@themost/query';
 import {TestFormatter} from './TestFormatter';
 import {TraceUtils} from '@themost/common';
+import {readFileSync} from 'fs';
 
 const INSTANCE_DB = new Map();
 const DateTimeRegex = /^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])(?:[T ](\d+):(\d+)(?::(\d+)(?:\.(\d+))?)?)(?:Z(-?\d*))?([+-](\d+):(\d+))?$/;
@@ -58,8 +59,13 @@ export class TestAdapter {
             }
             else {
                 self.options.name = self.options.name || 'memory-db';
-                // create database connection
-                self.rawConnection = new SQL.Database();
+                if (self.options.database) {
+                    const data = readFileSync(self.options.database);
+                    self.rawConnection = new SQL.Database(data);
+                } else {
+                    // create database connection
+                    self.rawConnection = new SQL.Database();
+                }
                 TraceUtils.debug(`Database initialization for ${self.options.name} file=${self.rawConnection.filename} db=${self.rawConnection.db}`);
                 // set instance database
                 INSTANCE_DB.set(self.options.name, self.rawConnection);
