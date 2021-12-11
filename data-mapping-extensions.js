@@ -224,10 +224,12 @@ var mappingExtensions = {
                     if (_.isNil(mapping.childModel)) {
                         var DataObjectTag = require('./data-object-tag').DataObjectTag;
                         junction = new DataObjectTag(thisQueryable.model.convert({ }), mapping);
-                        return junction.getBaseModel().where("object").in(values).flatten().silent().select("object", "value").all().then(function(items) {
+                        var objectField = junction.getObjectField();
+                        var valueField = junction.getValueField();
+                        return junction.getBaseModel().where(objectField).in(values).flatten().silent().select(objectField, valueField).all().then(function(items) {
                             arr.forEach(function(x) {
                                 x[mapping.refersTo] = items.filter(function(y) {
-                                    return y["object"]===x[mapping.parentField];
+                                    return y[objectField]===x[mapping.parentField];
                                 }).map(function (y) {
                                     return y.value;
                                 });
