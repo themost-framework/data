@@ -1,0 +1,68 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "AccessLevelType",
+    "title": "AccessLevelTypes",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "implements": "Enumeration",
+    "version": "2.0",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/id",
+            "name": "id",
+            "title": "ID",
+            "description": "The identifier of the item.",
+            "type": "Integer",
+            "primary": true
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ],
+    "seed": [
+        {
+            "id": 100,
+            "name": "Limited Access",
+            "alternateName": "limitedAccess",
+            "description": "This access level gives limited access in security users and groups. Assigned to Guests, by default."
+        },
+        {
+            "id": 200,
+            "name": "Read",
+            "alternateName": "read",
+            "description": "Can read objects and data. Assigned to security group Users, by default."
+        },
+        {
+            "id": 300,
+            "name": "Contribute",
+            "alternateName": "contribute",
+            "description": "Can edit, add, delete objects and data. Assigned to Contributors, by defalut"
+        },
+        {
+            "id": 400,
+            "name": "Design",
+            "alternateName": "design",
+            "description": "Can modify application layout, create models, pages and views. Assigned to Designers, by default"
+        },
+        {
+            "id": 500,
+            "name": "Full Control",
+            "alternateName": "fullControl",
+            "description": "This access level contains all permissions. Assigned to Administrators, by default."
+        }
+    ]
+}

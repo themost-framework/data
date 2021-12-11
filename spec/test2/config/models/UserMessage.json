@@ -1,0 +1,108 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "UserMessage",
+    "title": "UserMessages",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "2.0",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/id",
+            "name": "id",
+            "title": "ID",
+            "description": "The identifier of the item.",
+            "type": "Counter",
+            "primary": true
+        },
+        {
+            "name": "subject",
+            "title": "Subject",
+            "description": "The subject of this message.",
+            "type": "Text"
+        },
+        {
+            "name": "body",
+            "title": "Body",
+            "description": "The body of this message.",
+            "type": "Text"
+        },
+        {
+            "name": "sender",
+            "title": "Sender",
+            "description": "The email addresses of the author or authors of the message.",
+            "type": "Text"
+        },
+        {
+            "name": "recipient",
+            "title": "Recipient",
+            "description": "The email addresses of the primary recipients of this message.",
+            "type": "Text"
+        },
+        {
+            "name": "cc",
+            "title": "Cc",
+            "description": "The email addresses of the secondary recipients of this message.",
+            "type": "Text"
+        },
+        {
+            "name": "bcc",
+            "title": "Bcc",
+            "description": "The email addresses of the hidden recipients of this message.",
+            "type": "Text"
+        },
+        {
+            "name": "category",
+            "title": "Category",
+            "description": "The category of this message.",
+            "type": "Text"
+        },
+        {
+            "name": "flag",
+            "title": "Flag",
+            "description": "A flag associated with this message.",
+            "type": "Text"
+        },
+        {
+            "name": "dateSent",
+            "title": "Date Sent",
+            "description": "The date and time when the message was sent.",
+            "type": "DateTime"
+        },
+        {
+            "name": "dateReceived",
+            "title": "Date Received",
+            "description": "The date and time when the message was received.",
+            "type": "DateTime"
+        },
+        {
+            "name": "owner",
+            "title": "Owner",
+            "description": "The user who owns this message.",
+            "type": "Integer",
+            "value": "javascript:return this.user();"
+        },
+        {
+            "name": "message",
+            "title": "Message Identifier",
+            "description": "A string that represents a numeric or alphanumeric sequence which identifies uniquely the current item.",
+            "nullable": false,
+            "type": "Text",
+            "size": 24,
+            "value": "javascript:return this.chars(24);"
+        }
+    ],
+    "eventListeners": [
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "self",
+            "filter": "owner eq me()"
+        }
+    ]
+}
