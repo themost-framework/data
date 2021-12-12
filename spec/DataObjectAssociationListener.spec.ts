@@ -29,6 +29,22 @@ describe('DataObjectAssociationListener', () => {
         }
         return done();
     });
+    it('should validate foreign-key association', async ()=> {
+        await TestUtils.executeInTransaction(context, async () => {
+            const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .getItem();
+            let newOffer: any = {
+                itemOffered: product.id,
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer))
+                .toBeResolved();
+            
+        });
+    });
     it('should validate association', async ()=> {
         Object.assign(context, {
            user: {

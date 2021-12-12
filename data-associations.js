@@ -32,7 +32,7 @@ class DataObjectAssociationListener {
             var keys = Object.keys(event.target);
             var mappings = [];
             keys.forEach(function(key) {
-                if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] !== null) {
+                if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] != null) {
                         //try to find field mapping, if any
                         var mapping = event.model.inferMapping(key);
                         if (mapping && mapping.associationType === 'association' &&
@@ -77,7 +77,7 @@ class DataObjectAssociationListener {
                                     return cb(new DataObjectMultiAssociationError(mapping.childModel, mapping.childField));
                                 }
                                 else {
-                                    if (Object.prototype.hasOwnProperty.call(associatedObject, mapping.parentField) === false) {
+                                    if ( typeof associatedObject === 'object' && Object.prototype.hasOwnProperty.call(associatedObject, mapping.parentField) === false) {
                                         // set foreign key
                                         Object.defineProperty(associatedObject, mapping.parentField, {
                                             configurable: true,
@@ -117,7 +117,7 @@ class DataObjectAssociationListener {
                 var keys = Object.keys(event.target);
                 var mappings = [];
                 keys.forEach(function(key) {
-                    if (Object.prototype.hasOwnProperty.call(event.target, key)) {
+                    if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] != null) {
                         /**
                          * @type DataAssociationMapping
                          */
