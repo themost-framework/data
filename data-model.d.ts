@@ -36,7 +36,8 @@ export declare class DataModel extends SequentialEventEmitter{
     where(attr: string): DataQueryable;
     search(text: string): DataQueryable;
     asQueryable(): DataQueryable;
-    filter(params: any, callback?: (err?: Error, res?: any) => void): void;
+    filter(params: any, callback?: (err?: Error, res?: DataQueryable) => void): void;
+    filterAsync(params: any): Promise<DataQueryable>;
     find(obj: any):DataQueryable;
     select(...attr: any[]): DataQueryable;
     orderBy(attr: any): DataQueryable;
@@ -60,10 +61,10 @@ export declare class DataModel extends SequentialEventEmitter{
     inferMapping(name: string): DataAssociationMapping;
     validateForUpdate(obj: any): Promise<any>;
     validateForInsert(obj: any): Promise<any>;
-    levels(value: number);
+    levels(value: number): DataQueryable;
     getSubTypes(): Promise<string>;
     getReferenceMappings(deep?: boolean): Array<any>;
-    getAttribute(name: string);
+    getAttribute(name: string): DataField;
     getTypedItems(): Promise<DataObject|any>;
     getItems(): Promise<any>;
     getTypedList():Promise<any>;

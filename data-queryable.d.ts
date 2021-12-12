@@ -44,7 +44,7 @@ export declare class DataQueryable implements DataContextEmitter {
     min(): Promise<any>;
     max(): Promise<any>;
     average(): Promise<any>;
-    migrate(callback:(err?: Error) => void);
+    migrate(callback:(err?: Error) => void): void;
     silent(value?: boolean): DataQueryable;
     flatten(value?: boolean): DataQueryable;
     cache(value?: boolean): DataQueryable;

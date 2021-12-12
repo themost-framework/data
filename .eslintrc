@@ -1,28 +1,22 @@
 {
+  "extends": [
+    "eslint:recommended",
+    "plugin:node/recommended"
+  ],
   "parserOptions": {
-    "ecmaVersion": 2015,
-    "sourceType": "module"
+    // Only ESLint 6.2.0 and later support ES2020.
+    "ecmaVersion": 2020
   },
-  "env": {
-    "browser": true,
-    "node": true,
-    "es6": false,
-    "jquery": true
-  },
-  "globals": {
-    "describe": false,
-    "it": false
-  },
-  "extends": "eslint:recommended",
   "rules": {
-    "no-console": "warn",
-    "no-invalid-this": "warn",
-    "no-undef": "error",
-    "no-unused-vars": "warn",
     "no-var": "off",
-    "strict": [
-      2,
-      "never"
-    ]
+    "node/exports-style": ["error", "module.exports"],
+    "node/file-extension-in-import": ["error", "always"],
+    "node/prefer-global/buffer": ["error", "always"],
+    "node/prefer-global/console": ["error", "always"],
+    "node/prefer-global/process": ["error", "always"],
+    "node/prefer-global/url-search-params": ["error", "always"],
+    "node/prefer-global/url": ["error", "always"],
+    "node/prefer-promises/dns": "error",
+    "node/prefer-promises/fs": "error"
   }
 }

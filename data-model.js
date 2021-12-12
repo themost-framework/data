@@ -918,6 +918,18 @@ DataModel.prototype.filter = function(params, callback) {
     }
 };
 
+DataModel.prototype.filterAsync = function(params) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        return filterInternal.call(self, params, function(err, result) {
+           if (err) {
+               return reject(err);
+           }
+           return resolve(result);
+        });
+    });
+};
+
 /**
  * Prepares a data query with the given object as parameters and returns the equivalent DataQueryable instance
  * @param {*} obj - An object which represents the query parameters
