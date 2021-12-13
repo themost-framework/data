@@ -1095,8 +1095,11 @@ function setQualifiedName(schema, name) {
         // do nothing
         return name;
     }
-    // get namespace or alias or the default alias which is "self"
-    var namespace = schema.namespace || schema.alias || 'self';
+    // get namespace or alias
+    var namespace = schema.namespace || schema.alias;
+    if (namespace == null) {
+        return;
+    }
     // validate Collection(EntityType) expression
     var match = /^Collection\(([a-zA-Z0-9._]+)\)$/ig.exec(name);
     if (match) {
@@ -1129,10 +1132,6 @@ function schemaToEdmDocument(schema) {
     schemaElement.setAttribute("xmlns", "http://docs.oasis-open.org/odata/ns/edm");
     if (schema.namespace) {
         schemaElement.setAttribute("Namespace", schema.namespace);
-    }
-    // forcibly set alias when namespace is null
-    if (schema.namespace == null) {
-        schema.alias = schema.alias || 'self';
     }
     if (schema.alias != null) {
         schemaElement.setAttribute("Alias", schema.alias);
@@ -1345,12 +1344,19 @@ function ODataModelBuilder(configuration) {
     this[ignoreEntityTypesProperty] = [];
     this[entityContainerProperty] = [];
     this.defaultNamespace = null;
+    this.defaultAlias = null;
     /**
      * @returns {ConfigurationBase}
      */
     this.getConfiguration = function() {
         return configuration;
     };
+    if (configuration != null) {
+        this.defaultNamespace = configuration.getSourceAt('settings/builder/defaultNamespace');
+    }
+    if (configuration != null) {
+        this.defaultAlias = configuration.getSourceAt('settings/builder/defaultAlias');
+    }
     var serviceRoot_;
     var self = this;
     Object.defineProperty(this,'serviceRoot', {
@@ -1536,6 +1542,7 @@ ODataModelBuilder.prototype.removeEntitySet = function(name) {
             try{
                 var schema = {
                     namespace: self.defaultNamespace,
+                    alias: self.defaultAlias,
                     entityType:[],
                     entityContainer: {
                         "name":"DefaultContainer",

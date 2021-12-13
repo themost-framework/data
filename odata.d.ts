@@ -185,6 +185,7 @@ export declare class ODataModelBuilder {
     constructor(configuration: ConfigurationBase);
     serviceRoot: string;
     defaultNamespace: string;
+    defaultAlias: string;
     getEntity(name: string): EntityTypeConfiguration;
     addEntity(name: string): EntityTypeConfiguration;
     addSingleton(entityType: string, name: string): SingletonConfiguration;
