@@ -1098,7 +1098,7 @@ function setQualifiedName(schema, name) {
     // get namespace or alias
     var namespace = schema.namespace || schema.alias;
     if (namespace == null) {
-        return;
+        return name;
     }
     // validate Collection(EntityType) expression
     var match = /^Collection\(([a-zA-Z0-9._]+)\)$/ig.exec(name);
