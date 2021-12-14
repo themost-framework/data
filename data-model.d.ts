@@ -36,7 +36,8 @@ export declare class DataModel extends SequentialEventEmitter{
     where(attr: string): DataQueryable;
     search(text: string): DataQueryable;
     asQueryable(): DataQueryable;
-    filter(params: any, callback?: (err?: Error, res?: any) => void): void;
+    filter(params: any, callback?: (err?: Error, res?: DataQueryable) => void): void;
+    filterAsync(params: any): Promise<DataQueryable>;
     find(obj: any):DataQueryable;
     select(...attr: any[]): DataQueryable;
     orderBy(attr: any): DataQueryable;
