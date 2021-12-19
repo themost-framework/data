@@ -70,16 +70,28 @@ DataAttributeResolver.prototype.selectAggregatedAttribute = function(aggregation
     else {
         result = self.fieldOf(attribute);
     }
-    var sAlias = result.as(), name = result.getName(), expr;
-    if (sAlias) {
-        expr = result[sAlias];
-        result[sAlias] = { };
-        result[sAlias]['$' + aggregation ] = expr;
+    var alias = result.as();
+    var name = result.getName();
+    var expr;
+    if (alias) {
+        expr = result[alias];
+        result[alias] = { };
+        Object.defineProperty(result[alias], '$' + aggregation, {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: typeof expr === 'string' ? new QueryField(expr) : expr
+        });
     }
     else {
         expr = result.$name;
         result[name] = { };
-        result[name]['$' + aggregation ] = expr;
+        Object.defineProperty(result[name], '$' + aggregation, {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: typeof expr === 'string' ? new QueryField(expr) : expr
+        });
     }
     return result;
 };
