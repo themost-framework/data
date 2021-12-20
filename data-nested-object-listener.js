@@ -10,7 +10,7 @@
 var _ = require("lodash");
 var QueryUtils = require('@themost/query/utils').QueryUtils;
 var async = require("async");
-var DataError = require('@themost/common/errors').DataError;
+var DataError = require('@themost/common').DataError;
 
 
 /**

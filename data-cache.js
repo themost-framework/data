@@ -8,11 +8,11 @@
  */
 ///
 var _ = require('lodash');
-var LangUtils = require("@themost/common/utils").LangUtils;
-var Args = require("@themost/common/utils").Args;
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var AbstractMethodError = require('@themost/common/errors').AbstractMethodError;
-var ConfigurationStrategy = require('@themost/common/config').ConfigurationStrategy;
+var LangUtils = require("@themost/common").LangUtils;
+var Args = require("@themost/common").Args;
+var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var AbstractMethodError = require('@themost/common').AbstractMethodError;
+var ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
 var Symbol = require("symbol");
 var Q = require('q');
 var currentProperty = Symbol("current");

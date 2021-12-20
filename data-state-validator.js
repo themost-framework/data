@@ -8,7 +8,7 @@
  */
 ///
 var _ = require("lodash");
-var DataNotFoundError = require("@themost/common/errors").DataNotFoundError;
+var DataNotFoundError = require("@themost/common").DataNotFoundError;
 var async = require("async");
 
 /**
