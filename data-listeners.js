@@ -8,7 +8,7 @@
  */
 ///
 var async = require('async');
-var sprintf = require('sprintf');
+var sprintf = require('sprintf-js').sprintf;
 var _ = require('lodash');
 var QueryUtils = require('@themost/query/utils').QueryUtils;
 var QueryField = require('@themost/query/query').QueryField;
@@ -433,7 +433,7 @@ DataCachingListener.prototype.beforeExecute = function(event, callback) {
                     //log execution time (debug)
                     try {
                         if (process.env.NODE_ENV==='development') {
-                            TraceUtils.log(sprintf.sprintf('Cache (Execution Time:%sms):%s', (new Date()).getTime()-logTime, key));
+                            TraceUtils.debug(sprintf('Cache (Execution Time:%sms):%s', (new Date()).getTime()-logTime, key));
                         }
                     }
                     catch(err) {

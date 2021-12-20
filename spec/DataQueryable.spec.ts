@@ -44,7 +44,7 @@ describe('DataQueryable', () => {
         });
     });
 
-    it('should use select query option', async ()=> {
+    it('should use $select query option', async ()=> {
         let query = await context.model('Product').filterAsync({
             $select: 'id,name,price,year(releaseDate) as releaseYear',
             $orderby: 'price desc',
@@ -72,7 +72,19 @@ describe('DataQueryable', () => {
             ]);
             expect(item.releaseYear).toBeTruthy();
         });
-
+    });
+    it('should use $expand query option', async ()=> {
+        let query = await context.model('Person').filterAsync({
+            $expand: 'orders($expand=orderedItem,billingAddress)',
+            $top: 10
+        });
+        let items = await query.silent().getItems();
+        items.forEach((item: any) => {
+            expect(item.orders).toBeInstanceOf(Array);
+            item.orders.forEach((order: any) => {
+                expect(order.orderedItem).toBeTruthy();
+            });
+        });
     });
 
 });

@@ -9,7 +9,7 @@
 ///
 var _ = require("lodash");
 var trim = require("lodash").trim;
-var sprintf = require('sprintf').sprintf;
+var sprintf = require('sprintf-js').sprintf;
 var Symbol = require('symbol');
 var path = require("path");
 var pluralize = require("pluralize");

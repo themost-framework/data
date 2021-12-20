@@ -12,7 +12,7 @@
 ///
 var Symbol = require('symbol');
 var LangUtils = require('@themost/common/utils').LangUtils;
-var sprintf = require('sprintf').sprintf;
+var sprintf = require('sprintf-js').sprintf;
 var Q = require('q');
 var pluralize = require('pluralize');
 var _ = require('lodash');

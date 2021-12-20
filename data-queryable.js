@@ -8,7 +8,7 @@
  */
 ///
 var async = require('async');
-var sprintf = require('sprintf').sprintf;
+var sprintf = require('sprintf-js').sprintf;
 var Symbol = require('symbol');
 var _ = require("lodash");
 var TextUtils = require("@themost/common/utils").TextUtils;
@@ -19,7 +19,6 @@ var QueryField = require('@themost/query/query').QueryField;
 var QueryEntity = require('@themost/query/query').QueryEntity;
 var QueryUtils = require('@themost/query/utils').QueryUtils;
 var Q = require('q');
-var hash = require('object-hash');
 var aliasProperty = Symbol('alias');
 
 /**

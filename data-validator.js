@@ -8,7 +8,7 @@
  */
 ///
 var _ = require('lodash');
-var sprintf = require('sprintf');
+var sprintf = require('sprintf-js').sprintf;
 var LangUtils = require('@themost/common/utils').LangUtils;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var conf = require('./data-configuration');
@@ -204,10 +204,10 @@ var conf = require('./data-configuration');
         if (val.hasOwnProperty('length')) {
             if (val.length<this.minLength) {
 
-                var innerMessage = null, message = sprintf.sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
+                var innerMessage = null, message = sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
                 if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                     innerMessage = message;
-                    message = sprintf.sprintf(this.getContext().translate(this.message || MinLengthValidator.DefaultMessage), this.minLength);
+                    message = sprintf(this.getContext().translate(this.message || MinLengthValidator.DefaultMessage), this.minLength);
                 }
 
                 return {
@@ -294,10 +294,10 @@ var conf = require('./data-configuration');
             return;
         }
 
-        var innerMessage = null, message = sprintf.sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
+        var innerMessage = null, message = sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
         if (this.getContext() && (typeof this.getContext().translate === 'function')) {
             innerMessage = message;
-            message = sprintf.sprintf(this.getContext().translate(this.message || MaxLengthValidator.DefaultMessage), this.maxLength);
+            message = sprintf(this.getContext().translate(this.message || MaxLengthValidator.DefaultMessage), this.maxLength);
         }
 
         if (val.hasOwnProperty('length')) {
@@ -377,10 +377,10 @@ var conf = require('./data-configuration');
         }
         if (val<this.minValue) {
 
-            var innerMessage = null, message = sprintf.sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
+            var innerMessage = null, message = sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = sprintf.sprintf(this.getContext().translate(this.message || MinValueValidator.DefaultMessage), this.minValue);
+                message = sprintf(this.getContext().translate(this.message || MinValueValidator.DefaultMessage), this.minValue);
             }
 
             return {
@@ -457,10 +457,10 @@ var conf = require('./data-configuration');
         }
         if (val>this.maxValue) {
 
-            var innerMessage = null, message = sprintf.sprintf(this.message || MaxValueValidator.DefaultMessage , this.maxValue);
+            var innerMessage = null, message = sprintf(this.message || MaxValueValidator.DefaultMessage , this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = sprintf.sprintf(this.getContext().translate(this.message || MaxValueValidator.DefaultMessage), this.maxValue);
+                message = sprintf(this.getContext().translate(this.message || MaxValueValidator.DefaultMessage), this.maxValue);
             }
 
             return {
@@ -548,10 +548,10 @@ var conf = require('./data-configuration');
             maxValidation = maxValidator.validateSync(val);
         }
         if (minValidator && maxValidator && (minValidation || maxValidation)) {
-            var innerMessage = null, message = sprintf.sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
+            var innerMessage = null, message = sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = sprintf.sprintf(this.getContext().translate(this.message || RangeValidator.DefaultMessage), this.minValue, this.maxValue);
+                message = sprintf(this.getContext().translate(this.message || RangeValidator.DefaultMessage), this.minValue, this.maxValue);
             }
             return {
                 code:"ERANGE",
@@ -946,7 +946,7 @@ var conf = require('./data-configuration');
         if (result<=5) {
             return callback(null, {
                 code:"EPRICE",
-                "message":sprintf.sprintf("You have already 5 products with price lower than %s.", val)
+                "message":sprintf("You have already 5 products with price lower than %s.", val)
             });
         }
         return callback();
