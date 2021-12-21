@@ -8,7 +8,7 @@
     "install-peers": "add-peers"
   },
   "peerDependencies": {
-    "@themost/common": "latest",
+    "@themost/common": "next",
     "@themost/query": "next",
     "@themost/xml": ">= 2.5.1 < 3"
   },
