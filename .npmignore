@@ -1,4 +1,19 @@
 node_modules
 .DS_Store
 .github/
+
+# test
 spec/
+tsconfig.json
+tsconfig.spec.json
+Gruntfile.js
+
+# docs
+docs/
+jsdoc.conf.json
+
+# ide
+.vscode
+.theia
+.idea
+.eslintrc
