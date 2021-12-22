@@ -1017,7 +1017,7 @@ DataModel.prototype.find = function(obj) {
                                         }
                                     });
                                 }
-                            } 
+                            }
                             if (foundByConstraint === false) {
                                 Object.keys(value).filter(function (key) {
                                     return associatedModel.getAttribute(key) != null;
@@ -1030,7 +1030,7 @@ DataModel.prototype.find = function(obj) {
                         }
                     }
                 } else {
-                    result[x] = value;
+                    result[attribute] = value;
                 }
             }
         }

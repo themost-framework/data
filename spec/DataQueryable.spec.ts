@@ -119,4 +119,26 @@ describe('DataQueryable', () => {
         });
     });
 
+    it('should use find by associated object', async ()=> {
+        let obj = {
+            orderStatus: {
+                alternateName: 'OrderInTransit'
+            },
+            customer: {
+                email: 'brian.chapman@example.com'
+            },
+            paymentMethod: 5 // = CollectOnDelivery
+        }
+        let items = await context.model('Order').find(obj)
+            .expand('orderStatus', 'customer')
+            .take(25).silent()
+            .getItems();
+        expect(items.length).toBeTruthy();
+        items.forEach((item) => {
+            expect(item.orderStatus.alternateName).toBe('OrderInTransit');
+            expect(item.customer.email).toBe('brian.chapman@example.com');
+            expect(item.paymentMethod.id).toBe(5);
+        });
+    });
+
 });
