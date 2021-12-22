@@ -8,18 +8,17 @@
  */
 ///
 var async = require('async');
-var sprintf = require('sprintf').sprintf;
+var sprintf = require('sprintf-js').sprintf;
 var Symbol = require('symbol');
 var _ = require("lodash");
-var TextUtils = require("@themost/common/utils").TextUtils;
+var TextUtils = require("@themost/common").TextUtils;
 var mappingExtensions = require('./data-mapping-extensions');
 var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataError = require("@themost/common/errors").DataError;
+var DataError = require("@themost/common").DataError;
 var QueryField = require('@themost/query/query').QueryField;
 var QueryEntity = require('@themost/query/query').QueryEntity;
 var QueryUtils = require('@themost/query/utils').QueryUtils;
 var Q = require('q');
-var hash = require('object-hash');
 var aliasProperty = Symbol('alias');
 
 /**
@@ -70,16 +69,28 @@ DataAttributeResolver.prototype.selectAggregatedAttribute = function(aggregation
     else {
         result = self.fieldOf(attribute);
     }
-    var sAlias = result.as(), name = result.getName(), expr;
-    if (sAlias) {
-        expr = result[sAlias];
-        result[sAlias] = { };
-        result[sAlias]['$' + aggregation ] = expr;
+    var alias = result.as();
+    var name = result.getName();
+    var expr;
+    if (alias) {
+        expr = result[alias];
+        result[alias] = { };
+        Object.defineProperty(result[alias], '$' + aggregation, {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: typeof expr === 'string' ? new QueryField(expr) : expr
+        });
     }
     else {
         expr = result.$name;
         result[name] = { };
-        result[name]['$' + aggregation ] = expr;
+        Object.defineProperty(result[name], '$' + aggregation, {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: typeof expr === 'string' ? new QueryField(expr) : expr
+        });
     }
     return result;
 };

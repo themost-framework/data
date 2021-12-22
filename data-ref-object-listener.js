@@ -10,7 +10,7 @@
 var async = require('async');
 var HasParentJunction = require('./has-parent-junction').HasParentJunction;
 var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-var DataError = require('@themost/common/errors').DataError;
+var DataError = require('@themost/common').DataError;
 var _ = require('lodash');
 var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 

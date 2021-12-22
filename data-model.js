@@ -8,7 +8,8 @@
  */
 ///
 var _ = require("lodash");
-var sprintf = require('sprintf').sprintf;
+var trim = require("lodash").trim;
+var sprintf = require('sprintf-js').sprintf;
 var Symbol = require('symbol');
 var path = require("path");
 var pluralize = require("pluralize");
@@ -28,17 +29,48 @@ var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListen
 var DataModelView = require('./data-model-view').DataModelView;
 var DataFilterResolver = require('./data-filter-resolver').DataFilterResolver;
 var Q = require("q");
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var LangUtils = require("@themost/common/utils").LangUtils;
-var TraceUtils = require("@themost/common/utils").TraceUtils;
-var DataError = require("@themost/common/errors").DataError;
+var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var LangUtils = require("@themost/common").LangUtils;
+var TraceUtils = require("@themost/common").TraceUtils;
+var DataError = require("@themost/common").DataError;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var ModelClassLoaderStrategy = require('./data-configuration').ModelClassLoaderStrategy;
-var ModuleLoader = require('@themost/common/config').ModuleLoaderStrategy;
+var ModuleLoader = require('@themost/common').ModuleLoaderStrategy;
 var mappingsProperty = Symbol('mappings');
 var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
 var DataField = require('./types').DataField;
 var ZeroOrOneMultiplicityListener = require('./zero-or-one-multiplicity').ZeroOrOneMultiplicityListener;
+/**
+ * Splits an OData sequence expression like a $select, $orderby, $groupby param
+ * and returns an array of strings
+ * @param {string} str 
+ * @returns {Array<string>}
+ */
+function splitSequence(str) {
+    if (str == null) {
+        return [];
+    }
+    let index = 0;
+    let lastIndex = 0;
+    let c;
+    let results = [];
+    let length = str.length;
+    let parenOpen = 0
+    while (index < length) {
+        c = str.charAt(index);
+        if ( c === '(') {
+            parenOpen += 1;
+        } else if ( c === ')') {
+            parenOpen -= 1;
+        } else if ( c === ',' && parenOpen === 0) {
+            results.push(str.substring(lastIndex, index));
+            lastIndex = index + 1;
+        } 
+        index += 1;
+    }
+    results.push(str.substring(lastIndex, index));
+    return results;
+}
 
 /**
  * @this DataModel
@@ -793,73 +825,74 @@ function filterInternal(params, callback) {
             DataFilterResolver.prototype.resolveMethod.call(self, name, args, cb);
     };
     var filter;
-
     if ((params instanceof DataQueryable) && (self.name === params.model.name)) {
         var q = new DataQueryable(self);
         _.assign(q, params);
         _.assign(q.query, params.query);
         return callback(null, q);
     }
-
     if (typeof params === 'string') {
         filter = params;
     }
     else if (typeof params === 'object') {
         filter = params.$filter;
     }
-
     try {
-        parser.parse(filter, function(err, query) {
-            if (err) {
-                callback(err);
-            }
-            else {
+        parser.parse(filter, function (err, query) {
+            try {
+                if (err) {
+                    return callback(err);
+                }
                 //create a DataQueryable instance
                 var q = new DataQueryable(self);
                 q.query.$where = query;
-                if ($joinExpressions.length>0)
+                if ($joinExpressions.length > 0)
                     q.query.$expand = $joinExpressions;
                 //prepare
                 q.query.prepare();
-
                 if (typeof params === 'object') {
                     //apply query parameters
-                    var select = params.$select,
-                        skip = params.$skip || 0,
-                        orderBy = params.$orderby || params.$order,
-                        groupBy = params.$groupby || params.$group,
-                        expand = params.$expand,
-                        levels = parseInt(params.$levels),
-                        top = params.$top || params.$take;
+                    var options = {
+                        $select: params.$select,
+                        $orderBy: params.$orderby || params.$order,
+                        $groupBy: params.$groupby || params.$group,
+                        $expand: params.$expand,
+                        $skip: params.$skip || 0,
+                        $top: params.$top || params.$take,
+                        $levels: parseInt(params.$levels, 10)
+                    };
                     //select fields
-                    if (typeof select === 'string') {
-                        q.select.apply(q, select.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
+                    if (typeof options.$select === 'string') {
+                        var selectArgs = splitSequence(options.$select).map(function (item) {
+                            return trim(item);
+                        });
+                        q.select.apply(q, selectArgs);
                     }
                     //apply group by fields
-                    if (typeof groupBy === 'string') {
-                        q.groupBy.apply(q, groupBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
+                    if (typeof options.$groupBy === 'string') {
+                        var groupByArgs = splitSequence(options.$groupBy).map(function (item) {
+                            return trim(item);
+                        });
+                        q.groupBy.apply(q, groupByArgs);
                     }
-                    if ((typeof levels === 'number') && !isNaN(levels)) {
+                    if (Number.isInteger(options.$levels) && options.$levels >= 0) {
                         //set expand levels
-                        q.levels(levels);
+                        q.levels(options.$levels);
                     }
                     //set $skip
-                    q.skip(skip);
-                    if (top)
-                        q.query.take(top);
+                    q.skip(options.$skip);
+                    if (options.$top)
+                        q.query.take(options.$top);
                     //set caching
                     if (params.$cache && self.caching === 'conditional') {
                         q.cache(true);
                     }
                     //set $orderby
-                    if (orderBy) {
-                        orderBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }).forEach(function(x) {
+                    if (options.$orderBy) {
+                        var orderByArgs = splitSequence(options.$orderBy).map(function (item) {
+                            return trim(item);
+                        });
+                        orderByArgs.forEach(function (x) {
                             if (/\s+desc$/i.test(x)) {
                                 q.orderByDescending(x.replace(/\s+desc$/i, ''));
                             }
@@ -871,27 +904,27 @@ function filterInternal(params, callback) {
                             }
                         });
                     }
-                    if (expand) {
-
+                    if (options.$expand) {
                         var resolver = require("./data-expand-resolver");
-                        var matches = resolver.testExpandExpression(expand);
-                        if (matches && matches.length>0) {
+                        var matches = resolver.testExpandExpression(options.$expand);
+                        if (matches && matches.length > 0) {
                             q.expand.apply(q, matches);
                         }
                     }
                     //return
-                    callback(null, q);
+                    return callback(null, q);
                 }
                 else {
                     //and finally return DataQueryable instance
-                    callback(null, q);
+                    return callback(null, q);
                 }
-
+            } catch (error) {
+                return callback(error);
             }
         });
     }
-    catch(e) {
-        return callback(e);
+    catch (error) {
+        return callback(error);
     }
 }
 

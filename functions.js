@@ -8,8 +8,8 @@
  */
 ///
 var types = require('./types');
-var sprintf = require('sprintf');
-var TraceUtils = require('@themost/common/utils').TraceUtils;
+var sprintf = require('sprintf-js').sprintf;
+var TraceUtils = require('@themost/common').TraceUtils;
 var moment = require('moment');
 var _ = require('lodash');
 var Q = require("q");
@@ -83,7 +83,7 @@ FunctionContext.prototype.eval = function(expr, callback) {
         }
     }
     else {
-        console.log(sprintf.sprintf('Cannot evaluate %s.', expr1));
+        console.log(sprintf('Cannot evaluate %s.', expr1));
         callback(new Error('Cannot evaluate expression.'));
     }
 

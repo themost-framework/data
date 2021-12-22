@@ -1,18 +1,31 @@
-import { IApplication, ConfigurationBase } from "@themost/common";
+import { IApplication, ConfigurationBase, ApplicationBase, ApplicationServiceConstructor } from "@themost/common";
 import {resolve} from 'path';
 import { DataConfigurationStrategy, NamedDataContext, DataContext } from '../index';
 
-export class TestApplication extends IApplication {
-
-    private _services: Map<any,any> = new Map();
-    private _configuration: ConfigurationBase;
-
-    useStrategy(serviceCtor: void, strategyCtor: void): this {
+export class TestApplication extends ApplicationBase {
+    useStrategy(serviceCtor: ApplicationServiceConstructor<any>, strategyCtor: ApplicationServiceConstructor<any>): this {
         const ServiceClass: any = serviceCtor;
         const StrategyClass: any = strategyCtor;
         this._services.set(ServiceClass.name, new StrategyClass(this));
         return this;
     }
+
+    useService(serviceCtor: ApplicationServiceConstructor<any>): this {
+       const ServiceClass: any = serviceCtor;
+       this._services.set(ServiceClass.name, new ServiceClass(this));
+       return this;
+    }
+    hasService<T>(serviceCtor: ApplicationServiceConstructor<T>): boolean {
+        return this._services.has((<any>serviceCtor).name);
+    }
+    getService<T>(serviceCtor: ApplicationServiceConstructor<T>): T {
+        return this._services.get(serviceCtor.name);
+    }
+
+    private _services: Map<any,any> = new Map();
+    private _configuration: ConfigurationBase;
+
+    
     hasStrategy(serviceCtor: void): boolean {
         return this._services.has((<any>serviceCtor).name);
     }
@@ -23,7 +36,7 @@ export class TestApplication extends IApplication {
         return this._configuration;
     }
     constructor(executionPath: string) {
-        super();
+        super(null);
         // init application configuration
         this._configuration = new ConfigurationBase(resolve(executionPath, 'config'));
 

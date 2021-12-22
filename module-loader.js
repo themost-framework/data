@@ -7,7 +7,7 @@
  * found in the LICENSE file at https://themost.io/license
  */
 ///
-var LangUtils = require('@themost/common/utils').LangUtils;
+var LangUtils = require('@themost/common').LangUtils;
 var Symbol = require('symbol');
 var path = require('path');
 var executionPathProperty = Symbol('executionPath');

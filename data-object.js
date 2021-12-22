@@ -7,7 +7,7 @@
  * found in the LICENSE file at https://themost.io/license
  */
 ///
-var sprintf = require('sprintf').sprintf;
+var sprintf = require('sprintf-js').sprintf;
 var _ = require("lodash");
 var Q = require('q');
 var Symbol = require('symbol');
@@ -16,9 +16,9 @@ var DataObjectTag = require('./data-object-tag').DataObjectTag;
 var HasManyAssociation = require('./has-many-association').HasManyAssociation;
 var HasOneAssociation = require('./has-one-association').HasOneAssociation;
 var HasParentJunction = require('./has-parent-junction').HasParentJunction;
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var LangUtils = require("@themost/common/utils").LangUtils;
-var DataError = require("@themost/common/errors").DataError;
+var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var LangUtils = require("@themost/common").LangUtils;
+var DataError = require("@themost/common").DataError;
 
 var selectorsProperty = Symbol('selectors');
 var typeProperty = Symbol('type');

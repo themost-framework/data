@@ -7,12 +7,12 @@
  * found in the LICENSE file at https://themost.io/license
  */
 ///
-var sprintf = require('sprintf').sprintf;
+var sprintf = require('sprintf-js').sprintf;
 var _ = require('lodash');
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var LangUtils = require("@themost/common/utils").LangUtils;
-var AbstractClassError = require('@themost/common/errors').AbstractClassError;
-var AbstractMethodError = require('@themost/common/errors').AbstractMethodError;
+var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var LangUtils = require("@themost/common").LangUtils;
+var AbstractClassError = require('@themost/common').AbstractClassError;
+var AbstractMethodError = require('@themost/common').AbstractMethodError;
 
 var types = { };
 

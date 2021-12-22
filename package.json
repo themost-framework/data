@@ -1,19 +1,19 @@
 {
   "name": "@themost/data",
-  "version": "2.6.6",
+  "version": "2.7.1-next.1",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
     "test": "jasmine",
-    "install-peers": "npm-install-peers"
+    "install-peers": "add-peers"
   },
   "peerDependencies": {
-    "@themost/common": ">= 2.5.2 < 3",
-    "@themost/query": ">= 2.5.0 < 3",
+    "@themost/common": "next",
+    "@themost/query": "next",
     "@themost/xml": ">= 2.5.1 < 3"
   },
   "engines": {
-    "node": ">=6.9.0"
+    "node": ">=8"
   },
   "repository": {
     "type": "git",
@@ -30,19 +30,20 @@
     "lodash": "^4.17.21",
     "moment": "^2.19.3",
     "node-cache": "^1.1.0",
-    "object-hash": "^1.3.1",
     "pluralize": "^7.0.0",
     "q": "^1.4.1",
-    "sprintf": "^0.1.5",
+    "sprintf-js": "^1.1.2",
     "symbol": "^0.3.1"
   },
   "devDependencies": {
+    "@themost/peers": "^1.0.1",
     "@types/core-js": "^2.5.0",
     "@types/jasmine": "^3.6.4",
     "@types/lodash": "^4.14.149",
     "@types/node": "^10.12.0",
     "@types/pluralize": "0.0.29",
     "@types/q": "^1.5.1",
+    "@types/sprintf-js": "^1.1.2",
     "@types/sql.js": "^1.4.0",
     "dotenv": "^10.0.0",
     "jasmine": "^3.6.4",

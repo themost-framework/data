@@ -8,8 +8,8 @@
  */
 ///
 var _ = require("lodash");
-var TraceUtils = require('@themost/common/utils').TraceUtils;
-var LangUtils = require('@themost/common/utils').LangUtils;
+var TraceUtils = require('@themost/common').TraceUtils;
+var LangUtils = require('@themost/common').LangUtils;
 var DataContext = require('./types').DataContext;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var cfg = require('./data-configuration');
