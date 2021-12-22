@@ -993,7 +993,7 @@ DataModel.prototype.find = function(obj) {
             if (mapping == null) {
                 result[attribute] = value;
             } else {
-                if (_.isObject(value)) {
+                if (_.isPlainObject(value)) {
                     var associatedModel = model.context.model(field.type);
                     if (associatedModel == null) {
                         throw new DataError('E_ASSOC', 'Associated model cannot be found', null, model.name, field.name);
@@ -1038,7 +1038,7 @@ DataModel.prototype.find = function(obj) {
     }
 
     var findSet = false;
-    if (_.isObject(obj)) {
+    if (_.isPlainObject(obj)) {
         if (hasOwnProperty(obj, self.primaryKey)) {
             find[self.primaryKey] = obj[self.primaryKey];
             findSet = true;
@@ -1053,7 +1053,7 @@ DataModel.prototype.find = function(obj) {
                 return x.type === 'unique';
             });
             //find by constraint
-            if (_.isObject(constraint) && Array.isArray(constraint.fields)) {
+            if (constraint != null && Array.isArray(constraint.fields)) {
                 //search for all constrained fields
                 var findAttrs = {};
                 var foundByConstraint = true;
