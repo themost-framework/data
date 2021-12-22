@@ -40,6 +40,7 @@ var mappingsProperty = Symbol('mappings');
 var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
 var DataField = require('./types').DataField;
 var ZeroOrOneMultiplicityListener = require('./zero-or-one-multiplicity').ZeroOrOneMultiplicityListener;
+var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 /**
  * Splits an OData sequence expression like a $select, $orderby, $groupby param
  * and returns an array of strings
@@ -966,38 +967,106 @@ DataModel.prototype.filterAsync = function(params, callback) {
  });
  */
 DataModel.prototype.find = function(obj) {
-    var self = this, result;
-    if (_.isNil(obj))
+    var self = this;
+    var result;
+    if (obj == null)
     {
         result = new DataQueryable(this);
         result.where(self.primaryKey).equal(null);
         return result;
     }
-    var find = { }, findSet = false;
+    var find = { };
+    /**
+     * 
+     * @param {DataModel} model 
+     * @param {string} attribute 
+     * @param {*} source
+     * @return {*}
+     */
+    function mapFilterAttribute(model, attribute, source) {
+        var field = model.getAttribute(attribute);
+        var result = {};
+        if (hasOwnProperty(source, attribute) && field != null) {
+            var value = source[attribute];
+            // get field mapping
+            var mapping = model.inferMapping(attribute);
+            if (mapping == null) {
+                result[attribute] = value;
+            } else {
+                if (_.isObject(value)) {
+                    var associatedModel = model.context.model(field.type);
+                    if (associatedModel == null) {
+                        throw new DataError('E_ASSOC', 'Associated model cannot be found', null, model.name, field.name);
+                    } else {
+                        //enumerate value properties
+                        if (hasOwnProperty(value, associatedModel.primaryKey)) {
+                            result[x] = value[associatedModel.primaryKey];
+                        } else {
+                            // find contraint and pick item
+                            var constraint1 = associatedModel.constraints.find(function (constraint) {
+                                return constraint.type === 'unique';
+                            });
+                            var foundByConstraint = false;
+                            if (constraint1 != null && Array.isArray(constraint1.fields)) {
+                                var obj1 = _.pick(value, constraint1.fields);
+                                if (Object.keys(obj1).length === constraint1.fields.length) {
+                                    foundByConstraint = true;
+                                    Object.keys(obj1).forEach(function (key) {
+                                        if (hasOwnProperty(obj1, key)) {
+                                            result[attribute + '/' + key] = obj1[key];
+                                        }
+                                    });
+                                }
+                            } 
+                            if (foundByConstraint === false) {
+                                Object.keys(value).filter(function (key) {
+                                    return associatedModel.getAttribute(key) != null;
+                                }).forEach(function (key) {
+                                    if (hasOwnProperty(value, key)) {
+                                        result[attribute + '/' + key] = value[key];
+                                    }
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    result[x] = value;
+                }
+            }
+        }
+        return result;
+    }
+
+    var findSet = false;
     if (_.isObject(obj)) {
-        if (obj.hasOwnProperty(self.primaryKey)) {
+        if (hasOwnProperty(obj, self.primaryKey)) {
             find[self.primaryKey] = obj[self.primaryKey];
             findSet = true;
         }
         else {
-            //get unique constraint
-            var constraint = _.find(self.constraints, function(x) {
+           
+            /**
+             * get unique constraint
+             * @type {{ type:string,fields?:Array<string> }}
+             */
+            var constraint = self.constraints.find(function(x) {
                 return x.type === 'unique';
             });
             //find by constraint
-            if (_.isObject(constraint) && _.isArray(constraint.fields)) {
+            if (_.isObject(constraint) && Array.isArray(constraint.fields)) {
                 //search for all constrained fields
-                var findAttrs = {}, constrained = true;
-                _.forEach(constraint.fields, function(x) {
-                   if (obj.hasOwnProperty(x)) {
-                       findAttrs[x] = obj[x];
-                   }
-                   else {
-                       constrained = false;
-                   }
+                var findAttrs = {};
+                var foundByConstraint = true;
+                constraint.fields.forEach(function(field) {
+                    var result = mapFilterAttribute(self, field, obj);
+                    if (Object.keys(result).length >= 1) {
+                        Object.assign(findAttrs, result);
+                    } else {
+                        foundByConstraint = false;
+                    }
                 });
-                if (constrained) {
-                    _.assign(find, findAttrs);
+                if (foundByConstraint) {
+                    Object.assign(find, findAttrs);
                     findSet = true;
                 }
             }
@@ -1008,9 +1077,10 @@ DataModel.prototype.find = function(obj) {
         findSet = true;
     }
     if (!findSet) {
-        _.forEach(self.attributeNames, function(x) {
-            if (obj.hasOwnProperty(x)) {
-                find[x] = obj[x];
+        Object.keys(obj).forEach(function(attribute) {
+            if (hasOwnProperty(obj, attribute)) {
+                var result = mapFilterAttribute(self, attribute, obj);
+                Object.assign(find, result);
             }
         });
     }
@@ -1018,13 +1088,13 @@ DataModel.prototype.find = function(obj) {
     findSet = false;
     //enumerate properties and build query
     for(var key in find) {
-        if (find.hasOwnProperty(key)) {
-            if (!findSet) {
+        if (hasOwnProperty(find, key)) {
+            if (findSet === false) {
                 result.where(key).equal(find[key]);
                 findSet = true;
-            }
-            else
+            } else {
                 result.and(key).equal(find[key]);
+            }
         }
     }
     if (!findSet) {

@@ -87,4 +87,36 @@ describe('DataQueryable', () => {
         });
     });
 
+    it('should use find', async ()=> {
+        let obj = {
+            orderedItem: {
+                name: 'Samsung Galaxy S4'
+            }
+        }
+        let items = await context.model('Order').find(obj).select(
+            'id',
+            'orderedItem/name as productName',
+            'orderedItem/model as productModel'
+            ).silent().getItems();
+        expect(items.length).toBeTruthy();
+        items.forEach((item) => {
+            expect(item.productName).toBe('Samsung Galaxy S4');
+        });
+        let obj1 = {
+            orderedItem: {
+                name: 'Samsung Galaxy S4',
+                model: 'LD1179'
+            }
+        }
+        items = await context.model('Order').find(obj1).select(
+            'id',
+            'orderedItem/name as productName',
+            'orderedItem/model as productModel'
+            ).silent().getItems();
+        expect(items.length).toBeTruthy();
+        items.forEach((item) => {
+            expect(item.productName).toBe('Samsung Galaxy S4');
+        });
+    });
+
 });
