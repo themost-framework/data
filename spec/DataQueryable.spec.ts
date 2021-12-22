@@ -131,14 +131,35 @@ describe('DataQueryable', () => {
         }
         let items = await context.model('Order').find(obj)
             .expand('orderStatus', 'customer')
-            .take(25).silent()
-            .getItems();
+            .take(25).silent().getItems();
         expect(items.length).toBeTruthy();
         items.forEach((item) => {
             expect(item.orderStatus.alternateName).toBe('OrderInTransit');
             expect(item.customer.email).toBe('brian.chapman@example.com');
             expect(item.paymentMethod.id).toBe(5);
         });
+    });
+
+    it('should use find and ignore unknown properties', async ()=> {
+        let obj = {
+            orderStatus: {
+                test: true
+            }
+        }
+        let q = context.model('Order').find(obj)
+            .expand('orderStatus', 'customer')
+            .take(25).silent();
+        let items = await q.getItems();
+        expect(items.length).toBeFalsy();
+
+        let obj1 = {
+            orderStatus: false
+        }
+        q = context.model('Order').find(obj1)
+            .expand('orderStatus', 'customer')
+            .take(25).silent();
+        items = await q.getItems();
+        expect(items.length).toBeFalsy();
     });
 
 });

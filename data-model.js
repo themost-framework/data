@@ -1019,13 +1019,17 @@ DataModel.prototype.find = function(obj) {
                                 }
                             }
                             if (foundByConstraint === false) {
-                                Object.keys(value).filter(function (key) {
+                                var keys = Object.keys(value).filter(function (key) {
                                     return associatedModel.getAttribute(key) != null;
-                                }).forEach(function (key) {
+                                });
+                                keys.forEach(function (key) {
                                     if (hasOwnProperty(value, key)) {
                                         result[attribute + '/' + key] = value[key];
                                     }
                                 });
+                                if (keys.length === 0) {
+                                    result[attribute] = null;
+                                }
                             }
                         }
                     }
