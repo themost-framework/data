@@ -49,7 +49,7 @@ export declare class DataConfiguration {
     constructor(configPath: string);
     static getCurrent(): DataConfiguration;
     static setCurrent(config: DataConfiguration): DataConfiguration;
-    static getNamedConfiguration(name: string);
+    static getNamedConfiguration(name: string): DataConfiguration;
 
 }
 export declare class DataConfigurationStrategy extends ConfigurationStrategy{
@@ -97,14 +97,14 @@ export declare class DefaultSchemaLoaderStrategy extends FileSchemaLoaderStrateg
     loaders: Array<SchemaLoaderStrategy>;
 }
 
-export declare abstract class ModelClassLoaderStrategy extends ConfigurationStrategy {
-    abstract resolve(model: string): void;
+export declare type DataObjectConstructor<T> = Function & { prototype: T };
 
+export declare abstract class ModelClassLoaderStrategy extends ConfigurationStrategy {
+    abstract resolve(model: any): DataObjectConstructor<any>;
 }
 
-export declare abstract class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
-    abstract resolve(model: string): void;
-
+export declare class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
+    resolve(model: any): DataObjectConstructor<any>;
 }
 
 export declare function getCurrent(): DataConfiguration;

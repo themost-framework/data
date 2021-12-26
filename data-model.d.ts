@@ -60,10 +60,10 @@ export declare class DataModel extends SequentialEventEmitter{
     inferMapping(name: string): DataAssociationMapping;
     validateForUpdate(obj: any): Promise<any>;
     validateForInsert(obj: any): Promise<any>;
-    levels(value: number);
+    levels(value: number): DataQueryable;
     getSubTypes(): Promise<string>;
     getReferenceMappings(deep?: boolean): Array<any>;
-    getAttribute(name: string);
+    getAttribute(name: string): DataField;
     getTypedItems(): Promise<DataObject|any>;
     getItems(): Promise<any>;
     getTypedList():Promise<any>;

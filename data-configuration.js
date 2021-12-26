@@ -43,8 +43,11 @@ function interopRequireDefault(path) {
             throw new Error('Module exported member not found');
         }
     }
+    /**
+     * @type {*|{__esModule: *, default: *}}
+     */
     var obj = require(path);
-    return obj && obj.__esModule ? obj['default'] : obj;
+    return obj && obj.__esModule ? obj.default : obj;
 }
 
 /**
@@ -320,7 +323,7 @@ DataConfiguration.getCurrent = function() {
     return DataConfiguration[currentConfiguration];
 };
 /**
- * @param DataConfiguration config
+ * @param {DataConfiguration} config
  * @returns {DataConfiguration}
  */
 DataConfiguration.setCurrent = function(config) {
@@ -968,7 +971,7 @@ LangUtils.inherits(ModelClassLoaderStrategy,ConfigurationStrategy);
 
 /**
  * @param {DataModel} model
- * @returns {Function}
+ * @returns {DataObjectConstructor}
  */
 // eslint-disable-next-line no-unused-vars
 ModelClassLoaderStrategy.prototype.resolve = function(model) {
@@ -987,8 +990,8 @@ function DefaultModelClassLoaderStrategy(config) {
 LangUtils.inherits(DefaultModelClassLoaderStrategy,ModelClassLoaderStrategy);
 
 /**
- * @param {DataModel} model
- * @returns {Function}
+ * @param {*} model
+ * @returns {DataObjectConstructor}
  */
 DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     Args.notNull(model, 'Model');
@@ -1001,52 +1004,70 @@ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     }
     // get model definition
     var modelDefinition = this.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition(model.name);
+    var executionPath = this.getConfiguration().getExecutionPath();
+    // noinspection ExceptionCaughtLocallyJS
     if (typeof model.classPath === 'string') {
         if (/^\.\//.test(model.classPath)) {
-            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(this.getConfiguration().getExecutionPath(), model.classPath));
+            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(executionPath, model.classPath));
         }
         else {
             modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(model.classPath);
         }
     }
     else {
-        //try to find module by using capitalize naming convention
-        // e.g. OrderDetail -> OrderDetailModel.js
-        var classPath = PathUtils.join(this.getConfiguration().getExecutionPath(),'models', model.name.concat('Model'));
+        // try to find module by using an exported member
+        // e.g. OrderDetail -> OrderDetail#OrderDetail
+        var classPath = PathUtils.join(executionPath, 'models', model.name);
         try {
-            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
-        }
-        catch(err) {
-            if (err.code === 'MODULE_NOT_FOUND') {
-                try {
-                    //try to find module by using dasherize naming convention
-                    // e.g. OrderDetail -> order-detail-model.js
-                    classPath = PathUtils.join(this.getConfiguration().getExecutionPath(),'models',_.dasherize(model.name).concat('-model'));
-                    modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
-                }
-                catch(err) {
-                    if (err.code === 'MODULE_NOT_FOUND') {
-                        if (model.inherits == null) {
-                            if (model.implements == null) {
-                                //use default DataObject class
-                                modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault('./data-object').DataObject;
+            var module = require(classPath);
+            if (Object.prototype.hasOwnProperty.call(module, model.name)) {
+                modelDefinition[dataObjectClassProperty] = DataObjectClass = module[model.name];
+                return DataObjectClass;
+            }
+            // noinspection ExceptionCaughtLocallyJS
+            throw new Error('Exported member not found');
+        } catch (err) {
+            if (err.code !== 'MODULE_NOT_FOUND') {
+                throw err;
+            }
+            //try to find module by using capitalize naming convention
+            // e.g. OrderDetail -> OrderDetailModel.js
+            classPath = PathUtils.join(executionPath,'models', model.name.concat('Model'));
+            try {
+                modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
+            }
+            catch(err) {
+                if (err.code === 'MODULE_NOT_FOUND') {
+                    try {
+                        //try to find module by using dasherize naming convention
+                        // e.g. OrderDetail -> order-detail-model.js
+                        classPath = PathUtils.join(executionPath,'models',_.dasherize(model.name).concat('-model'));
+                        modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
+                    }
+                    catch(err) {
+                        if (err.code === 'MODULE_NOT_FOUND') {
+                            if (model.inherits == null) {
+                                if (model.implements == null) {
+                                    //use default DataObject class
+                                    modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault('./data-object').DataObject;
+                                }
+                                else {
+                                    //use implemented data model class
+                                    modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.context.model(model.implements));
+                                }
                             }
                             else {
-                                //use implemented data model class
-                                modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.context.model(model.implements));
+                                modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.base());
                             }
                         }
                         else {
-                            modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.base());
+                            throw err;
                         }
                     }
-                    else {
-                        throw err;
-                    }
                 }
-            }
-            else {
-                throw err;
+                else {
+                    throw err;
+                }
             }
         }
     }
