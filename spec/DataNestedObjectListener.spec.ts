@@ -1,7 +1,7 @@
 import { TestApplication } from './TestApplication';
 import { DataContext, DataObjectAssociationError, DataConfigurationStrategy } from '../index';
 import { resolve } from 'path';
-import { TestUtils } from './adapter/TestUtils';
+import * as moment from 'moment';
 
 describe('DataNestedObjectListener', () => {
     let app: TestApplication;
@@ -29,7 +29,7 @@ describe('DataNestedObjectListener', () => {
         }
         return done();
     });
-    it('should insert nested object', async () => {
+    it('should use zero-or-one multiplicity', async () => {
         await context.executeInTransactionAsync(async () => {
             const configuration = context.getConfiguration().getStrategy(DataConfigurationStrategy);
             configuration.setModelDefinition({
@@ -100,7 +100,77 @@ describe('DataNestedObjectListener', () => {
                 .where('product/name').equal('Samsung Galaxy S4')
                 .silent().getItem();
             expect(productDimension).toBeFalsy();
+        });
+    });
 
+    it('should use collection of nested objects', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const configuration = context.getConfiguration().getStrategy(DataConfigurationStrategy);
+            configuration.setModelDefinition({
+                "name": "SpecialOffer",
+                "version": "2.0",
+                "inherits": "Offer",
+                "fields": [
+                    {
+                        "@id": "http://schema.org/itemOffered",
+                        "name": "itemOffered",
+                        "title": "itemOffered",
+                        "description": "The item being offered.",
+                        "type": "Product",
+                        "nullable": false
+                    }
+                ],
+                "constraints": [
+                ]
+            });
+            const ProductModel = configuration.getModelDefinition("Product");
+            ProductModel.fields.push({
+                "name": "specialOffers",
+                "type": "SpecialOffer",
+                "nested": true,
+                "expandable": true,
+                "many": true,
+                "mapping": {
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "SpecialOffer",
+                    "childField": "itemOffered",
+                    "associationType": "association",
+                    "cascade": "delete"
+                }
+            });
+            configuration.setModelDefinition(ProductModel);
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                specialOffers: [
+                    {
+                        price: product.price * 0.8,
+                        validFrom: new Date(),
+                        validThrough: moment().add(1, 'M').toDate()
+                    },
+                    {
+                        price: product.price * 0.6,
+                        validFrom: moment().add(2, 'M').toDate(),
+                        validThrough: moment().add(3, 'M').toDate()
+                    }
+                ]
+            });
+            await context.model('Product').silent().save(product);
+            product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            expect(product.specialOffers).toBeInstanceOf(Array);
+            expect(product.specialOffers.length).toBe(2);
+            Object.assign(product, {
+                specialOffers: []
+            });
+            await context.model('Product').silent().save(product);
+            let specialOffers = await context.model('SpecialOffer')
+                .where('itemOffered/name').equal('Samsung Galaxy S4')
+                .silent().getItems();
+            expect(specialOffers.length).toBe(0);
         });
     });
 });
