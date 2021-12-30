@@ -987,10 +987,10 @@ function DefaultModelClassLoaderStrategy(config) {
 LangUtils.inherits(DefaultModelClassLoaderStrategy,ModelClassLoaderStrategy);
 
 /**
- * @param {DataModel} model
- * @returns {Function}
+ * @param {*} model
+ * @returns {DataObjectConstructor}
  */
-DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
+ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     Args.notNull(model, 'Model');
     var dataObjectClassProperty = 'DataObjectClass';
     // get data object class from the given model
@@ -1001,53 +1001,74 @@ DefaultModelClassLoaderStrategy.prototype.resolve = function(model) {
     }
     // get model definition
     var modelDefinition = this.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition(model.name);
+    var executionPath = this.getConfiguration().getExecutionPath();
+    // noinspection ExceptionCaughtLocallyJS
     if (typeof model.classPath === 'string') {
         if (/^\.\//.test(model.classPath)) {
-            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(this.getConfiguration().getExecutionPath(), model.classPath));
+            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(executionPath, model.classPath));
         }
         else {
             modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(model.classPath);
         }
     }
     else {
-        //try to find module by using capitalize naming convention
-        // e.g. OrderDetail -> OrderDetailModel.js
-        var classPath = PathUtils.join(this.getConfiguration().getExecutionPath(),'models', model.name.concat('Model'));
-        try {
-            modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
+        var requireModules = [
+            // e.g. ./models/OrderDetail
+            PathUtils.join(executionPath, 'models', model.name), 
+            // e.g. ./models/OrderDetailModel
+            PathUtils.join(executionPath,'models', model.name.concat('Model')),
+            // e.g. ./models/order-detail-model
+            PathUtils.join(executionPath,'models',_.dasherize(model.name).concat('-model')),
+            // e.g. ./models/order-detail.model
+            PathUtils.join(executionPath,'models',_.dasherize(model.name).concat('.model')),
+        ];
+        for (var requiredModule of requireModules) {
+            try {
+                var module = require(requiredModule);
+                // try to find if module has an exported member with name equal to this model name
+                if (hasOwnProperty(module, model.name) && typeof module[model.name] === 'function') {
+                    modelDefinition[dataObjectClassProperty] = DataObjectClass = module[model.name];
+                } else if (hasOwnProperty(module, '__esModule') && typeof module.default === 'function') {
+                    // try to find the default export
+                    modelDefinition[dataObjectClassProperty] = DataObjectClass = module.default;
+                } else if (typeof module === 'function') {
+                    // otherwise validate module
+                    modelDefinition[dataObjectClassProperty] = DataObjectClass = module;
+                }
+                if (DataObjectClass != null) {
+                    return DataObjectClass;
+                }
+                // and throw error if module has an invalid format
+                var error = Object.assign(new Error('Data model class module is invalid. Expected a class to be exported as default or named member'),
+                {
+                    code: 'MODULE_INVALID',
+                    module: requiredModule
+                });
+                throw error;
+            } catch (err) {
+                if (err.code !== 'MODULE_NOT_FOUND') {
+                    throw err;
+                }
+                // otherwise, continue
+            }
         }
-        catch(err) {
-            if (err.code === 'MODULE_NOT_FOUND') {
-                try {
-                    //try to find module by using dasherize naming convention
-                    // e.g. OrderDetail -> order-detail-model.js
-                    classPath = PathUtils.join(this.getConfiguration().getExecutionPath(),'models',_.dasherize(model.name).concat('-model'));
-                    modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(classPath);
-                }
-                catch(err) {
-                    if (err.code === 'MODULE_NOT_FOUND') {
-                        if (model.inherits == null) {
-                            if (model.implements == null) {
-                                //use default DataObject class
-                                modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault('./data-object').DataObject;
-                            }
-                            else {
-                                //use implemented data model class
-                                modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.context.model(model.implements));
-                            }
-                        }
-                        else {
-                            modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(model.base());
-                        }
-                    }
-                    else {
-                        throw err;
-                    }
-                }
+        // check if model inherits another model and return its class
+        if (model.inherits != null) {
+            var inheritedModel = model.context.model(model.inherits);
+            if (inheritedModel == null) {
+                throw new Error('Inherited model cannot be found');
             }
-            else {
-                throw err;
+            modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(inheritedModel);
+        } else if (model.implements != null) {
+            var implementedModel = model.context.model(model.implements);
+            if (implementedModel == null) {
+                throw new Error('Implemented model cannot be found');
             }
+            modelDefinition[dataObjectClassProperty] = DataObjectClass = this.resolve(implementedModel);
+
+        } else {
+            // finally, return DataObject
+            modelDefinition[dataObjectClassProperty] = DataObjectClass = require('./data-object').DataObject;
         }
     }
     return DataObjectClass;

@@ -102,9 +102,8 @@ export declare abstract class ModelClassLoaderStrategy extends ConfigurationStra
 
 }
 
-export declare abstract class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
-    abstract resolve(model: string): void;
-
+export declare class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
+    resolve(model: string): void;
 }
 
 export declare function getCurrent(): DataConfiguration;
