@@ -171,6 +171,38 @@ describe('DataNestedObjectListener', () => {
                 .where('itemOffered/name').equal('Samsung Galaxy S4')
                 .silent().getItems();
             expect(specialOffers.length).toBe(0);
+            // LD1179
+            let updateProduct = {
+                model: product.model,
+                specialOffers: [
+                    {
+                        price: product.price * 0.8,
+                        validFrom: new Date(),
+                        validThrough: moment().add(1, 'M').toDate()
+                    },
+                    {
+                        price: product.price * 0.6,
+                        validFrom: moment().add(2, 'M').toDate(),
+                        validThrough: moment().add(3, 'M').toDate()
+                    }
+                ]
+            }
+            await context.model('Product').silent().save(updateProduct);
+            product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            expect(product.specialOffers).toBeInstanceOf(Array);
+            expect(product.specialOffers.length).toBe(2);
+            updateProduct = {
+                model: product.model,
+                specialOffers: [
+                ]
+            };
+            await context.model('Product').silent().save(updateProduct);
+            specialOffers = await context.model('SpecialOffer')
+                .where('itemOffered/name').equal('Samsung Galaxy S4')
+                .silent().getItems();
+            expect(specialOffers.length).toBe(0);
         });
     });
 });
