@@ -19,7 +19,7 @@
     "no-invalid-this": "warn",
     "no-undef": "error",
     "no-unused-vars": "warn",
-    "no-var": "off",
+    "no-var": "warn",
     "strict": [
       2,
       "never"

@@ -1,11 +1,11 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2021, THEMOST LP All rights reserved
-var {eachSeries} = require('async');
-var {parsers} = require('./types');
-var {DataError} = require('@themost/common');
-var {HasParentJunction} = require('./has-parent-junction');
-var {DataObjectJunction} = require('./data-object-junction');
-var {DataObjectTag} = require('./data-object-tag');
-var parseBoolean = parsers.parseBoolean;
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
+const {eachSeries} = require('async');
+const {parsers} = require('./types');
+const {DataError} = require('@themost/common');
+const {HasParentJunction} = require('./has-parent-junction');
+const {DataObjectJunction} = require('./data-object-junction');
+const {DataObjectTag} = require('./data-object-tag');
+const parseBoolean = parsers.parseBoolean;
 
 class DataObjectAssociationError extends DataError {
     constructor(model, field) {
@@ -29,12 +29,12 @@ class DataObjectAssociationListener {
             if (event.target == null) {
                 return callback();
             }
-            var keys = Object.keys(event.target);
-            var mappings = [];
+            const keys = Object.keys(event.target);
+            let mappings = [];
             keys.forEach(function(key) {
                 if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] != null) {
                         //try to find field mapping, if any
-                        var mapping = event.model.inferMapping(key);
+                        let mapping = event.model.inferMapping(key);
                         if (mapping && mapping.associationType === 'association' &&
                             mapping.childModel===event.model.name) {
                                 mappings.push(mapping);
@@ -51,8 +51,8 @@ class DataObjectAssociationListener {
                         /**
                          * @type {DataField|*}
                          */
-                        var field = event.model.field(mapping.childField);
-                        var childField = field.property || field.name;
+                        let field = event.model.field(mapping.childField);
+                        let childField = field.property || field.name;
                         //change:21-Mar 2016
                         //description: check if association belongs to this model or it's inherited from any base model
                         //if current association belongs to base model
@@ -60,10 +60,10 @@ class DataObjectAssociationListener {
                             //do nothing and exit
                             return cb();
                         }
-                        var silentMode = event.model.isSilent();
+                        let silentMode = event.model.isSilent();
                         //get associated model
-                        var associatedObject = event.target[childField]; 
-                        var associatedModel = event.model.context.model(mapping.parentModel);
+                        let associatedObject = event.target[childField]; 
+                        let associatedModel = event.model.context.model(mapping.parentModel);
                         // try to find associated object
                         return associatedModel.find(associatedObject).select(mapping.parentField)
                             .flatten().silent(silentMode).take(1).getList().then(function(result) {
@@ -114,16 +114,16 @@ class DataObjectAssociationListener {
                 return callback();
             }
             else {
-                var keys = Object.keys(event.target);
-                var mappings = [];
+                let keys = Object.keys(event.target);
+                let mappings = [];
                 keys.forEach(function(key) {
                     if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] != null) {
                         /**
                          * @type DataAssociationMapping
                          */
-                        var mapping = event.model.inferMapping(key);
+                        let mapping = event.model.inferMapping(key);
                         if (mapping != null) {
-                            var attribute = event.model.getAttribute(key);
+                            let attribute = event.model.getAttribute(key);
                             // get only many-to-many associations
                             if (mapping.associationType==='junction' && attribute.multiplicity === 'Many') {
                                 mappings.push({ name:key, mapping:mapping });
@@ -141,22 +141,22 @@ class DataObjectAssociationListener {
                      */
                     function(x, cb) {
     
-                        var silentMode = event.model.isSilent();
+                        let silentMode = event.model.isSilent();
     
                         if (x.mapping.associationType==='junction') {
-                            var obj = event.model.convert(event.target);
+                            let obj = event.model.convert(event.target);
                             /**
                              * @type {*|{deleted:Array}}
                              */
-                            var childs = obj[x.name]
-                            var junction;
+                            let childs = obj[x.name]
+                            let junction;
                             if (!Array.isArray(childs)) { 
                                 return cb(); 
                             }
                             if (x.mapping.childModel===event.model.name) {
                                 junction = new HasParentJunction(obj, x.mapping);
                                 if (event.state===1 || event.state===2) {
-                                    var toBeRemoved = [], toBeInserted = [];
+                                    let toBeRemoved = [], toBeInserted = [];
                                     childs.forEach(function(x) {
                                         if (x.$state === 4) {
                                             toBeRemoved.push(x);
@@ -182,10 +182,10 @@ class DataObjectAssociationListener {
                                         /**
                                          * @type {DataObjectTag}
                                          */
-                                        var tags = new DataObjectTag(obj, x.mapping);
+                                        let tags = new DataObjectTag(obj, x.mapping);
                                         return tags.silent(silentMode).all().then(function(result) {
-                                            var toBeRemoved = result.filter(function(x) { return childs.indexOf(x)<0; });
-                                            var toBeInserted = childs.filter(function(x) { return result.indexOf(x)<0; });
+                                            let toBeRemoved = result.filter(function(x) { return childs.indexOf(x)<0; });
+                                            let toBeInserted = childs.filter(function(x) { return result.indexOf(x)<0; });
                                             if (toBeRemoved.length>0) {
                                                 return tags.silent(silentMode).remove(toBeRemoved).then(function() {
                                                     if (toBeInserted.length===0) { return cb(); }
@@ -208,7 +208,7 @@ class DataObjectAssociationListener {
                                         junction = new DataObjectJunction(obj, x.mapping);
                                         junction.silent(silentMode).insert(childs, function(err) {
                                             if (err) { return cb(err); }
-                                            var toBeRemoved = [], toBeInserted = [];
+                                            let toBeRemoved = [], toBeInserted = [];
                                             childs.forEach(function(x) {
                                                 if (x.$state === 4) {
                                                     toBeRemoved.push(x);
