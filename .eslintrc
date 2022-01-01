@@ -4,10 +4,10 @@
     "sourceType": "module"
   },
   "env": {
-    "browser": true,
+    "browser": false,
     "node": true,
-    "es6": false,
-    "jquery": true
+    "es6": true,
+    "jquery": false
   },
   "globals": {
     "describe": false,

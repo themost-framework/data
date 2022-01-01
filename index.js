@@ -1,13 +1,5 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
-var {
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
+const {
     DataConfiguration,
     DefaultSchemaLoaderStrategy,
     DataConfigurationStrategy,
@@ -16,7 +8,7 @@ var {
     SchemaLoaderStrategy,
     FileSchemaLoaderStrategy
 } = require('./data-configuration');
-var {
+const {
     PrivilegeType,
     DataObjectState,
     DataCachingType,
@@ -32,13 +24,13 @@ var {
     DataModelEventListener,
     DataModelPrivilege
 } = require('./types');
-var { DataModel } = require('./data-model');
-var { DataQueryable } = require('./data-queryable');
-var { DataObject } = require('./data-object');
-var { NamedDataContext, DefaultDataContext } = require('./data-context');
-var { FunctionContext } = require('./functions');
-var { DataCache, DataCacheStrategy, DefaultDataCacheStrategy } = require('./data-cache');
-var {
+const { DataModel } = require('./data-model');
+const { DataQueryable } = require('./data-queryable');
+const { DataObject } = require('./data-object');
+const { NamedDataContext, DefaultDataContext } = require('./data-context');
+const { FunctionContext } = require('./functions');
+const { DataCache, DataCacheStrategy, DefaultDataCacheStrategy } = require('./data-cache');
+const {
     DataValidator,
     DataTypeValidator,
     DataValidatorListener,
@@ -50,7 +42,7 @@ var {
     RangeValidator,
     RequiredValidator
 } = require('./data-validator');
-var {
+const {
     EntitySetConfiguration,
     EntityTypeConfiguration,
     SingletonConfiguration,
@@ -68,16 +60,16 @@ var {
     ODataConventionModelBuilder,
     EntitySetSchemaLoaderStrategy
 } = require('./odata');
-var { PermissionMask,
+const { PermissionMask,
     DataPermissionEventArgs,
     DataPermissionEventListener} = require('./data-permission');
-var { DataFilterResolver } = require('./data-filter-resolver');
-var { DataObjectJunction } = require('./data-object-junction');
-var { DataObjectTag } = require('./data-object-tag');
-var { HasOneAssociation } = require('./has-one-association');
-var { HasManyAssociation } = require('./has-many-association');
-var { HasParentJunction } = require('./has-parent-junction');
-var {
+const { DataFilterResolver } = require('./data-filter-resolver');
+const { DataObjectJunction } = require('./data-object-junction');
+const { DataObjectTag } = require('./data-object-tag');
+const { HasOneAssociation } = require('./has-one-association');
+const { HasManyAssociation } = require('./has-many-association');
+const { HasParentJunction } = require('./has-parent-junction');
+const {
     CalculatedValueListener,
     DataCachingListener,
     DataModelCreateViewListener,
@@ -87,10 +79,10 @@ var {
     NotNullConstraintListener,
     UniqueConstraintListener
 } = require('./data-listeners');
-var { DataObjectAssociationListener,
+const { DataObjectAssociationListener,
     DataObjectAssociationError,
     DataObjectMultiAssociationError } = require('./data-associations');
-var { DataApplication } = require('./data-application');
+const { DataApplication } = require('./data-application');
 
 module.exports = {
     PrivilegeType,
