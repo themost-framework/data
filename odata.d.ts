@@ -1,5 +1,5 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2020, THEMOST LP All rights reserved
-import {DataContext} from "./types";
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
+import {DataAdapter, DataContext} from "./types";
 import {ConfigurationBase} from "@themost/common";
 
 export declare interface SystemQueryOptions {
@@ -41,7 +41,7 @@ export declare class EdmMultiplicity {
     static One: string;
     static Unknown: string;
     static ZeroOrOne: string;
-    static parse(value: string);
+    static parse(value: string): string;
 }
 
 
@@ -53,17 +53,17 @@ export declare class EntitySetKind {
 }
 
 export class EdmMapping {
-    static entityType(name: string);
-    static action(name: string, returnType: any);
-    static func(name: string, returnType: any);
-    static param(name: string, type: string, nullable?: boolean, fromBody?: boolean);
-    static navigationProperty(name: string, type: string, multiplicity: string);
-    static property(name: string, type: string, nullable?: boolean);
+    static entityType(name: string): Function;
+    static action(name: string, returnType: any): Function;
+    static func(name: string, returnType: any): Function;
+    static param(name: string, type: string, nullable?: boolean, fromBody?: boolean): Function;
+    static navigationProperty(name: string, type: string, multiplicity: string): Function;
+    static property(name: string, type: string, nullable?: boolean): Function;
     static hasOwnAction(obj: any, name: string): Function;
     static hasOwnNavigationProperty(obj: any, name: string): any;
     static hasOwnFunction(obj: any, name: string): Function;
-    static getOwnFunctions(obj): Array<Function>;
-    static getOwnActions(obj): Array<Function>;
+    static getOwnFunctions(obj: any): Array<Function>;
+    static getOwnActions(obj: any): Array<Function>;
 }
 
 export declare interface ProcedureParameter {
@@ -155,7 +155,7 @@ export declare class EntitySetConfiguration {
     kind: string;
     url: string;
     readonly entityType: EntityTypeConfiguration;
-    hasUrl(url: string);
+    hasUrl(url: string): void;
     getUrl(): string;
     getBuilder(): any;
     getEntityTypePropertyList(): Map<string, EntityTypeProperty>;
@@ -163,10 +163,10 @@ export declare class EntitySetConfiguration {
     getEntityTypeIgnoredPropertyList():Array<string>;
     getEntityTypeNavigationProperty(name: string, deep?: boolean): EntityTypeNavigationProperty;
     getEntityTypeNavigationPropertyList(): Map<string, EntityTypeNavigationProperty>;
-    hasContextLink(contextLinkFunc: (context: DataContext) => string);
-    hasIdLink(idLinkFunc: (context: DataContext) => string);
-    hasReadLink(readLinkFunc: (context: DataContext) => string);
-    hasEditLink(editLinkFunc: (context: DataContext) => string);
+    hasContextLink(contextLinkFunc: (context: DataContext) => string): void;
+    hasIdLink(idLinkFunc: (context: DataContext) => string): void;
+    hasReadLink(readLinkFunc: (context: DataContext) => string): void;
+    hasEditLink(editLinkFunc: (context: DataContext) => string): void;
     mapInstance(context: DataContext, any: any): any;
     mapInstanceSet(context: DataContext, any: any): any;
     mapInstanceProperty(context: DataContext, any: any): any;
@@ -201,12 +201,14 @@ export declare class ODataModelBuilder {
     getEdm(): Promise<SchemaConfiguration>;
     clean(all?: boolean): ODataModelBuilder;
     getEdmDocument(): Promise<any>;
-    hasContextLink(contextLinkFunc: (context: DataContext) => string);
-    hasJsonFormatter(jsonFormatterFunc: (context: DataContext, entitySet: EntitySetConfiguration, instance: any, options?: ModelBuilderJsonFormatterOptions)=> any);
+    hasContextLink(contextLinkFunc: (context: DataContext) => string): void;
+    hasJsonFormatter(jsonFormatterFunc: (context: DataContext, entitySet: EntitySetConfiguration, instance: any, options?: ModelBuilderJsonFormatterOptions)=> any): void;
 }
 
 export declare class EntityDataContext extends DataContext {
-
+    finalize(callback?: (err?: Error) => void): void;
+    getDb(): DataAdapter;
+    setDb(value: DataAdapter): void;
 }
 
 export declare class ODataConventionModelBuilder extends ODataModelBuilder{

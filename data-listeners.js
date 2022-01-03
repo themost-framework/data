@@ -232,8 +232,8 @@ function CalculatedValueListener() {
  */
 CalculatedValueListener.prototype.beforeSave = function(event, callback) {
     //get function context
-    var functions = require('./functions'),
-        functionContext = functions.createContext();
+    var FunctionContext = require('./functions').FunctionContext;
+    var functionContext = new FunctionContext();
     _.assign(functionContext, event);
     functionContext.context = event.model.context;
     //find all attributes that have a default value
@@ -565,7 +565,8 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
     }
     else {
         //get function context
-        var functions = require('./functions'), functionContext = functions.createContext();
+        var FunctionContext = require('./functions').FunctionContext;
+        var functionContext = new FunctionContext();
         _.assign(functionContext, event);
         //find all attributes that have a default value
         var attrs = event.model.attributes.filter(function(x) { return (typeof x.value!== 'undefined'); });
