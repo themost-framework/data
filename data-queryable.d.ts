@@ -1,3 +1,4 @@
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
 
@@ -44,7 +45,7 @@ export declare class DataQueryable implements DataContextEmitter {
     min(): Promise<any>;
     max(): Promise<any>;
     average(): Promise<any>;
-    migrate(callback:(err?: Error) => void);
+    migrate(callback:(err?: Error) => void): void;
     silent(value?: boolean): DataQueryable;
     flatten(value?: boolean): DataQueryable;
     cache(value?: boolean): DataQueryable;
