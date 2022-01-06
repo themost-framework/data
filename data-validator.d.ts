@@ -1,4 +1,4 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2020, THEMOST LP All rights reserved
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {BeforeSaveEventListener, DataContext, DataEventArgs} from "./types";
 
 export declare interface DataValidationResult {
@@ -8,7 +8,7 @@ export declare interface DataValidationResult {
 }
 
 export declare class DataValidator {
-    setContext(context: DataContext);
+    setContext(context: DataContext): void;
     getContext(): DataContext;
     target: any;
 }
