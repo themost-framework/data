@@ -1,4 +1,4 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2020, THEMOST LP All rights reserved
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {ConfigurationBase, ConfigurationStrategy} from "@themost/common";
 
 export declare interface DataTypePropertiesConfiguration {
@@ -49,7 +49,7 @@ export declare class DataConfiguration {
     constructor(configPath: string);
     static getCurrent(): DataConfiguration;
     static setCurrent(config: DataConfiguration): DataConfiguration;
-    static getNamedConfiguration(name: string);
+    static getNamedConfiguration(name: string): DataConfiguration;
 
 }
 export declare class DataConfigurationStrategy extends ConfigurationStrategy{

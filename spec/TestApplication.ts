@@ -2,7 +2,7 @@ import { IApplication, ConfigurationBase, ApplicationBase, ApplicationServiceCon
 import {resolve} from 'path';
 import { DataConfigurationStrategy, NamedDataContext, DataContext } from '../index';
 
-export class TestApplication extends ApplicationBase {
+export class TestApplication implements ApplicationBase {
     useStrategy(serviceCtor: ApplicationServiceConstructor<any>, strategyCtor: ApplicationServiceConstructor<any>): this {
         const ServiceClass: any = serviceCtor;
         const StrategyClass: any = strategyCtor;
@@ -36,7 +36,6 @@ export class TestApplication extends ApplicationBase {
         return this._configuration;
     }
     constructor(executionPath: string) {
-        super(null);
         // init application configuration
         this._configuration = new ConfigurationBase(resolve(executionPath, 'config'));
 
@@ -59,6 +58,7 @@ export class TestApplication extends ApplicationBase {
         // use data configuration strategy
         this._configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
     }
+    configuration: ConfigurationBase;
 
     createContext(): DataContext {
         const adapters = this._configuration.getSourceAt('adapters');
