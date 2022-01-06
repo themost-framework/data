@@ -17,16 +17,20 @@ describe('DataQueryable', () => {
                 database: resolve(__dirname, 'test2/db/local.db')
             }
         });
-        context = app.createContext();
         return done();
     });
-    afterAll((done) => {
-        if (context) {
-            return context.finalize(() => {
-                return done();
-            });
+    beforeEach(async () => {
+        context = app.createContext();
+    });
+    afterEach(async () => {
+        // important: clear cache after each test
+        const configuration: any = context.getConfiguration();
+        if (Object.prototype.hasOwnProperty.call(configuration, 'cache')) {
+            delete configuration.cache;
         }
-        return done();
+        if (context) {
+            await context.finalizeAsync();
+        }
     });
     it('should use DataModel.filter()', async ()=> {
         const query = await context.model('Product').filterAsync({

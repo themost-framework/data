@@ -27,17 +27,18 @@ describe('DataModel', () => {
         app = new TestApplication(resolve(__dirname, 'test1'));
         return done();
     });
-    beforeEach((done) => {
+    beforeEach(async () => {
         context = app.createContext();
-        return done();
     });
-    afterEach((done) => {
-        if (context) {
-            return context.finalize(() => {
-                return done();
-            });
+    afterEach(async () => {
+        // important: clear cache after each test
+        const configuration: any = context.getConfiguration();
+        if (Object.prototype.hasOwnProperty.call(configuration, 'cache')) {
+            delete configuration.cache;
         }
-        return done();
+        if (context) {
+            await context.finalizeAsync();
+        }
     });
     it('should get model', () => {
         let model = context.model('Employee');

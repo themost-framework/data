@@ -6,7 +6,7 @@ import { TestUtils } from './adapter/TestUtils';
 describe('DataObjectAssociationListener', () => {
     let app: TestApplication;
     let context: DataContext;
-    beforeAll((done) => {
+    beforeAll(async () => {
         app = new TestApplication(resolve(__dirname, 'test2'));
         // set default adapter
         const adapters: Array<any> = app.getConfiguration().getSourceAt('adapters');
@@ -18,16 +18,19 @@ describe('DataObjectAssociationListener', () => {
                 database: resolve(__dirname, 'test2/db/local.db')
             }
         });
-        context = app.createContext();
-        return done();
     });
-    afterAll((done) => {
-        if (context) {
-            return context.finalize(() => {
-                return done();
-            });
+    beforeEach(async () => {
+        context = app.createContext();
+    });
+    afterEach(async () => {
+        // important: clear cache after each test
+        const configuration: any = context.getConfiguration();
+        if (Object.prototype.hasOwnProperty.call(configuration, 'cache')) {
+            delete configuration.cache;
         }
-        return done();
+        if (context) {
+            await context.finalizeAsync();
+        }
     });
     it('should validate foreign-key association', async ()=> {
         await TestUtils.executeInTransaction(context, async () => {

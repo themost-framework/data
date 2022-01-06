@@ -192,6 +192,7 @@ const mappingExtensions = {
             getChilds_v1: function(items) {
                 let thisArg = this;
                 let deferred = Q.defer();
+                let junction;
                 process.nextTick(function() {
                     if (_.isNil(items)) {
                         return deferred.resolve();
@@ -231,7 +232,7 @@ const mappingExtensions = {
                     }
                     //create a dummy object
                     let DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-                    let junction = new DataObjectJunction(thisQueryable.model.convert({ }), mapping);
+                    junction = new DataObjectJunction(thisQueryable.model.convert({ }), mapping);
                     //query junction model
                     return junction.getBaseModel().where(mapping.associationObjectField).in(values).silent().flatten().getItems().then(function(junctions) {
                         //get array of child key values

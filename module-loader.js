@@ -68,10 +68,6 @@ class DefaultModuleLoader extends ModuleLoader {
      */
     require(modulePath) {
         if (!/^.\//i.test(modulePath)) {
-            //load module which is not starting with ./
-            if (require.main && typeof require.main.require === 'function') {
-                return require.main.require(modulePath);
-            }
             return require(modulePath);
         }
         return require(path.join(this.getExecutionPath(), modulePath));
