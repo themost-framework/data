@@ -19,7 +19,7 @@ const {DataObjectAssociationListener} = require('./data-associations');
 const {DataModelView} = require('./data-model-view');
 const {DataFilterResolver} = require('./data-filter-resolver');
 const Q = require("q");
-const {SequentialEventEmitter, LangUtils, TraceUtils, DataError} = require("@themost/common");
+const {SequentialEventEmitter, TraceUtils, DataError} = require("@themost/common");
 const {DataConfigurationStrategy, ModelClassLoaderStrategy} = require('./data-configuration');
 const {ModuleLoader} = require('./module-loader');
 const mappingsProperty = Symbol('mappings');
@@ -3187,13 +3187,6 @@ function validate_(obj, state, callback) {
     });
 }
 
-
-
-
-
-
-
-
 /**
  * Gets a result set that contains a collection of DataObject instances by executing the defined query.
  * @returns {Promise|*}
@@ -3212,8 +3205,8 @@ DataModel.prototype.getList = function() {
     return d.promise;
 };
 
-if (typeof exports !== 'undefined') {
-    module.exports.DataModel = DataModel;
-}
+module.exports = {
+    DataModel
+};
 
 

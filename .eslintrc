@@ -9,12 +9,18 @@
     "es6": true,
     "jquery": false
   },
+  "ignorePatterns": [
+    "*.d.ts"
+  ],
   "globals": {
     "describe": false,
     "it": false
   },
   "extends": "eslint:recommended",
   "rules": {
+    "indent": ["warn"],
+    "no-multiple-empty-lines": [ "warn", { "max": 1 } ],
+    "brace-style": ["warn", "1tbs"],
     "no-console": "warn",
     "no-invalid-this": "warn",
     "no-undef": "error",

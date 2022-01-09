@@ -33,12 +33,12 @@ class DataObjectAssociationListener {
             let mappings = [];
             keys.forEach(function(key) {
                 if (Object.prototype.hasOwnProperty.call(event.target, key) && event.target[key] != null) {
-                        //try to find field mapping, if any
-                        let mapping = event.model.inferMapping(key);
-                        if (mapping && mapping.associationType === 'association' &&
+                    //try to find field mapping, if any
+                    let mapping = event.model.inferMapping(key);
+                    if (mapping && mapping.associationType === 'association' &&
                             mapping.childModel===event.model.name) {
-                                mappings.push(mapping);
-                            }
+                        mappings.push(mapping);
+                    }
                 }
             });
             return eachSeries(mappings,
@@ -69,14 +69,11 @@ class DataObjectAssociationListener {
                             .flatten().silent(silentMode).take(1).getList().then(function(result) {
                                 if (result == null) {
                                     return cb(new DataObjectAssociationError(mapping.childModel, mapping.childField));
-                                }
-                                else if (result.total === 0) {
+                                } else if (result.total === 0) {
                                     return cb(new DataObjectAssociationError(mapping.childModel, mapping.childField));
-                                }
-                                else if (result.total > 1) {
+                                } else if (result.total > 1) {
                                     return cb(new DataObjectMultiAssociationError(mapping.childModel, mapping.childField));
-                                }
-                                else {
+                                } else {
                                     if ( typeof associatedObject === 'object' && Object.prototype.hasOwnProperty.call(associatedObject, mapping.parentField) === false) {
                                         // set foreign key
                                         Object.defineProperty(associatedObject, mapping.parentField, {
@@ -91,16 +88,14 @@ class DataObjectAssociationListener {
                             }).catch(function(err) {
                                 return cb(err);
                             });
-                    }
-                    else {
+                    } else {
                         return cb();
                     }
     
                 }, function(err) {
                     return callback(err);
                 });
-        }
-        catch (err) {
+        } catch (err) {
             return callback(err);
         }
     }
@@ -112,8 +107,7 @@ class DataObjectAssociationListener {
         try {
             if (event.target == null) {
                 return callback();
-            }
-            else {
+            } else {
                 let keys = Object.keys(event.target);
                 let mappings = [];
                 keys.forEach(function(key) {
@@ -160,20 +154,22 @@ class DataObjectAssociationListener {
                                     childs.forEach(function(x) {
                                         if (x.$state === 4) {
                                             toBeRemoved.push(x);
-                                        }
-                                        else {
+                                        } else {
                                             toBeInserted.push(x);
                                         }
                                     });
                                     junction.silent(silentMode).insert(toBeInserted, function(err) {
-                                        if (err) { return cb(err); }
+                                        if (err) {
+                                            return cb(err); 
+                                        }
                                         junction.silent(silentMode).remove(toBeRemoved, function(err) {
-                                            if (err) { return cb(err); }
+                                            if (err) {
+                                                return cb(err); 
+                                            }
                                             return cb();
                                         });
                                     });
-                                }
-                                else  {
+                                } else  {
                                     return cb();
                                 }
                             } else if (x.mapping.parentModel===event.model.name) {
@@ -184,11 +180,17 @@ class DataObjectAssociationListener {
                                          */
                                         let tags = new DataObjectTag(obj, x.mapping);
                                         return tags.silent(silentMode).all().then(function(result) {
-                                            let toBeRemoved = result.filter(function(x) { return childs.indexOf(x)<0; });
-                                            let toBeInserted = childs.filter(function(x) { return result.indexOf(x)<0; });
+                                            let toBeRemoved = result.filter(function(x) {
+                                                return childs.indexOf(x)<0; 
+                                            });
+                                            let toBeInserted = childs.filter(function(x) {
+                                                return result.indexOf(x)<0; 
+                                            });
                                             if (toBeRemoved.length>0) {
                                                 return tags.silent(silentMode).remove(toBeRemoved).then(function() {
-                                                    if (toBeInserted.length===0) { return cb(); }
+                                                    if (toBeInserted.length===0) {
+                                                        return cb(); 
+                                                    }
                                                     return tags.silent(silentMode).insert(toBeInserted).then(function() {
                                                         return cb();
                                                     });
@@ -196,24 +198,26 @@ class DataObjectAssociationListener {
                                                     return cb(err);
                                                 });
                                             }
-                                            if (toBeInserted.length===0) { return cb(); }
+                                            if (toBeInserted.length===0) {
+                                                return cb(); 
+                                            }
                                             return tags.silent(silentMode).insert(toBeInserted).then(function() {
                                                 return cb();
                                             });
                                         }).catch(function (err) {
                                             return cb(err);
                                         });
-                                    }
-                                    else {
+                                    } else {
                                         junction = new DataObjectJunction(obj, x.mapping);
                                         junction.silent(silentMode).insert(childs, function(err) {
-                                            if (err) { return cb(err); }
+                                            if (err) {
+                                                return cb(err); 
+                                            }
                                             let toBeRemoved = [], toBeInserted = [];
                                             childs.forEach(function(x) {
                                                 if (x.$state === 4) {
                                                     toBeRemoved.push(x);
-                                                }
-                                                else {
+                                                } else {
                                                     toBeInserted.push(x);
                                                 }
                                             });
@@ -230,12 +234,10 @@ class DataObjectAssociationListener {
                                             });
                                         });
                                     }
-                                }
-                                else  {
+                                } else  {
                                     cb();
                                 }
-                            }
-                            else {
+                            } else {
                                 cb();
                             }
                         } else {
@@ -245,13 +247,11 @@ class DataObjectAssociationListener {
                         callback(err);
                     });
             }
-        }
-        catch (err) {
+        } catch (err) {
             callback(err);
         }
     }
 }
-
 
 module.exports = {
     DataObjectAssociationListener,

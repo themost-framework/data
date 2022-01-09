@@ -1,6 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
 function previousStateListener(event, callback) {
-    if (event.state===1) { return callback(); }
+    if (event.state===1) {
+        return callback(); 
+    }
     const key = event.model.primaryKey;
     if (event.target[key] == null) {
         return callback();
@@ -8,8 +10,7 @@ function previousStateListener(event, callback) {
     event.model.where(key).equal(event.target[key]).silent().first(function(err, result) {
         if (err) {
             return callback(err);
-        }
-        else {
+        } else {
             event.previous = result;
             return callback();
         }

@@ -47,7 +47,6 @@ function _dasherize(s) {
     return s;
 }
 
-
 /**
  * @method dasherize
  * @memberOf _
@@ -56,7 +55,6 @@ function _dasherize(s) {
 if (typeof _.dasherize !== 'function') {
     _.mixin({'dasherize' : _dasherize});
 }
-
 
 class DataTypePropertiesConfiguration {
     /**
@@ -380,8 +378,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                                     }
                                     //otherwise get parent path
                                     path1 = path.resolve(path1, '..');
-                                }
-                                else {
+                                } else {
                                     //path already exists in paths collection, so break loop
                                     break;
                                 }
@@ -390,24 +387,20 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                                 paths: paths
                             });
                             adapterModule = require(adapterModulePath);
-                        }
-                        else {
+                        } else {
                             adapterModule = require(x.type);
                         }
-                    }
-                    else {
+                    } else {
                         adapterModule = require(x.type);
                     }
 
                     if (typeof adapterModule.createInstance === 'function') {
                         valid = true;
-                    }
-                    else {
+                    } else {
                         //adapter type does not export a createInstance(options) function
                         TraceUtils.log("The specified data adapter type (%s) does not have the appropriate constructor. Adapter type cannot be loaded.", x.invariantName);
                     }
-                }
-                catch (err) {
+                } catch (err) {
                     //catch error
                     TraceUtils.error(err);
                     //and log a specific error for this adapter type
@@ -421,8 +414,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                         createInstance: adapterModule.createInstance
                     };
                 }
-            }
-            else {
+            } else {
                 TraceUtils.log("The specified data adapter type (%s) does not have a type defined. Adapter type cannot be loaded.", x.invariantName);
             }
         });
@@ -443,8 +435,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                     if (_.isNil(dataTypes)) {
                         TraceUtils.log('Data: Application data types are empty. The default data types will be loaded instead.');
                         dataTypes = require('./dataTypes.json');
-                    }
-                    else {
+                    } else {
                         //append default data types which are not defined in application data types
                         let defaultDataTypes = require('./dataTypes.json');
                         //enumerate default data types and replace or append application specific data types
@@ -455,24 +446,20 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                                         //replace data type due to lower version
                                         dataTypes[key] = defaultDataTypes[key];
                                     }
-                                }
-                                else {
+                                } else {
                                     //replace data type due to invalid version
                                     dataTypes[key] = defaultDataTypes[key];
                                 }
-                            }
-                            else {
+                            } else {
                                 //append data type
                                 dataTypes[key] = defaultDataTypes[key];
                             }
                         });
                     }
-                }
-                catch (err) {
+                } catch (err) {
                     if (err.code === 'MODULE_NOT_FOUND') {
                         TraceUtils.log('Data: Application specific data types are missing. The default data types will be loaded instead.');
-                    }
-                    else {
+                    } else {
                         TraceUtils.log('Data: An error occurred while loading application data types.');
                         throw err;
                     }
@@ -503,7 +490,6 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
                 return this[adapterTypesProperty];
             }
         });
-
 
     }
     /**
@@ -764,8 +750,7 @@ class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
         if (singularName) {
             // search for singular name also e.g. ^(User|Users)\.json$
             searchName = new RegExp('^(' + singularName + '|' + name + ')\\.json$', 'i');
-        }
-        else {
+        } else {
             // otherwise search for name e.g. ^User\.json$
             searchName = new RegExp('^' + name + '\\.json$', 'i');
         }
@@ -838,8 +823,7 @@ class DefaultSchemaLoaderStrategy extends FileSchemaLoaderStrategy {
                         // add loader to collection
                         thisArg.loaders.push(new LoaderCtor(config));
                     }
-                }
-                else {
+                } else {
                     // simply add module to collection of loaders
                     // we assume that module exports the required methods
                     // and acts like an instance of SchemaLoader class
@@ -928,12 +912,10 @@ class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
         if (typeof model.classPath === 'string') {
             if (/^\.\//.test(model.classPath)) {
                 modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(PathUtils.join(executionPath, model.classPath));
-            }
-            else {
+            } else {
                 modelDefinition[dataObjectClassProperty] = DataObjectClass = interopRequireDefault(model.classPath);
             }
-        }
-        else {
+        } else {
             let requireModules = [
                 // e.g. ./models/OrderDetail
                 PathUtils.join(executionPath, 'models', model.name),
@@ -996,7 +978,6 @@ class DefaultModelClassLoaderStrategy extends ModelClassLoaderStrategy {
         return DataObjectClass;
     }
 }
-
 
 /**
  * Gets the current data configuration

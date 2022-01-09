@@ -86,7 +86,6 @@ class DataAdapter {
     }
 }
 
-
 /**
  * @classdesc Represents the event arguments of a data model listener.
  * @property {DataModel|*} model - Represents the underlying model.
@@ -188,8 +187,7 @@ class DataContext extends SequentialEventEmitter {
                         // rollback
                         return cb(err);
                     });
-                }
-                catch (err) {
+                } catch (err) {
                     return cb(err);
                 }
             }, function (err) {
@@ -277,7 +275,6 @@ class DataEventListener {
     }
 }
 
-
 const DateTimeRegex = /^(\d{4})(?:-?W(\d+)(?:-?(\d+)D?)?|(?:-(\d+))?-(\d+))(?:[T ](\d+):(\d+)(?::(\d+)(?:\.(\d+))?)?)?(?:Z(-?\d*))?$/g;
 const BooleanTrueRegex = /^true$/ig;
 const BooleanFalseRegex = /^false$/ig;
@@ -287,7 +284,6 @@ var UndefinedRegex = /^undefined$/ig;
 */
 const IntegerRegex =/^[-+]?\d+$/g;
 const FloatRegex =/^[+-]?\d+(\.\d+)?$/g;
-
 
 /**
  * Represents a model migration scheme against data adapters
@@ -414,7 +410,6 @@ class DataField {
     }
 }
 
-
 /**
  * @property {string} name - Gets or sets a short description for this listener
  * @property {string} type - Gets or sets a string which is the path of the module that exports this listener.
@@ -499,7 +494,6 @@ class DataContextEmitter {
     }
 }
 
-
 /**
  * An enumeration of the available data object states
  * @enum {number}
@@ -551,13 +545,11 @@ const parsers = {
         else if (typeof val === 'string') {
             if (val.match(IntegerRegex) || val.match(FloatRegex)) {
                 return parseInt(val, 10);
-            }
-            else if (val.match(BooleanTrueRegex))
+            } else if (val.match(BooleanTrueRegex))
                 return 1;
             else if (val.match(BooleanFalseRegex))
                 return 0;
-        }
-        else if (typeof val === 'boolean')
+        } else if (typeof val === 'boolean')
             return val===true ? 1 : 0;
         else {
             return parseInt(val) || 0;
@@ -574,11 +566,9 @@ const parsers = {
         else if (typeof val === 'string') {
             if (val.match(IntegerRegex) || val.match(FloatRegex)) {
                 return parseFloat(val);
-            }
-            else if (val.match(BooleanTrueRegex))
+            } else if (val.match(BooleanTrueRegex))
                 return 1;
-        }
-        else if (typeof val === 'boolean')
+        } else if (typeof val === 'boolean')
             return val===true ? 1 : 0;
         else {
             return parseFloat(val);
@@ -595,8 +585,7 @@ const parsers = {
         if (typeof val === 'string') {
             if (val.match(DateTimeRegex))
                 return new Date(Date.parse(val));
-        }
-        else if (typeof val === 'number') {
+        } else if (typeof val === 'number') {
             return new Date(val);
         }
         return null;
@@ -617,8 +606,7 @@ const parsers = {
             return val;
         else if (typeof val === 'string') {
             return val;
-        }
-        else {
+        } else {
             return val.toString();
         }
     }

@@ -125,7 +125,6 @@ class MinLengthValidator extends DataValidator {
 }
 MinLengthValidator.DefaultMessage = "The value is too short. It should have %s characters or more.";
 
-
 /**
  * @classdesc Validates a variable which has a length property (e.g. a string) against the maximum length provided
  */
@@ -164,7 +163,6 @@ class MaxLengthValidator extends DataValidator {
 }
 
 MaxLengthValidator.DefaultMessage = "The value is too long. It should have %s characters or fewer.";
-
 
 /**
  * @classdesc Validates a value against the minimum value provided
@@ -277,11 +275,9 @@ class RangeValidator extends DataValidator {
                 message: message,
                 innerMessage: innerMessage
             };
-        }
-        else if (minValidation) {
+        } else if (minValidation) {
             return minValidation;
-        }
-        else if (maxValidation) {
+        } else if (maxValidation) {
             return maxValidation;
         }
     }
@@ -302,8 +298,7 @@ class DataTypeValidator extends DataValidator {
             get: function () {
                 if (typeof type === 'string') {
                     return this.getContext().getConfiguration().getStrategy(DataConfigurationStrategy).dataTypes[type];
-                }
-                else {
+                } else {
                     return type;
                 }
             }
@@ -347,16 +342,14 @@ class DataTypeValidator extends DataValidator {
                 if (validationResult) {
                     return validationResult;
                 }
-            }
-            else if (hasOwnProperty(properties, 'minValue')) {
+            } else if (hasOwnProperty(properties, 'minValue')) {
                 validator = new MinValueValidator(properties.minValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     return validationResult;
                 }
-            }
-            else if (hasOwnProperty(properties, 'maxValue')) {
+            } else if (hasOwnProperty(properties, 'maxValue')) {
                 validator = new MaxValueValidator(properties.maxValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -397,27 +390,26 @@ class DataValidatorListener {
          * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
          */
     beforeSave(event, callback) {
-        if (event.state === 4) { return callback(); }
+        if (event.state === 4) {
+            return callback(); 
+        }
         if (event.state === 1) {
             return event.model.validateForInsert(event.target).then(function () {
                 return callback();
             }).catch(function (err) {
                 return callback(err);
             });
-        }
-        else if (event.state === 2) {
+        } else if (event.state === 2) {
             return event.model.validateForUpdate(event.target).then(function () {
                 return callback();
             }).catch(function (err) {
                 return callback(err);
             });
-        }
-        else {
+        } else {
             return callback();
         }
     }
 }
-
 
 /**
  * @classdesc Validates a required attribute
@@ -435,8 +427,7 @@ class RequiredValidator extends DataValidator {
         let invalid = false;
         if (_.isNil(val)) {
             invalid = true;
-        }
-        else if ((typeof val === 'number') && isNaN(val)) {
+        } else if ((typeof val === 'number') && isNaN(val)) {
             invalid = true;
         }
         if (invalid) {
@@ -468,6 +459,4 @@ module.exports = {
     DataTypeValidator,
     DataValidatorListener
 };
-
-
 
