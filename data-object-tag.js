@@ -38,7 +38,7 @@ class DataObjectTag extends DataQueryable {
         // add select
         this.select(this.getValueField()).asArray();
         // modify query (add join parent model)
-        let left = {}, right = {};
+        let left = {}; let right = {};
         // get parent adapter
         let parentAdapter = this.parent.getModel().viewAdapter;
         // set left operand of native join expression
@@ -317,7 +317,6 @@ class DataObjectTag extends DataQueryable {
 DataObjectTag.DEFAULT_OBJECT_FIELD = "object";
 DataObjectTag.DEFAULT_VALUE_FIELD = "value";
 
-
 /**
  * @this DataObjectTag
  * @param obj
@@ -357,7 +356,6 @@ function insert_(obj, callback) {
     });
 }
 
-
 /**
  * @this DataObjectTag
  * @param callback
@@ -381,7 +379,6 @@ function clear_(callback) {
         });
     });
 }
-
 
 /**
  * @this DataObjectTag

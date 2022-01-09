@@ -979,7 +979,8 @@ function schemaToEdmDocument(schema) {
     if (schema.alias != null) {
         schemaElement.setAttribute("Alias", schema.alias);
     }
-    let actionElements = [], functionElements = [];
+    let actionElements = [];
+    let functionElements = [];
     //append edmx:DataServices > Schema
     dataServicesElement.appendChild(schemaElement);
     _.forEach(schema.entityType,
@@ -1928,7 +1929,8 @@ class ODataConventionModelBuilder extends ODataModelBuilder {
          */
     getEdm() {
         // noinspection JSPotentiallyInvalidConstructorUsage
-        let self = this, superGetEdm = ODataConventionModelBuilder.super_.prototype.getEdm;
+        let self = this;
+        let superGetEdm = ODataConventionModelBuilder.super_.prototype.getEdm;
         try {
             if (_.isObject(self[edmProperty])) {
                 return Q.resolve(self[edmProperty]);

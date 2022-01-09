@@ -54,12 +54,12 @@ function beforeRemoveAssociatedObjects(event, mapping, callback) {
         return callback(new TypeError('Invalid association type. Expected a valid referenced key association.'));
     }
     let context = event.model.context;
-    let parentModel = event.model,
-        silent = event.model.$silent,
-        target = event.model.convert(event.target),
-        childModel = context.model(mapping.childModel),
-        parentField = event.model.getAttribute(mapping.parentField),
-        childField = childModel.getAttribute(mapping.childField);
+    let parentModel = event.model;
+    let silent = event.model.$silent;
+    let target = event.model.convert(event.target);
+    let childModel = context.model(mapping.childModel);
+    let parentField = event.model.getAttribute(mapping.parentField);
+    let childField = childModel.getAttribute(mapping.childField);
     parentModel.where(parentModel.primaryKey).equal(target[parentModel.primaryKey])
         .select(parentField.name)
         .cache(false)
@@ -132,10 +132,10 @@ function beforeRemoveParentConnectedObjects(event, mapping, callback) {
     if (mapping.childModel !== event.model.name) {
         return callback();
     }
-    let childModel = event.model,
-        silent = event.model.$silent,
-        target = event.model.convert(event.target),
-        childField = childModel.getAttribute(mapping.childField);
+    let childModel = event.model;
+    let silent = event.model.$silent;
+    let target = event.model.convert(event.target);
+    let childField = childModel.getAttribute(mapping.childField);
     let junction = new DataObjectJunction(target, mapping);
     return childModel.where(childModel.primaryKey).equal(target.getId())
         .select(childField.name)
@@ -188,11 +188,11 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
         return callback();
     }
     // eslint-disable-next-line no-unused-vars
-    let childModel = context.model(mapping.childModel),
-        silent = event.model.$silent,
-        target = event.model.convert(event.target),
-        parentModel =  event.model,
-        parentField = parentModel.getAttribute(mapping.parentField);
+    let childModel = context.model(mapping.childModel);
+    let silent = event.model.$silent;
+    let target = event.model.convert(event.target);
+    let parentModel =  event.model;
+    let parentField = parentModel.getAttribute(mapping.parentField);
     let junction = new HasParentJunction(target, mapping);
     return parentModel.where(parentModel.primaryKey).equal(target.getId())
         .select(parentField.name)
@@ -232,7 +232,6 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
                 });
         });
 }
-
 
 module.exports = {
     DataReferencedObjectListener

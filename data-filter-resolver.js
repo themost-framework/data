@@ -11,8 +11,7 @@ class DataFilterResolver {
         if (/\//.test(member)) {
             let arr = member.split('/');
             callback(null, arr.slice(arr.length - 2).join('.'));
-        }
-        else {
+        } else {
             callback(null, this.viewAdapter.concat('.', member));
         }
     }
@@ -23,11 +22,9 @@ class DataFilterResolver {
             a.push(callback);
             try {
                 return DataFilterResolver.prototype[name].apply(this, a);
-            }
-            catch (e) {
+            } catch (e) {
                 return callback(e);
             }
-
         }
         callback();
     }
@@ -63,8 +60,7 @@ class DataFilterResolver {
         let culture = this.context.culture();
         if (culture) {
             return callback(null, culture.substr(0, 2));
-        }
-        else {
+        } else {
             return callback(null, "en");
         }
     }

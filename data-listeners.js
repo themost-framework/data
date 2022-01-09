@@ -33,15 +33,13 @@ class NotNullConstraintListener {
             return 0;
         }
         async.eachSeries(attrs, function (attr, cb) {
-            let name = attr.property || attr.name, value = event.target[name];
+            let name = attr.property || attr.name; let value = event.target[name];
             if ((((value === null) || (value === undefined)) && (event.state === 1))
                 || ((value === null) && (typeof value !== 'undefined') && (event.state === 2))) {
                 let er = new NotNullError('A value is required.', null, event.model.name, attr.name);
                 TraceUtils.debug(er);
                 return cb(er);
-            }
-
-            else
+            } else
                 return cb();
         }, function (err) {
             callback(err);
@@ -102,8 +100,7 @@ class UniqueConstraintListener {
                     value = null;
                 if (q) {
                     q.and(attr).equal(value);
-                }
-                else {
+                } else {
                     q = event.model.where(attr).equal(value);
                 }
             }
@@ -118,8 +115,7 @@ class UniqueConstraintListener {
                     if (!result) {
                         //object does not exist
                         cb(null);
-                    }
-                    else {
+                    } else {
                         let objectExists = true;
                         if (event.state === 2) {
                             //validate object id (check if target object is the same with the returned object)
@@ -131,14 +127,12 @@ class UniqueConstraintListener {
                             //so throw exception
                             if (constraint.description) {
                                 er = new UniqueConstraintError(constraint.description, null, event.model.name);
-                            }
-                            else {
+                            } else {
                                 er = new UniqueConstraintError("Object already exists. A unique constraint violated.", null, event.model.name);
                             }
                             TraceUtils.debug(er);
                             return cb(er);
-                        }
-                        else {
+                        } else {
                             return cb();
                         }
                     }
@@ -169,7 +163,9 @@ class CalculatedValueListener {
         _.assign(functionContext, event);
         functionContext.context = event.model.context;
         //find all attributes that have a default value
-        let attrs = event.model.attributes.filter(function (x) { return (x.calculation !== undefined); });
+        let attrs = event.model.attributes.filter(function (x) {
+            return (x.calculation !== undefined); 
+        });
         async.eachSeries(attrs, function (attr, cb) {
             let expr = attr.calculation;
             //validate expression
@@ -184,10 +180,8 @@ class CalculatedValueListener {
                 //if expression starts with function add parenthesis (fo evaluation)
                 if (fnstr.indexOf('function') === 0) {
                     fnstr = '('.concat(fnstr, ')');
-                }
-
-                //if expression starts with return then normalize expression (surround with function() {} keyword)
-                else if (fnstr.indexOf('return') === 0) {
+                } else if (fnstr.indexOf('return') === 0) {
+                    //if expression starts with return then normalize expression (surround with function() {} keyword)            
                     fnstr = '(function() { '.concat(fnstr, '})');
                 }
                 let value = eval(fnstr);
@@ -204,13 +198,11 @@ class CalculatedValueListener {
                         }).catch(function (err) {
                             cb(err);
                         });
-                    }
-                    else {
+                    } else {
                         event.target[attr.name] = value1;
                         return cb();
                     }
-                }
-                else if (typeof value !== 'undefined' && value !== null && typeof value.then === 'function') {
+                } else if (typeof value !== 'undefined' && value !== null && typeof value.then === 'function') {
                     //we have a promise, so we need to wait for answer
                     value.then(function (result) {
                         //otherwise set result
@@ -219,22 +211,18 @@ class CalculatedValueListener {
                     }).catch(function (err) {
                         cb(err);
                     });
-                }
-                else {
+                } else {
                     //otherwise get value
                     event.target[attr.name] = value;
                     return cb();
                 }
-            }
-            else if (expr.indexOf('fn:') === 0) {
+            } else if (expr.indexOf('fn:') === 0) {
                 return cb(new Error('fn: syntax is deprecated.'));
-            }
-            else {
+            } else {
                 functionContext.eval(expr, function (err, result) {
                     if (err) {
                         cb(err);
-                    }
-                    else {
+                    } else {
                         event.target[attr.name] = result;
                         cb(null);
                     }
@@ -246,7 +234,6 @@ class CalculatedValueListener {
         });
     }
 }
-
 
 /**
  * @classdesc Represents a data caching listener which is going to be used while executing queries against
@@ -301,8 +288,7 @@ class DataCachingListener {
                 if (event.emitter && typeof event.emitter.toMD5 === 'function') {
                     //get hash from emitter (DataQueryable)
                     hash = event.emitter.toMD5();
-                }
-                else {
+                } else {
                     //else calculate hash
                     hash = TextUtils.toMD5({ query: event.query });
                 }
@@ -326,14 +312,12 @@ class DataCachingListener {
                             if (process.env.NODE_ENV === 'development') {
                                 TraceUtils.debug(sprintf('Cache (Execution Time:%sms):%s', (new Date()).getTime() - logTime, key));
                             }
-                        }
-                        catch (err) {
+                        } catch (err) {
                             //
                         }
                         //exit
                         return callback();
-                    }
-                    else {
+                    } else {
                         //do nothing and exit
                         return callback();
                     }
@@ -342,12 +326,10 @@ class DataCachingListener {
                     TraceUtils.log(err);
                     return callback();
                 });
-            }
-            else {
+            } else {
                 return callback();
             }
-        }
-        catch (err) {
+        } catch (err) {
             return callback(err);
         }
     }
@@ -396,8 +378,7 @@ class DataCachingListener {
                     if (event.emitter && typeof event.emitter.toMD5 === 'function') {
                         //get hash from emitter (DataQueryable)
                         hash = event.emitter.toMD5();
-                    }
-                    else {
+                    } else {
                         //else calculate hash
                         hash = TextUtils.toMD5({ query: event.query });
                     }
@@ -410,13 +391,11 @@ class DataCachingListener {
                 }
             }
             return callback();
-        }
-        catch (err) {
+        } catch (err) {
             return callback(err);
         }
     }
 }
-
 
 /**
  * @classdesc Represents an event listener for calculating default values.
@@ -435,14 +414,15 @@ class DefaultValueListener {
         let state = typeof event.state === 'number' ? event.state : 0;
         if (state !== 1) {
             return callback();
-        }
-        else {
+        } else {
             //get function context
             let FunctionContext = require('./functions').FunctionContext;
             let functionContext = new FunctionContext();
             _.assign(functionContext, event);
             //find all attributes that have a default value
-            let attrs = event.model.attributes.filter(function (x) { return (typeof x.value !== 'undefined'); });
+            let attrs = event.model.attributes.filter(function (x) {
+                return (typeof x.value !== 'undefined'); 
+            });
             async.eachSeries(attrs, function (attr, cb) {
                 try {
                     let expr = attr.value;
@@ -464,10 +444,8 @@ class DefaultValueListener {
                         //if expression starts with function add parenthesis (fo evaluation)
                         if (fnstr.indexOf('function') === 0) {
                             fnstr = '('.concat(fnstr, ')');
-                        }
-
-                        //if expression starts with return then normalize expression (surround with function() {} keyword)
-                        else if (fnstr.indexOf('return') === 0) {
+                        } else if (fnstr.indexOf('return') === 0) {
+                            //if expression starts with return then normalize expression (surround with function() {} keyword)
                             fnstr = '(function() { '.concat(fnstr, '})');
                         }
                         let value = eval(fnstr);
@@ -484,13 +462,11 @@ class DefaultValueListener {
                                 }).catch(function (err) {
                                     return cb(err);
                                 });
-                            }
-                            else {
+                            } else {
                                 event.target[attr.name] = value1;
                                 return cb();
                             }
-                        }
-                        else if (typeof value !== 'undefined' && value != null && typeof value.then === 'function') {
+                        } else if (typeof value !== 'undefined' && value != null && typeof value.then === 'function') {
                             //we have a promise, so we need to wait for answer
                             value.then(function (result) {
                                 //otherwise set result
@@ -499,17 +475,14 @@ class DefaultValueListener {
                             }).catch(function (err) {
                                 return cb(err);
                             });
-                        }
-                        else {
+                        } else {
                             //otherwise get value
                             event.target[attr.name] = value;
                             return cb();
                         }
-                    }
-                    else if (expr.indexOf('fn:') === 0) {
+                    } else if (expr.indexOf('fn:') === 0) {
                         return cb(new Error('fn: syntax is deprecated.'));
-                    }
-                    else {
+                    } else {
                         functionContext.eval(expr, function (err, result) {
                             if (err) {
                                 return cb(err);
@@ -518,8 +491,7 @@ class DefaultValueListener {
                             return cb();
                         });
                     }
-                }
-                catch (err) {
+                } catch (err) {
                     return cb(err);
                 }
             }, function (err) {
@@ -540,8 +512,8 @@ class DataModelCreateViewListener {
      */
     afterUpgrade(event, callback) {
 
-        let self = event.model, db = self.context.db;
-        let view = self.viewAdapter, adapter = self.sourceAdapter;
+        let self = event.model; let db = self.context.db;
+        let view = self.viewAdapter; let adapter = self.sourceAdapter;
         // if data model is a sealed model do nothing anb exit
         if (self.sealed) {
             return callback();
@@ -621,26 +593,24 @@ class DataModelSeedListener {
                     //if model has no data
                     if (count === 0) {
                         //set items state to new
-                        items.forEach(function (x) { x.$state = 1; });
+                        items.forEach(function (x) {
+                            x.$state = 1; 
+                        });
                         self.silent().save(items, callback);
-                    }
-                    else {
+                    } else {
                         //model was already seeded
                         return callback();
                     }
                 });
-            }
-            else {
+            } else {
                 //do nothing and exit
                 return callback();
             }
-        }
-        catch (e) {
+        } catch (e) {
             callback(e);
         }
     }
 }
-
 
 class DataModelSubTypesListener {
     constructor() {
@@ -652,17 +622,23 @@ class DataModelSubTypesListener {
      * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
      */
     afterUpgrade(event, callback) {
-        let self = event.model, context = event.model.context;
+        let self = event.model; let context = event.model.context;
         try {
             self.getSubTypes().then(function (result) {
-                if (result.length === 0) { return callback(); }
+                if (result.length === 0) {
+                    return callback(); 
+                }
                 //enumerate sub types
                 async.eachSeries(result, function (name, cb) {
                     //get model
                     let model = context.model(name);
-                    if (_.isNil(model)) { return cb(); }
+                    if (_.isNil(model)) {
+                        return cb(); 
+                    }
                     //if model is sealed do nothing
-                    if (model.sealed) { return cb(); }
+                    if (model.sealed) {
+                        return cb(); 
+                    }
                     //create event arguments
                     let ev = { model: model };
                     //execute create view listener
@@ -673,8 +649,7 @@ class DataModelSubTypesListener {
             }).catch(function (err) {
                 return callback(err);
             });
-        }
-        catch (e) {
+        } catch (e) {
             callback(e);
         }
     }

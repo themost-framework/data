@@ -37,7 +37,7 @@ class FunctionContext {
             callback(null);
             return;
         }
-        let re = /(fn:)\s?(.*?)\s?\((.*?)\)/, expr1 = expr;
+        let re = /(fn:)\s?(.*?)\s?\((.*?)\)/; let expr1 = expr;
         if (expr.indexOf('fn:') !== 0) {
             expr1 = 'fn:' + expr1;
         }
@@ -177,7 +177,8 @@ class FunctionContext {
         return new Promise(function (resolve, reject) {
             try {
                 length = length || 8;
-                let chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ", str = "";
+                let chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ";
+                let str = "";
                 for (let i = 0; i < length; i++) {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }
@@ -198,7 +199,7 @@ class FunctionContext {
             if (user && user.id) {
                 return resolve(user.id);
             }
-            let userModel = context.model('User'), parser, undefinedUser = null;
+            let userModel = context.model('User'); let parser; let undefinedUser = null;
             userModel.where('name').equal(user.name).silent().select('id').first(function (err, result) {
                 if (err) {
                     TraceUtils.error(err);

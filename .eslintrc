@@ -18,6 +18,7 @@
   },
   "extends": "eslint:recommended",
   "rules": {
+    "one-var": ["error", "never"],
     "indent": ["warn"],
     "no-multiple-empty-lines": [ "warn", { "max": 1 } ],
     "brace-style": ["warn", "1tbs"],

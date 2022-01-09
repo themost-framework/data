@@ -69,7 +69,8 @@ class DataExpandResolver {
         if (s == null) {
             return [];
         }
-        let result = [], reOptions = /(;|^)(\$expand|\$filter|\$levels|\$orderby|\$groupby|\$select|\$top|\$skip|\$search|\$count)=(.*?)(;\$|$)/ig;
+        let result = [];
+        let reOptions = /(;|^)(\$expand|\$filter|\$levels|\$orderby|\$groupby|\$select|\$top|\$skip|\$search|\$count)=(.*?)(;\$|$)/ig;
         let matches = testAndSplitExpandExpression(s);
         for (let i = 0; i < matches.length; i++) {
             let match = matches[i];

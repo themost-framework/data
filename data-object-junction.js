@@ -380,7 +380,7 @@ DataObjectJunction.DEFAULT_VALUE_FIELD = 'valueId';
  * @private
  */
 function insert_(obj, callback) {
-    let self = this, arr = [];
+    let self = this; let arr = [];
     if (_.isArray(obj))
         arr = obj;
     else {

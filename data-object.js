@@ -17,7 +17,6 @@ const contextProperty = Symbol('context');
 
 const STR_MISSING_CALLBACK_ARGUMENT = 'Missing argument. Callback function expected.';
 
-
 /**
  * @this DataObject
  * @param {DataContext} context - The underlying data context
@@ -47,7 +46,6 @@ function save_(context, callback) {
     model.save(self, callback);
 }
 
-
 /**
  * @this DataObject
  * @param {DataContext} context
@@ -76,7 +74,6 @@ function remove_(context, callback) {
     model.remove(self, callback);
 }
 
-
 /**
  * @this DataObject
  * @param {string} name - The name of the attribute
@@ -84,8 +81,8 @@ function remove_(context, callback) {
  * @private
  */
 function attrOf_(name, callback) {
-    let self = this, model = this.$$model,
-        mapping = model.inferMapping(name);
+    let self = this; let model = this.$$model;
+    let mapping = model.inferMapping(name);
     if (_.isNil(mapping)) {
         if (hasOwnProperty(self, name)) {
             return callback(null, self[name]);
@@ -387,9 +384,9 @@ class DataObject extends SequentialEventEmitter {
     property(name) {
         if (typeof name !== 'string')
             return null;
-        let self = this, er;
+        let self = this; let er;
         //validate relation based on the given name
-        let model = self.$$model, field = model.field(name);
+        let model = self.$$model; let field = model.field(name);
         if (_.isNil(field)) {
             er = new Error('The specified field cannot be found.'); er.code = 'EDATA';
             throw er;
@@ -509,7 +506,7 @@ class DataObject extends SequentialEventEmitter {
         if (hasOwnProperty(this, name)) {
             callback(null, this[name]);
         } else {
-            let self = this, model = self.$$model, field = model.field(name);
+            let self = this; let model = self.$$model; let field = model.field(name);
             if (field) {
                 let mapping = model.inferMapping(field.name);
                 if (_.isNil(mapping)) {
@@ -546,7 +543,7 @@ class DataObject extends SequentialEventEmitter {
                                 callback(new Error(sprintf('The value of property [%s] cannot be retrieved. The target data model has constraints but the required properties are missing.', name)));
                             } else {
                                 //get first constraint
-                                let constraint = arr[0], q = null;
+                                let constraint = arr[0]; let q = null;
                                 for (let i = 0; i < constraint.fields.length; i++) {
                                     let attr = constraint.fields[i];
                                     let value = self[attr];

@@ -25,7 +25,7 @@ class DataStateValidatorListener {
                 event.state = 1; 
             }
 
-            let model = event.model, target = event.target;
+            let model = event.model; let target = event.target;
             //if model or target is not defined do nothing and exit
             if (_.isNil(model) || _.isNil(target)) {
                 return callback();
@@ -90,7 +90,7 @@ class DataStateValidatorListener {
         if (_.isNil(event.state)) {
             event.state = 4; 
         }
-        let model = event.model, target = event.target;
+        let model = event.model; let target = event.target;
         //if model or target is not defined do nothing and exit
         if (_.isNil(model) || _.isNil(target)) {
             return callback();
@@ -143,8 +143,8 @@ function _mapKey(obj, callback) {
     }
     //get unique constraints
     let arr = self.constraintCollection.filter(function(x) {
-            return x.type==='unique' 
-        }), objectFound=false;
+        return x.type==='unique' 
+    }); let objectFound=false;
     if (arr.length === 0) {
         //do nothing and exit
         return callback();
@@ -184,10 +184,10 @@ function _mapKey(obj, callback) {
                              * Try to find if parent model has a unique constraint and constraint fields are defined
                              * @type {DataModel}
                              */
-                            let parentModel = self.context.model(mapping.parentModel),
-                                parentConstraint = parentModel.constraintCollection.find(function(x) {
-                                    return x.type==='unique' 
-                                });
+                            let parentModel = self.context.model(mapping.parentModel);
+                            let parentConstraint = parentModel.constraintCollection.find(function(x) {
+                                return x.type==='unique' 
+                            });
                             if (parentConstraint) {
                                 parentConstraint.fields.forEach(function(x) {
                                     fnAppendQuery(attr + "/" + x, parentObj[x]);

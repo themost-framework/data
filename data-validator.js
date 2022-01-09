@@ -64,13 +64,13 @@ class PatternValidator extends DataValidator {
             let second = zeroPad_(val.getSeconds(), 2);
             let millisecond = zeroPad_(val.getMilliseconds(), 3);
             //format timezone
-            let offset = (new Date()).getTimezoneOffset(), timezone = (offset >= 0 ? '+' : '') + zeroPad_(Math.floor(offset / 60), 2) + ':' + zeroPad_(offset % 60, 2);
+            let offset = (new Date()).getTimezoneOffset(); let timezone = (offset >= 0 ? '+' : '') + zeroPad_(Math.floor(offset / 60), 2) + ':' + zeroPad_(offset % 60, 2);
             valueTo = year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second + '.' + millisecond + timezone;
         }
         let re = new RegExp(this.pattern, "ig");
         if (!re.test(valueTo)) {
 
-            let innerMessage = null, message = this.message || PatternValidator.DefaultMessage;
+            let innerMessage = null; let message = this.message || PatternValidator.DefaultMessage;
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = this.getContext().translate(this.message || PatternValidator.DefaultMessage);
@@ -106,7 +106,7 @@ class MinLengthValidator extends DataValidator {
         if (hasOwnProperty(val, 'length')) {
             if (val.length < this.minLength) {
 
-                let innerMessage = null, message = sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
+                let innerMessage = null; let message = sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
                 if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                     innerMessage = message;
                     message = sprintf(this.getContext().translate(this.message || MinLengthValidator.DefaultMessage), this.minLength);
@@ -143,7 +143,7 @@ class MaxLengthValidator extends DataValidator {
             return;
         }
 
-        let innerMessage = null, message = sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
+        let innerMessage = null; let message = sprintf(this.message || MaxLengthValidator.DefaultMessage, this.maxLength);
         if (this.getContext() && (typeof this.getContext().translate === 'function')) {
             innerMessage = message;
             message = sprintf(this.getContext().translate(this.message || MaxLengthValidator.DefaultMessage), this.maxLength);
@@ -183,7 +183,7 @@ class MinValueValidator extends DataValidator {
         }
         if (val < this.minValue) {
 
-            let innerMessage = null, message = sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
+            let innerMessage = null; let message = sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = sprintf(this.getContext().translate(this.message || MinValueValidator.DefaultMessage), this.minValue);
@@ -219,7 +219,7 @@ class MaxValueValidator extends DataValidator {
         }
         if (val > this.maxValue) {
 
-            let innerMessage = null, message = sprintf(this.message || MaxValueValidator.DefaultMessage, this.maxValue);
+            let innerMessage = null; let message = sprintf(this.message || MaxValueValidator.DefaultMessage, this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = sprintf(this.getContext().translate(this.message || MaxValueValidator.DefaultMessage), this.maxValue);
@@ -254,7 +254,7 @@ class RangeValidator extends DataValidator {
         if (_.isNil(val)) {
             return;
         }
-        let minValidator, maxValidator, minValidation, maxValidation;
+        let minValidator; let maxValidator; let minValidation; let maxValidation;
         if (!_.isNil(this.minValue)) {
             minValidator = new MinValueValidator(this.minValue);
             minValidation = minValidator.validateSync(val);
@@ -264,7 +264,7 @@ class RangeValidator extends DataValidator {
             maxValidation = maxValidator.validateSync(val);
         }
         if (minValidator && maxValidator && (minValidation || maxValidation)) {
-            let innerMessage = null, message = sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
+            let innerMessage = null; let message = sprintf(this.message || RangeValidator.DefaultMessage, this.minValue, this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = sprintf(this.getContext().translate(this.message || RangeValidator.DefaultMessage), this.minValue, this.maxValue);
@@ -317,7 +317,7 @@ class DataTypeValidator extends DataValidator {
          */
         let properties = this.dataType.properties;
         if (typeof properties !== 'undefined') {
-            let validator, validationResult;
+            let validator; let validationResult;
             //validate pattern if any
             if (properties.pattern) {
                 validator = new PatternValidator(properties.pattern);
@@ -432,7 +432,7 @@ class RequiredValidator extends DataValidator {
         }
         if (invalid) {
 
-            let innerMessage = null, message = "A value is required.";
+            let innerMessage = null; let message = "A value is required.";
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
                 message = this.getContext().translate("A value is required.");

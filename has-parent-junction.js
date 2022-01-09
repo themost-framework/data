@@ -40,7 +40,7 @@ class HasParentJunction extends DataQueryable {
         this.model.silent(silentMode);
         //modify query (add join model)
         let adapter = this.model.viewAdapter;
-        let left = {}, right = {};
+        let left = {}; let right = {};
         this.select();
         // get association adapter
         let associationAdapter = this.mapping.associationAdapter;
@@ -459,7 +459,8 @@ function removeSingleObject_(obj, callback) {
  * @private
  */
 function remove_(obj, callback) {
-    let self = this, arr = [];
+    let self = this;
+    let arr = [];
     if (_.isArray(obj))
         arr = obj;
     else {

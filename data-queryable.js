@@ -52,8 +52,7 @@ class DataAttributeResolver {
         let result;
         if (DataAttributeResolver.prototype.testNestedAttribute(attribute)) {
             result = DataAttributeResolver.prototype.selecteNestedAttribute.call(self, attribute, alias);
-        }
-        else {
+        } else {
             result = self.fieldOf(attribute);
         }
         const alias1 = result.as();
@@ -68,8 +67,7 @@ class DataAttributeResolver {
                 writable: true,
                 value: typeof expr === 'string' ? new QueryField(expr) : expr
             });
-        }
-        else {
+        } else {
             expr = result.$name;
             result[name] = {};
             Object.defineProperty(result[name], '$' + aggregation, {
@@ -84,7 +82,7 @@ class DataAttributeResolver {
     resolveNestedAttribute(attr) {
         let self = this;
         if (typeof attr === 'string' && /\//.test(attr)) {
-            let member = attr.split('/'), expr, arr, obj, select;
+            let member = attr.split('/'); let expr; let arr; let obj; let select;
             //change: 18-Feb 2016
             //description: Support many to many (junction) resolving
             let mapping = self.model.inferMapping(member[0]);
@@ -94,8 +92,7 @@ class DataAttributeResolver {
                 select = expr1.$select;
                 //get expand
                 expr = expr1.$expand;
-            }
-            else {
+            } else {
                 // create member expression
                 let memberExpr = {
                     name: attr
@@ -109,8 +106,7 @@ class DataAttributeResolver {
                         member = memberExpr.name.split('/');
                     }
                     select = QueryField.select(member[member.length - 1]).from(member[member.length - 2]);
-                }
-                else {
+                } else {
                     if (memberExpr.name !== attr) {
                         // get member segments again because they have been modified
                         member = memberExpr.name.split('/');
@@ -122,8 +118,7 @@ class DataAttributeResolver {
             if (expr) {
                 if (_.isNil(self.query.$expand)) {
                     self.query.$expand = expr;
-                }
-                else {
+                } else {
                     arr = [];
                     if (!_.isArray(self.query.$expand)) {
                         arr.push(self.query.$expand);
@@ -148,8 +143,7 @@ class DataAttributeResolver {
                     });
                 }
                 return select;
-            }
-            else {
+            } else {
                 throw new Error('Member join expression cannot be empty at this context');
             }
         }
@@ -160,12 +154,11 @@ class DataAttributeResolver {
      * @returns {*} - An object that represents a query join expression
      */
     resolveNestedAttributeJoin(memberExpr) {
-        let self = this, childField, parentField, res, expr, entity;
+        let self = this; let childField; let parentField; let res; let expr; let entity;
         let memberExprString;
         if (typeof memberExpr === 'string') {
             memberExprString = memberExpr;
-        }
-        else if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
+        } else if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
             memberExprString = memberExpr.name;
         }
         if (/\//.test(memberExprString)) {
@@ -213,8 +206,7 @@ class DataAttributeResolver {
                 }
                 //--set active field
                 return res.$expand;
-            }
-            else if (mapping.parentModel === self.name && mapping.associationType === 'association') {
+            } else if (mapping.parentModel === self.name && mapping.associationType === 'association') {
                 let childModel = self.context.model(mapping.childModel);
                 if (_.isNil(childModel)) {
                     throw new Error(sprintf('Association child model (%s) cannot be found.', mapping.childModel));
@@ -250,8 +242,7 @@ class DataAttributeResolver {
                     }
                 }
                 return res.$expand;
-            }
-            else {
+            } else {
                 throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel, mapping.childModel));
             }
         }
@@ -456,13 +447,13 @@ class DataAttributeResolver {
      * @returns {*}
      */
     resolveJunctionAttributeJoin(attr) {
-        let self = this, member = attr.split("/");
+        let self = this; let member = attr.split("/");
         //get the data association mapping
         let mapping = self.inferMapping(member[0]);
         //if mapping defines a junction between two models
         if (mapping && mapping.associationType === "junction") {
             //get field
-            let field = self.field(member[0]), entity, expr, q;
+            let field = self.field(member[0]); let entity; let expr; let q;
             //first approach (default association adapter)
             //the underlying model is the parent model e.g. Group > Group Members
             if (mapping.parentModel === self.name) {
@@ -490,8 +481,7 @@ class DataAttributeResolver {
                         $expand: [q.$expand],
                         $select: QueryField.select(mapping.associationValueField).from(field.name)
                     };
-                }
-                else {
+                } else {
                     //get child model
                     let childModel = self.context.model(mapping.childModel);
                     if (_.isNil(childModel)) {
@@ -509,8 +499,7 @@ class DataAttributeResolver {
                         $select: QueryField.select(member[1]).from(alias)
                     };
                 }
-            }
-            else {
+            } else {
                 q = QueryUtils.query(self.viewAdapter).select(['*']);
                 //the underlying model is the child model
                 //init an entity based on association adapter (e.g. GroupMembers as groups)
@@ -527,8 +516,7 @@ class DataAttributeResolver {
                         $expand: [q.$expand],
                         $select: QueryField.select(mapping.associationObjectField).from(field.name)
                     };
-                }
-                else {
+                } else {
                     //get parent model
                     let parentModel = self.context.model(mapping.parentModel);
                     if (_.isNil(parentModel)) {
@@ -547,8 +535,7 @@ class DataAttributeResolver {
                     };
                 }
             }
-        }
-        else {
+        } else {
             throw new DataError("EJUNC", "The target model does not have a many to many association defined by the given attribute.", "", self.name, attr);
         }
     }
@@ -579,11 +566,11 @@ class DataQueryable {
                 return self[modelProperty];
             },
             set: function(value) {
-              self[modelProperty] = value;
-              if (value != null) {
-                  const silentMode = value.isSilent();
-                  self.silent(silentMode);
-              }
+                self[modelProperty] = value;
+                if (value != null) {
+                    const silentMode = value.isSilent();
+                    self.silent(silentMode);
+                }
             },
             configurable: true,
             enumerable: false
@@ -683,14 +670,15 @@ class DataQueryable {
         // eslint-disable-next-line no-unused-vars
         let options = { multiword: true };
         let terms = [];
-        if (typeof text !== 'string') { return self; }
+        if (typeof text !== 'string') {
+            return self; 
+        }
         let re = /("(.*?)")|([^\s]+)/g;
         let match = re.exec(text);
         while (match) {
             if (match[2]) {
                 terms.push(match[2]);
-            }
-            else {
+            } else {
                 terms.push(match[0]);
             }
             match = re.exec(text);
@@ -701,7 +689,9 @@ class DataQueryable {
         self.prepare();
         let stringTypes = ["Text", "URL", "Note"];
         self.model.attributes.forEach(function (x) {
-            if (x.many) { return; }
+            if (x.many) {
+                return; 
+            }
             let mapping = self.model.inferMapping(x.name);
             if (mapping) {
                 if ((mapping.associationType === 'association') && (mapping.childModel === self.model.name)) {
@@ -739,7 +729,9 @@ class DataQueryable {
         //validate joined model
         if (_.isNil(joinModel))
             throw new Error(sprintf("The %s model cannot be found", model));
-        let arr = self.model.attributes.filter(function (x) { return x.type === joinModel.name; });
+        let arr = self.model.attributes.filter(function (x) {
+            return x.type === joinModel.name; 
+        });
         if (arr.length === 0)
             throw new Error(sprintf("An internal error occurred. The association between %s and %s cannot be found", this.model.name, model));
         let mapping = self.model.inferMapping(arr[0].name);
@@ -1185,7 +1177,7 @@ class DataQueryable {
      */
     select(attr) {
 
-        let self = this, arr, expr, arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : attr;
+        let self = this; let arr; let expr; let arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : attr;
         let field;
         if (typeof arg === 'string') {
             if (arg === "*") {
@@ -1199,13 +1191,11 @@ class DataQueryable {
                 //validate field
                 if (field.many || (field.mapping && field.mapping.associationType === 'junction')) {
                     self.expand(field.name);
-                }
-                else {
+                } else {
                     arr = [];
                     arr.push(self.fieldOf(field.name));
                 }
-            }
-            else {
+            } else {
                 //get data view
                 self.$view = self.model.dataviews(arg);
                 //if data view was found
@@ -1223,40 +1213,36 @@ class DataQueryable {
 
                             else
                                 arr.push(self.fieldOf(field.name));
-                        }
-                        else {
+                        } else {
                             let b = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self, name);
                             if (b) {
                                 expr = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, b.aggr, b.name);
-                                if (expr) { arr.push(expr); }
-                            }
-                            else {
+                                if (expr) {
+                                    arr.push(expr); 
+                                }
+                            } else {
                                 b = DataAttributeResolver.prototype.testNestedAttribute.call(self, name);
                                 if (b) {
                                     expr = DataAttributeResolver.prototype.selecteNestedAttribute.call(self, b.name, x.property);
-                                    if (expr) { arr.push(expr); }
-                                }
-                                else {
+                                    if (expr) {
+                                        arr.push(expr); 
+                                    }
+                                } else {
                                     b = DataAttributeResolver.prototype.testAttribute.call(self, name);
                                     if (b) {
                                         arr.push(self.fieldOf(b.name, x.property));
-                                    }
-                                    else if (/\./g.test(name)) {
+                                    } else if (/\./g.test(name)) {
                                         name = name.split('.')[0];
                                         arr.push(self.fieldOf(name));
-                                    }
-
-                                    else {
+                                    } else {
                                         arr.push(self.fieldOf(name));
                                     }
                                 }
                             }
                         }
                     });
-                }
-
-                //select a field from a joined entity
-                else {
+                } else {
+                    //select a field from a joined entity
                     expr = select_.call(self, arg);
                     if (expr) {
                         arr = arr || [];
@@ -1268,8 +1254,7 @@ class DataQueryable {
                 if (arr.length === 0)
                     arr = null;
             }
-        }
-        else {
+        } else {
             //get array of attributes
             if (_.isArray(arg)) {
                 arr = [];
@@ -1288,22 +1273,18 @@ class DataQueryable {
                                     "name": field.name,
                                     "options": field.options
                                 });
-                            }
-                            else {
+                            } else {
                                 arr.push(self.fieldOf(field.name));
                             }
-                        }
-
-                        //test nested attribute and simple attribute expression
-                        else {
+                        } else {
+                            // test nested attribute and simple attribute expression
                             expr = select_.call(self, x);
                             if (expr) {
                                 arr = arr || [];
                                 arr.push(expr);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         //validate if x is an object (QueryField)
                         arr.push(x);
                     }
@@ -1324,8 +1305,7 @@ class DataQueryable {
                 }
                 return self.select.apply(self, fields);
             }
-        }
-        else {
+        } else {
             self.query.select(arr);
         }
 
@@ -1350,7 +1330,7 @@ class DataQueryable {
             return attr;
         if (typeof attr !== 'string')
             return attr;
-        let matches = /(count|avg|sum|min|max)\((.*?)\)/i.exec(attr), res, field, aggr, prop;
+        let matches = /(count|avg|sum|min|max)\((.*?)\)/i.exec(attr); let res; let field; let aggr; let prop;
         if (matches) {
             //get field
             field = this.model.field(matches[2]);
@@ -1380,8 +1360,7 @@ class DataQueryable {
                 matches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
                 if (matches) {
                     alias = matches[1];
-                }
-                else {
+                } else {
                     alias = aggr.concat('Of', field.name);
                 }
             }
@@ -1395,8 +1374,7 @@ class DataQueryable {
                 return QueryField.min(field.name).from(this.model.viewAdapter).as(alias);
             else if (aggr === 'max')
                 return QueryField.max(field.name).from(this.model.viewAdapter).as(alias);
-        }
-        else {
+        } else {
             matches = /(\w+)\((.*?)\)/i.exec(attr);
             if (matches) {
                 res = {};
@@ -1413,8 +1391,7 @@ class DataQueryable {
                 prop = alias || field.property || field.name;
                 res[prop] = {}; res[prop]['$' + aggr] = [QueryField.select(field.name).from(this.model.viewAdapter)];
                 return res;
-            }
-            else {
+            } else {
                 //matches expression [field] as [alias] e.g. itemType as type
                 matches = /^(\w+)\s+as\s+(.*?)$/i.exec(attr);
                 if (matches) {
@@ -1424,8 +1401,7 @@ class DataQueryable {
                     alias = matches[2];
                     prop = alias || field.property || field.name;
                     return QueryField.select(field.name).from(this.model.viewAdapter).as(prop);
-                }
-                else {
+                } else {
                     //try to match field with expression [field] as [alias] or [nested]/[field] as [alias]
                     field = this.model.field(attr);
                     if (typeof field === 'undefined' || field === null)
@@ -1433,8 +1409,7 @@ class DataQueryable {
                     let f = QueryField.select(field.name).from(this.model.viewAdapter);
                     if (alias) {
                         return f.as(alias);
-                    }
-                    else if (field.property) {
+                    } else if (field.property) {
                         return f.as(field.property);
                     }
                     return f;
@@ -1482,25 +1457,22 @@ class DataQueryable {
      HR6205        Samsung Galaxy Note 10.1 (2014 Edition)  2
      */
     groupBy(attr) {
-        let arr = [], arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : attr;
+        let arr = []; let arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : attr;
         if (_.isArray(arg)) {
             for (let i = 0; i < arg.length; i++) {
                 let x = arg[i];
                 if (DataAttributeResolver.prototype.testNestedAttribute.call(this, x)) {
                     //nested group by
                     arr.push(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, x));
-                }
-                else {
+                } else {
                     arr.push(this.fieldOf(x));
                 }
             }
-        }
-        else {
+        } else {
             if (DataAttributeResolver.prototype.testNestedAttribute.call(this, arg)) {
                 //nested group by
                 arr.push(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, arg));
-            }
-            else {
+            } else {
                 arr.push(this.fieldOf(arg));
             }
         }
@@ -1566,12 +1538,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             firstInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return firstInternal.call(this, callback);
         }
     }
@@ -1584,12 +1557,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             allInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             allInternal.call(this, callback);
         }
     }
@@ -1622,8 +1596,7 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             this.query.take(n);
             return this;
-        }
-        else {
+        } else {
             takeInternal.call(this, n, callback);
         }
     }
@@ -1695,12 +1668,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             listInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return listInternal.call(this, callback);
         }
     }
@@ -1716,7 +1690,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getItems() {
-        let self = this, d = Q.defer();
+        let self = this; let d = Q.defer();
         process.nextTick(function () {
             delete self.query.$inlinecount;
             if ((parseInt(self.query.$take) || 0) < 0) {
@@ -1784,8 +1758,7 @@ class DataQueryable {
                     return resolve(result);
                 });
             });
-        }
-        else {
+        } else {
             return countInternal.bind(self)(callback);
         }
     }
@@ -1808,12 +1781,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             maxInternal.call(this, attr, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return maxInternal.call(this, attr, callback);
         }
     }
@@ -1836,12 +1810,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             minInternal.call(this, attr, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return minInternal.call(this, attr, callback);
         }
     }
@@ -1864,12 +1839,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             averageInternal_.call(this, attr, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return averageInternal_.call(this, attr, callback);
         }
     }
@@ -1886,12 +1862,10 @@ class DataQueryable {
                 self.model.migrate(function (err) {
                     callback(err);
                 });
-            }
-            else {
+            } else {
                 callback();
             }
-        }
-        catch (e) {
+        } catch (e) {
             callback(e);
         }
 
@@ -1923,8 +1897,7 @@ class DataQueryable {
         this.$silent = false;
         if (typeof value === 'undefined') {
             this.$silent = true;
-        }
-        else {
+        } else {
             this.$silent = value;
         }
         return this;
@@ -1955,8 +1928,7 @@ class DataQueryable {
         this.$asArray = false;
         if (typeof value === 'undefined') {
             this.$asArray = true;
-        }
-        else {
+        } else {
             this.$asArray = value;
         }
         return this;
@@ -1974,8 +1946,7 @@ class DataQueryable {
         }
         if (typeof value === 'undefined') {
             return this.query.data[name];
-        }
-        else {
+        } else {
             this.query.data[name] = value;
         }
         return this;
@@ -2056,12 +2027,11 @@ class DataQueryable {
      */
     expand(attr) {
 
-        let self = this, arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : [attr];
+        let self = this; let arg = (arguments.length > 1) ? Array.prototype.slice.call(arguments) : [attr];
         let expanded;
         if (_.isNil(arg)) {
             delete self.$expand;
-        }
-        else {
+        } else {
             if (!_.isArray(this.$expand))
                 self.$expand = [];
             _.forEach(arg, function (x) {
@@ -2080,20 +2050,17 @@ class DataQueryable {
                                 self.$expand.splice(ix, 1);
                                 //push expand as object with options
                                 self.$expand.push(x);
-                            }
-                            else if (typeof expanded === 'object') {
+                            } else if (typeof expanded === 'object') {
                                 //ensure expand options
                                 expanded.options = expanded.options || {};
                                 //assign options to expand.options
                                 _.assign(expanded.options, x.options);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         self.$expand.push(x);
                     }
-                }
-                else {
+                } else {
                     throw new Error("Expand option may be a string or a named object.");
                 }
             });
@@ -2108,19 +2075,16 @@ class DataQueryable {
         let expand = attr;
         if (typeof attr === 'string') {
             expand = attr;
-        }
-        else if (typeof attr.name === "string") {
+        } else if (typeof attr.name === "string") {
             expand = attr.name;
         }
 
         return _.find(this.$expand, function (x) {
             if (typeof x === 'string') {
                 return x === expand;
-            }
-            else if (x instanceof DataAssociationMapping) {
+            } else if (x instanceof DataAssociationMapping) {
                 return x === expand;
-            }
-            else if (typeof x.name === "string") {
+            } else if (typeof x.name === "string") {
                 return x.name === expand;
             }
             return false;
@@ -2155,8 +2119,7 @@ class DataQueryable {
             //delete expandable data (if any)
             delete this.$expand;
             this.$flatten = true;
-        }
-        else {
+        } else {
             delete this.$flatten;
         }
         if (this.$flatten) {
@@ -2517,12 +2480,13 @@ class DataQueryable {
         if (typeof callback !== 'function') {
             let d = Q.defer();
             valueInternal.call(this, function (err, result) {
-                if (err) { return d.reject(err); }
+                if (err) {
+                    return d.reject(err); 
+                }
                 d.resolve(result);
             });
             return d.promise;
-        }
-        else {
+        } else {
             return valueInternal.call(this, callback);
         }
     }
@@ -2552,8 +2516,7 @@ class DataQueryable {
         this.$levels = 1;
         if (typeof value === 'undefined') {
             this.$levels = 1;
-        }
-        else if (typeof value === 'number') {
+        } else if (typeof value === 'number') {
             this.$levels = parseInt(value);
         }
         //set flatten property (backward compatibility issue)
@@ -2603,7 +2566,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getItem() {
-        let self = this, d = Q.defer();
+        let self = this; let d = Q.defer();
         process.nextTick(function () {
             self.first().then(function (result) {
                 return d.resolve(result);
@@ -2632,7 +2595,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getTypedItems() {
-        let self = this, d = Q.defer();
+        let self = this; let d = Q.defer();
         process.nextTick(function () {
             self.getItems().then(function (result) {
                 return d.resolve(self.model.convert(result));
@@ -2647,7 +2610,7 @@ class DataQueryable {
      * @returns {Promise|*}
      */
     getTypedList() {
-        let self = this, d = Q.defer();
+        let self = this; let d = Q.defer();
         process.nextTick(function () {
             self.list().then(function (result) {
                 result.value = self.model.convert(result.value.slice(0));
@@ -2687,8 +2650,7 @@ function resolveValue(obj) {
         let attr = obj.replace(/^\$it\//,'');
         if (DataAttributeResolver.prototype.testNestedAttribute(attr)) {
             return DataAttributeResolver.prototype.resolveNestedAttribute.call(self, attr);
-        }
-        else {
+        } else {
             attr = DataAttributeResolver.prototype.testAttribute(attr);
             if (attr) {
                 return self.fieldOf(attr.name);
@@ -2712,18 +2674,15 @@ function select_(arg) {
     let a = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self,arg);
     if (a) {
         return DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, a.aggr , a.name, a.property);
-    }
-    else {
+    } else {
         a = DataAttributeResolver.prototype.testNestedAttribute.call(self,arg);
         if (a) {
             return DataAttributeResolver.prototype.selecteNestedAttribute.call(self, a.name, a.property);
-        }
-        else {
+        } else {
             a = DataAttributeResolver.prototype.testAttribute.call(self,arg);
             if (a) {
                 return self.fieldOf(a.name, a.property);
-            }
-            else {
+            } else {
                 return self.fieldOf(arg);
             }
         }
@@ -2740,8 +2699,7 @@ function firstInternal(callback) {
     self.skip(0).take(1, function(err, result) {
         if (err) {
             callback(err);
-        }
-        else {
+        } else {
             if (result.length>0)
                 callback(null, result[0]);
             else
@@ -2749,8 +2707,6 @@ function firstInternal(callback) {
         }
     });
 }
-
-
 
 /**
  * @private
@@ -2771,7 +2727,6 @@ function allInternal(callback) {
     execute_.call(self, callback);
 }
 
-
 /**
  * @this DataQueryable
  * @private
@@ -2791,9 +2746,6 @@ function takeInternal(n, callback) {
     execute_.call(self,callback);
 }
 
-
-
-
 /**
  * @private
  * @this DataQueryable
@@ -2809,12 +2761,10 @@ function listInternal(callback) {
         self.select();
 
         //take objects
-        self.take(take, function(err, result)
-        {
+        self.take(take, function(err, result) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 /**
                  * @type {DataQueryable|*}
                  */
@@ -2823,8 +2773,7 @@ function listInternal(callback) {
                 q1.count(function(err, total) {
                     if (err) {
                         callback(err);
-                    }
-                    else {
+                    } else {
                         //and finally create result set
                         let res = { total: total, skip: parseInt(self.query.$skip) || 0 , value: (result || []) };
                         callback(null, res);
@@ -2832,13 +2781,10 @@ function listInternal(callback) {
                 });
             }
         });
-    }
-    catch(e) {
+    } catch(e) {
         callback(e);
     }
 }
-
-
 
 /**
  * @this DataQueryable
@@ -2872,7 +2818,6 @@ function countInternal(callback) {
     });
 }
 
-
 /**
  * @private
  * @this DataQueryable
@@ -2884,11 +2829,12 @@ function maxInternal(attr, callback) {
     delete self.query.$skip;
     let field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'max', attr);
     self.select([field]).flatten().value(function(err, result) {
-        if (err) { return callback(err); }
+        if (err) {
+            return callback(err); 
+        }
         callback(null, result)
     });
 }
-
 
 /**
  * @private
@@ -2901,11 +2847,12 @@ function minInternal(attr, callback) {
     delete self.query.$skip;
     let field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'min', attr);
     self.select([field]).flatten().value(function(err, result) {
-        if (err) { return callback(err); }
+        if (err) {
+            return callback(err); 
+        }
         callback(null, result)
     });
 }
-
 
 /**
  * @private
@@ -2918,11 +2865,12 @@ function averageInternal_(attr, callback) {
     delete self.query.$skip;
     let field = DataAttributeResolver.prototype.selectAggregatedAttribute.call(self, 'avg', attr);
     self.select([field]).flatten().value(function(err, result) {
-        if (err) { return callback(err); }
+        if (err) {
+            return callback(err); 
+        }
         callback(null, result)
     });
 }
-
 
 /**
  * Executes the underlying query statement.
@@ -2930,7 +2878,7 @@ function averageInternal_(attr, callback) {
  * @param {Function} callback
  * @private
  */
- function execute_(callback) {
+function execute_(callback) {
     let self = this;
     self.migrate(function(err) {
         if (err) { 
@@ -2942,12 +2890,16 @@ function averageInternal_(attr, callback) {
             let flatten = self.$flatten || (self.getLevels()===0);
             if (!flatten) {
                 //get expandable fields
-                let expandables = self.model.attributes.filter(function(x) { return x.expandable; });
+                let expandables = self.model.attributes.filter(function(x) {
+                    return x.expandable; 
+                });
                 //get selected fields
                 let selected = self.query.$select[self.model.viewAdapter];
                 if (_.isArray(selected)) {
                     //remove hidden fields
-                    let hiddens = self.model.attributes.filter(function(x) { return x.hidden; });
+                    let hiddens = self.model.attributes.filter(function(x) {
+                        return x.hidden; 
+                    });
                     if (hiddens.length>0) {
                         let x;
                         for (let i = 0; i < selected.length; i++) {
@@ -2990,8 +2942,7 @@ function averageInternal_(attr, callback) {
                     }
                 }
             }
-        }
-        catch(err) {
+        } catch(err) {
             return callback(err);
         }
 
@@ -2999,9 +2950,10 @@ function averageInternal_(attr, callback) {
         if (self.$view) {
             return self.model.filter({ $filter: self.$view.filter, $order:self.$view.order, $group:self.$view.group }, function(err, q) {
                 if (err) {
-                    if (err) { callback(err); }
-                }
-                else {
+                    if (err) {
+                        callback(err); 
+                    }
+                } else {
                     //prepare current filter
                     if (q.query.$prepared) {
                         if (event.query.$where)
@@ -3014,9 +2966,10 @@ function averageInternal_(attr, callback) {
                     //add order fields
                     if (q.query.$order) {
                         if (_.isArray(event.query.$order)) {
-                            q.query.$order.forEach(function(x) { event.query.$order.push(x); });
-                        }
-                        else {
+                            q.query.$order.forEach(function(x) {
+                                event.query.$order.push(x); 
+                            });
+                        } else {
                             event.query.$order = q.query.$order;
                         }
                     }
@@ -3024,8 +2977,7 @@ function averageInternal_(attr, callback) {
                     return finalExecuteInternal_.call(self, event, callback);
                 }
             });
-        }
-        else {
+        } else {
             //execute query
             return finalExecuteInternal_.call(self, event, callback);
         }
@@ -3038,39 +2990,52 @@ function averageInternal_(attr, callback) {
  * @param {*} event
  * @param {Function} callback
  */
- function finalExecuteInternal_(event, callback) {
-    let self = this, context = self.ensureContext();
+function finalExecuteInternal_(event, callback) {
+    let self = this; let context = self.ensureContext();
     //pass data queryable to event
     event.emitter = this;
     let afterListenerCount = self.model.listeners('after.execute').length;
     self.model.emit('before.execute', event, function(err) {
         if (err) {
             callback(err);
-        }
-        else {
+        } else {
             //if command has been completed, do not execute the command against the underlying database
             if (typeof event['result'] !== 'undefined') {
                 //call after execute
                 let result = event['result'];
                 return afterExecute_.call(self, result, function(err, result) {
-                    if (err) { return callback(err); }
-                    if (afterListenerCount===0) { return callback(null, result); }
+                    if (err) {
+                        return callback(err); 
+                    }
+                    if (afterListenerCount===0) {
+                        return callback(null, result); 
+                    }
                     //raise after execute event
                     self.model.emit('after.execute', event, function(err) {
-                        if (err) { return callback(err); }
+                        if (err) {
+                            return callback(err); 
+                        }
                         callback(null, result);
                     });
                 });
             }
             context.db.execute(event.query, null, function(err, result) {
-                if (err) { return callback(err); }
+                if (err) {
+                    return callback(err); 
+                }
                 afterExecute_.call(self, result, function(err, result) {
-                    if (err) { return callback(err); }
-                    if (afterListenerCount===0) { return callback(null, result); }
+                    if (err) {
+                        return callback(err); 
+                    }
+                    if (afterListenerCount===0) {
+                        return callback(null, result); 
+                    }
                     //raise after execute event
                     event.result = result;
                     self.model.emit('after.execute', event, function(err) {
-                        if (err) { return callback(err); }
+                        if (err) {
+                            return callback(err); 
+                        }
                         callback(null, result);
                     });
                 });
@@ -3096,16 +3061,14 @@ function afterExecute_(result, callback) {
         //get distinct values
 
         let expands = _.intersectionBy(_.reverse(self.$expand), function(x) {
-           if (typeof x === 'string') {
-               return x;
-           }
-           else if (x instanceof DataAssociationMapping) {
+            if (typeof x === 'string') {
                 return x;
-           }
-           else if (typeof x.name === "string") {
-               return x.name;
-           }
-           return x;
+            } else if (x instanceof DataAssociationMapping) {
+                return x;
+            } else if (typeof x.name === "string") {
+                return x.name;
+            }
+            return x;
         });
 
         //expands = self.$expand.distinct(function(x) { return x; });
@@ -3114,8 +3077,8 @@ function afterExecute_(result, callback) {
              * get mapping
              * @type {DataAssociationMapping|*}
              */
-             let mapping = null;
-             let options = { };
+            let mapping = null;
+            let options = { };
             try {
                 
                 if (expand instanceof DataAssociationMapping) {
@@ -3130,45 +3093,43 @@ function afterExecute_(result, callback) {
                     if (typeof expand.options !== 'undefined' && expand.options !== null) {
                         _.assign(options, expand.options);
                     }
-                }
-                else {
+                } else {
                     //get mapping from expand attribute
                     let expandAttr;
                     if (typeof expand === 'string') {
                         //get expand attribute as string
                         expandAttr = expand;
-                    }
-                    else if ((typeof expand === 'object') && hasOwnProperty(expand, 'name')) {
+                    } else if ((typeof expand === 'object') && hasOwnProperty(expand, 'name')) {
                         //get expand attribute from Object.name property
                         expandAttr = expand.name;
                         //get expand options
                         if (typeof expand.options !== 'undefined' && expand.options !== null) {
                             options = expand.options;
                         }
-                    }
-                    else {
+                    } else {
                         //invalid expand parameter
                         return callback(new Error("Invalid expand option. Expected string or a named object."));
                     }
                     field = self.model.field(expandAttr);
                     if (typeof field === 'undefined')
-                        field = self.model.attributes.find(function(x) { return x.type===expandAttr });
+                        field = self.model.attributes.find(function(x) {
+                            return x.type===expandAttr 
+                        });
                     if (field) {
                         mapping = self.model.inferMapping(field.name);
                         if (expands.find(function(x) {
-                                return (x.parentField === mapping.parentField) &&
+                            return (x.parentField === mapping.parentField) &&
                                     (x.parentModel === mapping.parentModel) &&
                                     (x.childField === mapping.childField) &&
                                     (x.childModel === mapping.childModel)
-                            })) {
+                        })) {
                             return cb();
                         }
                         if (mapping) {
                             mapping.refersTo = mapping.refersTo || field.name;
                             if (_.isObject(mapping.options)) {
                                 _.assign(options, mapping.options);
-                            }
-                            else if (_.isArray(mapping.select) && mapping.select.length>0) {
+                            } else if (_.isArray(mapping.select) && mapping.select.length>0) {
                                 options['$select'] = mapping.select.join(",");
                             }
                             // check data view attribute mapping options
@@ -3189,8 +3150,7 @@ function afterExecute_(result, callback) {
                 }
                 if (options instanceof DataQueryable) {
                     // do nothing
-                }
-                else {
+                } else {
                     //set default $top option to -1 (backward compatibility issue)
                     if (!hasOwnProperty(options, "$top")) {
                         options["$top"] = -1;
@@ -3202,8 +3162,7 @@ function afterExecute_(result, callback) {
                         }
                     }
                 }
-            }
-            catch(e) {
+            } catch(e) {
                 return cb(e);
             }
 
@@ -3219,24 +3178,21 @@ function afterExecute_(result, callback) {
                             }).catch(function(err) {
                                 return cb(err);
                             });
-                    }
-                    else if (mapping.childModel===self.model.name && mapping.associationType==='junction') {
+                    } else if (mapping.childModel===self.model.name && mapping.associationType==='junction') {
                         return mappingExtensions.extend(thisMapping).for(self).getParents_v1(result)
                             .then(function() {
                                 return cb();
-                        }).catch(function(err) {
-                           return cb(err);
-                        });
-                    }
-                    else if (mapping.parentModel===self.model.name && mapping.associationType==='junction') {
+                            }).catch(function(err) {
+                                return cb(err);
+                            });
+                    } else if (mapping.parentModel===self.model.name && mapping.associationType==='junction') {
                         return mappingExtensions.extend(thisMapping).for(self).getChilds_v1(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
                                 return cb(err);
                             });
-                    }
-                    else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
+                    } else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
                         return mappingExtensions.extend(thisMapping).for(self).getAssociatedParents_v1(result)
                             .then(function() {
                                 return cb();
@@ -3244,24 +3200,20 @@ function afterExecute_(result, callback) {
                                 return cb(err);
                             });
                     }
-                }
-                else {
+                } else {
                     return cb(new Error("Not yet implemented"));
                 }
-            }
-            else {
+            } else {
                 return cb(new DataError("EASSOC", sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
             }
         }, function(err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 toArrayCallback.call(self, result, callback);
             }
         });
-    }
-    else {
+    } else {
         toArrayCallback.call(self, result, callback);
     }
 }
@@ -3293,16 +3245,13 @@ function toArrayCallback(result, callback) {
                         arr.push(x[key]);
                 });
                 return callback(null, arr);
-            }
-            else {
+            } else {
                 return callback(null, result);
             }
-        }
-        else {
+        } else {
             return callback(null, result);
         }
-    }
-    catch (e) {
+    } catch (e) {
         return callback(e);
     }
 }
@@ -3317,10 +3266,16 @@ function valueInternal(callback) {
         this.select(this.model.primaryKey);
     }
     firstInternal.call(this, function(err, result) {
-        if (err) { return callback(err); }
-        if (_.isNil(result)) { return callback(); }
+        if (err) {
+            return callback(err); 
+        }
+        if (_.isNil(result)) {
+            return callback(); 
+        }
         let key = Object.keys(result)[0];
-        if (typeof key === 'undefined') { return callback(); }
+        if (typeof key === 'undefined') {
+            return callback(); 
+        }
         callback(null, result[key]);
     });
 }

@@ -352,7 +352,7 @@ class DataConfigurationStrategy extends ConfigurationStrategy {
             //first of all validate module
             x.invariantName = x.invariantName || 'unknown';
             x.name = x.name || 'Unknown Data Adapter';
-            let valid = false, adapterModule;
+            let valid = false; let adapterModule;
             if (x.type) {
                 try {
                     if (/^@themost\//.test(x.type)) {

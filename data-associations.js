@@ -150,7 +150,8 @@ class DataObjectAssociationListener {
                             if (x.mapping.childModel===event.model.name) {
                                 junction = new HasParentJunction(obj, x.mapping);
                                 if (event.state===1 || event.state===2) {
-                                    let toBeRemoved = [], toBeInserted = [];
+                                    let toBeRemoved = [];
+                                    let toBeInserted = [];
                                     childs.forEach(function(x) {
                                         if (x.$state === 4) {
                                             toBeRemoved.push(x);
@@ -213,7 +214,7 @@ class DataObjectAssociationListener {
                                             if (err) {
                                                 return cb(err); 
                                             }
-                                            let toBeRemoved = [], toBeInserted = [];
+                                            let toBeRemoved = []; let toBeInserted = [];
                                             childs.forEach(function(x) {
                                                 if (x.$state === 4) {
                                                     toBeRemoved.push(x);

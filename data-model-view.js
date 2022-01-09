@@ -39,9 +39,7 @@ class DataModelView {
 
                         else
                             attrs.push(_.assign({}, x));
-                    }
-
-                    else
+                    } else
                         //unbound view (?)
                         attrs.push(_.assign({}, x));
 
@@ -56,7 +54,7 @@ class DataModelView {
      * @returns {Array|*}
      */
     cast(obj) {
-        let self = this, res;
+        let self = this; let res;
         let localFields = this.fields.filter(function (y) {
             return !_.isNil(self.model.field(y.name));
         });
@@ -71,8 +69,7 @@ class DataModelView {
                 arr.push(res);
             });
             return arr;
-        }
-        else {
+        } else {
             res = {};
             localFields.forEach(function (y) {
                 if (typeof obj[y.name] !== 'undefined')

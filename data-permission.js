@@ -172,7 +172,7 @@ class DataPermissionEventListener {
             }
         }
         //get user key
-        let users = context.model('User'), permissions = context.model('Permission');
+        let users = context.model('User'); let permissions = context.model('Permission');
         if (_.isNil(users)) {
             //do nothing
             return callback();
@@ -355,9 +355,9 @@ class DataPermissionEventListener {
                         }
                         if (requestMask === PermissionMask.Create) {
                             let query = QueryUtils.query(model.viewAdapter);
-                            let fields = [], field;
+                            let fields = []; let field;
                             //cast target
-                            let name, obj = event.target;
+                            let name; let obj = event.target;
                             model.attributes.forEach(function (x) {
                                 name = hasOwnProperty(obj, x.property) ? x.property : x.name;
                                 if (hasOwnProperty(obj, name)) {
@@ -526,7 +526,7 @@ class DataPermissionEventListener {
         if (event.query) {
 
             //get user key
-            let users = context.model('User'), permissions = context.model('Permission');
+            let users = context.model('User'); let permissions = context.model('Permission');
             if (_.isNil(users)) {
                 //do nothing
                 callback(null);
@@ -569,7 +569,7 @@ class DataPermissionEventListener {
 
                 // set query lastIndex
                 event.query.$lastIndex = parseInt(event.query.$lastIndex) || 0;
-                let cancel = false, assigned = false, entity = new QueryEntity(model.viewAdapter), expand = null, perms1 = new QueryEntity(permissions.viewAdapter).as(permissions.viewAdapter + event.query.$lastIndex.toString()), expr = null;
+                let cancel = false; let assigned = false; let entity = new QueryEntity(model.viewAdapter); let expand = null; let perms1 = new QueryEntity(permissions.viewAdapter).as(permissions.viewAdapter + event.query.$lastIndex.toString()); let expr = null;
                 async.eachSeries(privileges, function (item, cb) {
                     if (cancel) {
                         return cb();
@@ -847,11 +847,9 @@ function effectiveAccounts(context, callback) {
     }
 }
 
-
 module.exports = {
     DataPermissionEventArgs,
     DataPermissionEventListener,
     PermissionMask
 };
-
 
