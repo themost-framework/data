@@ -4,7 +4,6 @@ const {DataNotFoundError} = require("@themost/common");
 const async = require("async");
 const { hasOwnProperty } = require('./has-own-property');
 
-
 /**
  * @classdesc Validates the state of a data object. DataStateValidatorListener is one of the default listeners which are being registered for all data models.
  */
@@ -22,7 +21,9 @@ class DataStateValidatorListener {
             if (_.isNil(event)) {
                 return callback();
             }
-            if (_.isNil(event.state)) { event.state = 1; }
+            if (_.isNil(event.state)) {
+                event.state = 1; 
+            }
 
             let model = event.model, target = event.target;
             //if model or target is not defined do nothing and exit
@@ -34,10 +35,8 @@ class DataStateValidatorListener {
             //if target has $state property defined, set this state and exit
             if (event.target.$state) {
                 event.state = event.target.$state;
-            }
-
-            //if object has primary key
-            else if (keyState) {
+            } else if (keyState) {
+                //if object has primary key
                 event.state = 2;
             }
             //if state is Update (2)
@@ -45,19 +44,21 @@ class DataStateValidatorListener {
                 //if key exists exit
                 if (keyState) {
                     return callback();
-                }
-                else {
+                } else {
                     return _mapKey.call(model, target, function (err) {
-                        if (err) { return callback(err); }
+                        if (err) {
+                            return callback(err); 
+                        }
                         //if object is mapped with a key exit
                         return callback();
                     });
                 }
-            }
-            else if (event.state === 1) {
+            } else if (event.state === 1) {
                 if (!keyState) {
                     return _mapKey.call(model, target, function (err, result) {
-                        if (err) { return callback(err); }
+                        if (err) {
+                            return callback(err); 
+                        }
                         if (result) {
                             //set state to Update
                             event.state = 2;
@@ -67,13 +68,11 @@ class DataStateValidatorListener {
                 }
                 //otherwise do nothing
                 return callback();
-            }
-            else {
+            } else {
                 return callback();
             }
 
-        }
-        catch (er) {
+        } catch (er) {
             callback(er);
         }
     }
@@ -84,9 +83,13 @@ class DataStateValidatorListener {
      */
     beforeRemove(event, callback) {
         //validate event arguments
-        if (_.isNil(event)) { return callback(); }
+        if (_.isNil(event)) {
+            return callback(); 
+        }
         //validate state (the default is Delete=4)
-        if (_.isNil(event.state)) { event.state = 4; }
+        if (_.isNil(event.state)) {
+            event.state = 4; 
+        }
         let model = event.model, target = event.target;
         //if model or target is not defined do nothing and exit
         if (_.isNil(model) || _.isNil(target)) {
@@ -113,12 +116,10 @@ class DataStateValidatorListener {
         _mapKey.call(model, target, function (err, result) {
             if (err) {
                 return callback(err);
-            }
-            else if (typeof result !== 'undefined' && result !== null) {
+            } else if (typeof result !== 'undefined' && result !== null) {
                 //continue and exit
                 return callback();
-            }
-            else {
+            } else {
                 callback(new DataNotFoundError('The target object cannot be found or is inaccessible.', null, model.name));
             }
         });
@@ -141,7 +142,9 @@ function _mapKey(obj, callback) {
         return callback(null, true);
     }
     //get unique constraints
-    let arr = self.constraintCollection.filter(function(x) { return x.type==='unique' }), objectFound=false;
+    let arr = self.constraintCollection.filter(function(x) {
+            return x.type==='unique' 
+        }), objectFound=false;
     if (arr.length === 0) {
         //do nothing and exit
         return callback();
@@ -176,54 +179,48 @@ function _mapKey(obj, callback) {
                     if (_.isObject(mapping) && (typeof parentObj === 'object')) {
                         if (hasOwnProperty(parentObj, mapping.parentField)) {
                             fnAppendQuery(attr, parentObj[mapping.parentField]);
-                        }
-                        else {
+                        } else {
                             /**
                              * Try to find if parent model has a unique constraint and constraint fields are defined
                              * @type {DataModel}
                              */
                             let parentModel = self.context.model(mapping.parentModel),
-                                parentConstraint = parentModel.constraintCollection.find(function(x) { return x.type==='unique' });
+                                parentConstraint = parentModel.constraintCollection.find(function(x) {
+                                    return x.type==='unique' 
+                                });
                             if (parentConstraint) {
                                 parentConstraint.fields.forEach(function(x) {
                                     fnAppendQuery(attr + "/" + x, parentObj[x]);
                                 });
-                            }
-                            else {
+                            } else {
                                 fnAppendQuery(attr, null);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         fnAppendQuery(attr, value);
                     }
                 }
                 if (_.isNil(q)) {
                     cb();
-                }
-                else {
+                } else {
                     q.silent().flatten().select(self.primaryKey).value(function(err, result) {
                         if (err) {
                             cb(err);
-                        }
-                        else if (typeof result !== 'undefined' && result !== null) {
+                        } else if (typeof result !== 'undefined' && result !== null) {
                             //set primary key value
                             obj[self.primaryKey] = result;
                             //object found
                             objectFound=true;
                             cb();
-                        }
-                        else {
+                        } else {
                             cb();
                         }
                     });
                 }
-            }
-            else {
+            } else {
                 cb();
             }
-        }
-        catch(e) {
+        } catch(e) {
             cb(e);
         }
     }, function(err) {

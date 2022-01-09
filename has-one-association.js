@@ -1,198 +1,93 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
-var LangUtils = require('@themost/common').LangUtils;
-var _ = require('lodash');
-var QueryExpression = require('@themost/query').QueryExpression;
-var QueryField = require('@themost/query').QueryField;
-var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataQueryable = require('./data-queryable').DataQueryable;
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
+const { QueryField } = require('@themost/query');
+const { DataAssociationMapping } = require('./types');
+const { DataQueryable } = require('./data-queryable');
+const { DataError } = require('@themost/common');
+const { instanceOf } = require('./instance-of');
+const { hasOwnProperty } = require('./has-own-property');
+const parentProperty = Symbol('parent');
+const mappingProperty = Symbol('mapping');
 
 /**
- * @classdesc Represents a foreign key association between two models.
- <p>
- This association may be defined in a field of a data model as follows:
- </p>
- <pre class="prettyprint"><code>
- {
-    "name": "Order", "id": 449, "title": "Order", "hidden": false, "sealed": false,
-    "abstract": false, "version": "1.0",
-    "fields": [
-        ...
-        {
-            "name": "customer",
-            "title": "Customer",
-            "description": "Party placing the order.",
-            "type": "Party"
-        }
-        ...
-    ]
- }
- </code></pre>
- <p>
- where model Order has a foreign key association with model Party (Person or Organization).
- HasOneAssociation class inherits DataQueryable class for selecting the associated item.
- </p>
- <pre class="prettyprint"><code>
- var orders = context.model('Order');
- orders.where('id').equal(145).first().then(function(result) {
-        var order = orders.convert(result);
-        order.property('customer')
-            .first().then(function(result) {
-                done(null, result);
-            }).catch(function(err) {
-                done(err);
-            });
-    }).catch(function(err) {
-        done(err);
-    });
- </code></pre>
- * @class
- * @constructor
- * @augments DataQueryable
- * @param {DataObject} obj - An instance of DataObject class that represents the parent data object
- * @param {string|*} association A string that represents the name of the field which holds association mapping or the association mapping itself.
- * @property {DataObject} parent Gets or sets the parent data object
+ * @classdesc Represents a foreign key association
  */
-function HasOneAssociation(obj, association)
-{
-    /**
-     * @type {DataObject}
-     * @private
-     */
-    var parent = obj;
-    /**
-     * Gets or sets the parent data object
-     * @type DataObject
-     */
-    Object.defineProperty(this, 'parent', { get: function () {
-        return parent;
-    }, set: function (value) {
-        parent = value;
-    }, configurable: false, enumerable: false});
-    var self = this;
-    /**
-     * @type {DataAssociationMapping}
-     */
-    this.mapping = undefined;
-    if (typeof association === 'string') {
-        //infer mapping from field name
-        //set relation mapping
-        if (self.parent!==null) {
-            var model = self.parent.getModel();
-            if (model!==null)
-                self.mapping = model.inferMapping(association);
+class HasOneAssociation extends DataQueryable {
+    constructor(object, association) {
+        super();
+        // set parent
+        this.parent = object;
+        // validate data association
+        if (instanceOf(association, DataAssociationMapping) === false) {
+            throw new Error('Expected a valid data association');
+        }
+        // set mapping
+        this.mapping = association;
+        if (this.parent == null) {
+            throw new DataError('ERR_ASSOCIATION_PARENT', 'Data association parent object cannot be empty at this context.');
+        }
+        /**
+         * @type {DataModel}
+         */
+        this.model = this.parent.context.model(this.mapping.parentModel);
+        // set silent mode
+        const silentMode = this.parent.getModel().isSilent();
+        // set silent model
+        this.model.silent(silentMode);
+
+        let value;
+        if (hasOwnProperty(this.parent, this.mapping.childField)) {
+            // get foreign key
+            value = this.parent[this.mapping.childField];
+            // and prepare query
+            // e.g. SELECT * FROM People WHERE id = @value
+            this.where(this.mapping.parentField).equal(value).prepare();
+        } else {
+            let childModel = this.parent.getModel();
+            let parentModel = this.model;
+            // wildcard select e.g. SELECT [People].* FROM [People]
+            this.select();
+            // get random alias
+            const alias = childModel.name + '0';
+            // get join left operand e.g. [People].[id]
+            let left = new QueryField(this.mapping.parentField).from(parentModel.viewAdapter);
+            // get join right operand e.g. [Order0].[customer]
+            let right = new QueryField(this.mapping.childField).from(alias);
+            // create join 
+            // e.g. INNER JOIN [Order] AS [Order0] ON [People].[id] = [Order0].[customer]
+            this.query.join(childModel.viewAdapter, [], alias).with([left, right]);
+            // prepare query e.g. WHERE [Order0].[id] = @id
+            this.query.where(new QueryField(childModel.primaryKey).from(alias))
+                .equal(this.parent.getId())
+                .prepare();
         }
     }
-    else if (typeof association === 'object' && association !==null) {
-        //get the specified mapping
-        if (association instanceof DataAssociationMapping)
-            self.mapping = association;
-        else
-            self.mapping = _.assign(new DataAssociationMapping(), association);
+
+    get mapping() {
+        return this[mappingProperty];
     }
 
-    /**
-     * @type QueryExpression
-     */
-    var _query;
-    //override query property
-    Object.defineProperty(this, 'query', {
-        get:function() {
-            //if query is already defined
-            if (_query != null) {
-                return _query;
-            }
-            if (typeof self.mapping === 'undefined' || self.mapping===null)
-                throw new Error('Data association mapping cannot be empty at this context.');
-            //get parent object
-            var associatedValue = null;
-            if (self.parent.hasOwnProperty(self.mapping.childField)) {
-                // get associated object
-                var associatedObject = self.parent[self.mapping.childField];
-                // if parent object has a property for mapping child field
-                if (associatedObject && associatedObject.hasOwnProperty(self.mapping.parentField)) {
-                    // get associated value
-                    associatedValue = associatedObject[self.mapping.parentField];
-                }
-                else if (associatedObject != null ) {
-                    associatedValue = associatedObject;
-                }
-                // return query
-                _query = self.model.where(self.mapping.parentField).equal(associatedValue).prepare().query;
-                return _query;
-            }
-            else {
-                var childModel = self.parent.getModel();
-                var parentModel = self.model;
-                /**
-                 * get empty query expression
-                 * @type QueryExpression
-                 */
-                _query = self.model.asQueryable().cache(false).select().query;
-                // get random alias
-                var alias = self.model.name + '0';
-                // get join left operand
-                var left = new QueryExpression().select(self.mapping.parentField).from(parentModel.viewAdapter).$select;
-                // get join right operand
-                var right = new QueryExpression().select(self.mapping.childField).from(alias).$select;
-                // create join
-                _query.join(childModel.viewAdapter, [], alias).with([left, right]);
-                // inject where
-                _query.injectWhere(new QueryExpression().where(new QueryField(self.model.primaryKey).from(alias)).equal(self.parent.getId()).$where);
-                // return query
-                return _query.prepare();
-            }
-        },
-        configurable:false,
-        enumerable:false
-    });
+    set mapping(value) {
+        this[mappingProperty] = value;
+    }
 
-    /**
-     * @type DataModel
-     */
-    var _model;
-    Object.defineProperty(this, 'model', {
-        get: function() {
-            if (_model) {
-                return _model;
-            }
-            if (self.parent && self.mapping) {
-                _model = this.parent.context.model(self.mapping.parentModel);
-                return _model;
-            }
-            return null;
-        },
-        enumerable: false
-    });
+    get parent() {
+        return this[parentProperty];
+    }
 
-
+    set parent(value) {
+        this[parentProperty] = value;
+    }
+    getItems() {
+        throw new Error('Unsupported method call:getItems()');
+    }
+    getList() {
+        throw new Error('Unsupported method call:getList()');
+    }
+    getAllItems() {
+        throw new Error('Unsupported method call:getAllItems()');
+    }
 }
-LangUtils.inherits(HasOneAssociation, DataQueryable);
 
-HasOneAssociation.prototype.getItems = function() {
-    throw new Error('Unsupported method call:getItems()')
-};
-
-HasOneAssociation.prototype.getList = function() {
-    throw new Error('Unsupported method call:getList()')
-};
-
-HasOneAssociation.prototype.getItem = function() {
-    return HasOneAssociation.super_.prototype.getItem.bind(this)();
-};
-
-HasOneAssociation.prototype.getAllItems = function() {
-    throw new Error('Unsupported method call:getAllItems()')
-};
-
-if (typeof exports !== 'undefined')
-{
-    module.exports.HasOneAssociation = HasOneAssociation;
+module.exports = {
+    HasOneAssociation
 }

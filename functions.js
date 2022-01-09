@@ -47,8 +47,7 @@ class FunctionContext {
             //check parameters (match[3])
             if (match[3].length === 0) {
                 expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2(); });");
-            }
-            else {
+            } else {
                 expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2($3); });");
             }
             //evaluate expression
@@ -61,16 +60,13 @@ class FunctionContext {
                     }).catch(function (err) {
                         callback(err);
                     });
-                }
-                else {
+                } else {
                     return callback(null, value1);
                 }
-            }
-            catch (err) {
+            } catch (err) {
                 callback(err);
             }
-        }
-        else {
+        } else {
             TraceUtils.error(sprintf('Cannot evaluate %s.', expr1));
             callback(new Error('Cannot evaluate expression.'));
         }
@@ -148,8 +144,7 @@ class FunctionContext {
                     res += _.random(1000000000, 9000000000);
                 });
                 return resolve(res.substr(0, length));
-            }
-            catch (err) {
+            } catch (err) {
                 reject(err);
             }
         });
@@ -169,8 +164,7 @@ class FunctionContext {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }
                 resolve(str);
-            }
-            catch (err) {
+            } catch (err) {
                 return reject(err);
             }
         });
@@ -188,8 +182,7 @@ class FunctionContext {
                     str += chars.substr(_.random(0, chars.length - 1), 1);
                 }
                 return resolve('{clear}' + str);
-            }
-            catch (err) {
+            } catch (err) {
                 return reject(err);
             }
         });
@@ -219,8 +212,7 @@ class FunctionContext {
                         context.user = user;
                     }
                     return resolve(undefinedUser);
-                }
-                else if (_.isNil(result)) {
+                } else if (_.isNil(result)) {
                     //try to get undefined user
                     parser = parsers['parse' + userModel.field('id').type];
                     if (typeof parser === 'function')
@@ -231,8 +223,7 @@ class FunctionContext {
                         context.user = user;
                     }
                     return resolve(undefinedUser);
-                }
-                else {
+                } else {
                     //set id for next calls
                     user.id = result.id;
                     return resolve(result.id);

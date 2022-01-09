@@ -9,6 +9,8 @@ const {DataAssociationMapping} = require('./types');
 const {QueryField, QueryEntity, QueryUtils} = require('@themost/query');
 const Q = require('q');
 const aliasProperty = Symbol('alias');
+const modelProperty = Symbol('model');
+const queryProperty = Symbol('query');
 const {hasOwnProperty} = require('./has-own-property');
 
 class DataAttributeResolver {
@@ -557,47 +559,36 @@ class DataAttributeResolver {
  */
 class DataQueryable {
     constructor(model) {
-        /**
-         * @type {QueryExpression}
-         * @private
-         */
-        let q = null;
-        /**
-         * Gets or sets an array of expandable models
-         * @type {Array}
-         * @private
-         */
-        this.$expand = undefined;
-        /**
-         * @type {Boolean}
-         * @private
-         */
-        this.$flatten = undefined;
-        /**
-         * @type {DataModel}
-         * @private
-         */
-        let m = model;
+        const self = this;
         Object.defineProperty(this, 'query', {
             get: function () {
-                if (!q) {
-                    if (!m) {
+                if (this[queryProperty] == null) {
+                    if (self.model == null) {
                         return null;
                     }
-                    q = QueryUtils.query(m.viewAdapter);
+                    self[queryProperty] = QueryUtils.query(self.model.viewAdapter);
                 }
-                return q;
-            }, configurable: false, enumerable: false
+                return self[queryProperty];
+            },
+            configurable: true,
+            enumerable: false
         });
 
         Object.defineProperty(this, 'model', {
             get: function () {
-                return m;
-            }, configurable: false, enumerable: false
+                return self[modelProperty];
+            },
+            set: function(value) {
+              self[modelProperty] = value;
+              if (value != null) {
+                  const silentMode = value.isSilent();
+                  self.silent(silentMode);
+              }
+            },
+            configurable: true,
+            enumerable: false
         });
-        //get silent property
-        if (m)
-            this.silent(m.$silent);
+        self.model = model;
     }
     /**
      * Clones the current DataQueryable instance.
@@ -1321,7 +1312,7 @@ class DataQueryable {
             }
         }
         if (_.isNil(arr)) {
-            if (!self.query.hasFields()) {
+            if (self.query.hasFields() === false) {
                 // //enumerate fields
                 let fields = self.model.attributes.filter(function (x) {
                     return (x.many === false) || (_.isNil(x.many)) || ((x.expandable === true) && (self.getLevels() > 0));
@@ -3336,5 +3327,7 @@ function valueInternal(callback) {
 
 module.exports = {
     DataQueryable,
-    DataAttributeResolver
+    DataAttributeResolver,
+    modelProperty,
+    queryProperty
 };

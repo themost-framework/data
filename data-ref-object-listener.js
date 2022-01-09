@@ -24,14 +24,11 @@ class DataReferencedObjectListener {
                 function (mapping, cb) {
                     if (mapping.associationType === 'association') {
                         return beforeRemoveAssociatedObjects(event, mapping, cb);
-                    }
-                    else if (mapping.associationType === 'junction' && mapping.parentModel === event.model.name) {
+                    } else if (mapping.associationType === 'junction' && mapping.parentModel === event.model.name) {
                         return beforeRemoveChildConnectedObjects(event, mapping, cb);
-                    }
-                    else if (mapping.associationType === 'junction' && mapping.childModel === event.model.name) {
+                    } else if (mapping.associationType === 'junction' && mapping.childModel === event.model.name) {
                         return beforeRemoveParentConnectedObjects(event, mapping, cb);
-                    }
-                    else {
+                    } else {
                         return cb();
                     }
                 }, function (err) {
@@ -77,55 +74,50 @@ function beforeRemoveAssociatedObjects(event, mapping, callback) {
                 .cache(false)
                 .silent()
                 .count().then(function(count) {
-                if (count>0) {
-                    mapping.cascade = mapping.cascade || 'none';
-                    if (mapping.cascade === 'none') {
-                        return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,childModel.name, childField.name));
-                    }
-                    else if (mapping.cascade === 'null' || mapping.cascade === 'default') {
-                        return childModel.where(mapping.childField).equal(target[mapping.parentField])
-                            .select(childModel.primaryKey, childModel.childField)
-                            .cache(false)
-                            .silent()
-                            .flatten()
-                            .all().then(function(items) {
-                                let childKey = childField.property || childField.name;
-                                _.forEach(items, function(x) {
-                                    if (hasOwnProperty(x, childKey)) {
-                                        x[childKey] = null;
-                                    }
-                                    else {
-                                        x[childKey] = null;
-                                    }
+                    if (count>0) {
+                        mapping.cascade = mapping.cascade || 'none';
+                        if (mapping.cascade === 'none') {
+                            return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,childModel.name, childField.name));
+                        } else if (mapping.cascade === 'null' || mapping.cascade === 'default') {
+                            return childModel.where(mapping.childField).equal(target[mapping.parentField])
+                                .select(childModel.primaryKey, childModel.childField)
+                                .cache(false)
+                                .silent()
+                                .flatten()
+                                .all().then(function(items) {
+                                    let childKey = childField.property || childField.name;
+                                    _.forEach(items, function(x) {
+                                        if (hasOwnProperty(x, childKey)) {
+                                            x[childKey] = null;
+                                        } else {
+                                            x[childKey] = null;
+                                        }
+                                    });
+                                    return childModel.silent(silent).save(items).then(function() {
+                                        return callback();
+                                    });
                                 });
-                                return childModel.silent(silent).save(items).then(function() {
-                                    return callback();
+                        } else if (mapping.cascade === 'delete') {
+                            return childModel.where(mapping.childField).equal(target[mapping.parentField])
+                                .select(childModel.primaryKey)
+                                .cache(false)
+                                .silent()
+                                .flatten()
+                                .all().then(function(items) {
+                                    return childModel.silent(silent).remove(items).then(function() {
+                                        return callback();
+                                    });
                                 });
-                            });
+                        } else {
+                            return callback(new DataError('EATTR', 'Invalid cascade action', childModel.name, childField.name));
+                        }
+                    } else {
+                        return callback();
                     }
-                    else if (mapping.cascade === 'delete') {
-                        return childModel.where(mapping.childField).equal(target[mapping.parentField])
-                            .select(childModel.primaryKey)
-                            .cache(false)
-                            .silent()
-                            .flatten()
-                            .all().then(function(items) {
-                                return childModel.silent(silent).remove(items).then(function() {
-                                    return callback();
-                                });
-                            });
-                    }
-                    else {
-                        return callback(new DataError('EATTR', 'Invalid cascade action', childModel.name, childField.name));
-                    }
-                }
-                else {
-                    return callback();
-                }
-            });
+                });
         }).catch(function(err) {
-        return callback(err);
-    });
+            return callback(err);
+        });
 }
 /**
  * @private
@@ -161,25 +153,23 @@ function beforeRemoveParentConnectedObjects(event, mapping, callback) {
                 .cache(false)
                 .silent()
                 .all().then(function(items) {
-                mapping.cascade = mapping.cascade || 'none';
-                if (mapping.cascade === 'none') {
-                    if (items.length === 0) {
-                        return callback();
+                    mapping.cascade = mapping.cascade || 'none';
+                    if (mapping.cascade === 'none') {
+                        if (items.length === 0) {
+                            return callback();
+                        }
+                        return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,childModel.name, childField.name));
+                    } else if (mapping.cascade === 'delete'  || mapping.cascade === 'null' || mapping.cascade === 'default') {
+                        return baseModel.silent(silent).remove(items).then(function() {
+                            return callback();
+                        });
+                    } else {
+                        return callback(new DataError('EATTR', 'Invalid cascade action', childModel.name, childField.name));
                     }
-                    return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,childModel.name, childField.name));
-                }
-                else if (mapping.cascade === 'delete'  || mapping.cascade === 'null' || mapping.cascade === 'default') {
-                    return baseModel.silent(silent).remove(items).then(function() {
-                        return callback();
-                    });
-                }
-                else {
-                    return callback(new DataError('EATTR', 'Invalid cascade action', childModel.name, childField.name));
-                }
 
-            }).catch(function(err) {
-                return callback(err);
-            });
+                }).catch(function(err) {
+                    return callback(err);
+                });
         });
 }
 
@@ -220,28 +210,26 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
                 .cache(false)
                 .silent()
                 .all().then(function(items) {
-                mapping.cascade = mapping.cascade || 'none';
-                if (mapping.cascade === 'none') {
-                    if (items.length===0) {
-                        return callback();
+                    mapping.cascade = mapping.cascade || 'none';
+                    if (mapping.cascade === 'none') {
+                        if (items.length===0) {
+                            return callback();
+                        }
+                        return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,parentModel.name, parentField.name));
+                    } else if (mapping.cascade === 'delete'  || mapping.cascade === 'null' || mapping.cascade === 'default') {
+                        if (items.length===0) {
+                            return callback();
+                        }
+                        return baseModel.silent(silent).remove(items).then(function() {
+                            return callback();
+                        });
+                    } else {
+                        return callback(new DataError('EATTR', 'Invalid cascade action', parentModel.name, parentField.name));
                     }
-                    return callback(new DataError('EFKEY','Cannot delete this object since it is being referenced by another entity.',null,parentModel.name, parentField.name));
-                }
-                else if (mapping.cascade === 'delete'  || mapping.cascade === 'null' || mapping.cascade === 'default') {
-                    if (items.length===0) {
-                        return callback();
-                    }
-                    return baseModel.silent(silent).remove(items).then(function() {
-                        return callback();
-                    });
-                }
-                else {
-                    return callback(new DataError('EATTR', 'Invalid cascade action', parentModel.name, parentField.name));
-                }
 
-            }).catch(function(err) {
-                return callback(err);
-            });
+                }).catch(function(err) {
+                    return callback(err);
+                });
         });
 }
 

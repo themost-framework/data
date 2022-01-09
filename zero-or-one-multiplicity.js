@@ -110,5 +110,5 @@ class ZeroOrOneMultiplicityListener {
 }
 
 module.exports = {
-        ZeroOrOneMultiplicityListener
-    };
+    ZeroOrOneMultiplicityListener
+};

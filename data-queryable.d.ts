@@ -1,10 +1,12 @@
 // MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
+import { QueryExpression } from "@themost/query";
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
 
 export declare class DataQueryable implements DataContextEmitter {
-    constructor(model: DataModel);
-    readonly model: DataModel;
+    constructor(model?: DataModel);
+    model: DataModel;
+    readonly query: QueryExpression;
     clone(): DataQueryable;
     where(attr: string): DataQueryable;
     search(text: string): DataQueryable;

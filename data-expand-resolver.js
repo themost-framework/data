@@ -22,17 +22,18 @@ function testAndSplitExpandExpression(s) {
                 match[0] = s.substr(lastSplitIndex, ix-lastSplitIndex);
                 paren = 0;
             }
-            if (ix1==-1) { ix1 = ix; }
+            if (ix1==-1) {
+                ix1 = ix; 
+            }
             hasParen = true;
             paren += 1;
-        }
-        else if ((charAt===')') && !isLiteral) {
-            if (paren>0) { paren -= 1; }
-        }
-        else if (charAt==='\'') {
+        } else if ((charAt===')') && !isLiteral) {
+            if (paren>0) {
+                paren -= 1; 
+            }
+        } else if (charAt==='\'') {
             isLiteral = !isLiteral;
-        }
-        else if ((charAt===',') && (paren ==-1)) {
+        } else if ((charAt===',') && (paren ==-1)) {
             if (match==null) {
                 matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex)]);
             }
@@ -44,8 +45,7 @@ function testAndSplitExpandExpression(s) {
         if ((ix === s.length - 1) && (paren == -1)) {
             matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex+1)]);
             match = null;
-        }
-        else if (paren == 0) {
+        } else if (paren == 0) {
             match = match || [ ];
             match[1] = s.substr(ix1+1, ix-ix1-1);
             matches.push(match);
@@ -75,8 +75,7 @@ class DataExpandResolver {
             let match = matches[i];
             if (typeof match[1] === 'undefined') {
                 result.push({ name: match[0].replace(/^\s+|\s+$/, "") });
-            }
-            else {
+            } else {
                 let expand = {};
                 expand["name"] = match[0].replace(/^\s+|\s+$/, "");
                 reOptions.lastIndex = 0;

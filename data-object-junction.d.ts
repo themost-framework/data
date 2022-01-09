@@ -1,10 +1,12 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2020, THEMOST LP All rights reserved
+// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataQueryable} from "./data-queryable";
 import {DataObject} from "./data-object";
-import {DataAssociationMapping, DataField} from "./types";
+import {DataAssociationMapping} from "./types";
 import {DataModel} from "./data-model";
 
 export declare class DataObjectJunction extends DataQueryable {
+
+    constructor(parent: any, mapping: DataAssociationMapping | string);
     parent: DataObject;
     mapping: DataAssociationMapping;
     getBaseModel(): DataModel;
@@ -13,5 +15,6 @@ export declare class DataObjectJunction extends DataQueryable {
     insert(obj: any): Promise<any>;
     remove(obj: any): Promise<any>;
     removeAll(): Promise<any>;
-    migrate(callback: (err?: Error) => void);
+    migrate(callback: (err?: Error) => void): void;
+    
 }

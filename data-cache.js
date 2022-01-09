@@ -42,8 +42,7 @@ class DataCache extends SequentialEventEmitter {
             this.rawCache = new NodeCache();
             this.initialized = true;
             callback();
-        }
-        catch (e) {
+        } catch (e) {
             callback(e);
         }
     }
@@ -65,8 +64,7 @@ class DataCache extends SequentialEventEmitter {
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.set(key, callback);
             }
         });
@@ -88,8 +86,7 @@ class DataCache extends SequentialEventEmitter {
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.flushAll();
                 callback();
             }
@@ -114,8 +111,7 @@ class DataCache extends SequentialEventEmitter {
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.set(key, value, ttl, callback);
             }
         });
@@ -149,14 +145,17 @@ class DataCache extends SequentialEventEmitter {
         }
         //try to get from cache
         self.get(key, function (err, result) {
-            if (err) { callback(err); return; }
+            if (err) {
+                callback(err); return; 
+            }
             if (typeof result !== 'undefined') {
                 callback(null, result);
-            }
-            else {
+            } else {
                 //execute fn
                 fn(function (err, result) {
-                    if (err) { callback(err); return; }
+                    if (err) {
+                        callback(err); return; 
+                    }
                     self.add(key, (typeof result === 'undefined') ? null : result, self.ttl, function () {
                         callback(null, result);
                     });
@@ -185,17 +184,14 @@ class DataCache extends SequentialEventEmitter {
         self.init(function (err) {
             if (err) {
                 callback(err);
-            }
-            else {
+            } else {
                 self.rawCache.get(key, function (err, value) {
                     if (err) {
                         callback(err);
-                    }
-                    else {
+                    } else {
                         if (typeof value[key] !== 'undefined') {
                             callback(null, value[key]);
-                        }
-                        else {
+                        } else {
                             callback();
                         }
                     }
@@ -377,11 +373,9 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
             self.rawCache.get(key, function (err, result) {
                 if (err) {
                     return reject(err);
-                }
-                else if (typeof result !== 'undefined' && hasOwnProperty(result, key)) {
+                } else if (typeof result !== 'undefined' && hasOwnProperty(result, key)) {
                     return resolve(result[key]);
-                }
-                else {
+                } else {
                     try {
                         //execute function and validate promise
                         let source = getFunc();
@@ -400,8 +394,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
                             .catch(function (err) {
                                 return reject(err);
                             });
-                    }
-                    catch (err) {
+                    } catch (err) {
                         return reject(err);
                     }
                 }
