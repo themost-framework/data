@@ -6,6 +6,7 @@ var {HasParentJunction} = require('./has-parent-junction');
 var {DataObjectJunction} = require('./data-object-junction');
 var {DataObjectTag} = require('./data-object-tag');
 var parseBoolean = parsers.parseBoolean;
+var {isPlainObject} = require('lodash');
 
 class DataObjectAssociationError extends DataError {
     constructor(model, field) {
@@ -62,8 +63,23 @@ class DataObjectAssociationListener {
                         }
                         var silentMode = event.model.isSilent();
                         //get associated model
-                        var associatedObject = event.target[childField]; 
                         var associatedModel = event.model.context.model(mapping.parentModel);
+                        var associatedObject;
+                        // if value is a plain object e.g. { id: 100, name: '' }
+                        if (isPlainObject(event.target[childField])) {
+                            // use this value
+                            associatedObject = event.target[childField];
+                        } else {
+                            // else create an empty object
+                            associatedObject = {};
+                            // and define parent field e.g. { identifier: '00000-11111-22222-FFFFF-00000' }
+                            Object.defineProperty(associatedObject, mapping.parentField, {
+                                configurable: true,
+                                enumerable: true,
+                                writable: true,
+                                value: event.target[childField]
+                            });
+                        }
                         // try to find associated object
                         return associatedModel.find(associatedObject).select(mapping.parentField)
                             .flatten().silent(silentMode).take(1).getList().then(function(result) {
