@@ -7,6 +7,7 @@ var {DataObjectJunction} = require('./data-object-junction');
 var {DataObjectTag} = require('./data-object-tag');
 var parseBoolean = parsers.parseBoolean;
 var {isPlainObject} = require('lodash');
+var {hasOwnProperty} = require('./has-own-property');
 
 class DataObjectAssociationError extends DataError {
     constructor(model, field) {
@@ -55,7 +56,7 @@ class DataObjectAssociationListener {
                         var field = event.model.field(mapping.childField);
                         var childField = field.property || field.name;
                         //change:21-Mar 2016
-                        //description: check if association belongs to this model or it's inherited from any base model
+                        //description: check if association belongs to this model, or it's inherited from any base model
                         //if current association belongs to base model
                         if ((event.model.name !== field.model) && (!parseBoolean(field.cloned))) {
                             //do nothing and exit
@@ -65,10 +66,33 @@ class DataObjectAssociationListener {
                         //get associated model
                         var associatedModel = event.model.context.model(mapping.parentModel);
                         var associatedObject;
+                        var value = event.target[childField];
                         // if value is a plain object e.g. { id: 100, name: '' }
-                        if (isPlainObject(event.target[childField])) {
-                            // use this value
-                            associatedObject = event.target[childField];
+                        if (isPlainObject(value)) {
+                            // if plain object has a property equal to mapping parent field
+                            if (hasOwnProperty(value, mapping.parentField)) {
+                                // get property value
+                                var propertyValue = value[mapping.parentField];
+                                // if property value is null
+                                if (propertyValue == null) {
+                                    // set associated object to null
+                                    event.target[childField] = null;
+                                    // and exit
+                                    return cb();
+                                }
+                                // otherwise, create a new object which contains only that value
+                                // e.g. { id: 400 }
+                                associatedObject = {};
+                                Object.defineProperty(associatedObject, mapping.parentField, {
+                                    configurable: true,
+                                    enumerable: true,
+                                    writable: true,
+                                    value: propertyValue
+                                });
+                            } else {
+                                // use this value
+                                associatedObject = event.target[childField];
+                            }
                         } else {
                             // else create an empty object
                             associatedObject = {};

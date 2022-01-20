@@ -95,6 +95,35 @@ describe('DataObjectAssociationListener', () => {
             .toBeResolved();
         });
     });
+    it('should validate null association', async ()=> {
+        Object.assign(context, {
+            user: {
+                name: 'alexis.rees@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            let newOffer: any = {
+                itemOffered: {
+                    id: null
+                },
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').save(newOffer))
+                .toBeRejectedWithError('A value is required.');
+            newOffer = {
+                itemOffered: {
+                    model: null
+                },
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').save(newOffer))
+                .toBeRejectedWithError(new DataObjectAssociationError().message);
+        });
+    });
     it('should use silent mode', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             Object.assign(context, {
