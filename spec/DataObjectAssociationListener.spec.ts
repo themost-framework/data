@@ -204,4 +204,113 @@ describe('DataObjectAssociationListener', () => {
             expect(products.length).toBe(2);
         });
     });
+
+    it('should validate associated object given as value', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             // get object
+             const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: product.id,
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            let offer = await context.model('Offer')
+                .where('id').equal(newOffer.id).silent().getItem();
+            expect(offer).toBeTruthy();
+            expect(offer.itemOffered).toBe(product.id);
+
+            newOffer = {
+                itemOffered: Number(product.id),
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            offer = await context.model('Offer')
+                .where('id').equal(newOffer.id).silent().getItem();
+            expect(offer).toBeTruthy();
+            expect(offer.itemOffered).toBe(product.id);
+        });
+    });
+
+    it('should validate associated object given as plain object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             // get object
+             const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: {
+                    id: product.id
+                },
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            let offer = await context.model('Offer')
+                .where('id').equal(newOffer.id).silent().getItem();
+            expect(offer).toBeTruthy();
+            expect(offer.itemOffered).toBe(product.id);
+        });
+    });
+
+    it('should validate associated object without having primary key', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             // get object
+             const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: {
+                    name: product.name
+                },
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            let offer = await context.model('Offer')
+                .where('id').equal(newOffer.id).silent().getItem();
+            expect(offer).toBeTruthy();
+            expect(offer.itemOffered).toBe(product.id);
+        });
+    });
+
+    it('should validate associated object given as data object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             // get object
+             const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4').getTypedItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: product,
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            let offer = await context.model('Offer')
+                .where('id').equal(newOffer.id).silent().getItem();
+            expect(offer).toBeTruthy();
+            expect(offer.itemOffered).toBe(product.id);
+        });
+    });
+
 });

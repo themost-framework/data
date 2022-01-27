@@ -6,8 +6,8 @@ var {HasParentJunction} = require('./has-parent-junction');
 var {DataObjectJunction} = require('./data-object-junction');
 var {DataObjectTag} = require('./data-object-tag');
 var parseBoolean = parsers.parseBoolean;
-var {isPlainObject} = require('lodash');
 var {hasOwnProperty} = require('./has-own-property');
+var {isObjectDeep} = require('./is-object');
 
 class DataObjectAssociationError extends DataError {
     constructor(model, field) {
@@ -68,7 +68,7 @@ class DataObjectAssociationListener {
                         var associatedObject;
                         var value = event.target[childField];
                         // if value is a plain object e.g. { id: 100, name: '' }
-                        if (isPlainObject(value)) {
+                        if (isObjectDeep(value)) {
                             // if plain object has a property equal to mapping parent field
                             if (hasOwnProperty(value, mapping.parentField)) {
                                 // get property value
