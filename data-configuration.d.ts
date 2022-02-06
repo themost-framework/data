@@ -68,13 +68,12 @@ export declare class DataConfigurationStrategy extends ConfigurationStrategy{
 
 }
 
-export declare class SchemaLoaderStrategy extends ConfigurationStrategy {
+export declare abstract class SchemaLoaderStrategy extends ConfigurationStrategy {
     constructor(config:ConfigurationBase);
     getModelDefinition(name: string): any;
     setModelDefinition(data: any): SchemaLoaderStrategy;
     getModels(): Array<string>;
-    readSync: Array<string>;
-
+    abstract readSync(): Array<string>;
 }
 
 export declare interface SchemaLoaderType {
@@ -88,6 +87,7 @@ export declare interface DefaultSchemaLoaderStrategyOptions {
 }
 
 export declare class FileSchemaLoaderStrategy extends SchemaLoaderStrategy {
+    readSync(): string[];
     getModelPath(): string;
     setModelPath(p: string): FileSchemaLoaderStrategy;
 }
