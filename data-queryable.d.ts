@@ -14,6 +14,8 @@ export declare class DataQueryable implements DataContextEmitter {
     is(value: any): DataQueryable;
     equal(value: any): DataQueryable;
     notEqual(value: any): DataQueryable;
+    in(...attr: any[]): DataQueryable;
+    notIn(...attr: any[]): DataQueryable;
     greaterThan(value: any): DataQueryable;
     greaterOrEqual(value: any): DataQueryable;
     bit(value: any, result?:number): DataQueryable;
