@@ -1,22 +1,16 @@
-/**
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
 var Symbol = require('symbol');
-var TraceUtils = require('@themost/common/utils').TraceUtils;
+var TraceUtils = require('@themost/common').TraceUtils;
 var path = require("path");
 var pluralize = require('pluralize');
-var LangUtils = require('@themost/common/utils').LangUtils;
-var Args = require('@themost/common/utils').Args;
-var ConfigurationBase = require('@themost/common/config').ConfigurationBase;
-var ConfigurationStrategy = require('@themost/common/config').ConfigurationStrategy;
-var PathUtils = require('@themost/common/utils').PathUtils;
-var RandomUtils = require('@themost/common/utils').RandomUtils;
-var AbstractMethodError = require('@themost/common/errors').AbstractMethodError;
+var LangUtils = require('@themost/common').LangUtils;
+var Args = require('@themost/common').Args;
+var ConfigurationBase = require('@themost/common').ConfigurationBase;
+var ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
+var PathUtils = require('@themost/common').PathUtils;
+var RandomUtils = require('@themost/common').RandomUtils;
+var AbstractMethodError = require('@themost/common').AbstractMethodError;
 var DataCacheStrategy = require('./data-cache').DataCacheStrategy;
 var DefaultDataCacheStrategy = require('./data-cache').DefaultDataCacheStrategy;
 var hasOwnProperty = require('./has-own-property').hasOwnProperty;

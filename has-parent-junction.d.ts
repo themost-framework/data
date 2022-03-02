@@ -1,4 +1,4 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2020, THEMOST LP All rights reserved
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataQueryable} from "./data-queryable";
 import {DataObject} from "./data-object";
 import {DataAssociationMapping, DataField} from "./types";

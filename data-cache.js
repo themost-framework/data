@@ -1,18 +1,10 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var LangUtils = require("@themost/common/utils").LangUtils;
-var Args = require("@themost/common/utils").Args;
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var AbstractMethodError = require('@themost/common/errors').AbstractMethodError;
-var ConfigurationStrategy = require('@themost/common/config').ConfigurationStrategy;
+var LangUtils = require("@themost/common").LangUtils;
+var Args = require("@themost/common").Args;
+var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var AbstractMethodError = require('@themost/common').AbstractMethodError;
+var ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
 var Symbol = require("symbol");
 var Q = require('q');
 var currentProperty = Symbol("current");

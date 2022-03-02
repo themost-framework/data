@@ -1,20 +1,12 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require("lodash");
 var sprintf = require('sprintf').sprintf;
 var Symbol = require('symbol');
 var path = require("path");
 var pluralize = require("pluralize");
 var async = require('async');
-var QueryUtils = require('@themost/query/utils').QueryUtils;
-var OpenDataParser = require('@themost/query/odata').OpenDataParser;
+var QueryUtils = require('@themost/query').QueryUtils;
+var OpenDataParser = require('@themost/query').OpenDataParser;
 var types = require('./types');
 var DataAssociationMapping = require('./types').DataAssociationMapping;
 var dataListeners = require('./data-listeners');
@@ -28,13 +20,13 @@ var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListen
 var DataModelView = require('./data-model-view').DataModelView;
 var DataFilterResolver = require('./data-filter-resolver').DataFilterResolver;
 var Q = require("q");
-var SequentialEventEmitter = require("@themost/common/emitter").SequentialEventEmitter;
-var LangUtils = require("@themost/common/utils").LangUtils;
-var TraceUtils = require("@themost/common/utils").TraceUtils;
-var DataError = require("@themost/common/errors").DataError;
+var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var LangUtils = require("@themost/common").LangUtils;
+var TraceUtils = require("@themost/common").TraceUtils;
+var DataError = require("@themost/common").DataError;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var ModelClassLoaderStrategy = require('./data-configuration').ModelClassLoaderStrategy;
-var ModuleLoader = require('@themost/common/config').ModuleLoaderStrategy;
+var ModuleLoader = require('@themost/common').ModuleLoaderStrategy;
 var mappingsProperty = Symbol('mappings');
 var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
 var DataField = require('./types').DataField;

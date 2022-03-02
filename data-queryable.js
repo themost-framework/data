@@ -1,23 +1,15 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var async = require('async');
 var sprintf = require('sprintf').sprintf;
 var Symbol = require('symbol');
 var _ = require("lodash");
-var TextUtils = require("@themost/common/utils").TextUtils;
+var TextUtils = require("@themost/common").TextUtils;
 var mappingExtensions = require('./data-mapping-extensions');
 var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataError = require("@themost/common/errors").DataError;
-var QueryField = require('@themost/query/query').QueryField;
-var QueryEntity = require('@themost/query/query').QueryEntity;
-var QueryUtils = require('@themost/query/utils').QueryUtils;
+var DataError = require("@themost/common").DataError;
+var QueryField = require('@themost/query').QueryField;
+var QueryEntity = require('@themost/query').QueryEntity;
+var QueryUtils = require('@themost/query').QueryUtils;
 var Q = require('q');
 var hash = require('object-hash');
 var aliasProperty = Symbol('alias');

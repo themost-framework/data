@@ -1,17 +1,6 @@
-/**
- * @licence
- * MOST Web Framework
- * A JavaScript Web Framework
- * http://themost.io
- *
- * Copyright (c) 2014, Kyriakos Barbounakis k.barbounakis@gmail.com, Anthi Oikonomou anthioikonomou@gmail.com
- *
- * Released under the BSD-3-Clause license
- * Date: 2017-11-10
- */
-///
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var Symbol = require('symbol');
-var LangUtils = require('@themost/common/utils').LangUtils;
+var LangUtils = require('@themost/common').LangUtils;
 var sprintf = require('sprintf').sprintf;
 var Q = require('q');
 var pluralize = require('pluralize');

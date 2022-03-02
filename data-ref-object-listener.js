@@ -1,16 +1,8 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var async = require('async');
 var HasParentJunction = require('./has-parent-junction').HasParentJunction;
 var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-var DataError = require('@themost/common/errors').DataError;
+var DataError = require('@themost/common').DataError;
 var _ = require('lodash');
 var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 

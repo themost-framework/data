@@ -1,17 +1,9 @@
-/**
- * @license
- * MOST Web Framework 2.0 Codename Blueshift
- * Copyright (c) 2017, THEMOST LP All rights reserved
- *
- * Use of this source code is governed by an BSD-3-Clause license that can be
- * found in the LICENSE file at https://themost.io/license
- */
-///
-var LangUtils = require('@themost/common/utils').LangUtils;
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+var LangUtils = require('@themost/common').LangUtils;
 var _ = require('lodash');
 var Q = require('q');
 var async = require('async');
-var QueryField = require('@themost/query/query').QueryField;
+var QueryField = require('@themost/query').QueryField;
 var DataAssociationMapping = require('./types').DataAssociationMapping;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var DataQueryable = require('./data-queryable').DataQueryable;
