@@ -8,9 +8,9 @@
  */
 ///
 var _ = require('lodash');
-var QueryUtils = require('@themost/query/utils').QueryUtils;
-var QueryEntity = require('@themost/query/query').QueryEntity;
-var QueryField = require('@themost/query/query').QueryField;
+var QueryUtils = require('@themost/query').QueryUtils;
+var QueryEntity = require('@themost/query').QueryEntity;
+var QueryField = require('@themost/query').QueryField;
 var Q = require('q');
 
 

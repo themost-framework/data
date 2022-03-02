@@ -8,7 +8,7 @@
  */
 ///
 var _ = require("lodash");
-var QueryUtils = require('@themost/query/utils').QueryUtils;
+var QueryUtils = require('@themost/query').QueryUtils;
 var async = require("async");
 var DataError = require('@themost/common').DataError;
 

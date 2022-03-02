@@ -9,7 +9,7 @@
 ///
 var LangUtils = require('@themost/common').LangUtils;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
-var QueryField = require('@themost/query/query').QueryField;
+var QueryField = require('@themost/query').QueryField;
 var _ = require('lodash');
 var Q = require('q');
 var types = require('./types');

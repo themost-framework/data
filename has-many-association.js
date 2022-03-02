@@ -9,7 +9,7 @@
 ///
 var LangUtils = require('@themost/common').LangUtils;
 var _ = require('lodash');
-var QueryUtils = require('@themost/query/utils').QueryUtils;
+var QueryUtils = require('@themost/query').QueryUtils;
 var types = require('./types');
 var DataQueryable = require('./data-queryable').DataQueryable;
 
