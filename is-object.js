@@ -1,4 +1,4 @@
-
+// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var {isPlainObject, isObjectLike, isNative} = require('lodash');
 
 var objectToString = Function.prototype.toString.call(Object);
