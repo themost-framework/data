@@ -11,7 +11,7 @@
  */
 ///
 var Symbol = require('symbol');
-var LangUtils = require('@themost/common/utils').LangUtils;
+var LangUtils = require('@themost/common').LangUtils;
 var sprintf = require('sprintf').sprintf;
 var Q = require('q');
 var pluralize = require('pluralize');

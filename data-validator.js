@@ -9,7 +9,7 @@
 ///
 var _ = require('lodash');
 var sprintf = require('sprintf');
-var LangUtils = require('@themost/common/utils').LangUtils;
+var LangUtils = require('@themost/common').LangUtils;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var conf = require('./data-configuration');
 

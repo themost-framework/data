@@ -9,7 +9,7 @@
 ///
 var types = require('./types');
 var sprintf = require('sprintf');
-var TraceUtils = require('@themost/common/utils').TraceUtils;
+var TraceUtils = require('@themost/common').TraceUtils;
 var moment = require('moment');
 var _ = require('lodash');
 var Q = require("q");

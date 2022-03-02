@@ -7,7 +7,7 @@
  * found in the LICENSE file at https://themost.io/license
  */
 ///
-var LangUtils = require('@themost/common/utils').LangUtils;
+var LangUtils = require('@themost/common').LangUtils;
 var _ = require('lodash');
 var Q = require('q');
 var async = require('async');
