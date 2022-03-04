@@ -685,7 +685,7 @@ SchemaLoaderStrategy.prototype.setModelDefinition = function(data) {
         if (typeof data.name === 'undefined' || data.name === null) {
             throw new Error("Invalid model definition. Expected model name.")
         }
-        this[modelsProperty][data.name] = data;
+        this[modelsProperty][data.name] = _.cloneDeep(data);
     }
     return this;
 };
