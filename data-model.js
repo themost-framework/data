@@ -2376,14 +2376,46 @@ DataModel.prototype.migrate = function(callback)
             });
         }
     }, function(err) {
-        if (!err) {
-            //set migration info to configuration cache (conf.cache.model.version=[current version])
-            //cache: data model migration
-            configuration.cache[self.name].version = self.version;
+        if (err) {
+            return callback(err);
         }
-        callback(err);
+        try {
+            // validate caching property
+            if (Object.prototype.hasOwnProperty.call(configuration.cache, self.name) === false) {
+                // and assign it if it's missing
+                Object.defineProperty(configuration.cache, self.name, {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    value: {}
+                });
+            }
+            // get caching property
+            const cached = Object.getOwnPropertyDescriptor(configuration.cache, self.name);
+            Object.assign(cached.value, {
+                version: self.version
+            });
+        } catch(err1) {
+            return callback(err1);
+        }
+        return callback();
     });
 };
+/**
+ * Performs an async upgrade of this model based on current model definition
+ * @returns {Promise<void>}
+ */
+DataModel.prototype.migrateAsync = function() {
+    const self = this;
+    return new Promise(function (resolve, reject) {
+        self.migrate(function(err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+}
 
 /**
  * Gets an instance of DataField class which represents the primary key of this model.

@@ -1,6 +1,7 @@
 import {DataModel, EdmMapping, DataContext} from '../index';
 import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
+import { TestAdapter } from './adapter/TestAdapter';
 
 class Employee {
     public EmployeeID?: number;
@@ -64,6 +65,15 @@ describe('DataModel', () => {
         let item: Employee = await context.model(Employee).where('EmployeeID').equal(1).getItem();
         expect(item).toBeTruthy();
         expect(item.EmployeeID).toBe(1);
+    });
+
+    it('should use migrateAsync', async () => {
+        const db: TestAdapter = context.db as TestAdapter;
+        let exists = await db.table('OtherProducts').existsAsync();
+        expect(exists).toBeFalse();
+        await context.model('OtherProduct').migrateAsync();
+        exists = await db.table('OtherProducts').existsAsync();
+        expect(exists).toBeTruthy();
     });
 
 });

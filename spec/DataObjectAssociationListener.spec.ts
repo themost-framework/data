@@ -2,6 +2,7 @@ import { TestApplication } from './TestApplication';
 import { DataContext, DataObjectAssociationError } from '../index';
 import { resolve } from 'path';
 import { TestUtils } from './adapter/TestUtils';
+import { ConfigurationBase } from '@themost/common';
 
 describe('DataObjectAssociationListener', () => {
     let app: TestApplication;

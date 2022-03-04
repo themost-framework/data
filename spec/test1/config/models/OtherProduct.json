@@ -1,0 +1,12 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "title": "OtherProducts",
+    "name": "OtherProduct",
+    "source": "OtherProducts",
+    "view": "OtherProducts",
+    "version": "1.0",
+    "inherits": "Product",
+    "fields": [
+        
+    ]
+}
