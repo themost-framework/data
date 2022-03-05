@@ -71,9 +71,16 @@ describe('DataModel', () => {
         const db: TestAdapter = context.db as TestAdapter;
         let exists = await db.table('OtherProducts').existsAsync();
         expect(exists).toBeFalse();
-        await context.model('OtherProduct').migrateAsync();
+        const upgraded = await context.model('OtherProduct').migrateAsync();
+        expect(upgraded).toBeTrue();
         exists = await db.table('OtherProducts').existsAsync();
         expect(exists).toBeTruthy();
+        const configuration: any = app.getConfiguration();
+        expect(configuration.cache).toBeInstanceOf(Object);
+        const version = context.model('OtherProduct').version;
+        expect(configuration.cache.OtherProduct).toEqual({
+            version
+        });
     });
 
 });
