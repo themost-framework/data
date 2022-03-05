@@ -685,7 +685,7 @@ SchemaLoaderStrategy.prototype.setModelDefinition = function(data) {
         if (typeof data.name === 'undefined' || data.name === null) {
             throw new Error("Invalid model definition. Expected model name.")
         }
-        this[modelsProperty][data.name] = _.cloneDeep(data);
+        this[modelsProperty][data.name] = data;
     }
     return this;
 };
@@ -836,14 +836,16 @@ FileSchemaLoaderStrategy.prototype.getModelDefinition = function(name) {
     for (i = 0; i < files.length; i++) {
         searchName.lastIndex=0;
         if (searchName.test(files[i])) {
-            //build model file path
+            // build model file path
             var finalPath = PathUtils.join(modelPath, files[i]);
-            //get model
+            // get model
             var result = require(finalPath);
-            //set definition
-            this.setModelDefinition(result);
-            //and finally return this definition
-            return result;
+            // clone
+            var finalResult = _.cloneDeep(result);
+            // clone and set definition
+            this.setModelDefinition(finalResult);
+            // return this definition
+            return finalResult;
         }
     }
 };
