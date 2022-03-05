@@ -31,53 +31,6 @@ describe('DataNestedObjectListener', () => {
     });
     it('should use zero-or-one multiplicity', async () => {
         await context.executeInTransactionAsync(async () => {
-            const configuration = context.getConfiguration().getStrategy(DataConfigurationStrategy);
-            configuration.setModelDefinition({
-                "name": "ProductDimension",
-                "version": "2.0",
-                "inherits": "StructuredValue",
-                "fields": [
-                    {
-                        "name": "width",
-                        "type": "Number",
-                        "nullable": false
-                    },
-                    {
-                        "name": "height",
-                        "type": "Number",
-                        "nullable": false
-                    },
-                    {
-                        "name": "product",
-                        "type": "Product"
-                    }
-                ],
-                "constraints": [
-                    {
-                        "type": "unique",
-                        "fields": [
-                            "product"
-                        ]
-                    }
-                ]
-            });
-            const ProductModel = configuration.getModelDefinition("Product");
-            ProductModel.fields.push({
-                "name": "productDimensions",
-                "type": "ProductDimension",
-                "nested": true,
-                "expandable": true,
-                "multiplicity": "ZeroOrOne",
-                "mapping": {
-                    "parentModel": "Product",
-                    "parentField": "id",
-                    "childModel": "ProductDimension",
-                    "childField": "product",
-                    "associationType": "association",
-                    "cascade": "delete"
-                }
-            });
-            configuration.setModelDefinition(ProductModel);
             let product = await context.model('Product')
                 .where('name').equal('Samsung Galaxy S4')
                 .silent().getItem();
@@ -105,41 +58,7 @@ describe('DataNestedObjectListener', () => {
 
     it('should use collection of nested objects', async () => {
         await context.executeInTransactionAsync(async () => {
-            const configuration = context.getConfiguration().getStrategy(DataConfigurationStrategy);
-            configuration.setModelDefinition({
-                "name": "SpecialOffer",
-                "version": "2.0",
-                "inherits": "Offer",
-                "fields": [
-                    {
-                        "@id": "http://schema.org/itemOffered",
-                        "name": "itemOffered",
-                        "title": "itemOffered",
-                        "description": "The item being offered.",
-                        "type": "Product",
-                        "nullable": false
-                    }
-                ],
-                "constraints": [
-                ]
-            });
-            const ProductModel = configuration.getModelDefinition("Product");
-            ProductModel.fields.push({
-                "name": "specialOffers",
-                "type": "SpecialOffer",
-                "nested": true,
-                "expandable": true,
-                "many": true,
-                "mapping": {
-                    "parentModel": "Product",
-                    "parentField": "id",
-                    "childModel": "SpecialOffer",
-                    "childField": "itemOffered",
-                    "associationType": "association",
-                    "cascade": "delete"
-                }
-            });
-            configuration.setModelDefinition(ProductModel);
+            
             let product = await context.model('Product')
                 .where('name').equal('Samsung Galaxy S4')
                 .silent().getItem();

@@ -1,0 +1,17 @@
+{
+    "name": "SpecialOffer",
+    "version": "2.0",
+    "inherits": "Offer",
+    "fields": [
+        {
+            "@id": "http://schema.org/itemOffered",
+            "name": "itemOffered",
+            "title": "itemOffered",
+            "description": "The item being offered.",
+            "type": "Product",
+            "nullable": false
+        }
+    ],
+    "constraints": [
+    ]
+}

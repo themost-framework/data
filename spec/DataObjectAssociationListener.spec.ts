@@ -32,7 +32,8 @@ describe('DataObjectAssociationListener', () => {
     });
     it('should validate foreign-key association', async ()=> {
         await TestUtils.executeInTransaction(context, async () => {
-            const product = await context.model('Product')
+            const Products = context.model('Product');
+            const product = await Products
                 .where('name').equal('Samsung Galaxy S4')
                 .getItem();
             let newOffer: any = {

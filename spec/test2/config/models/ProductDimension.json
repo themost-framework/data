@@ -1,0 +1,30 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "ProductDimension",
+    "version": "2.0",
+    "inherits": "StructuredValue",
+    "fields": [
+        {
+            "name": "width",
+            "type": "Number",
+            "nullable": false
+        },
+        {
+            "name": "height",
+            "type": "Number",
+            "nullable": false
+        },
+        {
+            "name": "product",
+            "type": "Product"
+        }
+    ],
+    "constraints": [
+        {
+            "type": "unique",
+            "fields": [
+                "product"
+            ]
+        }
+    ]
+}
