@@ -5,7 +5,7 @@ export declare class DefaultDataContext extends DataContext {
     constructor();
     readonly name: string;
     getDb(): DataAdapter;
-    setDb(db: DataAdapter);
+    setDb(db: DataAdapter): void;
 }
 
 export declare class NamedDataContext extends DataContext {
@@ -13,5 +13,5 @@ export declare class NamedDataContext extends DataContext {
     readonly name: string;
     getName(): string
     getDb(): DataAdapter;
-    setDb(db: DataAdapter);
+    setDb(db: DataAdapter): void;
 }

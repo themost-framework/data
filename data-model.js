@@ -2249,20 +2249,25 @@ DataModel.prototype.migrate = function(callback)
     //prepare migration cache
     var configuration = self.context.getConfiguration();
     configuration.cache = configuration.cache || { };
-    if (configuration.cache.hasOwnProperty(self.name) === false) {
+    if (Object.prototype.hasOwnProperty.call(configuration.cache, self.name) === false) {
         // set cache
-        configuration.cache[self.name] = { };
+        Object.defineProperty(configuration.cache, self.name, {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: {}
+        });
     }
-    if (configuration.cache[self.name].version===self.version) {
+    if (configuration.cache[self.name].version === self.version) {
         //model has already been migrated, so do nothing
-        return callback();
+        return callback(null, false);
     }
     if (self.abstract) {
         return new callback(new DataError('EABSTRACT','An abstract model cannot be instantiated.',null,self.name));
     }
     //do not migrate sealed models
     if (self.sealed) {
-        return callback();
+        return callback(null, false);
     }
     var context = self.context;
     //do migration
@@ -2285,16 +2290,6 @@ DataModel.prototype.migrate = function(callback)
 
     //get all related models
     var models = [];
-    // self.fields.filter(function(x) {
-    //     return (!conf.dataTypes[x.type] && (self.name!=x.type));
-    // }).forEach(function(x) {
-    //     var m = context.model(x.type);
-    //     if (m) {
-    //         var m1 = models.find(function(y) {
-    //             return y.name === m.name;
-    //         });
-    //     }
-    // });
     var db = context.db;
     var baseModel = self.base();
     if (baseModel!==null) {
@@ -2339,11 +2334,12 @@ DataModel.prototype.migrate = function(callback)
                 if (err) { return tr(err); }
                 db.migrate(migration, function(err) {
                     if (err) { return tr(err); }
-                    if (migration['updated']) {
+                    if (migration.updated) {
                         return tr();
                     }
                     //execute after migrate events
                     self.emit('after.upgrade', { model:self }, function(err) {
+                        migration.updated = true;
                         return tr(err);
                     });
                 });
@@ -2364,11 +2360,12 @@ DataModel.prototype.migrate = function(callback)
                     if (err) { return tr(err); }
                     db.migrate(migration, function(err) {
                         if (err) { return tr(err);  }
-                        if (migration['updated']) {
+                        if (migration.updated) {
                             return tr();
                         }
                         //execute after migrate events
                         self.emit('after.upgrade', { model:self }, function(err) {
+                            migration.updated = true;
                             return tr(err);
                         });
                     });
@@ -2376,14 +2373,46 @@ DataModel.prototype.migrate = function(callback)
             });
         }
     }, function(err) {
-        if (!err) {
-            //set migration info to configuration cache (conf.cache.model.version=[current version])
-            //cache: data model migration
-            configuration.cache[self.name].version = self.version;
+        if (err) {
+            return callback(err);
         }
-        callback(err);
+        try {
+            // validate caching property
+            if (Object.prototype.hasOwnProperty.call(configuration.cache, self.name) === false) {
+                // and assign it if it's missing
+                Object.defineProperty(configuration.cache, self.name, {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    value: {}
+                });
+            }
+            // get caching property
+            const cached = Object.getOwnPropertyDescriptor(configuration.cache, self.name);
+            Object.assign(cached.value, {
+                version: self.version
+            });
+        } catch(err1) {
+            return callback(err1);
+        }
+        return callback(null, !!migration.updated);
     });
 };
+/**
+ * Performs an async upgrade of this model based on current model definition
+ * @returns {Promise<boolean>}
+ */
+DataModel.prototype.migrateAsync = function() {
+    const self = this;
+    return new Promise(function (resolve, reject) {
+        self.migrate(function(err, result) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(result);
+        });
+    });
+}
 
 /**
  * Gets an instance of DataField class which represents the primary key of this model.

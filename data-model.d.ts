@@ -53,7 +53,8 @@ export declare class DataModel extends SequentialEventEmitter{
     update(obj: any): Promise<any>;
     insert(obj: any): Promise<any>;
     remove(obj: any): Promise<any>;
-    migrate(callback: (err?: Error, res?: any) => void): void;
+    migrate(callback: (err?: Error, res?: boolean) => void): void;
+    migrateAsync(): Promise<boolean>;
     key(): any;
     field(name: string): DataField;
     getDataView(name: string): any;

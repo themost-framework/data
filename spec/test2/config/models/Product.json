@@ -70,7 +70,37 @@
                 "associationObjectField": "product",
                 "associationValueField": "value"
             }
-        }
+        },
+            {
+                "name": "productDimensions",
+                "type": "ProductDimension",
+                "nested": true,
+                "expandable": true,
+                "multiplicity": "ZeroOrOne",
+                "mapping": {
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "ProductDimension",
+                    "childField": "product",
+                    "associationType": "association",
+                    "cascade": "delete"
+                }
+            },
+            {
+                "name": "specialOffers",
+                "type": "SpecialOffer",
+                "nested": true,
+                "expandable": true,
+                "many": true,
+                "mapping": {
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "SpecialOffer",
+                    "childField": "itemOffered",
+                    "associationType": "association",
+                    "cascade": "delete"
+                }
+            }
     ],
     "constraints": [
         {
