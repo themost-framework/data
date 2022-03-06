@@ -11,7 +11,6 @@ var QueryField = require('@themost/query').QueryField;
 var QueryEntity = require('@themost/query').QueryEntity;
 var QueryUtils = require('@themost/query').QueryUtils;
 var Q = require('q');
-var hash = require('object-hash');
 var aliasProperty = Symbol('alias');
 
 /**
