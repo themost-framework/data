@@ -13,7 +13,7 @@
     "@themost/xml": ">= 2.5.1 < 3"
   },
   "engines": {
-    "node": ">=6.9.0"
+    "node": ">=8.17.0"
   },
   "repository": {
     "type": "git",
