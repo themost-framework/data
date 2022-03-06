@@ -1,5 +1,5 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var _ = require("lodash");
+var _ = require('lodash');
 var TraceUtils = require('@themost/common').TraceUtils;
 var LangUtils = require('@themost/common').LangUtils;
 var DataContext = require('./types').DataContext;
@@ -74,7 +74,7 @@ function DefaultDataContext()
         //otherwise load database options from configuration
         var strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
         var adapter = _.find(strategy.adapters, function(x) {
-            return x["default"];
+            return x['default'];
         });
         if (_.isNil(adapter)) {
             er = new Error('The default data adapter is missing.'); er.code = 'EADAPTER';

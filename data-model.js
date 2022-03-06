@@ -1,9 +1,9 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var _ = require("lodash");
+var _ = require('lodash');
 var sprintf = require('sprintf').sprintf;
 var Symbol = require('symbol');
-var path = require("path");
-var pluralize = require("pluralize");
+var path = require('path');
+var pluralize = require('pluralize');
 var async = require('async');
 var QueryUtils = require('@themost/query').QueryUtils;
 var OpenDataParser = require('@themost/query').OpenDataParser;
@@ -12,18 +12,18 @@ var DataAssociationMapping = require('./types').DataAssociationMapping;
 var dataListeners = require('./data-listeners');
 var validators = require('./data-validator');
 var dataAssociations = require('./data-associations');
-var DataNestedObjectListener = require("./data-nested-object-listener").DataNestedObjectListener;
-var DataReferencedObjectListener = require("./data-ref-object-listener").DataReferencedObjectListener;
+var DataNestedObjectListener = require('./data-nested-object-listener').DataNestedObjectListener;
+var DataReferencedObjectListener = require('./data-ref-object-listener').DataReferencedObjectListener;
 var DataQueryable = require('./data-queryable').DataQueryable;
 var DataAttributeResolver = require('./data-queryable').DataAttributeResolver;
 var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListener;
 var DataModelView = require('./data-model-view').DataModelView;
 var DataFilterResolver = require('./data-filter-resolver').DataFilterResolver;
-var Q = require("q");
-var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
-var LangUtils = require("@themost/common").LangUtils;
-var TraceUtils = require("@themost/common").TraceUtils;
-var DataError = require("@themost/common").DataError;
+var Q = require('q');
+var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
+var LangUtils = require('@themost/common').LangUtils;
+var TraceUtils = require('@themost/common').TraceUtils;
+var DataError = require('@themost/common').DataError;
 var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
 var ModelClassLoaderStrategy = require('./data-configuration').ModelClassLoaderStrategy;
 var ModuleLoader = require('@themost/common').ModuleLoaderStrategy;
@@ -68,12 +68,12 @@ function inferTagMapping(field) {
     var parentField = self.primaryKey;
     // mapping attributes
     var mapping = _.assign({}, {
-        "associationType": "junction",
-        "associationAdapter": associationAdapter,
-        "cascade": "delete",
-        "parentModel": self.name,
-        "parentField": parentField,
-        "refersTo": field.name
+        'associationType': 'junction',
+        'associationAdapter': associationAdapter,
+        'cascade': 'delete',
+        'parentModel': self.name,
+        'parentField': parentField,
+        'refersTo': field.name
     }, field.mapping);
     // and return
     return new DataAssociationMapping(mapping);
@@ -88,7 +88,7 @@ function getImplementedModel() {
         return null;
     }
     if (typeof this.context === 'undefined' || this.context === null)
-        throw new Error("The underlying data context cannot be empty.");
+        throw new Error('The underlying data context cannot be empty.');
     return this.context.model(this['implements']);
 }
 
@@ -450,11 +450,11 @@ function DataModel(obj) {
                     if (typeof primaryKey === 'undefined') {
                         //add primary key field
                         primaryKey = _.assign({}, x, {
-                            "type": x.type === 'Counter' ? 'Integer' : x.type,
-                            "model": self.name,
-                            "indexed": true,
-                            "value": null,
-                            "calculation": null
+                            'type': x.type === 'Counter' ? 'Integer' : x.type,
+                            'model': self.name,
+                            'indexed': true,
+                            'value': null,
+                            'calculation': null
                         });
                         delete primaryKey.value;
                         delete primaryKey.calculation;
@@ -738,14 +738,14 @@ function filterInternal(params, callback) {
             member = attr.name;
         if (DataAttributeResolver.prototype.testNestedAttribute.call(self,member)) {
             try {
-                var member1 = member.split("/"),
+                var member1 = member.split('/'),
                     mapping = self.inferMapping(member1[0]),
                     expr;
                 if (mapping && mapping.associationType === 'junction') {
                     var expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, member);
                     expr = expr1.$expand;
                     //replace member expression
-                    member = expr1.$select.$name.replace(/\./g,"/");
+                    member = expr1.$select.$name.replace(/\./g,'/');
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
@@ -865,7 +865,7 @@ function filterInternal(params, callback) {
                     }
                     if (expand) {
 
-                        var resolver = require("./data-expand-resolver");
+                        var resolver = require('./data-expand-resolver');
                         var matches = resolver.testExpandExpression(expand);
                         if (matches && matches.length>0) {
                             q.expand.apply(q, matches);
@@ -1168,7 +1168,7 @@ DataModel.prototype.base = function()
     if (_.isNil(this.inherits))
         return null;
     if (typeof this.context === 'undefined' || this.context === null)
-        throw new Error("The underlying data context cannot be empty.");
+        throw new Error('The underlying data context cannot be empty.');
     return this.context.model(this.inherits);
 };
 
@@ -1465,7 +1465,7 @@ function cast_(obj, state) {
             author:k.barbounakis@gmail.com
             description:exclude non editable attributes on update operation
              */
-            return (state===2) ? (y.hasOwnProperty("editable") ? y.editable : true) : true;
+            return (state===2) ? (y.hasOwnProperty('editable') ? y.editable : true) : true;
         }).forEach(function(x) {
             name = obj.hasOwnProperty(x.property) ? x.property : x.name;
             if (obj.hasOwnProperty(name))
@@ -1533,7 +1533,7 @@ function castForValidation_(obj, state) {
              author:k.barbounakis@gmail.com
              description:exclude non editable attributes on update operation
              */
-            return (state===2) ? (y.hasOwnProperty("editable") ? y.editable : true) : true;
+            return (state===2) ? (y.hasOwnProperty('editable') ? y.editable : true) : true;
         }).forEach(function(x) {
             name = obj.hasOwnProperty(x.property) ? x.property : x.name;
             if (obj.hasOwnProperty(name))
@@ -2276,7 +2276,7 @@ DataModel.prototype.migrate = function(callback)
     });
 
     if ((fields===null) || (fields.length===0))
-        throw new Error("Migration is not valid for this model. The model has no fields.");
+        throw new Error('Migration is not valid for this model. The model has no fields.');
     var migration = new types.DataModelMigration();
     migration.add = _.map(fields, function(x) {
         return _.assign({ }, x);
@@ -2286,7 +2286,7 @@ DataModel.prototype.migrate = function(callback)
     migration.model = self.name;
     migration.description = sprintf('%s migration (version %s)', this.title, migration.version);
     if (context===null)
-        throw new Error("The underlying data context cannot be empty.");
+        throw new Error('The underlying data context cannot be empty.');
 
     //get all related models
     var models = [];
@@ -2315,13 +2315,13 @@ DataModel.prototype.migrate = function(callback)
                 }
             }
             migration.indexes.push({
-                name: "INDEX_" + migration.appliesTo.toUpperCase() + "_" + x.name.toUpperCase(),
+                name: 'INDEX_' + migration.appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
                 columns: [ x.name ]
             });
         }
         else if (x.indexed === true) {
             migration.indexes.push({
-                name: "INDEX_" + migration.appliesTo.toUpperCase() + "_" + x.name.toUpperCase(),
+                name: 'INDEX_' + migration.appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
                 columns: [ x.name ]
             });
         }
@@ -2476,10 +2476,10 @@ DataModel.prototype.getDataView = function(name) {
     if (_.isNil(view))
     {
         return _.assign(new DataModelView(self), {
-            "name":"default",
-            "title":"Default View",
-            "fields": self.attributes.map(function(x) {
-                return { "name":x.name }
+            'name':'default',
+            'title':'Default View',
+            'fields': self.attributes.map(function(x) {
+                return { 'name':x.name }
             })
         });
     }
@@ -2612,7 +2612,7 @@ DataModel.prototype.inferMapping = function(name) {
     var self = this;
     //ensure model cached mappings
     var conf = self.context.model(self.name);
-    if (typeof conf === "undefined" || conf === null) {
+    if (typeof conf === 'undefined' || conf === null) {
         return;
     }
     if (_.isNil(conf[mappingsProperty])) {
@@ -2657,13 +2657,13 @@ DataModel.prototype.inferMapping = function(name) {
     if (mapping.associationType === 'junction' && typeof mapping.associationObjectField === 'undefined') {
         // todo: remove this rule and use always "object" as association object field (solve backward compatibility issues)
         // set default object field
-        mapping.associationObjectField = "parentId";
+        mapping.associationObjectField = 'parentId';
         if (mapping.refersTo && mapping.parentModel === self.name) {
             // get type
             var refersTo = self.getAttribute(mapping.refersTo);
             // validate data object tag association
             if (refersTo && self.context.getConfiguration().getStrategy(DataConfigurationStrategy).hasDataType(refersTo.type)) {
-                mapping.associationObjectField = "object";
+                mapping.associationObjectField = 'object';
             }
         }
     }
@@ -2683,13 +2683,13 @@ DataModel.prototype.inferMapping = function(name) {
     if (mapping.associationType === 'junction' && typeof mapping.associationValueField === 'undefined') {
         // todo: remove this rule and use always "value" as association value field (solve backward compatibility issues)
         // set default object field
-        mapping.associationValueField = "valueId";
+        mapping.associationValueField = 'valueId';
         if (mapping.refersTo && mapping.parentModel === self.name) {
             // get type
             var refersToAttr = self.getAttribute(mapping.refersTo);
             // validate data object tag association
             if (refersToAttr && self.context.getConfiguration().getStrategy(DataConfigurationStrategy).hasDataType(refersToAttr.type)) {
-                mapping.associationValueField = "value";
+                mapping.associationValueField = 'value';
             }
         }
     }
@@ -2723,7 +2723,7 @@ DataModel.prototype.inferMapping = function(name) {
             }
             else {
                 //this is an exception
-                throw new DataError("EMAP","An inherited data association cannot be mapped.");
+                throw new DataError('EMAP','An inherited data association cannot be mapped.');
             }
             //cache mapping
             conf[mappingsProperty][name] = result;
@@ -2745,7 +2745,7 @@ DataModel.prototype.inferMapping = function(name) {
             }
             else {
                 //this is an exception
-                throw new DataError("EMAP","An inherited data association cannot be mapped.");
+                throw new DataError('EMAP','An inherited data association cannot be mapped.');
             }
             //cache mapping
             conf[mappingsProperty][name] = result;
@@ -2797,7 +2797,7 @@ function validate_(obj, state, callback) {
             (x.readonly && (typeof x.value!=='undefined') && state===1) ||
             (x.readonly && (typeof x.calculation!=='undefined') && state===1);
     }).filter(function(y) {
-        return (state===2) ? (y.hasOwnProperty("editable") ? y.editable : true) : true;
+        return (state===2) ? (y.hasOwnProperty('editable') ? y.editable : true) : true;
     });
 
     /**
@@ -2833,13 +2833,13 @@ function validate_(obj, state, callback) {
                 validatorModule = moduleLoader.require(attr.validation['validator']);
             }
             catch (err) {
-                TraceUtils.debug(sprintf("Data validator module (%s) cannot be loaded", attr.validation['validator']));
+                TraceUtils.debug(sprintf('Data validator module (%s) cannot be loaded', attr.validation['validator']));
                 TraceUtils.debug(err);
                 return cb(err);
             }
             if (typeof validatorModule.createInstance !== 'function') {
-                TraceUtils.debug(sprintf("Data validator module (%s) does not export createInstance() method.", attr.validation.type));
-                return cb(new Error("Invalid data validator type."));
+                TraceUtils.debug(sprintf('Data validator module (%s) does not export createInstance() method.', attr.validation.type));
+                return cb(new Error('Invalid data validator type.'));
             }
             arrValidators.push(validatorModule.createInstance(attr));
         }
@@ -2877,7 +2877,7 @@ function validate_(obj, state, callback) {
                 if (typeof validator.validateSync === 'function') {
                     validationResult = validator.validateSync(value);
                     if (validationResult) {
-                        return cb(new DataError(validationResult.code || "EVALIDATE",validationResult.message, validationResult.innerMessage, self.name, attr.name));
+                        return cb(new DataError(validationResult.code || 'EVALIDATE',validationResult.message, validationResult.innerMessage, self.name, attr.name));
                     }
                     else {
                         return cb();
@@ -2889,14 +2889,14 @@ function validate_(obj, state, callback) {
                             return cb(err);
                         }
                         if (validationResult) {
-                            return cb(new DataError(validationResult.code || "EVALIDATE",validationResult.message, validationResult.innerMessage, self.name, attr.name));
+                            return cb(new DataError(validationResult.code || 'EVALIDATE',validationResult.message, validationResult.innerMessage, self.name, attr.name));
                         }
                         return cb();
                     });
                 }
                 else {
-                    TraceUtils.debug(sprintf("Data validator (%s) does not have either validate() or validateSync() methods.", attr.validation.type));
-                    return cb(new Error("Invalid data validator type."));
+                    TraceUtils.debug(sprintf('Data validator (%s) does not have either validate() or validateSync() methods.', attr.validation.type));
+                    return cb(new Error('Invalid data validator type.'));
                 }
             }
             catch(err) {
@@ -2990,13 +2990,13 @@ DataModel.prototype.getSubTypes = function () {
     var self = this;
     var d = Q.defer();
     process.nextTick(function() {
-        var migrations = self.context.model("Migration");
+        var migrations = self.context.model('Migration');
         if (_.isNil(migrations)) {
             return d.resolve([]);
         }
         migrations.silent()
-            .select("model")
-            .groupBy("model")
+            .select('model')
+            .groupBy('model')
             .all().then(function(result) {
             var conf = self.context.getConfiguration().getStrategy(DataConfigurationStrategy), arr = [];
             result.forEach(function(x) {
@@ -3023,13 +3023,13 @@ DataModel.prototype.getReferenceMappings = function (deep) {
     var d = Q.defer();
     process.nextTick(function() {
         var referenceMappings = [], name = self.name, attributes;
-        var migrations = self.context.model("Migration");
+        var migrations = self.context.model('Migration');
         if (_.isNil(migrations)) {
             return d.resolve([]);
         }
         migrations.silent()
-            .select("model")
-            .groupBy("model")
+            .select('model')
+            .groupBy('model')
             .all().then(function(result) {
             _.forEach(result, function(x) {
                 var m = context.model(x.model);

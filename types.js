@@ -1,8 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var sprintf = require('sprintf').sprintf;
 var _ = require('lodash');
-var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
-var LangUtils = require("@themost/common").LangUtils;
+var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
+var LangUtils = require('@themost/common').LangUtils;
 var AbstractClassError = require('@themost/common').AbstractClassError;
 var AbstractMethodError = require('@themost/common').AbstractMethodError;
 
@@ -736,22 +736,22 @@ var PrivilegeType = {
      * Self Privilege (self).
      * @type {string}
      */
-    Self: "self",
+    Self: 'self',
     /**
      * Parent Privilege (parent)
      * @type {string}
      */
-    Parent: "parent",
+    Parent: 'parent',
     /**
      * Item Privilege (child)
      * @type {string}
      */
-    Item: "item",
+    Item: 'item',
     /**
      * Global Privilege (global)
      * @type {string}
      */
-    Global: "global"
+    Global: 'global'
 };
 
 /**

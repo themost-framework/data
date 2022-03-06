@@ -1,13 +1,13 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var LangUtils = require("@themost/common").LangUtils;
-var Args = require("@themost/common").Args;
-var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
+var LangUtils = require('@themost/common').LangUtils;
+var Args = require('@themost/common').Args;
+var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
 var AbstractMethodError = require('@themost/common').AbstractMethodError;
 var ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
-var Symbol = require("symbol");
+var Symbol = require('symbol');
 var Q = require('q');
-var currentProperty = Symbol("current");
+var currentProperty = Symbol('current');
 var CACHE_ABSOLUTE_EXPIRATION = 1200;
 
 /**
@@ -41,7 +41,7 @@ DataCache.prototype.init = function(callback) {
             callback();
             return;
         }
-        var NodeCache = require( "node-cache" );
+        var NodeCache = require( 'node-cache' );
         this.rawCache = new NodeCache();
         this.initialized = true;
         callback();
@@ -301,7 +301,7 @@ DataCacheStrategy.prototype.getOrDefault = function(key, getFunc, absoluteExpira
  */
 function DefaultDataCacheStrategy(config) {
     DefaultDataCacheStrategy.super_.bind(this)(config);
-    var NodeCache = require( "node-cache" );
+    var NodeCache = require( 'node-cache' );
     var expiration = CACHE_ABSOLUTE_EXPIRATION;
     var absoluteExpiration = LangUtils.parseInt(config.getSourceAt('settings/cache/absoluteExpiration'));
     if (absoluteExpiration>0) {

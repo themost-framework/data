@@ -4,7 +4,7 @@ var sprintf = require('sprintf');
 var TraceUtils = require('@themost/common').TraceUtils;
 var moment = require('moment');
 var _ = require('lodash');
-var Q = require("q");
+var Q = require('q');
 
 
 var functions = { };
@@ -50,10 +50,10 @@ FunctionContext.prototype.eval = function(expr, callback) {
         var expr2eval;
         //check parameters (match[3])
         if (match[3].length===0) {
-            expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2(); });");
+            expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, '(function() { return this.$2(); });');
         }
         else {
-            expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, "(function() { return this.$2($3); });");
+            expr2eval = expr1.replace(/(fn:)\s?(.*?)\s?\((.*?)\)/, '(function() { return this.$2($3); });');
         }
         //evaluate expression
         try {
@@ -215,10 +215,10 @@ FunctionContext.prototype.numbers = function(length) {
         try {
             length = length || 8;
             if (length<0) {
-                return deferred.reject(new Error("Number sequence length must be greater than zero."));
+                return deferred.reject(new Error('Number sequence length must be greater than zero.'));
             }
             if (length>255) {
-                return deferred.reject(new Error("Number sequence length exceeds the maximum of 255 characters."));
+                return deferred.reject(new Error('Number sequence length exceeds the maximum of 255 characters.'));
             }
             var times = Math.ceil(length / 10);
             var res = '';
@@ -244,8 +244,8 @@ FunctionContext.prototype.chars = function(length) {
     process.nextTick(function() {
         try {
             length = length || 8;
-            var chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ";
-            var str = "";
+            var chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ';
+            var str = '';
             for(var i = 0; i < length; i++) {
                 str += chars.substr(_.random(0, chars.length-1),1);
             }
@@ -266,8 +266,8 @@ FunctionContext.prototype.password = function(length) {
     process.nextTick(function() {
         try {
             length = length || 8;
-            var chars = "abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ",
-                str = "";
+            var chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ',
+                str = '';
             for(var i = 0; i < length; i++) {
                 str += chars.substr(_.random(0, chars.length-1),1);
             }

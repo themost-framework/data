@@ -5,11 +5,11 @@ var _ = require('lodash');
 var QueryUtils = require('@themost/query').QueryUtils;
 var QueryField = require('@themost/query').QueryField;
 var QueryFieldRef = require('@themost/query').QueryFieldRef;
-var NotNullError = require("@themost/common").NotNullError;
-var UniqueConstraintError = require("@themost/common").UniqueConstraintError;
-var TraceUtils = require("@themost/common").TraceUtils;
-var TextUtils = require("@themost/common").TextUtils;
-var DataCacheStrategy = require("./data-cache").DataCacheStrategy;
+var NotNullError = require('@themost/common').NotNullError;
+var UniqueConstraintError = require('@themost/common').UniqueConstraintError;
+var TraceUtils = require('@themost/common').TraceUtils;
+var TextUtils = require('@themost/common').TextUtils;
+var DataCacheStrategy = require('./data-cache').DataCacheStrategy;
 /**
  * @module @themost/data/data-listeners
  * @ignore
@@ -143,7 +143,7 @@ UniqueConstraintListener.prototype.beforeSave = function(event, callback) {
                             er = new UniqueConstraintError(constraint.description, null, event.model.name);
                         }
                         else {
-                            er = new UniqueConstraintError("Object already exists. A unique constraint violated.", null, event.model.name);
+                            er = new UniqueConstraintError('Object already exists. A unique constraint violated.', null, event.model.name);
                         }
                         TraceUtils.debug(er);
                         return cb(er);
@@ -377,7 +377,7 @@ DataCachingListener.prototype.beforeExecute = function(event, callback) {
             dataCache = event.emitter.data('cache');
         }
         // if caching is enabled and cache attribute is defined
-        if (typeof dataCache === "boolean" && dataCache === false) {
+        if (typeof dataCache === 'boolean' && dataCache === false) {
             return callback();
         }
         //validate conditional caching
@@ -470,7 +470,7 @@ DataCachingListener.prototype.afterExecute = function(event, callback) {
             dataCache = event.emitter.data('cache');
         }
         // if caching is enabled and cache attribute is defined
-        if (typeof dataCache === "boolean" && dataCache === false) {
+        if (typeof dataCache === 'boolean' && dataCache === false) {
             return callback();
         }
         //validate conditional caching

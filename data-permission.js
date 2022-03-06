@@ -2,10 +2,10 @@
 var QueryEntity = require('@themost/query').QueryEntity;
 var QueryUtils = require('@themost/query').QueryUtils;
 var async = require('async');
-var AccessDeniedError = require("@themost/common").AccessDeniedError;
-var DataConfigurationStrategy = require("./data-configuration").DataConfigurationStrategy;
-var _ = require("lodash");
-var DataCacheStrategy = require("./data-cache").DataCacheStrategy;
+var AccessDeniedError = require('@themost/common').AccessDeniedError;
+var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
+var _ = require('lodash');
+var DataCacheStrategy = require('./data-cache').DataCacheStrategy;
 var Q = require('q');
 var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 
@@ -240,7 +240,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                             event.result = true;
                             return cb();
                         }
-                        else if (hasOwnProperty(item, "account")) {
+                        else if (hasOwnProperty(item, 'account')) {
                             if (accounts.findIndex(function(x) { return x.name === item.account })>=0) {
                                 cancel=true;
                                 event.result = true;
@@ -501,7 +501,7 @@ function queryUser(context, username, callback) {
         if (_.isNil(users)) {
             return callback();
         }
-        users.where('name').equal(username).silent().select('id','name').expand("groups").getTypedItem().then(function(result) {
+        users.where('name').equal(username).silent().select('id','name').expand('groups').getTypedItem().then(function(result) {
             return callback(null, result);
         }).catch(function(err) {
             return callback(err);
@@ -542,9 +542,9 @@ function effectiveAccounts(context, callback) {
         }).then(function(result) {
             var arr = [];
             if (result) {
-                arr.push({ "id": result.id, "name": result.name });
+                arr.push({ 'id': result.id, 'name': result.name });
                 result.groups = result.groups || [];
-                result.groups.forEach(function(x) { arr.push({ "id": x.id, "name": x.name }); });
+                result.groups.forEach(function(x) { arr.push({ 'id': x.id, 'name': x.name }); });
             }
             if (arr.length===0)
                 arr.push({ id: null });
@@ -565,14 +565,14 @@ function effectiveAccounts(context, callback) {
             }).then(function(anonymous) {
                 var arr = [ ];
                 if (user) {
-                    arr.push({ "id": user.id, "name": user.name });
+                    arr.push({ 'id': user.id, 'name': user.name });
                     if (_.isArray(user.groups))
-                        user.groups.forEach(function(x) { arr.push({ "id": x.id, "name": x.name }); });
+                        user.groups.forEach(function(x) { arr.push({ 'id': x.id, 'name': x.name }); });
                 }
                 if (anonymous) {
-                    arr.push({ "id": anonymous.id, "name": "anonymous" });
+                    arr.push({ 'id': anonymous.id, 'name': 'anonymous' });
                     if (_.isArray(anonymous.groups))
-                        anonymous.groups.forEach(function(x) { arr.push({ "id": x.id, "name": x.name }); });
+                        anonymous.groups.forEach(function(x) { arr.push({ 'id': x.id, 'name': x.name }); });
                 }
                 if (arr.length===0)
                     arr.push({ id: null });
@@ -718,7 +718,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             assigned=true;
                             return cb(new EachSeriesCancelled());
                         }
-                        else if (hasOwnProperty(item, "account")) {
+                        else if (hasOwnProperty(item, 'account')) {
                             if (accounts.findIndex(function(x) { return x.name === item.account })>=0) {
                                 assigned=true;
                                 return cb(new EachSeriesCancelled());

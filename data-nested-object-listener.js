@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var _ = require("lodash");
+var _ = require('lodash');
 var QueryUtils = require('@themost/query').QueryUtils;
-var async = require("async");
+var async = require('async');
 var DataError = require('@themost/common').DataError;
 
 
@@ -91,7 +91,7 @@ function beforeSaveMany_(attr, event, callback) {
     //if nested object is not an array
     if (!_.isArray(nestedObj)) {
         //throw exception
-        return callback(new DataError("EJUNCT","Invalid argument type. Expected array.",null, event.model.name, name));
+        return callback(new DataError('EJUNCT','Invalid argument type. Expected array.',null, event.model.name, name));
     }
     //if nested array does not have any data
     if (nestedObj.length===0) {
@@ -430,7 +430,7 @@ function afterSaveMany_(attr, event, callback) {
     //if nested object is not an array
     if (!_.isArray(nestedArr)) {
         //throw exception
-        return callback(new DataError("EASSOCIATION","Invalid argument type. Expected array.",null, event.model.name, name));
+        return callback(new DataError('EASSOCIATION','Invalid argument type. Expected array.',null, event.model.name, name));
     }
     //get mapping
     var mapping = event.model.inferMapping(attr.name);

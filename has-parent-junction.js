@@ -174,24 +174,24 @@ function HasParentJunction(obj, association) {
             if (_.isNil(baseModel)) {
                 var associationObjectField = self.mapping.associationObjectField || DataObjectJunction.DEFAULT_OBJECT_FIELD ;
                 var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
-                var modelDefinition = { name:adapter, title: adapter, sealed:false, hidden:true, type:"hidden", source:adapter, view:adapter, version:'1.0', fields:[
-                        { name: "id", type:"Counter", primary: true },
+                var modelDefinition = { name:adapter, title: adapter, sealed:false, hidden:true, type:'hidden', source:adapter, view:adapter, version:'1.0', fields:[
+                        { name: 'id', type:'Counter', primary: true },
                         { name: associationObjectField, indexed: true, nullable:false, type: self.mapping.parentModel},
                         { name: associationValueField, indexed: true, nullable:false, type: self.mapping.childModel } ],
                     constraints: [
                         {
-                            description: "The relation between two objects must be unique.",
-                            type:"unique",
+                            description: 'The relation between two objects must be unique.',
+                            type:'unique',
                             fields: [ associationObjectField, associationValueField ]
                         }
-                    ], "privileges": self.mapping.privileges || [
+                    ], 'privileges': self.mapping.privileges || [
                         {
-                            "mask":15,
-                            "type":"global"
+                            'mask':15,
+                            'type':'global'
                         },
-                        { "mask":15,
-                            "type":"global",
-                            "account": "Administrators"
+                        { 'mask':15,
+                            'type':'global',
+                            'account': 'Administrators'
                         }
                     ]};
                 // add unique constraint if child model mappind is Zero Or One
@@ -202,7 +202,7 @@ function HasParentJunction(obj, association) {
                     return mapping && mapping.associationAdapter === adapter;
                 });
                 if (attribute) {
-                    if (attribute && (attribute.multiplicity === "ZeroOrOne" || attribute.multiplicity === "One")) {
+                    if (attribute && (attribute.multiplicity === 'ZeroOrOne' || attribute.multiplicity === 'One')) {
                         modelDefinition.constraints[0].fields = [associationObjectField];
                     }
                 }

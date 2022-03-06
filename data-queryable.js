@@ -2,11 +2,11 @@
 var async = require('async');
 var sprintf = require('sprintf').sprintf;
 var Symbol = require('symbol');
-var _ = require("lodash");
-var TextUtils = require("@themost/common").TextUtils;
+var _ = require('lodash');
+var TextUtils = require('@themost/common').TextUtils;
 var mappingExtensions = require('./data-mapping-extensions');
 var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataError = require("@themost/common").DataError;
+var DataError = require('@themost/common').DataError;
 var QueryField = require('@themost/query').QueryField;
 var QueryEntity = require('@themost/query').QueryEntity;
 var QueryUtils = require('@themost/query').QueryUtils;
@@ -28,11 +28,11 @@ DataAttributeResolver.prototype.orderByNestedAttribute = function(attr) {
     if (nestedAttribute) {
         var matches = /^(\w+)\((\w+)\/(\w+)\)$/i.exec(nestedAttribute.name);
         if (matches)   {
-            return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + "/" + matches[3]);
+            return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + '/' + matches[3]);
         }
         matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\)$/i.exec(nestedAttribute.name);
         if (matches)   {
-            return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + "/" + matches[3] + "/" + matches[4]);
+            return DataAttributeResolver.prototype.selectAggregatedAttribute.call(this, matches[1], matches[2] + '/' + matches[3] + '/' + matches[4]);
         }
     }
     return DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
@@ -456,11 +456,11 @@ DataAttributeResolver.prototype.testNestedAttribute = function(s) {
  * @returns {*}
  */
 DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
-    var self = this, member = attr.split("/");
+    var self = this, member = attr.split('/');
     //get the data association mapping
     var mapping = self.inferMapping(member[0]);
     //if mapping defines a junction between two models
-    if (mapping && mapping.associationType === "junction") {
+    if (mapping && mapping.associationType === 'junction') {
         //get field
         var field = self.field(member[0]), entity, expr, q;
         //first approach (default association adapter)
@@ -495,10 +495,10 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //get child model
                 var childModel = self.context.model(mapping.childModel);
                 if (_.isNil(childModel)) {
-                    throw new DataError("EJUNC","The associated model cannot be found.");
+                    throw new DataError('EJUNC','The associated model cannot be found.');
                 }
                 //create new join
-                var alias = field.name + "_" + childModel.name;
+                var alias = field.name + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
                     .equal(QueryField.select(mapping.childField).from(alias));
@@ -532,10 +532,10 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //get parent model
                 var parentModel = self.context.model(mapping.parentModel);
                 if (_.isNil(parentModel)) {
-                    throw new DataError("EJUNC","The associated model cannot be found.");
+                    throw new DataError('EJUNC','The associated model cannot be found.');
                 }
                 //create new join
-                var parentAlias = field.name + "_" + parentModel.name;
+                var parentAlias = field.name + '_' + parentModel.name;
                 entity = new QueryEntity(parentModel.viewAdapter).as(parentAlias);
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationObjectField).from(field.name))
                     .equal(QueryField.select(mapping.parentField).from(parentAlias));
@@ -549,7 +549,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
         }
     }
     else {
-        throw new DataError("EJUNC","The target model does not have a many to many association defined by the given attribute.","", self.name, attr);
+        throw new DataError('EJUNC','The target model does not have a many to many association defined by the given attribute.','', self.name, attr);
     }
 };
 
@@ -716,7 +716,7 @@ DataQueryable.prototype.search = function(text) {
         return self;
     }
     self.prepare();
-    var stringTypes = [ "Text", "URL", "Note" ];
+    var stringTypes = [ 'Text', 'URL', 'Note' ];
     self.model.attributes.forEach(function(x) {
         if (x.many) { return; }
         var mapping = self.model.inferMapping(x.name);
@@ -757,10 +757,10 @@ DataQueryable.prototype.join = function(model)
     var joinModel = self.model.context.model(model);
     //validate joined model
     if (_.isNil(joinModel))
-        throw new Error(sprintf("The %s model cannot be found", model));
+        throw new Error(sprintf('The %s model cannot be found', model));
     var arr = self.model.attributes.filter(function(x) { return x.type===joinModel.name; });
     if (arr.length===0)
-        throw new Error(sprintf("An internal error occurred. The association between %s and %s cannot be found", this.model.name ,model));
+        throw new Error(sprintf('An internal error occurred. The association between %s and %s cannot be found', this.model.name ,model));
     var mapping = self.model.inferMapping(arr[0].name);
     var expr = QueryUtils.query();
     expr.where(self.fieldOf(mapping.childField)).equal(joinModel.fieldOf(mapping.parentField));
@@ -1277,7 +1277,7 @@ DataQueryable.prototype.select = function(attr) {
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
 
     if (typeof arg === 'string') {
-        if (arg==="*") {
+        if (arg==='*') {
             //delete select
             delete self.query.$select;
             return this;
@@ -1372,8 +1372,8 @@ DataQueryable.prototype.select = function(attr) {
                     if (field) {
                         if (field.many || (field.mapping && field.mapping.associationType === 'junction')) {
                             self.expand({
-                                "name":field.name,
-                                "options":field.options
+                                'name':field.name,
+                                'options':field.options
                             });
                         }
                         else {
@@ -1451,7 +1451,7 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
             if (nestedAttr) {
                 if (_.isNil(alias)) {
                     var nestedMatches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
-                    alias = _.isNil(nestedMatches) ? aggr.concat('Of_', matches[2].replace(/\//g, "_")) : nestedMatches[1];
+                    alias = _.isNil(nestedMatches) ? aggr.concat('Of_', matches[2].replace(/\//g, '_')) : nestedMatches[1];
                 }
                 /**
                  * @type {Function}
@@ -1975,7 +1975,7 @@ function countInternal(callback) {
     callback = callback || function() {};
     //clone query
     var cloned = self.clone();
-    cloned.query.count("__count__");
+    cloned.query.count('__count__');
     if (cloned.query.hasFields() === false) {
         cloned.select();
     }
@@ -1990,7 +1990,7 @@ function countInternal(callback) {
         if (_.isArray(result)) {
             //get first value
             if (result.length>0)
-                value = result[0]["__count__"];
+                value = result[0]['__count__'];
         }
         return callback(null, value);
     });
@@ -2363,7 +2363,7 @@ function afterExecute_(result, callback) {
            else if (x instanceof DataAssociationMapping) {
                 return x;
            }
-           else if (typeof x.name === "string") {
+           else if (typeof x.name === 'string') {
                return x.name;
            }
            return x;
@@ -2382,9 +2382,9 @@ function afterExecute_(result, callback) {
                     mapping = expand;
                     if (typeof expand.select !== 'undefined' && expand.select !== null) {
                         if (typeof expand.select === 'string')
-                            options["$select"] = expand.select;
+                            options['$select'] = expand.select;
                         else if (_.isArray(expand.select))
-                            options["$select"] = expand.select.join(",");
+                            options['$select'] = expand.select.join(',');
                     }
                     //get expand options
                     if (typeof expand.options !== 'undefined' && expand.options !== null) {
@@ -2408,7 +2408,7 @@ function afterExecute_(result, callback) {
                     }
                     else {
                         //invalid expand parameter
-                        return callback(new Error("Invalid expand option. Expected string or a named object."));
+                        return callback(new Error('Invalid expand option. Expected string or a named object.'));
                     }
                     field = self.model.field(expandAttr);
                     if (typeof field === 'undefined')
@@ -2429,7 +2429,7 @@ function afterExecute_(result, callback) {
                                 _.assign(options, mapping.options);
                             }
                             else if (_.isArray(mapping.select) && mapping.select.length>0) {
-                                options['$select'] = mapping.select.join(",");
+                                options['$select'] = mapping.select.join(',');
                             }
                             // check data view attribute mapping options
                             if (self.$view) {
@@ -2452,13 +2452,13 @@ function afterExecute_(result, callback) {
                 }
                 else {
                     //set default $top option to -1 (backward compatibility issue)
-                    if (!options.hasOwnProperty("$top")) {
-                        options["$top"] = -1;
+                    if (!options.hasOwnProperty('$top')) {
+                        options['$top'] = -1;
                     }
                     //set default $levels option to 1 (backward compatibility issue)
-                    if (!options.hasOwnProperty("$levels")) {
+                    if (!options.hasOwnProperty('$levels')) {
                         if (typeof self.$levels === 'number') {
-                            options["$levels"] = self.getLevels() - 1;
+                            options['$levels'] = self.getLevels() - 1;
                         }
                     }
                 }
@@ -2506,11 +2506,11 @@ function afterExecute_(result, callback) {
                     }
                 }
                 else {
-                    return cb(new Error("Not yet implemented"));
+                    return cb(new Error('Not yet implemented'));
                 }
             }
             else {
-                return cb(new DataError("EASSOC", sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
+                return cb(new DataError('EASSOC', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
             }
         }, function(err) {
             if (err) {
@@ -2765,7 +2765,7 @@ DataQueryable.prototype.expand = function(attr) {
                 }
             }
             else {
-                throw new Error("Expand option may be a string or a named object.")
+                throw new Error('Expand option may be a string or a named object.')
             }
         });
     }
@@ -2781,7 +2781,7 @@ DataQueryable.prototype.hasExpand = function(attr) {
     if (typeof attr === 'string') {
         expand = attr;
     }
-    else if (typeof attr.name === "string") {
+    else if (typeof attr.name === 'string') {
         expand = attr.name;
     }
 
@@ -2792,7 +2792,7 @@ DataQueryable.prototype.hasExpand = function(attr) {
         else if (x instanceof DataAssociationMapping) {
             return x === expand;
         }
-        else if (typeof x.name === "string") {
+        else if (typeof x.name === 'string') {
             return x.name === expand;
         }
         return false;
@@ -3295,7 +3295,7 @@ DataQueryable.prototype.toExpand = function(attr) {
             options: this
         }
     }
-    throw new Error("Invalid parameter. Expected not empty string.")
+    throw new Error('Invalid parameter. Expected not empty string.')
 };
 /**
  * Executes the specified query and returns the first object which satisfy the specified criteria.

@@ -81,11 +81,11 @@ DataExpandResolver.prototype.testExpandExpression = function(s) {
     for (var i = 0; i < matches.length; i++) {
         var match = matches[i];
         if (typeof match[1] === 'undefined') {
-            result.push({ name:match[0].replace(/^\s+|\s+$/,"") });
+            result.push({ name:match[0].replace(/^\s+|\s+$/,'') });
         }
         else {
             var expand = { };
-            expand["name"] = match[0].replace(/^\s+|\s+$/,"");
+            expand['name'] = match[0].replace(/^\s+|\s+$/,'');
             reOptions.lastIndex = 0;
             var params = { };
             var expandOptions = match[1];

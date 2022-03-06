@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var sprintf = require('sprintf').sprintf;
-var _ = require("lodash");
+var _ = require('lodash');
 var Q = require('q');
 var Symbol = require('symbol');
 var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
@@ -8,9 +8,9 @@ var DataObjectTag = require('./data-object-tag').DataObjectTag;
 var HasManyAssociation = require('./has-many-association').HasManyAssociation;
 var HasOneAssociation = require('./has-one-association').HasOneAssociation;
 var HasParentJunction = require('./has-parent-junction').HasParentJunction;
-var SequentialEventEmitter = require("@themost/common").SequentialEventEmitter;
-var LangUtils = require("@themost/common").LangUtils;
-var DataError = require("@themost/common").DataError;
+var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
+var LangUtils = require('@themost/common').LangUtils;
+var DataError = require('@themost/common').DataError;
 
 var selectorsProperty = Symbol('selectors');
 var typeProperty = Symbol('type');
@@ -697,7 +697,7 @@ DataObject.prototype.getAdditionalModel = function() {
     return Q.promise(function (resolve, reject) {
         try {
             var model = self.getModel();
-            var attr = self.getModel().attributes.find(function(x) { return x.name === "additionalType"; });
+            var attr = self.getModel().attributes.find(function(x) { return x.name === 'additionalType'; });
             if (typeof attr === 'undefined') {
                 return resolve();
             }

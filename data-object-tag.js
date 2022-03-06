@@ -5,7 +5,7 @@ var QueryField = require('@themost/query').QueryField;
 var _ = require('lodash');
 var Q = require('q');
 var types = require('./types');
-var DataObjectJunction = require("./data-object-junction").DataObjectJunction;
+var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
 var DataQueryable = require('./data-queryable').DataQueryable;
 
 /**
@@ -148,45 +148,45 @@ function DataObjectTag(obj, association) {
                 var objectFieldType = parentModel.getAttribute(self.mapping.parentField).type;
                 if (objectFieldType === 'Counter') { objectFieldType = 'Integer'; }
                 definition = {
-                    "name": self.mapping.associationAdapter,
-                    "hidden": true,
-                    "source": self.mapping.associationAdapter,
-                    "view": self.mapping.associationAdapter,
-                    "version": "1.0",
-                    "fields": [
+                    'name': self.mapping.associationAdapter,
+                    'hidden': true,
+                    'source': self.mapping.associationAdapter,
+                    'view': self.mapping.associationAdapter,
+                    'version': '1.0',
+                    'fields': [
                         {
-                            "name": "id",
-                            "type": "Counter",
-                            "nullable": false,
-                            "primary": true
+                            'name': 'id',
+                            'type': 'Counter',
+                            'nullable': false,
+                            'primary': true
                         },
                         {
-                            "name": associationObjectField,
-                            "type": objectFieldType,
-                            "nullable": false,
-                            "many": false,
-                            "indexed": true
+                            'name': associationObjectField,
+                            'type': objectFieldType,
+                            'nullable': false,
+                            'many': false,
+                            'indexed': true
                         },
                         {
-                            "name": associationValueField,
-                            "type": refersToType,
-                            "nullable": false,
-                            "many": false,
-                            "indexed": true
+                            'name': associationValueField,
+                            'type': refersToType,
+                            'nullable': false,
+                            'many': false,
+                            'indexed': true
                         }
                     ],
-                    "constraints": [
-                        { "type":"unique", "fields": [ associationObjectField, associationValueField ] }
+                    'constraints': [
+                        { 'type':'unique', 'fields': [ associationObjectField, associationValueField ] }
                     ],
-                    "privileges": self.mapping.privileges || [
+                    'privileges': self.mapping.privileges || [
                         {
-                            "mask": 15,
-                            "type": "global"
+                            'mask': 15,
+                            'type': 'global'
                         },
                         {
-                            "mask": 15,
-                            "type": "global",
-                            "account": "Administrators"
+                            'mask': 15,
+                            'type': 'global',
+                            'account': 'Administrators'
                         }
                     ]
                 };
@@ -225,8 +225,8 @@ function DataObjectTag(obj, association) {
 
 LangUtils.inherits(DataObjectTag, DataQueryable);
 
-DataObjectTag.DEFAULT_OBJECT_FIELD = "object";
-DataObjectTag.DEFAULT_VALUE_FIELD = "value";
+DataObjectTag.DEFAULT_OBJECT_FIELD = 'object';
+DataObjectTag.DEFAULT_VALUE_FIELD = 'value';
 
 /**
  * @returns {string=}
@@ -381,7 +381,7 @@ function clear_(callback) {
         if (err) {
             return callback(err);
         }
-        self.getBaseModel().silent(self.$silent).where(self.getObjectField()).equal(self.parent[self.mapping.parentField]).select("id").getAllItems().then(function(result) {
+        self.getBaseModel().silent(self.$silent).where(self.getObjectField()).equal(self.parent[self.mapping.parentField]).select('id').getAllItems().then(function(result) {
             if (result.length===0) { return callback(); }
             return self.getBaseModel().remove(result).then(function () {
                return callback();

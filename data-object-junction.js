@@ -179,30 +179,30 @@ function DataObjectJunction(obj, association) {
             if (_.isNil(baseModel)) {
                 var associationObjectField = self.mapping.associationObjectField || DataObjectJunction.DEFAULT_OBJECT_FIELD;
                 var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
-                modelDefinition = { name:adapter, title: adapter, source:adapter, type:"hidden", hidden:true, sealed:false, view:adapter, version:'1.0', fields:[
-                        { name: "id", type:"Counter", primary: true },
+                modelDefinition = { name:adapter, title: adapter, source:adapter, type:'hidden', hidden:true, sealed:false, view:adapter, version:'1.0', fields:[
+                        { name: 'id', type:'Counter', primary: true },
                         { name: associationObjectField, indexed: true, nullable:false, type: self.mapping.parentModel },
                         { name: associationValueField, indexed: true, nullable:false, type: self.mapping.childModel } ],
-                    "constraints": [
+                    'constraints': [
                         {
-                            "description": "The relation between two objects must be unique.",
-                            "type":"unique",
-                            "fields": [ associationObjectField, associationValueField ]
+                            'description': 'The relation between two objects must be unique.',
+                            'type':'unique',
+                            'fields': [ associationObjectField, associationValueField ]
                         }
-                    ], "privileges": self.mapping.privileges || [
+                    ], 'privileges': self.mapping.privileges || [
                         {
-                            "mask":15,
-                            "type":"global"
+                            'mask':15,
+                            'type':'global'
                         },
                         {
-                            "mask": 15,
-                            "type": "global",
-                            "account": "Administrators"
+                            'mask': 15,
+                            'type': 'global',
+                            'account': 'Administrators'
                         }
                     ]};
                 if (self.mapping.refersTo) {
                     var refersTo = parentModel.getAttribute(self.mapping.refersTo);
-                    if (refersTo && (refersTo.multiplicity === "ZeroOrOne" || refersTo.multiplicity === "One")) {
+                    if (refersTo && (refersTo.multiplicity === 'ZeroOrOne' || refersTo.multiplicity === 'One')) {
                         modelDefinition.constraints[0].fields = [associationObjectField];
                     }
                 }
@@ -570,7 +570,7 @@ DataObjectJunction.prototype.migrate = function(callback)
 {
     var self = this;
     //get migration model
-    var migrationModel = self.parent.context.model("Migration");
+    var migrationModel = self.parent.context.model('Migration');
     //get related model
     var relationModel = self.getBaseModel();
     migrationModel.find({ appliesTo:relationModel.source, version: relationModel.version }).first(function(err, result) {

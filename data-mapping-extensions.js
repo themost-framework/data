@@ -154,20 +154,20 @@ var mappingExtensions = {
                             if (err) { return deferred.reject(err); }
                             //get junction sub-query
                             var junctionQuery = QueryUtils.query(junction.getBaseModel().name).select([mapping.associationObjectField, mapping.associationValueField])
-                                .join(thisQueryable.query.as("j0"))
+                                .join(thisQueryable.query.as('j0'))
                                 .with(QueryUtils.where(new QueryEntity(junction.getBaseModel().name).select(mapping.associationValueField))
-                                    .equal(new QueryEntity("j0").select(mapping.childField)));
+                                    .equal(new QueryEntity('j0').select(mapping.childField)));
                             //append join statement with sub-query
-                            q.query.join(junctionQuery.as("g0"))
+                            q.query.join(junctionQuery.as('g0'))
                                 .with(QueryUtils.where(new QueryEntity(parentModel.viewAdapter).select(mapping.parentField))
-                                    .equal(new QueryEntity("g0").select(mapping.associationObjectField)));
+                                    .equal(new QueryEntity('g0').select(mapping.associationObjectField)));
                             if (!q.query.hasFields()) {
                                 q.select();
                             }
                             //inherit silent mode
                             if (thisQueryable.$silent)  { q.silent(); }
                             //append child key field
-                            q.alsoSelect(QueryField.select(mapping.associationValueField).from("g0").as("ref__"));
+                            q.alsoSelect(QueryField.select(mapping.associationValueField).from('g0').as('ref__'));
                             return q.getItems().then(function (parents) {
                                 _.forEach(arr, function(x) {
                                     x[mapping.refersTo] = _.filter(parents, function(y) {
@@ -334,18 +334,18 @@ var mappingExtensions = {
                             }
                             //get junction sub-query
                             var junctionQuery = QueryUtils.query(junction.getBaseModel().name).select([mapping.associationObjectField, mapping.associationValueField])
-                                .join(thisQueryable.query.as("j0"))
+                                .join(thisQueryable.query.as('j0'))
                                 .with(QueryUtils.where(new QueryEntity(junction.getBaseModel().name).select(mapping.associationObjectField))
-                                    .equal(new QueryEntity("j0").select(mapping.parentField)));
+                                    .equal(new QueryEntity('j0').select(mapping.parentField)));
                             //append join statement with sub-query
-                            q.query.join(junctionQuery.as("g0"))
+                            q.query.join(junctionQuery.as('g0'))
                                 .with(QueryUtils.where(new QueryEntity(childModel.viewAdapter).select(mapping.childField))
-                                    .equal(new QueryEntity("g0").select(mapping.associationValueField)));
+                                    .equal(new QueryEntity('g0').select(mapping.associationValueField)));
 
                             //inherit silent mode
                             if (thisQueryable.$silent)  { q.silent(); }
                             //append item reference
-                            q.alsoSelect(QueryField.select(mapping.associationObjectField).from("g0").as("ref__"));
+                            q.alsoSelect(QueryField.select(mapping.associationObjectField).from('g0').as('ref__'));
                             return q.getItems().then(function (childs) {
                                 _.forEach(arr, function(x) {
                                     x[mapping.refersTo] = _.filter(childs, function(y) {
@@ -402,7 +402,7 @@ var mappingExtensions = {
                                .distinct()
                                .join(thisQueryable.query.as('j0'))
                                .with(QueryUtils.where(new QueryEntity(thisArg.getParentModel().viewAdapter).select(mapping.parentField))
-                                   .equal(new QueryEntity("j0").select(mapping.childField)));
+                                   .equal(new QueryEntity('j0').select(mapping.childField)));
                             //inherit silent mode
                             if (thisQueryable.$silent)  { q.silent(); }
                             q.silent().getAllItems().then(function(parents) {
@@ -450,7 +450,7 @@ var mappingExtensions = {
                         var childField = thisQueryable.model.field(mapping.childField);
                         var keyField = childField.property || childField.name;
                         if (_.isNil(childField)) {
-                            return deferred.reject("The specified field cannot be found on child model");
+                            return deferred.reject('The specified field cannot be found on child model');
                         }
                         var values = _.intersection(_.map(_.filter(arr, function(x) {
                             return x.hasOwnProperty(keyField);
@@ -524,7 +524,7 @@ var mappingExtensions = {
                         if (err) { return deferred.reject(err); }
                         var parentField = thisQueryable.model.field(mapping.parentField);
                         if (_.isNil(parentField)) {
-                            return deferred.reject("The specified field cannot be found on parent model");
+                            return deferred.reject('The specified field cannot be found on parent model');
                         }
                         var keyField = parentField.property || parentField.name;
                         var values = _.intersection(_.map(_.filter(arr, function(x) {
@@ -540,7 +540,7 @@ var mappingExtensions = {
                             }
                             var childField = thisArg.getChildModel().field(mapping.childField);
                             if (_.isNil(childField)) {
-                                return deferred.reject("The specified field cannot be found on child model");
+                                return deferred.reject('The specified field cannot be found on child model');
                             }
                             var foreignKeyField = childField.property || childField.name;
                             //Important Backward compatibility issue (<1.8.0)
@@ -619,7 +619,7 @@ var mappingExtensions = {
                         if (err) { return deferred.reject(err); }
                         var parentField = thisArg.getParentModel().field(mapping.parentField);
                         if (_.isNil(parentField)) {
-                            return deferred.reject("The specified field cannot be found on parent model");
+                            return deferred.reject('The specified field cannot be found on parent model');
                         }
                         var keyField = parentField.property || parentField.name;
                         var values = _.intersection(_.map(_.filter(arr, function(x) {
@@ -635,7 +635,7 @@ var mappingExtensions = {
                             }
                             var childField = thisArg.getChildModel().field(mapping.childField);
                             if (_.isNil(childField)) {
-                                return deferred.reject("The specified field cannot be found on child model");
+                                return deferred.reject('The specified field cannot be found on child model');
                             }
                             var foreignKeyField = childField.property || childField.name;
                             //Important Backward compatibility issue (<1.8.0)
@@ -649,9 +649,9 @@ var mappingExtensions = {
                             //inherit silent mode
                             if (thisQueryable.$silent)  { q.silent(); }
                             //join parents
-                            q.query.join(thisQueryable.query.as("j0"))
+                            q.query.join(thisQueryable.query.as('j0'))
                                 .with(QueryUtils.where(new QueryEntity(thisArg.getChildModel().viewAdapter).select(mapping.childField))
-                                    .equal(new QueryEntity("j0").select(mapping.parentField)));
+                                    .equal(new QueryEntity('j0').select(mapping.parentField)));
                             q.prepare();
                             //final execute query
                             return q.getItems().then(function(childs) {
