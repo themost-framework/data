@@ -1,8 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
+import {ApplicationBase, ConfigurationBase, SequentialEventEmitter} from "@themost/common";
 
-export declare function DataAdapterCallback(err?:Error, result?:any);
+export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
 export declare class DataAdapter {
     /**
@@ -23,13 +23,13 @@ export declare class DataAdapter {
      *
      * @param {(err?: Error) => void} callback
      */
-    open(callback:(err?:Error) => void);
+    open(callback:(err?:Error) => void): void;
 
     /**
      *
      * @param {(err?: Error) => void} callback
      */
-    close(callback:(err?:Error) => void);
+    close(callback:(err?:Error) => void): void;
 
     /**
      *
@@ -37,7 +37,7 @@ export declare class DataAdapter {
      * @param {Array<any>} values
      * @param {(err?: Error, result?: any) => void} callback
      */
-    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void);
+    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void): void;
 
     /**
      *
@@ -45,14 +45,14 @@ export declare class DataAdapter {
      * @param {string} attribute
      * @param {(err?: Error, result?: any) => void} callback
      */
-    selectIdentity(entity:string, attribute:string , callback?:(err?:Error, result?:any) => void);
+    selectIdentity(entity:string, attribute:string , callback?:(err?:Error, result?:any) => void): void;
 
     /**
      *
-     * @param {Function} fn
+     * @param {Function} closure
      * @param {(err?: Error) => void} callback
      */
-    executeInTransaction(fn:Function, callback:(err?:Error) => void);
+    executeInTransaction(closure:(cb: (err?: Error) => void) => void, callback:(err?:Error) => void): void;
 
     /**
      *
@@ -60,18 +60,20 @@ export declare class DataAdapter {
      * @param query
      * @param {(err?: Error) => void} callback
      */
-    createView(name:string, query:any, callback:(err?:Error) => void);
+    createView(name:string, query:any, callback:(err?:Error) => void): void;
 }
 
-export declare class DataContext extends SequentialEventEmitter {
+export declare abstract class DataContext extends SequentialEventEmitter {
     
-    model(name:any): DataModel
+    abstract model(name:any): DataModel;
 
-    db: DataAdapter;
+    abstract db: DataAdapter;
+
+    application: ApplicationBase;
 
     getConfiguration(): ConfigurationBase;
 
-    finalize(callback?:(err?:Error) => void): void;
+    abstract finalize(callback?:(err?:Error) => void): void;
 
     finalizeAsync(): Promise<void>;
 

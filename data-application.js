@@ -70,6 +70,7 @@ DataApplication.prototype.createContext = function() {
     context.getConfiguration = () => {
         return this.configuration;
     };
+    context.application = this;
     return context;
 };
 

@@ -1,18 +1,12 @@
-import { IApplication, ConfigurationBase } from "@themost/common";
+import { IApplication, ConfigurationBase, ApplicationBase, ApplicationServiceConstructor } from "@themost/common";
 import {resolve} from 'path';
 import { DataConfigurationStrategy, NamedDataContext, DataContext } from '../index';
 
-export class TestApplication extends IApplication {
+export class TestApplication implements ApplicationBase {
 
     private _services: Map<any,any> = new Map();
     private _configuration: ConfigurationBase;
 
-    useStrategy(serviceCtor: void, strategyCtor: void): this {
-        const ServiceClass: any = serviceCtor;
-        const StrategyClass: any = strategyCtor;
-        this._services.set(ServiceClass.name, new StrategyClass(this));
-        return this;
-    }
     hasStrategy(serviceCtor: void): boolean {
         return this._services.has((<any>serviceCtor).name);
     }
@@ -23,7 +17,6 @@ export class TestApplication extends IApplication {
         return this._configuration;
     }
     constructor(executionPath: string) {
-        super();
         // init application configuration
         this._configuration = new ConfigurationBase(resolve(executionPath, 'config'));
 
@@ -46,6 +39,25 @@ export class TestApplication extends IApplication {
         // use data configuration strategy
         this._configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
     }
+    configuration: ConfigurationBase;
+    useStrategy(serviceCtor: ApplicationServiceConstructor<any>, strategyCtor: ApplicationServiceConstructor<any>): this {
+        const ServiceClass: any = serviceCtor;
+        const StrategyClass: any = strategyCtor;
+        this._services.set(ServiceClass.name, new StrategyClass(this));
+        return this;
+    }
+    useService(serviceCtor: ApplicationServiceConstructor<any>): this {
+        const ServiceClass: any = serviceCtor;
+        this._services.set(serviceCtor.name, new ServiceClass(this));
+        return this;
+    }
+    hasService<T>(serviceCtor: ApplicationServiceConstructor<T>): boolean {
+        return this._services.has(serviceCtor.name);
+    }
+    getService<T>(serviceCtor: ApplicationServiceConstructor<T>): T {
+        const ServiceClass: any = serviceCtor;
+        return this._services.get(ServiceClass.name);
+    }
 
     createContext(): DataContext {
         const adapters = this._configuration.getSourceAt('adapters');
@@ -56,6 +68,7 @@ export class TestApplication extends IApplication {
         context.getConfiguration = () => {
             return this._configuration;
         };
+        context.application = this;
         return context;
     }
 

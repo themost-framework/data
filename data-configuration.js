@@ -509,10 +509,10 @@ function DataConfigurationStrategy(config) {
             }
             catch(err) {
                 if (err.code === 'MODULE_NOT_FOUND') {
-                    TraceUtils.log('Data: Application specific data types are missing. The default data types will be loaded instead.');
+                    TraceUtils.debug('Data: Application specific data types are missing. The default data types will be loaded instead.');
                 }
                 else {
-                    TraceUtils.log('Data: An error occurred while loading application data types.');
+                    TraceUtils.error('Data: An error occurred while loading application data types.');
                     throw err;
                 }
                 dataTypes = require('./dataTypes.json');

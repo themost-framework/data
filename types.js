@@ -1,10 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var sprintf = require('sprintf').sprintf;
 var _ = require('lodash');
-var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
-var LangUtils = require('@themost/common').LangUtils;
 var AbstractClassError = require('@themost/common').AbstractClassError;
 var AbstractMethodError = require('@themost/common').AbstractMethodError;
+var DataContext = require('./DataContext').DataContext;
 
 var types = { };
 
@@ -287,110 +285,6 @@ DataAdapter.prototype.createView = function(name, query, callback) {
 function DataEventArgs() {
     //
 }
-
-/**
- * @classdesc Represents the main data context.
- * @class
- * @augments SequentialEventEmitter
- * @constructor
- * @abstract
- */
-function DataContext() {
-    DataContext.super_.bind(this)();
-    //throw abstract class error
-    if (this.constructor === DataContext.prototype.constructor) {
-        throw new AbstractClassError();
-    }
-    /**
-     * @property db
-     * @description Gets the current database adapter
-     * @type {DataAdapter}
-     * @memberOf DataContext#
-     */
-    Object.defineProperty(this, 'db', {
-        get : function() {
-            return null;
-        },
-        configurable : true,
-        enumerable:false });
-}
-// noinspection JSUnusedLocalSymbols
-/**
- * Gets a data model based on the given data context
- * @param name {string} A string that represents the model to be loaded.
- * @returns {DataModel}
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataContext.prototype.model = function(name) {
-    throw new AbstractMethodError();
-};
-
-/**
- * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase}
- * @abstract
- */
-DataContext.prototype.getConfiguration = function() {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * @param {Function} callback
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataContext.prototype.finalize = function(callback) {
-    throw new AbstractMethodError();
-};
-/**
- * Finalizes data context
- * @returns {Promise<void>}
- */
-DataContext.prototype.finalizeAsync = function() {
-    const self = this;
-    return new Promise(function(resolve, reject) {
-        return self.finalize(function(err) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve();
-        });
-    });
-}
-/**
- * 
- * @param {function():Promise<void>} func 
- * @returns {Promise<void>}
- */
-DataContext.prototype.executeInTransactionAsync = function(func) {
-    const self = this;
-    return new Promise((resolve, reject) => {
-        // start transaction
-        return self.db.executeInTransaction(function(cb) {
-            try {
-                func().then(function() {
-                    // commit
-                    return cb();
-                }).catch( function(err) {
-                    // rollback
-                    return cb(err);
-                });
-            }
-            catch (err) {
-                return cb(err);
-            }
-        }, function(err) {
-            if (err) {
-                return reject(err);
-            }
-            // end transaction
-            return resolve();
-        });
-    });
-}
-
-LangUtils.inherits(DataContext, SequentialEventEmitter);
 
 /**
  * @classdesc Represents a data model's listener
