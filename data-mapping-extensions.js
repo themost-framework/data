@@ -479,6 +479,9 @@ var mappingExtensions = {
                             //append where statement for this operation
                             q.where(mapping.parentField).in(values);
                             //set silent (?)
+                            if (childField && childField.nested === true) {
+                                q.silent();
+                            }
                             q.getAllItems().then(function(parents) {
                                 var key=null,
                                     selector = function(x) {
