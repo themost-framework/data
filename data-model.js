@@ -31,6 +31,7 @@ var mappingsProperty = Symbol('mappings');
 var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
 var DataField = require('./types').DataField;
 var ZeroOrOneMultiplicityListener = require('./zero-or-one-multiplicity').ZeroOrOneMultiplicityListener;
+var OnNestedQueryListener = require('./OnNestedQueryListener').OnNestedQueryListener;
 
 /**
  * @this DataModel
@@ -615,6 +616,7 @@ function unregisterContextListeners() {
     if (this.caching==='always' || this.caching==='conditional') {
         this.on('before.execute', DataCachingListener.prototype.beforeExecute);
     }
+    this.on('before.execute', OnNestedQueryListener.prototype.beforeExecute);
     //register after execute caching
     if (this.caching==='always' || this.caching==='conditional') {
         this.on('after.execute', DataCachingListener.prototype.afterExecute);

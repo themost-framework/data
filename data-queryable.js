@@ -201,6 +201,12 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 .equal(QueryField.select(mapping.parentField).from(childFieldName));
             entity = new QueryEntity(parentModel.viewAdapter).as(childFieldName).left();
             res.join(entity).with(expr);
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: parentModel.name
+            });
             if (arrMember.length>2) {
                 parentModel[aliasProperty] = mapping.childField;
                 expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
@@ -230,6 +236,12 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             expr = QueryUtils.query().where(QueryField.select(parentField.name).from(parentEntity)).equal(QueryField.select(childField.name).from(childEntity));
             entity = new QueryEntity(childModel.viewAdapter).as(childEntity).left();
             res.join(entity).with(expr);
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: childModel.name
+            });
             if (arrMember.length === 2) {
                 // get child model member
                 var childMember = childModel.field(arrMember[1]);

@@ -100,6 +100,21 @@
                     "associationType": "association",
                     "cascade": "delete"
                 }
+            },
+            {
+                "name": "orders",
+                "type": "Order",
+                "nested": true,
+                "expandable": true,
+                "many": true,
+                "mapping": {
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "Order",
+                    "childField": "orderedItem",
+                    "associationType": "association",
+                    "cascade": "delete"
+                }
             }
     ],
     "constraints": [
