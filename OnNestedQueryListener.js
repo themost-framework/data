@@ -26,6 +26,11 @@ class OnNestedQueryListener {
         if (query.$select == null) {
             return Promise.resolve();
         }
+        // if queryable is silent
+        if (event.emitter.$silent) {
+            // exit
+            return Promise.resolve();
+        }
         if (Object.prototype.hasOwnProperty.call(query, '$expand')) {
             /**
              * @type {{ $entity:{ model:string }} | Array<{ $entity:{ model:string }}>}
