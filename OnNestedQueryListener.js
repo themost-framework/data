@@ -1,4 +1,6 @@
+const { QueryExpression } = require('@themost/query');
 const { DataPermissionEventListener } = require('./data-permission');
+const { instanceOf } = require('./instance-of');
 /**
  * @implements {BeforeExecuteEventListener}
  */
@@ -52,6 +54,11 @@ class OnNestedQueryListener {
                     });
                 }
                 const sources = expand.map(function(item) {
+                    // if entity is already a query expression
+                    if (instanceOf(item.$entity, QueryExpression)) {
+                        // do nothing
+                        return Promise.resolve();
+                    }
                     if (item.$entity && item.$entity.model) {
                         /**
                          * @type {DataModel}

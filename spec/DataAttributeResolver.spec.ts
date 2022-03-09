@@ -57,7 +57,7 @@ describe('DataAttributeResolver', () => {
         expect(items.length).toBe(0);
     });
 
-    it('should resolve parent nested attributes', async () => {
+    fit('should resolve parent nested attributes', async () => {
         Object.assign(context, {
             user: null
         });
@@ -65,8 +65,10 @@ describe('DataAttributeResolver', () => {
             'id',
             'orderedItem/name as productName',
             'customer/name as customerName'
-        ).getItems();
-        expect(items.length).toBe(0);
+        ).getList();
+        expect(items).toBeTruthy();
+        expect(items.value).toBeInstanceOf(Array);
+        expect(items.value.length).toBe(0);
     });
     
 });
