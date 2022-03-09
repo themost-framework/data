@@ -57,11 +57,10 @@ class OnNestedQueryListener {
                          * @type {DataModel}
                          */
                         const nestedModel = context.model(item.$entity.model);
-                        const silent = !!event.model.$silent;
                         // if model exists
                         if (nestedModel != null) {
                             //
-                            const nestedQuery = nestedModel.asQueryable().select().silent(silent).query;
+                            const nestedQuery = nestedModel.asQueryable().select().query;
                             return beforeExecute2({
                                 query: nestedQuery,
                                 model: nestedModel
