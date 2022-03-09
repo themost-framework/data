@@ -157,19 +157,16 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
             return callback(new Error('Target object has an invalid state.'));
         }
     }
-
     // use privilege defined by event arguments
     var privilege = model.name;
     var parentPrivilege = null;
     if (event.privilege) {
         privilege = event.privilege;
     }
-
     //validate throwError
     if (typeof event.throwError === 'undefined')
         event.throwError = true;
     context.user = context.user || { name:'anonymous',authenticationType:'None' };
-    //change: 2-May 2015
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
     if (authSettings)
@@ -180,24 +177,24 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
             && (unattendedExecutionAccount===context.user.name))
         {
             event.result = true;
-            callback();
-            return;
+            return callback();
         }
     }
     //get user key
-    var users = context.model('User'), permissions = context.model('Permission');
-    if (_.isNil(users)) {
+    var users = context.model('User');
+    if (users == null) {
         //do nothing
         return callback();
     }
-    if (_.isNil(permissions)) {
+    var permissions = context.model('Permission');
+    if (permissions == null) {
         //do nothing
         return callback();
     }
-
     effectiveAccounts(context, function(err, accounts) {
-        if (err) { callback(err); return; }
-
+        if (err) { 
+            return callback(err);
+        }
         var permEnabled = model.privileges.filter(function(x) { return !x.disabled; }, model.privileges).length>0;
         //get all enabled privileges
         var privileges = model.privileges.filter(function(x) { return !x.disabled && ((x.mask & requestMask) === requestMask) });
@@ -656,32 +653,57 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
             || unattendedExecutionAccount !== null)
             && (unattendedExecutionAccount===context.user.name))
         {
-            callback();
-            return;
+            return callback();
         }
     }
     if (event.query) {
-
         //get user key
-        var users = context.model('User'), permissions = context.model('Permission');
-        if (_.isNil(users)) {
+        var users = context.model('User');
+        var permissions = context.model('Permission');
+        if (users == null) {
             //do nothing
-            callback(null);
-            return;
+            return callback();
         }
-        if (_.isNil(permissions)) {
+        if (permissions == null) {
             //do nothing
-            callback(null);
-            return;
+            return callback();
         }
-        //get model privileges
-        var modelPrivileges = model.privileges || [];
+        //get model privileges (and clone them)
+        var modelPrivileges = _.cloneDeep(model.privileges || []);
+        // if there are no privileges
+        if (modelPrivileges.length == 0) {
+            // add defaults
+            modelPrivileges.push.apply(modelPrivileges, [
+                {
+                    type: 'global',
+                    mask: 31 // read, insert, update, delete and execute 
+                }
+            ]);
+        }
+        // validate current emitter view
+        if (event.emitter && event.emitter.$view) {
+            // get array
+            const viewPrivileges = event.emitter.$view.privileges || [];
+            if (viewPrivileges.length) {
+                // initialize privileges
+                modelPrivileges = [
+                    {
+                        type: 'global',
+                        mask: 31 // read, insert, update, delete and execute 
+                    }
+                ];
+                // set parent privilege e.g. Order
+                parentPrivilege = model.name;
+                // set privilege e.g. Delivered
+                privilege = event.emitter.$view.name;
+                // and append view privileges
+                modelPrivileges.push.apply(modelPrivileges, viewPrivileges);
+            }
+        }
         //if model has no privileges defined
         if (modelPrivileges.length===0) {
-            //do nothing
-            callback(null);
-            //and exit
-            return;
+            //do nothing and exit
+            return callback();
         }
         //tuning up operation
         //validate request mask permissions against all users privilege { mask:<requestMask>,disabled:false,account:"*" }
@@ -690,9 +712,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         });
         if (typeof allUsersPrivilege !== 'undefined') {
             //do nothing
-            callback(null);
-            //and exit
-            return;
+            return callback();
         }
 
         effectiveAccounts(context, function(err, accounts) {
@@ -725,8 +745,8 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             }
                         }
                         //try to find user has global permissions assigned
-                        permissions.where('privilege').equal(model.name).
-                            and('parentPrivilege').equal(null).
+                        permissions.where('privilege').equal(privilege).
+                            and('parentPrivilege').equal(parentPrivilege).
                             and('target').equal('0').
                             and('workspace').equal(1).
                             and('account').in(accounts.map(function(x) { return x.id; })).

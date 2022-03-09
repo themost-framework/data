@@ -1,6 +1,18 @@
 const { QueryExpression } = require('@themost/query');
 const { DataPermissionEventListener } = require('./data-permission');
 const { instanceOf } = require('./instance-of');
+
+function beforeExecuteQuery(event) {
+    return new Promise(function(resolve, reject) {
+        return DataPermissionEventListener.prototype.beforeExecute(event, function(err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+}
+
 /**
  * @implements {BeforeExecuteEventListener}
  */
@@ -33,6 +45,13 @@ class OnNestedQueryListener {
             // exit
             return Promise.resolve();
         }
+        // validate emitter.$view
+        const view = event.emitter && event.emitter.$view;
+        if (view && view.privileges && view.privileges.length) {
+            // DataEventPermissionListener will validate view privileges itself
+            // so, do nothing and exit
+            return Promise.resolve();
+        }
         if (Object.prototype.hasOwnProperty.call(query, '$expand')) {
             /**
              * @type {{ $entity:{ model:string }} | Array<{ $entity:{ model:string }}>}
@@ -43,16 +62,7 @@ class OnNestedQueryListener {
                 return Promise.resolve();
             }
             if (Array.isArray(expand)) {
-                const beforeExecute2 = function(event) {
-                    return new Promise(function(resolve, reject) {
-                        return DataPermissionEventListener.prototype.beforeExecute(event, function(err) {
-                            if (err) {
-                                return reject(err);
-                            }
-                            return resolve();
-                        });
-                    });
-                }
+                
                 const sources = expand.map(function(item) {
                     // if entity is already a query expression
                     if (instanceOf(item.$entity, QueryExpression)) {
@@ -68,7 +78,7 @@ class OnNestedQueryListener {
                         if (nestedModel != null) {
                             //
                             const nestedQuery = nestedModel.asQueryable().select().query;
-                            return beforeExecute2({
+                            return beforeExecuteQuery({
                                 query: nestedQuery,
                                 model: nestedModel
                             }).then(function() {

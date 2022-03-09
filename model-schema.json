@@ -471,6 +471,43 @@
                                 "name"
                             ]
                         }
+                    },
+                    "privileges": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "mask": {
+                                    "default": 1,
+                                    "type": "number",
+                                    "description": "A number which represents permission mask (1=Read, 2=Create, 4=Update, 8=Delete, 16=Execute)",
+                                    "minimum": 0,
+                                    "maximum": 31
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "self",
+                                        "global",
+                                        "parent",
+                                        "item"
+                                    ],
+                                    "description": "A string which represents the permission scope."
+                                },
+                                "account": {
+                                    "type": "string",
+                                    "description": "A string which represents the name of the security group where this privilege will be applied e.g. Administrators, Sales etc."
+                                },
+                                "filter": {
+                                    "type": "string",
+                                    "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
+                                }
+                            },
+                            "required": [
+                                "mask",
+                                "type"
+                            ]
+                        }
                     }
                 },
                 "required": [

@@ -167,13 +167,39 @@
     ],
     "views": [
         {
-            "name": "delivered",
+            "name": "Delivered",
             "title": "Delivered Orders",
             "filter": "orderStatus eq 1",
-            "order": "dateCreated desc"
+            "order": "dateCreated desc",
+            "fields": [
+                {
+                    "name": "id"
+                },
+                {
+                    "name": "orderDate"
+                },
+                {
+                    "name": "orderedItem"
+                },
+                {
+                    "name": "customer/givenName",
+                    "property": "customerGivenName"
+                },
+                {
+                    "name": "customer/familyName",
+                    "property": "customerFamilyName"
+                }
+            ],
+            "privileges": [
+                {
+                    "mask": 1,
+                    "account": "Contributors",
+                    "type": "global"
+                }
+            ]
         },
         {
-            "name": "latest",
+            "name": "Latest",
             "title": "Latest Orders",
             "filter": "orderDate gt lastMonth()",
             "order": "dateCreated desc"

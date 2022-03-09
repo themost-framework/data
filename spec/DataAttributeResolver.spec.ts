@@ -2,6 +2,7 @@ import { QueryEntity, QueryExpression, QueryField, SqlFormatter } from '@themost
 import { resolve } from 'path';
 import { DataContext } from '../index';
 import { TestApplication } from './TestApplication';
+import { TestUtils } from './adapter/TestUtils';
 
 describe('DataAttributeResolver', () => {
     let app;
@@ -57,7 +58,7 @@ describe('DataAttributeResolver', () => {
         expect(items.length).toBe(0);
     });
 
-    fit('should resolve parent nested attributes', async () => {
+    it('should resolve parent nested attributes', async () => {
         Object.assign(context, {
             user: null
         });
@@ -69,6 +70,61 @@ describe('DataAttributeResolver', () => {
         expect(items).toBeTruthy();
         expect(items.value).toBeInstanceOf(Array);
         expect(items.value.length).toBe(0);
+    });
+
+    it('should get privileged view', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            await context.model('User').silent().save([
+                {
+                  "enabled": 1,
+                  "name": "michael.barret@example.com",
+                  "description": "Michael Barret",
+                  "groups": [
+                      {
+                          "name": "Contributors"
+                      }
+                  ]
+                }
+              ]);
+            Object.assign(context, {
+                user: {
+                    name: 'michael.barret@example.com'
+                }
+            });
+            let items = await context.model('Order').select('Delivered').getList();
+            expect(items).toBeTruthy();
+            expect(items.value).toBeInstanceOf(Array);
+            expect(items.value.length).toBeGreaterThan(0);
+            const newUser =  {
+                "enabled": 1,
+                "name": "tom.hutchinson@example.com",
+                "description": "Tom Hutchinson",
+                "groups": [
+                    {
+                        "name": "Users"
+                    }
+                ]
+              };
+            await context.model('User').silent().save(newUser);
+            Object.assign(context, {
+                user: {
+                    name: 'tom.hutchinson@example.com'
+                }
+            });
+            items = await context.model('Order').select('Delivered').getList();
+            expect(items.value.length).toBe(0);
+            await context.model('Permission').silent().save({
+                parentPrivilege: 'Order',
+                privilege: 'Delivered',
+                mask: 1,
+                account: {
+                    name: 'tom.hutchinson@example.com'
+                },
+                target: 0
+            });
+            items = await context.model('Order').select('Delivered').getList();
+            expect(items.value.length).toBeGreaterThan(0);
+        });
     });
     
 });
