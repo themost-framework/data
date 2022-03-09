@@ -43,9 +43,6 @@ describe('DataAttributeResolver', () => {
             'orders'
         ).getItems();
         expect(items.length).toBeGreaterThan(0);
-        for (const item of items) {
-            expect(item.customer).toBe(customer.id);
-        }
     });
 
     it('should resolve child nested attributes', async () => {
