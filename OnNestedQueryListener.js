@@ -1,4 +1,4 @@
-const { QueryExpression } = require('@themost/query');
+const { QueryExpression, QueryField } = require('@themost/query');
 const { DataPermissionEventListener } = require('./data-permission');
 const { instanceOf } = require('./instance-of');
 
@@ -70,6 +70,16 @@ class OnNestedQueryListener {
                         return Promise.resolve();
                     }
                     if (item.$entity && item.$entity.model) {
+                        // get entity alias (which is a field of current model) 
+                        if (item.$entity.$as != null) {
+                            /**
+                             * @type {DataField}
+                             */
+                            const attribute = event.model.getAttribute(item.$entity.$as);
+                            if (attribute && attribute.nested) {
+                                return Promise.resolve();
+                            }
+                        }
                         /**
                          * @type {DataModel}
                          */
@@ -112,6 +122,26 @@ class OnNestedQueryListener {
                                         enumerable: false,
                                         writable: true,
                                         value: entity.model
+                                    });
+                                }
+                                let entityAlias;
+                                if (nestedQuery.$select) {
+                                    for(const key in nestedQuery.$select) {
+                                        if (Object.prototype.hasOwnProperty.call(nestedQuery.$select, key)) {
+                                            entityAlias = key;
+                                        }
+                                    }
+                                }
+                                if (entityAlias) {
+                                    Object.defineProperty(nestedQuery.$select, entityAlias, {
+                                        configurable: true,
+                                        enumerable: true,
+                                        writable: true,
+                                        value: [
+                                            Object.assign(new QueryField(), {
+                                                $name: entityAlias.concat('.*')
+                                            })
+                                        ]
                                     });
                                 }
                                 // change item.$entity from QueryEntity to QueryExpression

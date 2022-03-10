@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@themost/common": ">= 2.5.2 < 3",
-    "@themost/query": ">= 2.5.1 < 3",
+    "@themost/query": ">= 2.5.3 < 3",
     "@themost/xml": ">= 2.5.1 < 3"
   },
   "engines": {

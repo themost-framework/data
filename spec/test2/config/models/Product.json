@@ -5,7 +5,7 @@
     "hidden": false,
     "sealed": false,
     "abstract": false,
-    "version": "2.0",
+    "version": "2.1",
     "inherits": "Thing",
     "caching":"conditional",
     "fields": [
@@ -104,8 +104,7 @@
             {
                 "name": "orders",
                 "type": "Order",
-                "nested": true,
-                "expandable": true,
+                "expandable": false,
                 "many": true,
                 "mapping": {
                     "parentModel": "Product",
@@ -115,6 +114,14 @@
                     "associationType": "association",
                     "cascade": "delete"
                 }
+            },
+            {
+                "name": "productImage",
+                "type": "ImageObject",
+                "nullable": true,
+                "nested": true,
+                "expandable": true,
+                "many": false
             }
     ],
     "constraints": [

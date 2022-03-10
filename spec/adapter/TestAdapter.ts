@@ -143,7 +143,7 @@ export class TestAdapter {
         switch (field.type)
         {
             case 'Boolean':
-                s = 'INTEGER(1,0)';
+                s = 'INTEGER(1)';
                 break;
             case 'Byte':
                 s = 'INTEGER(1,0)';
@@ -477,7 +477,7 @@ export class TestAdapter {
                 // execute expressions (with clone adapter)
                 if (expressions.length) {
                     for (let i = 0; i < expressions.length; i++) {
-                        const expression = migration[i];
+                        const expression = expressions[i];
                         await self.executeAsync(expression);
                     }
                 }

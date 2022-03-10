@@ -31,7 +31,11 @@ describe('DataAttributeResolver', () => {
             'orders/id as orderID',
             'orders/customer as customer'
         ).getItems();
-        expect(items.length).toBe(0);
+        expect(items.length).toBeGreaterThan(0);
+        for (const item of items) {
+            expect(item.orderID).toBe(null);
+            expect(item.customer).toBe(null);
+        }
         Object.assign(context, {
             user: {
                 name: 'luis.nash@example.com'
@@ -46,19 +50,7 @@ describe('DataAttributeResolver', () => {
         expect(items.length).toBeGreaterThan(0);
     });
 
-    it('should resolve child nested attributes', async () => {
-        Object.assign(context, {
-            user: null
-        });
-        const items = await context.model('Product').select(
-            'id',
-            'orders/id as orderID',
-            'orders/customer as customer'
-        ).getItems();
-        expect(items.length).toBe(0);
-    });
-
-    it('should resolve parent nested attributes', async () => {
+    fit('should resolve parent nested attributes', async () => {
         Object.assign(context, {
             user: null
         });
@@ -124,6 +116,22 @@ describe('DataAttributeResolver', () => {
             });
             items = await context.model('Order').select('Delivered').getList();
             expect(items.value.length).toBeGreaterThan(0);
+        });
+    });
+
+
+    it('should get nested item', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const product = await context.model('Product').asQueryable().silent().getItem();
+            product.productImage = {
+                url: '/images/products/abc.png'
+            }
+            await context.model('Product').silent().save(product);
+            Object.assign(context, {
+                user: null
+            });
+            let item = await context.model('Product').where('id').equal(product.id).getItem();
+            expect(item.productImage).toBeTruthy();
         });
     });
     
