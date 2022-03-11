@@ -12,6 +12,7 @@ var QueryEntity = require('@themost/query').QueryEntity;
 var QueryUtils = require('@themost/query').QueryUtils;
 var Q = require('q');
 var aliasProperty = Symbol('alias');
+var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 
 /**
  * @class
@@ -160,7 +161,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
     if (typeof memberExpr === 'string') {
         memberExprString = memberExpr;
     }
-    else if (typeof memberExpr === 'object' && memberExpr.hasOwnProperty('name')) {
+    else if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
         memberExprString = memberExpr.name
     }
     if (/\//.test(memberExprString)) {
@@ -250,7 +251,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                     if (childMember.name !== arrMember[1]) {
                         arrMember[1] = childMember.name;
                         // set memberExpr
-                        if (typeof memberExpr === 'object' && memberExpr.hasOwnProperty('name')) {
+                        if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
                             memberExpr.name = arrMember.join('/');
                         }
                     }
@@ -832,6 +833,7 @@ DataQueryable.prototype.or = function(attr) {
 
 /**
  * @private
+ * @this DataQueryable
  * @memberof DataQueryable#
  * @param {*} obj
  * @returns {*}
@@ -1201,6 +1203,7 @@ DataQueryable.prototype.between = function(value1, value2) {
 };
 
 /**
+ * @this DataQueryable
  * @memberOf DataQueryable#
  * @param arg
  * @returns {*}
@@ -1681,6 +1684,7 @@ DataQueryable.prototype.first = function(callback) {
     }
 };
 /**
+ * @this DataQueryable
  * @private
  * @memberOf DataQueryable#
  * @param {Function} callback
@@ -1722,6 +1726,7 @@ DataQueryable.prototype.all = function(callback) {
 };
 
 /**
+ * @this DataQueryable
  * @private
  * @memberOf DataQueryable#
  * @param {Function} callback
@@ -1761,6 +1766,7 @@ DataQueryable.prototype.skip = function(n) {
 };
 
 /**
+ * @this DataQueryable
  * @memberOf DataQueryable#
  * @private
  * @param {Number} n - Defines the number of items to take
@@ -1907,6 +1913,7 @@ DataQueryable.prototype.getItems = function() {
 
 /**
  * @private
+ * @this DataQueryable
  * @memberOf DataQueryable#
  * @param {Function} callback
  */
@@ -1990,7 +1997,7 @@ function countInternal(callback) {
     if (cloned.query.hasFields() === false) {
         cloned.select();
     }
-    if (cloned.query.hasOwnProperty('$order')) {
+    if (hasOwnProperty(cloned.query, '$order')) {
         delete cloned.query.$order;
     }
     return  execute_.bind(cloned)(function(err, result) {
@@ -2039,6 +2046,7 @@ DataQueryable.prototype.count = function(callback) {
 };
 
 /**
+ * @this DataQueryable
  * @private
  * @memberOf DataQueryable#
  * @param {string} attr
@@ -2084,6 +2092,7 @@ DataQueryable.prototype.max = function(attr, callback) {
 };
 
 /**
+ * @this DataQueryable
  * @private
  * @memberOf DataQueryable#
  * @param {string} attr
@@ -2130,6 +2139,7 @@ DataQueryable.prototype.min = function(attr, callback) {
 
 /**
  * @private
+ * @this DataQueryable
  * @memberOf DataQueryable#
  * @param {string} attr
  * @param {Function} callback
@@ -2409,7 +2419,7 @@ function afterExecute_(result, callback) {
                         //get expand attribute as string
                         expandAttr = expand;
                     }
-                    else if ((typeof expand === 'object') && expand.hasOwnProperty('name')) {
+                    else if ((typeof expand === 'object') && hasOwnProperty(expand, 'name')) {
                         //get expand attribute from Object.name property
                         expandAttr = expand.name;
                         //get expand options
@@ -2463,11 +2473,11 @@ function afterExecute_(result, callback) {
                 }
                 else {
                     //set default $top option to -1 (backward compatibility issue)
-                    if (!options.hasOwnProperty('$top')) {
+                    if (!hasOwnProperty(options, '$top')) {
                         options['$top'] = -1;
                     }
                     //set default $levels option to 1 (backward compatibility issue)
-                    if (!options.hasOwnProperty('$levels')) {
+                    if (!hasOwnProperty(options, '$levels')) {
                         if (typeof self.$levels === 'number') {
                             options['$levels'] = self.getLevels() - 1;
                         }
@@ -2484,7 +2494,7 @@ function afterExecute_(result, callback) {
                 thisMapping.options = options;
                 if (mapping.associationType==='association' || mapping.associationType==='junction') {
                     if ((mapping.parentModel===self.model.name) && (mapping.associationType==='association')) {
-                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedChilds_v1(result)
+                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedChildren(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
@@ -2492,7 +2502,7 @@ function afterExecute_(result, callback) {
                             });
                     }
                     else if (mapping.childModel===self.model.name && mapping.associationType==='junction') {
-                        return mappingExtensions.extend(thisMapping).for(self).getParents_v1(result)
+                        return mappingExtensions.extend(thisMapping).for(self).getParents(result)
                             .then(function() {
                                 return cb();
                         }).catch(function(err) {
@@ -2500,7 +2510,7 @@ function afterExecute_(result, callback) {
                         });
                     }
                     else if (mapping.parentModel===self.model.name && mapping.associationType==='junction') {
-                        return mappingExtensions.extend(thisMapping).for(self).getChilds_v1(result)
+                        return mappingExtensions.extend(thisMapping).for(self).getChildren(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
@@ -2508,7 +2518,7 @@ function afterExecute_(result, callback) {
                             });
                     }
                     else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
-                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedParents_v1(result)
+                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedParents(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
@@ -2538,6 +2548,7 @@ function afterExecute_(result, callback) {
 }
 
 /**
+ * @this DataQueryable
  * @private
  * @memberOf DataQueryable#
  * @param {Array|*} result
@@ -2751,7 +2762,7 @@ DataQueryable.prototype.expand = function(attr) {
                 return;
             }
             if ((typeof x === 'string') || (x instanceof DataAssociationMapping)
-                || (typeof x === 'object' && x.hasOwnProperty('name'))) {
+                || (typeof x === 'object' && hasOwnProperty(x, 'name'))) {
                 expanded = self.hasExpand(x);
                 if (expanded) {
                     //expandable already exists
@@ -3187,6 +3198,7 @@ DataQueryable.prototype.toUpperCase = function() {
     return this.toLocaleUpperCase();
 };
 /**
+ * @this DataQueryable
  * @private
  * @memberOf DataQueryable#
  * @param {Function} callback

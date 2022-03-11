@@ -50,7 +50,7 @@ describe('DataAttributeResolver', () => {
         expect(items.length).toBeGreaterThan(0);
     });
 
-    fit('should resolve parent nested attributes', async () => {
+    it('should resolve parent nested attributes', async () => {
         Object.assign(context, {
             user: null
         });

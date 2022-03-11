@@ -6,12 +6,6 @@ var QueryField = require('@themost/query').QueryField;
 var Q = require('q');
 var hasOwnProperty = require('./has-own-property').hasOwnProperty;
 
-
-/**
- * @module @themost/data/data-mapping-extensions
- * @ignore
- */
-
 var mappingExtensions = {
 
     /**
@@ -131,30 +125,37 @@ var mappingExtensions = {
              * @param {*} items
              * @returns {Promise|*}
              */
-            getParents : function(items) {
+            getParents: function(items) {
                 var thisArg = this;
-                var deferred = Q.defer();
-                process.nextTick(function() {
-                    if (_.isNil(items)) {
-                        return deferred.resolve();
+                return new Promise(function(resolve, reject) {
+                    if (items == null) {
+                        return resolve();
                     }
-                    var arr = _.isArray(items) ? items : [items];
+                    var arr = Array.isArray(items) ? items : [ items ];
                     if (arr.length === 0) {
-                        return deferred.resolve();
+                        return resolve();
                     }
                     if (_.isNil(thisQueryable)) {
-                        return deferred.reject('The underlying data queryable cannot be empty at this context.');
+                        return reject('The underlying data queryable cannot be empty at this context.');
                     }
+                    
                     if ((mapping.childModel !== thisQueryable.model.name) || (mapping.associationType!=='junction')) {
-                        return deferred.resolve();
+                        return resolve();
                     }
                     var HasParentJunction = require('./has-parent-junction').HasParentJunction;
                     var junction = new HasParentJunction(thisQueryable.model.convert({ }), mapping);
                     return junction.migrate(function(err) {
-                        if (err) { return deferred.reject(err); }
+                        if (err) {
+                            return reject(err);
+                        }
                         var parentModel = thisArg.getParentModel();
                         parentModel.filter(mapping.options, function(err, q) {
-                            if (err) { return deferred.reject(err); }
+                            if (err) {
+                                return reject(err);
+                            }
+                            if (!q.query.hasFields()) {
+                                q.select();
+                            }
                             //get junction sub-query
                             var junctionQuery = QueryUtils.query(junction.getBaseModel().name).select([mapping.associationObjectField, mapping.associationValueField])
                                 .join(thisQueryable.query.as('j0'))
@@ -168,27 +169,38 @@ var mappingExtensions = {
                                 q.select();
                             }
                             //inherit silent mode
-                            if (thisQueryable.$silent)  { q.silent(); }
+                            if (thisQueryable.$silent)  {
+                                q.silent();
+                            }
+                            // append child key field
+                            if (hasOwnProperty(q.query.$select, q.model.viewAdapter)) {
+                                const select =  Object.getOwnPropertyDescriptor(q.query.$select, q.model.viewAdapter).value;
+                                select.push(QueryField.select(mapping.associationValueField).from('g0').as('__ref'));
+                            } else {
+                                throw new Error('Query expression is invalid. Expected a collection of selected attributes');
+                            }
                             //append child key field
-                            q.alsoSelect(QueryField.select(mapping.associationValueField).from('g0').as('ref__'));
                             return q.getItems().then(function (parents) {
-                                _.forEach(arr, function(x) {
-                                    x[mapping.refersTo] = _.filter(parents, function(y) {
-                                        if (y['ref__'] === x[mapping.childField]) {
-                                            delete y['ref__'];
+                                _.forEach(arr, function(item) {
+                                    var values = parents.filter(function(parent) {
+                                        if (parent.__ref === item[mapping.childField]) {
                                             return true;
                                         }
                                         return false;
                                     });
+                                    var cloned = _.cloneDeep(values);
+                                    cloned.forEach(function(item1) {
+                                        delete item1.__ref; 
+                                    });
+                                    item[mapping.refersTo] = cloned;
                                 });
-                                return deferred.resolve();
+                                return resolve();
                             }).catch(function (err) {
-                                return deferred.reject(err);
+                                return reject(err);
                             });
                         });
                     });
                 });
-                return deferred.promise;
             },
             /**
              * @param {*} items
@@ -311,30 +323,69 @@ var mappingExtensions = {
              * @param {*} items
              * @returns {Promise|*}
              */
-            getChilds: function(items) {
+            getChildren: function(items) {
                 var thisArg = this;
-                var deferred = Q.defer();
-                process.nextTick(function() {
-                    if (_.isNil(items)) {
-                        return deferred.resolve();
+                return new Promise(function(resolve, reject) {
+                    if (items == null) {
+                        return resolve();
                     }
-                    var arr = _.isArray(items) ? items : [items];
+                    var arr = Array.isArray(items) ? items : [ items ];
                     if (arr.length === 0) {
-                        return deferred.resolve();
+                        return resolve();
                     }
-                    if (_.isNil(thisQueryable)) {
-                        return deferred.reject('The underlying data queryable cannot be empty at this context.');
+                    if (thisQueryable == null) {
+                        return reject('The underlying data queryable cannot be empty at this context.');
                     }
                     if ((mapping.parentModel !== thisQueryable.model.name) || (mapping.associationType!=='junction')) {
-                        return deferred.resolve();
+                        return resolve();
+                    }
+                    var junction;
+                    if (mapping.childModel == null) {
+                        var DataObjectTag = require('./data-object-tag').DataObjectTag;
+                        junction = new DataObjectTag(thisQueryable.model.convert({ }), mapping);
+                        return junction.migrate(function(err) {
+                            if (err) {
+                                return reject(err);
+                            }
+                            //get junction sub-query
+                            var q = junction.getBaseModel()
+                                .select(mapping.associationObjectField, mapping.associationValueField);
+                            q.query.join(thisQueryable.query.as('j0'))
+                                .with(QueryUtils.where(new QueryEntity(junction.getBaseModel().name).select(mapping.associationObjectField))
+                                    .equal(new QueryEntity('j0').select(mapping.parentField)));
+                            if (thisQueryable.$silent)  {
+                                q.silent();
+                            }
+                            return q.getItems().then(function (children) {
+                                arr.forEach(function(item) {
+                                     var values = children.filter(function(child) {
+                                        if (child[mapping.associationObjectField] === item[mapping.parentField]) {
+                                            return true;
+                                        }
+                                        return false;
+                                    });
+                                    var cloned = _.cloneDeep(values);
+                                    item[mapping.refersTo] = cloned.map(function(item) {
+                                        return item[mapping.associationValueField];
+                                    });
+                                });
+                                return resolve();
+                            }).catch(function (err) {
+                                return reject(err);
+                            });
+                        });
                     }
                     var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-                    var junction = new DataObjectJunction(thisQueryable.model.convert({ }), mapping);
+                    junction = new DataObjectJunction(thisQueryable.model.convert({ }), mapping);
                     return junction.migrate(function(err) {
-                        if (err) { return deferred.reject(err); }
+                        if (err) {
+                            return reject(err);
+                        }
                         var childModel = thisArg.getChildModel();
                         childModel.filter(mapping.options, function(err, q) {
-                            if (err) { return deferred.reject(err); }
+                            if (err) {
+                                return reject(err);
+                            }
                             if (!q.query.hasFields()) {
                                 q.select();
                             }
@@ -349,27 +400,38 @@ var mappingExtensions = {
                                     .equal(new QueryEntity('g0').select(mapping.associationValueField)));
 
                             //inherit silent mode
-                            if (thisQueryable.$silent)  { q.silent(); }
-                            //append item reference
-                            q.alsoSelect(QueryField.select(mapping.associationObjectField).from('g0').as('ref__'));
-                            return q.getItems().then(function (childs) {
-                                _.forEach(arr, function(x) {
-                                    x[mapping.refersTo] = _.filter(childs, function(y) {
-                                        if (y['ref__'] === x[mapping.parentField]) {
-                                            delete y['ref__'];
+                            if (thisQueryable.$silent)  {
+                                q.silent();
+                            }
+                            // append item reference
+                            if (hasOwnProperty(q.query.$select, q.model.viewAdapter)) {
+                                const select =  Object.getOwnPropertyDescriptor(q.query.$select, q.model.viewAdapter).value;
+                                select.push(QueryField.select(mapping.associationObjectField).from('g0').as('__ref'));
+                            } else {
+                                throw new Error('Query expression is invalid. Expected a collection of selected attributes');
+                            }
+                            return q.getItems().then(function (children) {
+                                arr.forEach(function(item) {
+                                     var values = children.filter(function(child) {
+                                         // important:: use type equal operator
+                                        if (child.__ref === item[mapping.parentField]) {
                                             return true;
                                         }
                                         return false;
                                     });
+                                    var cloned = _.cloneDeep(values);
+                                    cloned.forEach(function(item1) {
+                                        delete item1.__ref;
+                                    });
+                                    item[mapping.refersTo] = cloned;
                                 });
-                                return deferred.resolve();
+                                return resolve();
                             }).catch(function (err) {
-                                return deferred.reject(err);
+                                return reject(err);
                             });
                         });
                     });
                 });
-                return deferred.promise;
             },
             /**
              * @param {*} items
@@ -377,31 +439,34 @@ var mappingExtensions = {
              */
             getAssociatedParents: function(items) {
                 var thisArg = this;
-                var deferred = Q.defer();
-                process.nextTick(function() {
-                    if (_.isNil(items)) {
-                        return deferred.resolve();
+                return new Promise(function(resolve, reject) {
+                    if (items == null) {
+                        return resolve();
                     }
-                    var arr = _.isArray(items) ? items : [items];
+                    var arr = Array.isArray(items) ? items : [items];
                     if (arr.length === 0) {
-                        return deferred.resolve();
+                        return resolve();
                     }
-                    if (_.isNil(thisQueryable)) {
-                        return deferred.reject('The underlying data queryable cannot be empty at this context.');
+                    if (thisQueryable == null) {
+                        return reject('The underlying data queryable cannot be empty at this context.');
                     }
                     if ((mapping.childModel !== thisQueryable.model.name) || (mapping.associationType!=='association')) {
-                        return deferred.resolve();
+                        return resolve();
                     }
                     thisArg.getParentModel().migrate(function(err) {
-                       if (err) { return deferred.reject(err); }
+                       if (err) {
+                           return reject(err);
+                        }
                         thisArg.getParentModel().filter(mapping.options, function(err, q) {
-                           if (err) { return deferred.reject(err); }
+                           if (err) {
+                               return reject(err);
+                            }
                             //Important Backward compatibility issue (<1.8.0)
                             //Description: if $levels parameter is not defined then set the default value to 0.
-                            if (typeof q.$levels === 'undefined') {
+                            if (q.$levels == null) {
                                 q.$levels = 0;
                             }
-                            if (typeof q.query.$select === 'undefined') {
+                            if (q.query.$select == null) {
                                q.select();
                             }
                             q.query
@@ -410,25 +475,31 @@ var mappingExtensions = {
                                .with(QueryUtils.where(new QueryEntity(thisArg.getParentModel().viewAdapter).select(mapping.parentField))
                                    .equal(new QueryEntity('j0').select(mapping.childField)));
                             //inherit silent mode
-                            if (thisQueryable.$silent)  { q.silent(); }
-                            q.getAllItems().then(function(parents) {
+                            if (thisQueryable.$silent)  {
+                                q.silent();
+                            }
+                            var refersTo = thisArg.getChildModel().getAttribute(mapping.childField);
+                            if (refersTo.nested === true) {
+                                q.silent();
+                            }
+                            // validate nested attribute
+                            q.getAllItems().then(function(results) {
                                 var childField = thisQueryable.model.field(mapping.childField);
                                 var keyField = childField.property || childField.name;
-                                var iterator = function(x) {
-                                    var key = x[keyField];
-                                    x[keyField] = _.find(parents, function(x) {
-                                       return x[mapping.parentField] === key;
+                                var iterator = function(item) {
+                                    var find = results.find(function(result) {
+                                       return result[mapping.parentField] == item[keyField];
                                     });
+                                    item[keyField] = _.cloneDeep(find);
                                 };
-                                _.forEach(arr, iterator);
-                                return deferred.resolve();
+                                arr.forEach(iterator);
+                                return resolve();
                             }).catch(function (err) {
-                                return deferred.reject(err);
+                                return reject(err);
                             });
                         });
                     });
                 });
-                return deferred.promise;
             },
             /**
              * @param {*} items
@@ -607,79 +678,141 @@ var mappingExtensions = {
              * @param {*} items
              * @returns {Promise|*}
              */
-            getAssociatedChilds: function(items) {
+            getAssociatedChildren: function(items) {
                 var thisArg = this;
-                var deferred = Q.defer();
-                process.nextTick(function() {
-                    if (_.isNil(items)) {
-                        return deferred.resolve();
+                return new Promise(function(resolve, reject) {
+                    if (items == null) {
+                        return resolve();
                     }
-                    var arr = _.isArray(items) ? items : [items];
+                    var arr = Array.isArray(items) ? items : [items];
                     if (arr.length === 0) {
-                        return deferred.resolve();
+                        return resolve();
                     }
-                    if (_.isNil(thisQueryable)) {
-                        return deferred.reject('The underlying data queryable cannot be empty at this context.');
+                    if (thisQueryable == null) {
+                        return reject('The underlying data queryable cannot be empty at this context.');
                     }
                     if ((mapping.parentModel !== thisQueryable.model.name) || (mapping.associationType!=='association')) {
-                        return deferred.resolve();
+                        return resolve();
                     }
                     thisArg.getChildModel().migrate(function(err) {
-                        if (err) { return deferred.reject(err); }
+                        if (err) { 
+                            return reject(err);
+                        }
                         var parentField = thisArg.getParentModel().field(mapping.parentField);
-                        if (_.isNil(parentField)) {
-                            return deferred.reject('The specified field cannot be found on parent model');
+                        if (parentField == null) {
+                            return reject('The specified field cannot be found on parent model');
                         }
                         var keyField = parentField.property || parentField.name;
                         var values = _.intersection(_.map(_.filter(arr, function(x) {
                             return hasOwnProperty(x, keyField);
-                        }), function (x) { return x[keyField];}));
+                        }), function (x) {
+                            return x[keyField];
+                        }));
                         if (values.length===0) {
-                            return deferred.resolve();
+                            return resolve();
                         }
                         //search for view named summary
                         thisArg.getChildModel().filter(mapping.options, function(err, q) {
                             if (err) {
-                                return deferred.reject(err);
+                                return reject(err);
                             }
                             var childField = thisArg.getChildModel().field(mapping.childField);
-                            if (_.isNil(childField)) {
-                                return deferred.reject('The specified field cannot be found on child model');
+                            if (childField == null) {
+                                return reject('The specified field cannot be found on child model');
                             }
                             var foreignKeyField = childField.property || childField.name;
                             //Important Backward compatibility issue (<1.8.0)
                             //Description: if $levels parameter is not defined then set the default value to 0.
-                            if (typeof q.$levels === 'undefined') {
+                            if (q.$levels == null) {
                                 q.$levels = 0;
                             }
-                            if (!q.query.hasFields()) {
+                            if (q.query.hasFields() == false) {
                                 q.select();
                             }
                             //inherit silent mode
-                            if (thisQueryable.$silent)  { q.silent(); }
-                            //join parents
+                            if (thisQueryable.$silent)  {
+                                q.silent();
+                            }
+                            // if query is a select statement
+                            if (q.query.$fixed == null) {
+                                // check if foreign key field exists in query
+                                var selectEntity = q.model.viewAdapter;
+                                if (Object.prototype.hasOwnProperty.call(q.query.$select, selectEntity)) {
+                                    /**
+                                     * @type {Array}
+                                     */
+                                    var select = Object.getOwnPropertyDescriptor(q.query.$select, selectEntity).value;
+                                    // find foreign key key
+                                    var find =  select.find(function(field) {
+                                        if (field instanceof QueryField) {
+                                            // by alias or name
+                                            return field.as() === foreignKeyField || field.getName() === foreignKeyField;
+                                        }
+                                    });
+                                    // if foreign key field does not exist
+                                    if (find == null) {
+                                        // clone query
+                                        var q1 = q.clone().select(foreignKeyField);
+                                        // and select foreign key field
+                                        var select1 = Object.getOwnPropertyDescriptor(q1.query.$select, selectEntity).value;
+                                        if (Array.isArray(select1)) {
+                                            // append field to select fields
+                                            select.push.apply(select, select1);
+                                        }
+                                        if (Array.isArray(q.query.$group)) {
+                                            find =  q.query.$group.find(function(field) {
+                                                if (field instanceof QueryField) {
+                                                    // by alias or name
+                                                    return field.as() === foreignKeyField || field.getName() === foreignKeyField;
+                                                }
+                                            });
+                                            if (find == null) {
+                                                q.query.$group.push.apply(q.query.$group, select1);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            // join parents
                             q.query.join(thisQueryable.query.as('j0'))
                                 .with(QueryUtils.where(new QueryEntity(thisArg.getChildModel().viewAdapter).select(mapping.childField))
                                     .equal(new QueryEntity('j0').select(mapping.parentField)));
                             q.prepare();
-                            //final execute query
-                            return q.getItems().then(function(childs) {
-                                _.forEach(arr, function(x) {
-                                    x[mapping.refersTo] = _.filter(childs, function(y) {
-                                        if (!_.isNil(y[foreignKeyField]) && hasOwnProperty(y[foreignKeyField], keyField)) {
-                                            return y[foreignKeyField][keyField] === x[keyField];
+                            // final execute query
+                            return q.getItems().then(function(results) {
+                                arr.forEach(function(item) {
+                                    var children = results.filter(function(result) {
+                                        if (item[keyField] == null) {
+                                            return false;
                                         }
-                                        return y[foreignKeyField] === x[keyField];
+                                        var value = result[foreignKeyField];
+                                        if (value != null && hasOwnProperty(value, keyField) === true) {
+                                            // important:: use equal value operator (==)
+                                            return value[keyField] == item[keyField];
+                                        }
+                                        return value == item[keyField];
                                     });
+                                    var refersTo = thisArg.getParentModel().getAttribute(mapping.refersTo);
+                                    // if parent field multiplicity attribute defines an one-to-one association
+                                    if (refersTo && (refersTo.multiplicity === 'ZeroOrOne' || refersTo.multiplicity === 'One')) {
+                                        if (children[0] != null) {
+                                            item[mapping.refersTo] = _.cloneDeep(children[0]);
+                                        }
+                                        else {
+                                            item[mapping.refersTo] = null;
+                                        }
+                                    }
+                                    else {
+                                        item[mapping.refersTo] = _.cloneDeep(children);
+                                    }
                                 });
-                                return deferred.resolve();
+                                return resolve();
                             }).catch(function(err) {
-                                return deferred.resolve(err);
+                                return resolve(err);
                             });
                         });
                     });
                 });
-                return deferred.promise;
             }
         };
     }

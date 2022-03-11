@@ -68,7 +68,19 @@
                 "associationType": "junction",
                 "cascade": "delete",
                 "associationObjectField": "product",
-                "associationValueField": "value"
+                "associationValueField": "value",
+                "privileges": [
+                    {
+                        "mask": 1,
+                        "type": "global",
+                        "account": "*"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    }
+                ]
             }
         },
             {
