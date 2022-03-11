@@ -1,5 +1,6 @@
 const { QueryExpression, QueryField } = require('@themost/query');
 const { DataPermissionEventListener } = require('./data-permission');
+const { DataEventArgs } = require('./types');
 const { instanceOf } = require('./instance-of');
 
 function beforeExecuteQuery(event) {
@@ -19,7 +20,7 @@ function beforeExecuteQuery(event) {
 class OnNestedQueryListener {
     /**
      * 
-     * @param {EventArgs} event 
+     * @param {DataEventArgs} event
      * @param {function} callback 
      */
     beforeExecute(event, callback) {
@@ -115,7 +116,7 @@ class OnNestedQueryListener {
                                         value: entity.$join
                                     });
                                 }
-                                // set unerlying model
+                                // set underlying model
                                 if (entity.model != null) {
                                     Object.defineProperty(nestedQuery, 'model', {
                                         configurable: true,
