@@ -1,6 +1,7 @@
 import {DataApplication} from '../data-application';
 import { ApplicationService, ApplicationBase } from '@themost/common';
 import {resolve} from 'path';
+import {DataCacheStrategy} from '../data-cache';
 
 class Service1 extends ApplicationService {
     constructor(app: ApplicationBase) {
@@ -27,6 +28,7 @@ describe('DataApplication', () => {
     it('should create instance', () => {
         const app = new DataApplication(cwd);
         expect(app).toBeTruthy();
+        app.getService(DataCacheStrategy).clear();
     });
     it('should get configuration', () => {
         const app = new DataApplication(cwd);
@@ -35,11 +37,11 @@ describe('DataApplication', () => {
     });
     it('should use service', () => {
         const app = new DataApplication(cwd);
-        expect(app.hasService(Service1)).toBeFalse();
+        expect(app.hasService(Service1)).toBeFalsy();
         app.useService(Service1);
         const service = app.getService<Service1>(Service1);
         expect(service).toBeTruthy();
-        expect(app.hasService(Service1)).toBeTrue();
+        expect(app.hasService(Service1)).toBeTruthy();
         expect(service.getMessage()).toBe('Hello World');
     });
     it('should use strategy', () => {
@@ -54,12 +56,12 @@ describe('DataApplication', () => {
         expect(service.getMessage()).toBe('Hello World!!!');
     });
 
-    it('should use context', () => {
+    it('should use context', async () => {
         const app = new DataApplication(cwd);
         const context = app.createContext();
         expect(context).toBeTruthy();
         const Products = context.model('Product');
         expect(Products).toBeTruthy();
-        context.finalize();
+        await context.finalize();
     });
 });
