@@ -931,11 +931,13 @@ class TypeParser {
         if (typeof type !== 'string') {
             return;
         }
-        var descriptor = Object.getOwnPropertyDescriptor(TypeParser, type);
+        var descriptor = Object.getOwnPropertyDescriptor(TypeParser, 'parse' + type);
         if (descriptor == null) {
             return;
         }
-        return descriptor.value;
+        if (typeof descriptor.value === 'function') {
+            return descriptor.value;
+        }
     }
 }
 // backward compatibility issue (this constant should be removed in next version)
