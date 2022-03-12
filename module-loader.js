@@ -78,8 +78,8 @@ DefaultModuleLoader.prototype.require = function(modulePath) {
     }
     return require(path.join(this.getExecutionPath(),modulePath));
 };
-
-if (typeof module !== 'undefined') {
-    module.exports.ModuleLoader = ModuleLoader;
-    module.exports.DefaultModuleLoader = DefaultModuleLoader;
+module.exports = {
+    ModuleLoader,
+    DefaultModuleLoader
 }
+

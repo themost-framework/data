@@ -2502,17 +2502,19 @@ EdmMapping.getOwnActions = function(obj) {
 
 
 //exports
+module.exports = {
+    EdmType,
+    EdmMultiplicity,
+    EntitySetKind,
+    ProcedureConfiguration,
+    ActionConfiguration,
+    FunctionConfiguration,
+    EntityTypeConfiguration,
+    EntitySetConfiguration,
+    SingletonConfiguration,
+    ODataModelBuilder,
+    ODataConventionModelBuilder,
+    EdmMapping,
+    defineDecorator
+}
 
-module.exports.EdmType = EdmType;
-module.exports.EdmMultiplicity = EdmMultiplicity;
-module.exports.EntitySetKind = EntitySetKind;
-module.exports.ProcedureConfiguration = ProcedureConfiguration;
-module.exports.ActionConfiguration = ActionConfiguration;
-module.exports.FunctionConfiguration = FunctionConfiguration;
-module.exports.EntityTypeConfiguration = EntityTypeConfiguration;
-module.exports.EntitySetConfiguration = EntitySetConfiguration;
-module.exports.SingletonConfiguration = SingletonConfiguration;
-module.exports.ODataModelBuilder = ODataModelBuilder;
-module.exports.ODataConventionModelBuilder = ODataConventionModelBuilder;
-module.exports.EdmMapping = EdmMapping;
-module.exports.defineDecorator = defineDecorator;

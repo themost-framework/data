@@ -164,7 +164,7 @@ function HasParentJunction(obj, association) {
                 baseModel.context = self.parent.context;
                 return baseModel;
             }
-            //otherwise create model
+            // otherwise, create model
             var parentModel = self.parent.getModel();
             var parentField = parentModel.field(self.mapping.parentField);
             var childModel = self.parent.context.model(self.mapping.childModel);
@@ -289,7 +289,7 @@ function insertSingleObject_(obj, callback) {
                 return callback();
             }
             else {
-                //otherwise create new item
+                //otherwise, create new item
                 var newItem = { };
                 newItem[self.getObjectField()] = parentValue;
                 newItem[self.getValueField()] = childValue;
@@ -422,7 +422,7 @@ function removeSingleObject_(obj, callback) {
                 callback(null);
             }
             else {
-                //otherwise remove item
+                // otherwise, remove item
                 self.baseModel.silent(self.$silent).remove(result, callback);
             }
         }

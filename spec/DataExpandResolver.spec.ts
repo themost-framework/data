@@ -1,5 +1,5 @@
 import {DataExpandResolver} from '../data-expand-resolver';
-fdescribe('DataExpandResolver', () => {
+describe('DataExpandResolver', () => {
     it('should parse `orders`', () => {
         const resolver = new DataExpandResolver();
         let res = resolver.test('orders');
