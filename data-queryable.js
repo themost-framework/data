@@ -3398,8 +3398,7 @@ DataQueryable.prototype.getAllTypedItems = function() {
     return this.skip(0).take(-1).getTypedItems();
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports.DataQueryable = DataQueryable;
-    module.exports.DataAttributeResolver = DataAttributeResolver;
+module.exports = {
+    DataQueryable,
+    DataAttributeResolver
 }

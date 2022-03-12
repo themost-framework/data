@@ -5,7 +5,7 @@ var _ = require('lodash');
  * @returns {Array}
  * @private
  */
-function testSplitExpandExpr_(s) {
+function testSplitExpandExpression(s) {
     var ix = 0;
     var paren = -1, charAt, ix1 = -1,
         isLiteral = false,
@@ -56,7 +56,6 @@ function testSplitExpandExpr_(s) {
 }
 
 /**
- * @ignore
  * @constructor
  */
 function DataExpandResolver() {
@@ -71,7 +70,7 @@ DataExpandResolver.prototype.testExpandExpression = function(s) {
         return [];
     }
     var result = [], reOptions = /(;|^)(\$expand|\$filter|\$levels|\$orderby|\$groupby|\$select|\$top|\$skip|\$search|\$count)=(.*?)(;\$|$)/ig;
-    var matches = testSplitExpandExpr_(s);
+    var matches = testSplitExpandExpression(s);
     for (var i = 0; i < matches.length; i++) {
         var match = matches[i];
         if (typeof match[1] === 'undefined') {
@@ -98,11 +97,19 @@ DataExpandResolver.prototype.testExpandExpression = function(s) {
     return result;
 };
 
+/**
+ * Tests a string expression and returns an array of matched expandable entities
+ * @param {string} s
+ */
+ DataExpandResolver.prototype.test = function(s) {
+    return this.testExpandExpression(s);
+ }
+
 
 if (typeof exports !== 'undefined')
 {
     module.exports = {
-        DataExpandResolver:DataExpandResolver,
+        DataExpandResolver,
         testExpandExpression: function(s) {
             return DataExpandResolver.prototype.testExpandExpression(s);
         }
