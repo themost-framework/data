@@ -2,7 +2,7 @@
 import {DataModel} from "./data-model";
 import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
 
-export declare function DataAdapterCallback(err?:Error, result?:any);
+export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
 export declare class DataAdapter {
     /**
@@ -23,13 +23,13 @@ export declare class DataAdapter {
      *
      * @param {(err?: Error) => void} callback
      */
-    open(callback:(err?:Error) => void);
+    open(callback:(err?:Error) => void): void;
 
     /**
      *
      * @param {(err?: Error) => void} callback
      */
-    close(callback:(err?:Error) => void);
+    close(callback:(err?:Error) => void): void;
 
     /**
      *
@@ -37,7 +37,7 @@ export declare class DataAdapter {
      * @param {Array<any>} values
      * @param {(err?: Error, result?: any) => void} callback
      */
-    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void);
+    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void): void;
 
     /**
      *
@@ -45,14 +45,14 @@ export declare class DataAdapter {
      * @param {string} attribute
      * @param {(err?: Error, result?: any) => void} callback
      */
-    selectIdentity(entity:string, attribute:string , callback?:(err?:Error, result?:any) => void);
+    selectIdentity(entity:string, attribute:string , callback?:(err?:Error, result?:any) => void): void;
 
     /**
      *
      * @param {Function} fn
      * @param {(err?: Error) => void} callback
      */
-    executeInTransaction(fn:Function, callback:(err?:Error) => void);
+    executeInTransaction(fn:Function, callback:(err?:Error) => void): void;
 
     /**
      *
@@ -60,7 +60,7 @@ export declare class DataAdapter {
      * @param query
      * @param {(err?: Error) => void} callback
      */
-    createView(name:string, query:any, callback:(err?:Error) => void);
+    createView(name:string, query:any, callback:(err?:Error) => void): void;
 }
 
 export declare class DataContext extends SequentialEventEmitter {
@@ -173,15 +173,16 @@ export declare interface AfterExecuteEventListener {
     afterExecute(event: DataEventArgs, callback: (err?: Error) => void): void;
 }
 
-export declare interface TypeParser {
-    parseInteger(val: any): number;
-    parseCounter(val: any): number;
-    parseFloat(val: any): number;
-    parseNumber(val: any): number;
-    parseDateTime(val: any): Date;
-    parseDate(val: any): Date;
-    parseBoolean(val: any): boolean;
-    parseText(val: any): string;
+export declare class TypeParser {
+    static parseInteger(val: any): number;
+    static parseCounter(val: any): number;
+    static parseFloat(val: any): number;
+    static parseNumber(val: any): number;
+    static parseDateTime(val: any): Date;
+    static parseDate(val: any): Date;
+    static parseBoolean(val: any): boolean;
+    static parseText(val: any): string;
+    static hasParser(type: string): (value: any) => any;
 
 }
 
@@ -210,4 +211,4 @@ declare interface DataCachingTypeEnum {
 
 export declare const DataCachingType: DataCachingTypeEnum;
 
-export declare const parsers: TypeParser;
+export declare type parsers = TypeParser;

@@ -1,8 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var Q = require('q');
 var _ = require('lodash');
-var DataError = require('@themost/common').DataError;
-var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
+var {DataError} = require('@themost/common');
+var {DataObjectJunction} = require('./data-object-junction');
 function ZeroOrOneMultiplicityListener() {
     //
 }

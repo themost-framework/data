@@ -1,5 +1,6 @@
 const { QueryExpression, QueryField } = require('@themost/query');
 const { DataPermissionEventListener } = require('./data-permission');
+// eslint-disable-next-line no-unused-vars
 const { DataEventArgs } = require('./types');
 const { instanceOf } = require('./instance-of');
 

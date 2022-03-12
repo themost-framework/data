@@ -1,11 +1,11 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var {eachSeries} = require('async');
-var {parsers} = require('./types');
+var {TypeParser} = require('./types');
 var {DataError} = require('@themost/common');
 var {HasParentJunction} = require('./has-parent-junction');
 var {DataObjectJunction} = require('./data-object-junction');
 var {DataObjectTag} = require('./data-object-tag');
-var parseBoolean = parsers.parseBoolean;
+var parseBoolean = TypeParser.parseBoolean;
 var {hasOwnProperty} = require('./has-own-property');
 var {isObjectDeep} = require('./is-object');
 

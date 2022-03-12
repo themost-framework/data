@@ -3,16 +3,16 @@ var async = require('async');
 var sprintf = require('sprintf').sprintf;
 var Symbol = require('symbol');
 var _ = require('lodash');
-var TextUtils = require('@themost/common').TextUtils;
+var {TextUtils} = require('@themost/common');
 var mappingExtensions = require('./data-mapping-extensions');
-var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataError = require('@themost/common').DataError;
-var QueryField = require('@themost/query').QueryField;
-var QueryEntity = require('@themost/query').QueryEntity;
-var QueryUtils = require('@themost/query').QueryUtils;
+var {DataAssociationMapping} = require('./types');
+var {DataError} = require('@themost/common');
+var {QueryField} = require('@themost/query');
+var {QueryEntity} = require('@themost/query');
+var {QueryUtils} = require('@themost/query');
 var Q = require('q');
 var aliasProperty = Symbol('alias');
-var hasOwnProperty = require('./has-own-property').hasOwnProperty;
+var {hasOwnProperty} = require('./has-own-property');
 
 /**
  * @class

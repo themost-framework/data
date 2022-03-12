@@ -1,12 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var sprintf = require('sprintf').sprintf;
 var _ = require('lodash');
-var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
-var LangUtils = require('@themost/common').LangUtils;
-var AbstractClassError = require('@themost/common').AbstractClassError;
-var AbstractMethodError = require('@themost/common').AbstractMethodError;
-
-var types = { };
+var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -846,23 +840,8 @@ var DataCachingType = {
     Conditional: 'conditional'
 };
 
-types.PrivilegeType = PrivilegeType;
-types.DataObjectState = DataObjectState;
-types.DataCachingType = DataCachingType;
-types.DataAdapter = DataAdapter;
-types.DataContext = DataContext;
-types.DataContextEmitter = DataContextEmitter;
-types.DataEventArgs = DataEventArgs;
-types.DataEventListener = DataEventListener;
-types.DataModelMigration = DataModelMigration;
-types.DataAssociationMapping = DataAssociationMapping;
-types.DataField=DataField;
-types.DataResultSet=DataResultSet;
-types.DataModelEventListener=DataModelEventListener;
-types.DataModelPrivilege=DataModelPrivilege;
-// noinspection JSUnusedGlobalSymbols
-types.parsers = {
-    parseInteger: function(val) {
+class TypeParser {
+    static parseInteger(val) {
         if (_.isNil(val))
             return 0;
         else if (typeof val === 'number')
@@ -881,11 +860,13 @@ types.parsers = {
         else {
             return parseInt(val) || 0;
         }
-    },
-    parseCounter: function(val) {
-        return types.parsers.parseInteger(val);
-    },
-    parseFloat: function(val) {
+    }
+
+    static parseCounter(val) {
+        return TypeParser.parseInteger(val);
+    }
+
+    static parseFloat(val) {
         if (_.isNil(val))
             return 0;
         else if (typeof val === 'number')
@@ -902,11 +883,13 @@ types.parsers = {
         else {
             return parseFloat(val);
         }
-    },
-    parseNumber: function(val) {
-        return types.parsers.parseFloat(val);
-    },
-    parseDateTime: function(val) {
+    }
+
+    static parseNumber(val) {
+        return TypeParser.parseFloat(val);
+    }
+
+    static parseDateTime(val) {
         if (_.isNil(val))
             return null;
         if (val instanceof Date)
@@ -919,19 +902,22 @@ types.parsers = {
             return new Date(val);
         }
         return null;
-    },
-    parseDate: function(val) {
-        var res = types.parsers.parseDateTime(val);
+    }
+
+    static parseDate(val) {
+        var res = this.parseDateTime(val);
         if (res instanceof Date) {
             res.setHours(0,0,0,0);
             return res;
         }
         return res;
-    },
-    parseBoolean: function(val) {
-        return (types.parsers.parseInteger(val)!==0);
-    },
-    parseText: function(val) {
+    }
+
+    static parseBoolean(val) {
+        return (TypeParser.parseInteger(val)!==0);
+    }
+
+    static parseText(val) {
         if (_.isNil(val))
             return val;
         else if (typeof val === 'string') {
@@ -941,6 +927,35 @@ types.parsers = {
             return val.toString();
         }
     }
-};
+    static hasParser(type) {
+        if (typeof type !== 'string') {
+            return;
+        }
+        var descriptor = Object.getOwnPropertyDescriptor(TypeParser, type);
+        if (descriptor == null) {
+            return;
+        }
+        return descriptor.value;
+    }
+}
+// backward compatibility issue (this constant should be removed in next version)
+var parsers = TypeParser;
 
-module.exports = types;
+module.exports = {
+    TypeParser,
+    parsers,
+    PrivilegeType,
+    DataObjectState,
+    DataCachingType,
+    DataAdapter,
+    DataContext,
+    DataContextEmitter,
+    DataEventArgs,
+    DataEventListener,
+    DataModelMigration,
+    DataAssociationMapping,
+    DataField,
+    DataResultSet,
+    DataModelEventListener,
+    DataModelPrivilege
+};

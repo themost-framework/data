@@ -1,5 +1,5 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var types = require('./types');
+var {TypeParser} = require('./types');
 var sprintf = require('sprintf');
 var {TraceUtils} = require('@themost/common');
 var moment = require('moment');
@@ -292,7 +292,7 @@ FunctionContext.prototype.user = function() {
             if (err) {
                 TraceUtils.log(err);
                 //try to get undefined user
-                parser = types.parsers['parse' + userModel.field('id').type];
+                parser = TypeParser.hasParser(userModel.field('id').type);
                 if (typeof parser === 'function')
                     undefinedUser = parser(null);
                 //set id for next calls
@@ -304,7 +304,7 @@ FunctionContext.prototype.user = function() {
             }
             else if (_.isNil(result)) {
                 //try to get undefined user
-                parser = types.parsers['parse' + userModel.field('id').type];
+                parser = TypeParser.hasParser(userModel.field('id').type);
                 if (typeof parser === 'function')
                     undefinedUser = parser(null);
                 //set id for next calls

@@ -9,6 +9,7 @@ var {
     FileSchemaLoaderStrategy
 } = require('./data-configuration');
 var {
+    TypeParser,
     PrivilegeType,
     DataObjectState,
     DataCachingType,
@@ -85,6 +86,7 @@ var { DataObjectAssociationListener,
 var { DataApplication } = require('./data-application');
 
 module.exports = {
+    TypeParser,
     PrivilegeType,
     DataObjectState,
     DataCachingType,

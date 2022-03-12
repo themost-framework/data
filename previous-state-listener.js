@@ -16,21 +16,25 @@ function previousStateListener(event, callback) {
         }
     });
 }
-
-/**
- * @module @themost/data/previous-state-listener
- * @ignore
- */
-
 /**
  * Occurs before creating or updating a data object.
  * @param {DataEventArgs|*} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
  */
-exports.beforeSave = previousStateListener;
+function beforeSave(event, callback) {
+    return previousStateListener(event, callback);
+}
+
 /**
  * Occurs before removing a data objects.
  * @param {DataEventArgs|*} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
  */
-exports.beforeRemove = previousStateListener;
+function beforeRemove(event, callback) {
+    return previousStateListener(event, callback);
+}
+
+module.exports = {
+    beforeSave,
+    beforeRemove
+}

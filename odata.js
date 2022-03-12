@@ -1,15 +1,16 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var Symbol = require('symbol');
-var LangUtils = require('@themost/common').LangUtils;
-var sprintf = require('sprintf').sprintf;
+var {LangUtils} = require('@themost/common');
+var {sprintf} = require('sprintf');
 var Q = require('q');
 var pluralize = require('pluralize');
 var _ = require('lodash');
 var moment = require('moment');
-var parseBoolean = require('./types').parsers.parseBoolean;
-var DataModel = require('./data-model').DataModel;
-var DataContext = require('./types').DataContext;
-var XDocument = require('@themost/xml').XDocument;
+var {TypeParser} = require('./types');
+var parseBoolean = TypeParser.parseBoolean;
+var {DataModel} = require('./data-model');
+var {DataContext} = require('./types');
+var {XDocument} = require('@themost/xml');
 // noinspection JSUnusedLocalSymbols
 var entityTypesProperty = Symbol('entityTypes');
 // noinspection JSUnusedLocalSymbols
@@ -20,10 +21,10 @@ var entityTypeProperty = Symbol('entityType');
 // noinspection JSUnusedLocalSymbols
 var edmProperty = Symbol('edm');
 var initializeProperty = Symbol('initialize');
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
-var SchemaLoaderStrategy = require('./data-configuration').SchemaLoaderStrategy;
-var DefaultSchemaLoaderStrategy = require('./data-configuration').DefaultSchemaLoaderStrategy;
-var instanceOf = require('./instance-of').instanceOf;
+var {DataConfigurationStrategy} = require('./data-configuration');
+var {SchemaLoaderStrategy} = require('./data-configuration');
+var {DefaultSchemaLoaderStrategy} = require('./data-configuration');
+var {instanceOf} = require('./instance-of');
 
 function Args() {
     //
