@@ -1,6 +1,5 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var Q = require('q');
-var functions = require('./functions');
+var {FunctionContext} = require('./functions');
 
 /**
  * @module @themost/data/data-filter-resolver
@@ -47,7 +46,7 @@ DataFilterResolver.prototype.resolveMethod = function(name, args, callback) {
  * @param {Function} callback
  */
 DataFilterResolver.prototype.me = function(callback) {
-    var fx = new functions.FunctionContext(this.context, this);
+    var fx = new FunctionContext(this.context, this);
     fx.user().then(function(value) {
         callback(null, value)
     }).catch(function(err) {
@@ -84,11 +83,10 @@ DataFilterResolver.prototype.lang = function(callback) {
 /**
  * @param {Function} callback
  */
-DataFilterResolver.prototype.user = DataFilterResolver.prototype.me;
+DataFilterResolver.prototype.user = function(callback) {
+    return this.me(callback);
+};
 
-if (typeof exports !== 'undefined')
-{
-    module.exports = {
-        DataFilterResolver:DataFilterResolver
-    };
-}
+module.exports = {
+    DataFilterResolver
+};

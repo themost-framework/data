@@ -1,8 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var Args = require('@themost/common').Args;
-var DataConfiguration = require('./data-configuration').DataConfiguration;
-var DefaultDataContext = require('./data-context').DefaultDataContext;
-var PathUtils = require('@themost/common').PathUtils;
+var {Args, PathUtils} = require('@themost/common');
+var {DataConfiguration} = require('./data-configuration');
+var {DefaultDataContext} = require('./data-context');
 /**
  * @class
  * @param {string} cwd - A string which defines application root directory
@@ -74,6 +73,6 @@ DataApplication.prototype.createContext = function() {
 };
 
 module.exports = {
-    DataApplication: DataApplication
+    DataApplication
 };
 

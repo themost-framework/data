@@ -3,14 +3,14 @@ var sprintf = require('sprintf').sprintf;
 var _ = require('lodash');
 var Q = require('q');
 var Symbol = require('symbol');
-var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-var DataObjectTag = require('./data-object-tag').DataObjectTag;
-var HasManyAssociation = require('./has-many-association').HasManyAssociation;
-var HasOneAssociation = require('./has-one-association').HasOneAssociation;
-var HasParentJunction = require('./has-parent-junction').HasParentJunction;
-var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
-var LangUtils = require('@themost/common').LangUtils;
-var DataError = require('@themost/common').DataError;
+var {DataObjectJunction} = require('./data-object-junction');
+var {DataObjectTag} = require('./data-object-tag');
+var {HasManyAssociation} = require('./has-many-association');
+var {HasOneAssociation} = require('./has-one-association');
+var {HasParentJunction} = require('./has-parent-junction');
+var {SequentialEventEmitter} = require('@themost/common');
+var {LangUtils} = require('@themost/common');
+var {DataError} = require('@themost/common');
 
 var selectorsProperty = Symbol('selectors');
 var typeProperty = Symbol('type');
@@ -805,6 +805,6 @@ DataObject.prototype.silent = function(value) {
     return this;
 };
 
-if (typeof exports !== 'undefined') {
-    module.exports.DataObject = DataObject;
+module.exports = {
+    DataObject
 }

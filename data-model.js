@@ -5,33 +5,33 @@ var Symbol = require('symbol');
 var path = require('path');
 var pluralize = require('pluralize');
 var async = require('async');
-var QueryUtils = require('@themost/query').QueryUtils;
-var OpenDataParser = require('@themost/query').OpenDataParser;
+var {QueryUtils} = require('@themost/query');
+var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
-var DataAssociationMapping = require('./types').DataAssociationMapping;
+var {DataAssociationMapping} = require('./types');
 var dataListeners = require('./data-listeners');
 var validators = require('./data-validator');
 var dataAssociations = require('./data-associations');
-var DataNestedObjectListener = require('./data-nested-object-listener').DataNestedObjectListener;
-var DataReferencedObjectListener = require('./data-ref-object-listener').DataReferencedObjectListener;
-var DataQueryable = require('./data-queryable').DataQueryable;
-var DataAttributeResolver = require('./data-queryable').DataAttributeResolver;
+var {DataNestedObjectListener} = require('./data-nested-object-listener');
+var {DataReferencedObjectListener} = require('./data-ref-object-listener');
+var {DataQueryable} = require('./data-queryable');
+var {DataAttributeResolver} = require('./data-queryable');
 var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListener;
-var DataModelView = require('./data-model-view').DataModelView;
-var DataFilterResolver = require('./data-filter-resolver').DataFilterResolver;
+var {DataModelView} = require('./data-model-view');
+var {DataFilterResolver} = require('./data-filter-resolver');
 var Q = require('q');
-var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
-var LangUtils = require('@themost/common').LangUtils;
-var TraceUtils = require('@themost/common').TraceUtils;
-var DataError = require('@themost/common').DataError;
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
-var ModelClassLoaderStrategy = require('./data-configuration').ModelClassLoaderStrategy;
-var ModuleLoader = require('@themost/common').ModuleLoaderStrategy;
+var {SequentialEventEmitter} = require('@themost/common');
+var {LangUtils} = require('@themost/common');
+var {TraceUtils} = require('@themost/common');
+var {DataError} = require('@themost/common');
+var {DataConfigurationStrategy} = require('./data-configuration');
+var {ModelClassLoaderStrategy} = require('./data-configuration');
+var {ModuleLoader} = require('./module-loader');
 var mappingsProperty = Symbol('mappings');
-var DataPermissionEventListener = require('./data-permission').DataPermissionEventListener;
-var DataField = require('./types').DataField;
-var ZeroOrOneMultiplicityListener = require('./zero-or-one-multiplicity').ZeroOrOneMultiplicityListener;
-var OnNestedQueryListener = require('./OnNestedQueryListener').OnNestedQueryListener;
+var {DataPermissionEventListener} = require('./data-permission');
+var {DataField} = require('./types');
+var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
+var {OnNestedQueryListener} = require('./OnNestedQueryListener');
 
 /**
  * @this DataModel
@@ -3143,8 +3143,8 @@ DataModel.prototype.getList = function() {
     return d.promise;
 };
 
-if (typeof exports !== 'undefined') {
-    module.exports.DataModel = DataModel;
+module.exports = {
+    DataModel
 }
 
 

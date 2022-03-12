@@ -1,13 +1,13 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var QueryEntity = require('@themost/query').QueryEntity;
-var QueryUtils = require('@themost/query').QueryUtils;
+var {QueryEntity} = require('@themost/query');
+var {QueryUtils} = require('@themost/query');
 var async = require('async');
-var AccessDeniedError = require('@themost/common').AccessDeniedError;
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
+var {AccessDeniedError} = require('@themost/common');
+var {DataConfigurationStrategy} = require('./data-configuration');
 var _ = require('lodash');
-var DataCacheStrategy = require('./data-cache').DataCacheStrategy;
+var {DataCacheStrategy} = require('./data-cache');
 var Q = require('q');
-var hasOwnProperty = require('./has-own-property').hasOwnProperty;
+var {hasOwnProperty} = require('./has-own-property');
 
 /**
  * @class

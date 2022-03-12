@@ -1,10 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var LangUtils = require('@themost/common').LangUtils;
-var Args = require('@themost/common').Args;
-var SequentialEventEmitter = require('@themost/common').SequentialEventEmitter;
-var AbstractMethodError = require('@themost/common').AbstractMethodError;
-var ConfigurationStrategy = require('@themost/common').ConfigurationStrategy;
+var {LangUtils, Args, SequentialEventEmitter, AbstractMethodError, ConfigurationStrategy} = require('@themost/common');
+var {hasOwnProperty} = require('./has-own-property');
 var Symbol = require('symbol');
 var Q = require('q');
 var currentProperty = Symbol('current');
@@ -401,7 +398,7 @@ DefaultDataCacheStrategy.prototype.getOrDefault = function(key, getFunc, absolut
             if (err) {
                 return reject(err);
             }
-            else if (typeof result !== 'undefined' && result.hasOwnProperty(key)) {
+            else if (typeof result !== 'undefined' && hasOwnProperty(result, key)) {
                 return resolve(result[key]);
             }
             else {
@@ -432,10 +429,7 @@ DefaultDataCacheStrategy.prototype.getOrDefault = function(key, getFunc, absolut
     });
 };
 
-
-if (typeof exports !== 'undefined') {
-
-    module.exports.DataCache = DataCache;
-    module.exports.DataCacheStrategy = DataCacheStrategy;
-    module.exports.DefaultDataCacheStrategy = DefaultDataCacheStrategy;
+module.exports = {
+    DataCacheStrategy,
+    DefaultDataCacheStrategy
 }

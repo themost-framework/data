@@ -1,8 +1,8 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var QueryUtils = require('@themost/query').QueryUtils;
+var {QueryUtils} = require('@themost/query');
 var async = require('async');
-var DataError = require('@themost/common').DataError;
+var {DataError} = require('@themost/common');
 
 
 /**
@@ -78,6 +78,7 @@ function beforeSave_(attr, event, callback) {
  * @returns {*}
  * @private
  */
+// eslint-disable-next-line no-unused-vars
 function beforeSaveMany_(attr, event, callback) {
     var context = event.model.context;
     var name = attr.property || attr.name;
@@ -603,8 +604,6 @@ DataNestedObjectListener.prototype.afterSave = function (event, callback) {
     }
 };
 
-
-if (typeof exports !== 'undefined')
-{
-    module.exports.DataNestedObjectListener = DataNestedObjectListener;
+module.exports = {
+    DataNestedObjectListener
 }

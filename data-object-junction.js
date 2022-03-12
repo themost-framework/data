@@ -1,12 +1,12 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var LangUtils = require('@themost/common').LangUtils;
+var {LangUtils} = require('@themost/common');
 var _ = require('lodash');
 var Q = require('q');
 var async = require('async');
-var QueryField = require('@themost/query').QueryField;
-var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataQueryable = require('./data-queryable').DataQueryable;
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
+var {QueryField} = require('@themost/query');
+var {DataAssociationMapping} = require('./types');
+var {DataQueryable} = require('./data-queryable');
+var {DataConfigurationStrategy} = require('./data-configuration');
 
 
 /**
@@ -712,7 +712,6 @@ DataObjectJunction.prototype.remove = function(obj, callback) {
     });
 }
 
-if (typeof exports !== 'undefined')
-{
-    module.exports.DataObjectJunction = DataObjectJunction;
+module.exports = {
+    DataObjectJunction
 }

@@ -2,18 +2,14 @@
 var async = require('async');
 var sprintf = require('sprintf');
 var _ = require('lodash');
-var QueryUtils = require('@themost/query').QueryUtils;
-var QueryField = require('@themost/query').QueryField;
-var QueryFieldRef = require('@themost/query').QueryFieldRef;
-var NotNullError = require('@themost/common').NotNullError;
-var UniqueConstraintError = require('@themost/common').UniqueConstraintError;
-var TraceUtils = require('@themost/common').TraceUtils;
-var TextUtils = require('@themost/common').TextUtils;
-var DataCacheStrategy = require('./data-cache').DataCacheStrategy;
-/**
- * @module @themost/data/data-listeners
- * @ignore
- */
+var {QueryUtils} = require('@themost/query');
+var {QueryField} = require('@themost/query');
+var {QueryFieldRef} = require('@themost/query');
+var {NotNullError} = require('@themost/common');
+var {UniqueConstraintError} = require('@themost/common');
+var {TraceUtils} = require('@themost/common');
+var {TextUtils} = require('@themost/common');
+var {DataCacheStrategy} = require('./data-cache');
 
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
@@ -805,16 +801,13 @@ DataModelSubTypesListener.prototype.afterUpgrade = function(event, callback) {
     }
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports = {
-        NotNullConstraintListener:NotNullConstraintListener,
-        UniqueConstraintListener:UniqueConstraintListener,
-        CalculatedValueListener:CalculatedValueListener,
-        DataCachingListener:DataCachingListener,
-        DefaultValueListener:DefaultValueListener,
-        DataModelCreateViewListener:DataModelCreateViewListener,
-        DataModelSeedListener:DataModelSeedListener,
-        DataModelSubTypesListener:DataModelSubTypesListener
-    };
-}
+module.exports = {
+    NotNullConstraintListener,
+    UniqueConstraintListener,
+    CalculatedValueListener,
+    DataCachingListener,
+    DefaultValueListener,
+    DataModelCreateViewListener,
+    DataModelSeedListener,
+    DataModelSubTypesListener
+};

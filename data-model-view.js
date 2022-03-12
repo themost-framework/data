@@ -1,12 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var DataField = require('./types').DataField;
-
-
-/**
- * @module @themost/data/data-model-view
- * @ignore
- */
+var {DataField} = require('./types');
 
 /**
  * @class DataModelView
@@ -87,7 +81,6 @@ DataModelView.prototype.cast = function(obj) {
     }
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports.DataModelView = DataModelView;
+module.exports = {
+    DataModelView
 }

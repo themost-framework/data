@@ -1,9 +1,9 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var TraceUtils = require('@themost/common').TraceUtils;
-var LangUtils = require('@themost/common').LangUtils;
-var DataContext = require('./types').DataContext;
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
+var {TraceUtils} = require('@themost/common');
+var {LangUtils} = require('@themost/common');
+var {DataContext} = require('./types');
+var {DataConfigurationStrategy} = require('./data-configuration');
 var cfg = require('./data-configuration');
 var Symbol = require('symbol');
 var nameProperty = Symbol('name');
@@ -357,9 +357,7 @@ NamedDataContext.prototype.finalize = function(cb) {
     cb.call(this);
 };
 
-
-if (typeof exports !== 'undefined')
-{
-    module.exports.DefaultDataContext = DefaultDataContext;
-    module.exports.NamedDataContext = NamedDataContext;
+module.exports = {
+    DefaultDataContext,
+    NamedDataContext
 }

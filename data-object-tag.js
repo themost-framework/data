@@ -1,12 +1,12 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var LangUtils = require('@themost/common').LangUtils;
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
-var QueryField = require('@themost/query').QueryField;
+var {LangUtils} = require('@themost/common');
+var {DataConfigurationStrategy} = require('./data-configuration');
+var {QueryField} = require('@themost/query');
 var _ = require('lodash');
 var Q = require('q');
 var types = require('./types');
-var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-var DataQueryable = require('./data-queryable').DataQueryable;
+var {DataObjectJunction} = require('./data-object-junction');
+var {DataQueryable} = require('./data-queryable');
 
 /**
  * @classdesc Represents a collection of values associated with a data object e.g. a collection of tags of an article, a set of skills of a person etc.
@@ -487,9 +487,6 @@ DataObjectTag.prototype.remove = function(item, callback) {
     return remove_.call(self, item, callback);
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports = {
-        DataObjectTag:DataObjectTag
-    };
-}
+module.exports = {
+    DataObjectTag
+};
