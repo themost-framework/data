@@ -1,13 +1,11 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var types = require('./types');
 var sprintf = require('sprintf');
-var TraceUtils = require('@themost/common').TraceUtils;
+var {TraceUtils} = require('@themost/common');
 var moment = require('moment');
 var _ = require('lodash');
 var Q = require('q');
 
-
-var functions = { };
 /**
  * @class
  * @classdesc A utility class which offers a set of methods for calculating the default values of a data model
@@ -104,7 +102,7 @@ FunctionContext.prototype.eval = function(expr, callback) {
  ```
  */
 FunctionContext.prototype.now = function() {
-    return Q.promise(function(resolve) {
+    return Q.Promise(function(resolve) {
         return resolve(new Date());
     });
 };
@@ -130,7 +128,7 @@ FunctionContext.prototype.now = function() {
  ```
  */
 FunctionContext.prototype.today = function() {
-    return Q.promise(function(resolve) {
+    return Q.Promise(function(resolve) {
         return resolve(new Date().getDate());
     });
 };
@@ -163,7 +161,7 @@ function newGuidInternal() {
     for (i = 0; i < 36; i++) {
         if (!uuid[i]) {
             r = 0 | Math.random()*16;
-            uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+            uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
         }
     }
     return uuid.join('');
@@ -332,7 +330,6 @@ FunctionContext.prototype.me = function() {
     return this.user();
 };
 
-functions.FunctionContext = FunctionContext;
 /**
  * Creates a new instance of FunctionContext class
  * @param {DataContext|*=} context
@@ -340,70 +337,11 @@ functions.FunctionContext = FunctionContext;
  * @param {*=} target
  * @returns FunctionContext
  */
-// eslint-disable-next-line no-unused-vars
-functions.createContext = function(context, model, target) {
-    return new FunctionContext();
-};
-/**
- * Gets the current date and time
- * @param {FunctionContext} e The current function context
- * @param {Function} callback The callback function to be called
- */
-functions.now = function(e, callback) {
-    callback.call(this, null, new Date());
-};
-/**
- * Gets the current date
- * @param {FunctionContext} e
- * @param {Function} callback
- */
-functions.today = function(e, callback) {
-    var d = new Date();
-    callback.call(this, d.getDate());
-};
-/**
- * Gets new identity key for a primary key column
- * @param {FunctionContext} e
- * @param {Function} callback
- */
-functions.newid = function(e, callback)
-{
-    e.model.context.db.selectIdentity(e.model.sourceAdapter, e.model.primaryKey, callback);
-};
+function createContext(context, model, target) {
+    return new FunctionContext(context, model, target);
+}
 
-/**
- * Gets the current user
- * @param {FunctionContext} e The current function context
- * @param {Function} callback The callback function to be called
- */
-functions.user = function(e, callback) {
-    callback = callback || function() {};
-    var user = e.model.context.interactiveUser || e.model.context.user || {  };
-    //ensure user name (or anonymous)
-    user.name = user.name || 'anonymous';
-    if (user['id']) {
-        return callback(null, user['id']);
-    }
-    var userModel = e.model.context.model('User');
-    userModel.where('name').equal(user.name).silent().select('id','name').first(function(err, result) {
-        if (err) {
-            callback();
-        }
-        else {
-            //filter result to exclude anonymous user
-            var filtered = result.filter(function(x) { return x.name!=='anonymous'; }, result);
-            //if user was found
-            if (filtered.length>0) {
-                e.model.context.user.id = result[0].id;
-                callback(null, result[0].id);
-            }
-            //if anonymous was found
-            else if (result.length>0) {
-                callback(null, result[0].id);
-            }
-            else
-                callback();
-        }
-    });
+module.exports = {
+    createContext,
+    FunctionContext
 };
-module.exports = functions;

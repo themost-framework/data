@@ -1,15 +1,10 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var async = require('async');
-var HasParentJunction = require('./has-parent-junction').HasParentJunction;
-var DataObjectJunction = require('./data-object-junction').DataObjectJunction;
-var DataError = require('@themost/common').DataError;
+var {HasParentJunction} = require('./has-parent-junction');
+var {DataObjectJunction} = require('./data-object-junction');
+var {DataError} = require('@themost/common');
 var _ = require('lodash');
-var hasOwnProperty = require('./has-own-property').hasOwnProperty;
-
-/**
- * @module @themost/data/data-ref-object-listener
- * @ignore
- */
+var {hasOwnProperty} = require('./has-own-property');
 
 /**
  * @class
@@ -252,7 +247,6 @@ DataReferencedObjectListener.prototype.beforeRemove = function (event, callback)
     });
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports.DataReferencedObjectListener = DataReferencedObjectListener;
-}
+module.exports = {
+    DataReferencedObjectListener
+};

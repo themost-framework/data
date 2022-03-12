@@ -1,12 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var DataNotFoundError = require('@themost/common').DataNotFoundError;
+var {DataNotFoundError} = require('@themost/common');
 var async = require('async');
-
-/**
- * @module @themost/data/data-state-validator
- * @ignore
- */
 
 /**
  * @class
@@ -270,12 +265,6 @@ DataStateValidatorListener.prototype.beforeRemove = function(event, callback) {
 
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports = {
-        /**
-         * @constructs DataStateValidatorListener
-         */
-        DataStateValidatorListener:DataStateValidatorListener
-    };
+module.exports = {
+    DataStateValidatorListener
 }

@@ -1,9 +1,9 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var LangUtils = require('@themost/common').LangUtils;
+var {LangUtils} = require('@themost/common');
 var _ = require('lodash');
-var QueryUtils = require('@themost/query').QueryUtils;
+var {QueryUtils} = require('@themost/query');
 var types = require('./types');
-var DataQueryable = require('./data-queryable').DataQueryable;
+var {DataQueryable} = require('./data-queryable');
 
 
 /**
@@ -148,10 +148,7 @@ function HasManyAssociation(obj, association)
 }
 LangUtils.inherits(HasManyAssociation, DataQueryable);
 
-if (typeof exports !== 'undefined')
-{
-    module.exports = {
-        HasManyAssociation:HasManyAssociation
-    };
-}
+module.exports = {
+    HasManyAssociation
+};
 

@@ -1,10 +1,10 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var LangUtils = require('@themost/common').LangUtils;
+var {LangUtils} = require('@themost/common');
 var _ = require('lodash');
-var QueryExpression = require('@themost/query').QueryExpression;
-var QueryField = require('@themost/query').QueryField;
-var DataAssociationMapping = require('./types').DataAssociationMapping;
-var DataQueryable = require('./data-queryable').DataQueryable;
+var {QueryExpression} = require('@themost/query');
+var {QueryField} = require('@themost/query');
+var {DataAssociationMapping} = require('./types');
+var {DataQueryable} = require('./data-queryable');
 
 /**
  * @classdesc Represents a foreign key association between two models.
@@ -184,7 +184,6 @@ HasOneAssociation.prototype.getAllItems = function() {
     throw new Error('Unsupported method call:getAllItems()')
 };
 
-if (typeof exports !== 'undefined')
-{
-    module.exports.HasOneAssociation = HasOneAssociation;
-}
+module.exports = {
+    HasOneAssociation
+};

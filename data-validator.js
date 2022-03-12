@@ -1,11 +1,9 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
 var sprintf = require('sprintf');
-var LangUtils = require('@themost/common').LangUtils;
-var DataConfigurationStrategy = require('./data-configuration').DataConfigurationStrategy;
-var conf = require('./data-configuration');
+var {LangUtils} = require('@themost/common');
+var {DataConfigurationStrategy} = require('./data-configuration');
 
-    var validators = { };
     /**
      * @class
      * @property {*} target - Gets or sets the target data object
@@ -255,7 +253,7 @@ var conf = require('./data-configuration');
         "model": "Product",
         "field": "model",
         "message": "The value is too long. It should have 8 characters or fewer."
-    }
+     }
      </code></pre>
      <p><strong>Note:</strong>If validation.maxLength is missing and data model's attribute has a defined size then the operation will try to validate data object against this size.
      <pre class="prettyprint"><code>
@@ -425,7 +423,7 @@ var conf = require('./data-configuration');
         "code": "EMAXVAL",
         "model": "Product",
         "field": "price",
-        "message": "The value should be lower or equal to 1000."
+        "message": "The value should be lowered or equal to 1000."
     }
      </code></pre>
      */
@@ -508,7 +506,7 @@ var conf = require('./data-configuration');
         "code": "ERANGE",
         "model": "Product",
         "field": "price",
-        "message": "The value should be between 5 to 100."
+        "message": "The value should be between 5 and 100."
     }
      </code></pre>
      */
@@ -991,7 +989,7 @@ var conf = require('./data-configuration');
 
     /**
      * @class
-     * @augments most-data/data-validator~DataValidator
+     * @augments DataValidator
      * @constructor
      * @classdesc Validates a required attribute
      <p>RequiredValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
@@ -1063,19 +1061,19 @@ var conf = require('./data-configuration');
         }
     };
 
-    validators.PatternValidator = PatternValidator;
-    validators.DataValidator = DataValidator;
-    validators.MaxValueValidator = MaxValueValidator;
-    validators.MinValueValidator = MinValueValidator;
-    validators.MaxLengthValidator = MaxLengthValidator;
-    validators.MinLengthValidator = MinLengthValidator;
-    validators.RangeValidator = RangeValidator;
-    validators.RequiredValidator = RequiredValidator;
-    validators.DataTypeValidator = DataTypeValidator;
-    validators.DataValidatorListener = DataValidatorListener;
 
-
-    module.exports = validators;
+    module.exports = {
+        PatternValidator,
+        DataValidator,
+        MaxValueValidator,
+        MinValueValidator,
+        MaxLengthValidator,
+        MinLengthValidator,
+        RangeValidator,
+        RequiredValidator,
+        DataTypeValidator,
+        DataValidatorListener
+    };
 
 
 
