@@ -1,6 +1,13 @@
 import { IApplication, ConfigurationBase } from "@themost/common";
 import {resolve} from 'path';
-import { DataConfigurationStrategy, NamedDataContext, DataContext } from '../index';
+import {
+    DataConfigurationStrategy,
+    NamedDataContext,
+    DataContext,
+    DataApplication,
+    DataCacheStrategy,
+    DataCacheFinalize
+} from '../index';
 
 export class TestApplication extends IApplication {
 
@@ -57,6 +64,13 @@ export class TestApplication extends IApplication {
             return this._configuration;
         };
         return context;
+    }
+
+    async finalize(): Promise<void> {
+        const service = this.getConfiguration().getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
+        if (typeof service.finalize === 'function') {
+            await service.finalize();
+        }
     }
 
 }

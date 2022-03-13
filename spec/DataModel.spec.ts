@@ -70,9 +70,9 @@ describe('DataModel', () => {
     it('should use migrateAsync', async () => {
         const db: TestAdapter = context.db as TestAdapter;
         let exists = await db.table('OtherProducts').existsAsync();
-        expect(exists).toBeFalse();
+        expect(exists).toBeFalsy();
         const upgraded = await context.model('OtherProduct').migrateAsync();
-        expect(upgraded).toBeTrue();
+        expect(upgraded).toBeTruthy();
         exists = await db.table('OtherProducts').existsAsync();
         expect(exists).toBeTruthy();
         const configuration: any = app.getConfiguration();

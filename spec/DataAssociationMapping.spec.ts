@@ -3,12 +3,11 @@ import { DataContext } from '../index';
 import { TestApplication } from './TestApplication';
 
 describe('DataAssociationMapping', () => {
-    let app;
+    let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
         app = new TestApplication(resolve(__dirname, 'test2'));
-        const adapters: Array<any> = app.getConfiguration().getSourceAt('adapters');
-        adapters.unshift({
+        app.getConfiguration().getSourceAt('adapters').unshift({
             name: 'test-local',
             invariantName: 'test',
             default: true,
@@ -18,6 +17,9 @@ describe('DataAssociationMapping', () => {
         });
         context = app.createContext();
     });
+    afterAll(async () => {
+        await app.finalize();
+    })
     it('should get item children', async () => {
         Object.assign(context, {
             user: {
@@ -117,7 +119,7 @@ describe('DataAssociationMapping', () => {
         expect(items.length).toBeGreaterThan(0);
         for (const item of items) {
             expect(item.orderedItem).toBeInstanceOf(Object);
-            expect(item.orderedItem.id).toBeInstanceOf(Number);
+            expect(item.orderedItem.id).toBeDefined();
         }
         
     });

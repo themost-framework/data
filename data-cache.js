@@ -373,14 +373,24 @@ DefaultDataCacheStrategy.prototype.remove = function(key) {
 DefaultDataCacheStrategy.prototype.clear = function() {
     var self = this;
     return Q.Promise(function(resolve, reject) {
-        self.rawCache.flushAll(function(err, count) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(count);
-        });
+        try {
+            self.rawCache.flushAll();
+        } catch (err) {
+            return reject(err);
+        }
+        return resolve();
     });
 };
+
+DefaultDataCacheStrategy.prototype.finalize = function() {
+    var self = this;
+    return self.clear().then(function() {
+        // destroy timer
+        if (self.rawCache && typeof self.rawCache._killCheckPeriod === 'function') {
+            self.rawCache._killCheckPeriod();
+        }
+    });
+}
 
 /**
  * Gets data from cache or executes the defined function and adds the result to the cache with the specified key
