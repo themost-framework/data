@@ -1,4 +1,21 @@
+# node
 node_modules
 .DS_Store
+
+
+# github
 .github/
+
+# test
 spec/
+coverage
+jest.config.js
+tsconfig.json
+tsconfig.spec.json
+
+# ide
+jsdoc.conf.json
+.vscode
+.idea
+.theia
+
