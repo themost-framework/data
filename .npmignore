@@ -18,4 +18,8 @@ jsdoc.conf.json
 .vscode
 .idea
 .theia
+*.workspace
+.eslintrc
+# docs
+docs/
 
