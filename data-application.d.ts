@@ -1,9 +1,9 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import { IApplication, ConfigurationBase, 
-    ApplicationService, ApplicationBase, ApplicationServiceConstructor } from "@themost/common";
+    ApplicationService, ApplicationBase, ApplicationServiceConstructor, SequentialEventEmitter } from "@themost/common";
 import {DataContext} from "./types";
 
-export declare class DataApplication implements ApplicationBase {
+export declare class DataApplication extends SequentialEventEmitter implements ApplicationBase {
     constructor(cwd?: string);
     configuration: ConfigurationBase;    
     useStrategy(serviceCtor: ApplicationServiceConstructor<any>, strategyCtor: ApplicationServiceConstructor<any>): this;

@@ -40,6 +40,9 @@ describe('DataModel', () => {
         }
         return done();
     });
+    afterAll(async () => {
+        await app.finalize();
+    });
     it('should get model', () => {
         let model = context.model('Employee');
         expect(model).toBeTruthy();
