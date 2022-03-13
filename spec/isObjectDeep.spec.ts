@@ -28,30 +28,30 @@ class PositiveNumber extends Number {
 
 describe('isObjectDeep', () => {
     it('should use isObjectDeep(string)', () => {
-        expect(isObjectDeep(new String('test'))).toBeFalse();
-        expect(isObjectDeep('test')).toBeFalse();
+        expect(isObjectDeep(String('test'))).toBeFalsy();
+        expect(isObjectDeep('test')).toBeFalsy();
     });
     it('should use isObjectDeep(number)', () => {
-        expect(isObjectDeep(new Number(100))).toBeFalse();
-        expect(isObjectDeep(100)).toBeFalse();
-        expect(isObjectDeep(new PositiveNumber(100))).toBeFalse();
+        expect(isObjectDeep(Number(100))).toBeFalsy();
+        expect(isObjectDeep(100)).toBeFalsy();
+        expect(isObjectDeep(new PositiveNumber(100))).toBeFalsy();
     });
 
     it('should use isObjectDeep(Date)', () => {
-        expect(isObjectDeep(new Date)).toBeFalse();
+        expect(isObjectDeep(new Date)).toBeFalsy();
     });
 
     it('should use isObjectDeep(RegExp)', () => {
-        expect(isObjectDeep(new RegExp('^testing'))).toBeFalse();
-        expect(isObjectDeep(/^testing/ig)).toBeFalse();
+        expect(isObjectDeep(new RegExp('^testing'))).toBeFalsy();
+        expect(isObjectDeep(/^testing/ig)).toBeFalsy();
     });
 
     it('should use isObjectDeep(Array)', () => {
-        expect(isObjectDeep([])).toBeFalse();
+        expect(isObjectDeep([])).toBeFalsy();
     });
 
     it('should use isObjectDeep(BigInt)', () => {
-        expect(isObjectDeep(BigInt(2))).toBeFalse();
+        expect(isObjectDeep(BigInt(2))).toBeFalsy();
     });
 
     it('should use isObjectDeep(Guid)', () => {
@@ -62,24 +62,24 @@ describe('isObjectDeep', () => {
         expect(isObjectDeep({
             a: 1,
             b: 2
-        })).toBeTrue();
+        })).toBeTruthy();
     });
 
     it('should use Object.create(any)', () => {
         const obj = Object.create({
             a: 1
         });
-        expect(isObjectDeep(obj)).toBeTrue();
+        expect(isObjectDeep(obj)).toBeTruthy();
     });
     it('should use isObjectDeep(empty)', () => {
         expect(isObjectDeep({
-        })).toBeTrue();
+        })).toBeTruthy();
     });
 
     it('should use isObjectDeep(null)', () => {
-        expect(isObjectDeep(null)).toBeFalse();
-        expect(isObjectDeep(undefined)).toBeFalse();
-        expect(isObjectDeep(NaN)).toBeFalse();
+        expect(isObjectDeep(null)).toBeFalsy();
+        expect(isObjectDeep(undefined)).toBeFalsy();
+        expect(isObjectDeep(NaN)).toBeFalsy();
     });
 
     it('should use isObjectDeep(object)', () => {

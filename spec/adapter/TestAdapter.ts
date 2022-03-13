@@ -72,7 +72,7 @@ export class TestAdapter {
             }
             // and return
             return callback();
-        }).catch( err => {
+        }).catch((err?: Error) => {
             return callback(err);
         });
     }
@@ -115,7 +115,7 @@ export class TestAdapter {
      */
     closeAsync() {
         return new Promise<void>((resolve, reject) => {
-            return this.close( err => {
+            return this.close((err?: Error) => {
                 if (err) {
                     return reject(err);
                 }
@@ -129,15 +129,15 @@ export class TestAdapter {
      * @param {string} query - A parameterized query expression e.g. SELECT * FROM Table1 WHERE status = ?
      * @param {Array<*>=} values - An array of parameters
      */
-    prepare(query, values) {
+    prepare(query: string, values?: any): string {
         return SqlUtils.format(query,values);
     }
 
     /**
-     * @param {MemoryAdapterColumn} field
+     * @param {DataField|*} field
      * @returns {string}
      */
-    static formatType(field) {
+    static formatType(field: any) {
         const size = parseInt(field.size);
         let s;
         switch (field.type)
@@ -209,23 +209,23 @@ export class TestAdapter {
      * @param {TransactionFunctionCallback} transactionFunc The function to execute
      * @param {AdapterExecuteCallback} callback The callback that contains the error -if any- and the results of the given operation
      */
-    executeInTransaction(transactionFunc, callback) {
+    executeInTransaction(transactionFunc: any, callback: (err?: Error, res?: any) => void) {
         const self = this;
         //ensure parameters
         transactionFunc = transactionFunc || function() {};
         callback = callback || function() {};
-        self.open(function(err) {
+        self.open(function(err?: Error) {
             if (err) {
                 return callback(err);
             }
             // if adapter has an active transaction
             if (self.transaction) {
-                return transactionFunc.call(self, (err) => {
+                return transactionFunc.call(self, (err?: Error) => {
                     callback(err);
                 });
             }
             // begin transaction
-            return self.execute('BEGIN TRANSACTION;', null, (err) => {
+            return self.execute('BEGIN TRANSACTION;', null, (err?: Error) => {
                 if (err) {
                     // sometimes something went wrong with transaction validation
                     // so prevent error while starting a transaction by handling 'cannot start transaction' error
@@ -239,7 +239,7 @@ export class TestAdapter {
                 //initialize dummy transaction object (for future use)
                 self.transaction = { };
                 //execute function
-                transactionFunc.call(self, (err) => {
+                transactionFunc.call(self, (err?: Error) => {
                     if (err) {
                         //rollback transaction
                         self.execute('ROLLBACK;', null, rollbackError => {
@@ -271,10 +271,10 @@ export class TestAdapter {
      */
     executeInTransactionAsync(transactionFunc) {
         return new Promise<void>((resolve, reject) => {
-           this.executeInTransaction((cb) => {
+           this.executeInTransaction((cb: any) => {
                transactionFunc.bind(this)().then(() => {
                    return cb();
-               }).catch( err => {
+               }).catch((err?: Error) => {
                    return cb(err);
                });
            }, ((error) => {
@@ -293,7 +293,7 @@ export class TestAdapter {
      * @param {*} query
      * @param {AdapterExecuteCallback} callback
      */
-    createView(name, query, callback) {
+    createView(name, query, callback: (err?: Error, res?: any) => void) {
         return this.view(name).create(query, callback);
     }
 
@@ -311,7 +311,7 @@ export class TestAdapter {
      * @param {MemoryAdapterMigration} obj An Object that represents the data model scheme we want to migrate
      * @param {function(Error=)} callback
      */
-    migrate(obj, callback) {
+    migrate(obj, callback: (err?: Error, res?: any) => void) {
         const self = this;
         callback = callback || function() {};
         if (obj == null) {
@@ -355,9 +355,9 @@ export class TestAdapter {
             exists = await self.table(migration.appliesTo).existsAsync();
             if (exists === false) {
                 // create table
-                const str1 = migration.add.filter( x => {
+                const str1 = migration.add.filter( (x: any) => {
                     return !x['oneToMany'];
-                }).map( x => {
+                }).map( (x: any) => {
                         return format('"%f" %t', x);
                     }).join(', ');
                 const sql = `CREATE TABLE "${migration.appliesTo}" (${str1})`;
@@ -482,7 +482,7 @@ export class TestAdapter {
                     }
                 }
             }
-            // finally do update version (with clone adapter)
+            // do update version (with clone adapter)
             await self.executeAsync('INSERT INTO "migrations" ("appliesTo", "model", "version", "description") VALUES (?,?,?,?)', [
                 migration.appliesTo,
                 migration.model,
@@ -493,7 +493,7 @@ export class TestAdapter {
             setTimeout(()=> {
                 return callback();
             }, 100);
-        }).catch( err => {
+        }).catch((err?: Error) => {
             return callback(err);
         });
     }
@@ -502,9 +502,9 @@ export class TestAdapter {
     /**
      * @param {MemoryAdapterMigration} migration
      */
-    migrateAsync(migration) {
+    migrateAsync(migration: any) {
         return new Promise<void>((resolve, reject) => {
-            return this.migrate(migration, (err) => {
+            return this.migrate(migration, (err?: Error) => {
                 if (err) {
                     return reject(err);
                 }
@@ -519,7 +519,7 @@ export class TestAdapter {
      * @param attribute {string} The target attribute
      * @param {AdapterExecuteCallback} callback
      */
-    selectIdentity(entity, attribute, callback) {
+    selectIdentity(entity: string, attribute: string, callback: (err?: Error, res?: any) => void) {
 
         const self = this;
 
@@ -551,7 +551,7 @@ export class TestAdapter {
                         if (result.length>0) {
                             value = (parseInt(result[0][attribute]) || 0)+ 1;
                         }
-                        self.execute('INSERT INTO increment_id(entity, attribute, value) VALUES (?,?,?)',[entity, attribute, value], function(err) {
+                        self.execute('INSERT INTO increment_id(entity, attribute, value) VALUES (?,?,?)',[entity, attribute, value], function(err?: Error) {
                             //throw error if any
                             if (err) { callback.call(self, err); return; }
                             //return new increment value
@@ -562,7 +562,7 @@ export class TestAdapter {
                 else {
                     //get new increment value
                     const value = parseInt(result[0].value) + 1;
-                    self.execute('UPDATE increment_id SET value=? WHERE id=?',[value, result[0].id], function(err) {
+                    self.execute('UPDATE increment_id SET value=? WHERE id=?',[value, result[0].id], function(err?: Error) {
                         //throw error if any
                         if (err) { callback.call(self, err); return; }
                         //return new increment value
@@ -580,7 +580,7 @@ export class TestAdapter {
      * @param {string} attribute The target attribute
      * @returns Promise<*>
      */
-    selectIdentityAsync(entity, attribute) {
+    selectIdentityAsync(entity: string, attribute: string) {
         return new Promise((resolve, reject) => {
             return this.selectIdentity(entity, attribute, (err, result) => {
                 if (err) {
@@ -602,7 +602,7 @@ export class TestAdapter {
             /**
              * @param {ExistsCallback} callback
              */
-            exists:function(callback) {
+            exists:function(callback: (err?: Error, res?: any) => void) {
                 self.execute(`SELECT COUNT(*) AS "count" FROM "sqlite_master" WHERE "name" = ? AND "type" = 'table';`, [ name ], (err, result) => {
                     if (err) {
                         return callback(err);
@@ -616,7 +616,7 @@ export class TestAdapter {
             existsAsync() {
                 const thisArg = this;
                 return new Promise((resolve, reject) => {
-                    return thisArg.exists((error, result) => {
+                    return thisArg.exists((error?: Error, result?: any) => {
                         if (error) {
                             return reject(error);
                         }
@@ -627,9 +627,9 @@ export class TestAdapter {
             /**
              * @param {VersionCallback} callback
              */
-            version:function(callback) {
+            version:function(callback: (err?: any, res?: any) => void) {
                 self.execute(`SELECT MAX("version") AS "version" FROM "migrations" WHERE "appliesTo" = ?`,
-                    [name], function(err, result) {
+                    [name], function(err: any, result: string | any[]) {
                         if (err) { return callback(err); }
                         if (result.length === 0)
                             callback(null, '0.0');
@@ -643,7 +643,7 @@ export class TestAdapter {
             versionAsync() {
                 const thisArg = this;
                 return new Promise((resolve, reject) => {
-                    return thisArg.version((error, result) => {
+                    return thisArg.version((error?: Error, result?: any) => {
                         if (error) {
                             return reject(error);
                         }
@@ -654,7 +654,7 @@ export class TestAdapter {
             /**
              * @param {HasSequenceCallback} callback
              */
-            hasSequence:function(callback) {
+            hasSequence:function(callback: (err?: Error, res?: any) => void) {
                 callback = callback || function() {};
                 self.execute(`SELECT COUNT(*) AS "count" FROM "sqlite_sequence" WHERE "name" = ?`,
                     [name], function(err, result) {
@@ -670,7 +670,7 @@ export class TestAdapter {
             hasSequenceAsync() {
                 const thisArg = this;
                 return new Promise((resolve, reject) => {
-                    return thisArg.hasSequence((error, result) => {
+                    return thisArg.hasSequence((error?: Error, result?: any) => {
                         if (error) {
                             return reject(error);
                         }
@@ -681,7 +681,7 @@ export class TestAdapter {
             /**
              * @param {ColumnsCallback} callback
              */
-            columns:function(callback) {
+            columns:function(callback: (err?: Error, res?: any) => void) {
                 callback = callback || function() {};
                 self.execute(`SELECT c.* from pragma_table_info(?) c;`,
                     [name], function(err, result) {
@@ -717,7 +717,7 @@ export class TestAdapter {
              */
             columnsAsync(): Promise<any[]> {
                 return new Promise((resolve, reject) => {
-                    return this.columns((error, result) => {
+                    return this.columns((error?: Error, result?: any) => {
                         if (error) {
                             return reject(error);
                         }
@@ -741,7 +741,7 @@ export class TestAdapter {
             /**
              * @param {ExistsCallback} callback
              */
-            exists:function(callback) {
+            exists:function(callback: (err?: Error, res?: any) => void) {
                 self.execute(`SELECT COUNT(*) count FROM sqlite_master WHERE name=? AND type=\'view\';`, [name], function(err, result) {
                     if (err) { callback(err); return; }
                     callback(null, (result[0].count>0));
@@ -752,7 +752,7 @@ export class TestAdapter {
              */
             existsAsync() {
               return new Promise((resolve, reject) => {
-                 return this.exists((error, result) => {
+                 return this.exists((error?: Error, result?: any) => {
                     if (error) {
                         return reject(error);
                     }
@@ -763,13 +763,13 @@ export class TestAdapter {
             /**
              * @param {AdapterExecuteCallback} callback
              */
-            drop:function(callback) {
+            drop:function(callback: (err?: Error, res?: any) => void) {
                 callback = callback || function() {};
-                self.open(function(err) {
+                self.open(function(err?: Error) {
                     if (err) { callback(err); return; }
                     const formatter = new TestFormatter();
                     const sql = `DROP VIEW IF EXISTS ${formatter.escapeName(name)}`;
-                    self.execute(sql, undefined, function(err) {
+                    self.execute(sql, undefined, function(err?: Error) {
                         if (err) { callback(err); return; }
                         callback();
                     });
@@ -792,10 +792,10 @@ export class TestAdapter {
              * @param {*} q
              * @param {AdapterExecuteCallback} callback
              */
-            create:function(q, callback) {
+            create:function(q, callback: (err?: Error, res?: any) => void) {
                 const thisArg = this;
                 self.executeInTransaction( tr => {
-                    thisArg.drop(function(err) {
+                    thisArg.drop(function(err?: Error) {
                         if (err) {
                             return tr(err);
                         }
@@ -813,7 +813,7 @@ export class TestAdapter {
                             tr(e);
                         }
                     });
-                }, function(err) {
+                }, function(err?: Error) {
                     callback(err);
                 });
             },
@@ -840,12 +840,12 @@ export class TestAdapter {
      * @param {Array<*>=} values
      * @param {AdapterExecuteCallback} callback
      */
-    execute(query, values, callback) {
+    execute(query, values, callback: (err?: Error, res?: any) => void) {
         const self = this;
         /**
          * @type {string}
          */
-        let sql;
+        let sql: string;
         try {
 
             if (typeof query === 'string') {
@@ -853,7 +853,7 @@ export class TestAdapter {
                 sql = query;
             }
             else {
-                //format query expression or any object that may be act as query expression
+                // format query expression or any object that may be acted as query expression
                 const formatter = new TestFormatter();
                 sql = formatter.format(query);
             }
@@ -862,7 +862,7 @@ export class TestAdapter {
                 return callback.call(self, new Error('The executing command is of the wrong type or empty.'));
             }
             //ensure connection
-            self.open(function(err) {
+            self.open(function(err?: Error) {
                 if (err) {
                     callback.call(self, err);
                 }
@@ -874,7 +874,7 @@ export class TestAdapter {
                     if (process.env.NODE_ENV==='development') {
                         TraceUtils.log(`SQL:${prepared}, Parameters:${JSON.stringify(values)}`);
                     }
-                    let results;
+                    let results: any;
                     let result = [];
                     //validate statement
                     if (/^(SELECT|PRAGMA)/ig.test(prepared)) {
@@ -917,7 +917,7 @@ export class TestAdapter {
                     }
                     else {
                         try {
-                            //otherwise prepare for run
+                            // otherwise, prepare for run
                             self.rawConnection.run(prepared);
                             return callback();
                         }
@@ -959,9 +959,9 @@ export class TestAdapter {
      * @param {AdapterExecuteCallback} callback
      * @returns {*}
      */
-    lastIdentity(callback) {
+    lastIdentity(callback: (err?: Error, res?: any) => void) {
         const self = this;
-        return self.open(function(err) {
+        return self.open(function(err?: Error) {
             if (err) {
                 return callback(err);
             }
@@ -1009,7 +1009,7 @@ export class TestAdapter {
             /**
              * @param {IndexesCallback} callback
              */
-            list: function (callback) {
+            list: function (callback: (err?: Error, res?: any) => void) {
                 const thisObject = this;
                 if (thisObject.hasOwnProperty('indexes')) {
                     return callback(null, thisObject['indexes']);
@@ -1061,7 +1061,7 @@ export class TestAdapter {
              * @param {Array<string>|string} columns
              * @param {AdapterExecuteCallback} callback
              */
-            create: function(name, columns, callback) {
+            create: function(name, columns, callback: (err?: Error, res?: any) => void) {
                 const cols = [];
                 if (typeof columns === 'string') {
                     cols.push(columns);
@@ -1098,7 +1098,7 @@ export class TestAdapter {
                         });
                         if (nCols>0) {
                             //drop index
-                            thisArg.drop(name, function(err) {
+                            thisArg.drop(name, function(err?: Error) {
                                 if (err) { return callback(err); }
                                 //and create it
                                 self.execute(sqlCreateIndex, [], callback);
@@ -1132,7 +1132,7 @@ export class TestAdapter {
              * @param {AdapterExecuteCallback} callback
              * @returns {*}
              */
-            drop: function(name, callback) {
+            drop: function(name, callback: (err?: Error, res?: any) => void) {
                 if (typeof name !== 'string') {
                     return callback(new Error("Name must be a valid string."));
                 }

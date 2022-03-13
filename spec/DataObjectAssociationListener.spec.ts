@@ -2,7 +2,6 @@ import { TestApplication } from './TestApplication';
 import { DataContext, DataObjectAssociationError } from '../index';
 import { resolve } from 'path';
 import { TestUtils } from './adapter/TestUtils';
-import { ConfigurationBase } from '@themost/common';
 
 describe('DataObjectAssociationListener', () => {
     let app: TestApplication;
@@ -10,25 +9,22 @@ describe('DataObjectAssociationListener', () => {
     beforeAll((done) => {
         app = new TestApplication(resolve(__dirname, 'test2'));
         // set default adapter
-        const adapters: Array<any> = app.getConfiguration().getSourceAt('adapters');
-        adapters.unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
+        app.getConfiguration().setSourceAt('adapters', [
+            {
+                name: 'test-local',
+                invariantName: 'test',
+                default: true,
+                options: {
+                    database: resolve(__dirname, 'test2/db/local.db')
+                }
             }
-        });
+        ])
         context = app.createContext();
         return done();
     });
-    afterAll((done) => {
-        if (context) {
-            return context.finalize(() => {
-                return done();
-            });
-        }
-        return done();
+    afterAll(async () => {
+        await context.finalize();
+        await app.finalize();
     });
     it('should validate foreign-key association', async ()=> {
         await TestUtils.executeInTransaction(context, async () => {
@@ -42,8 +38,8 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer))
-                .toBeResolved();
+            await expect(context.model('Offer').silent().save(newOffer))
+                .resolves.toBeTruthy();
             
         });
     });
@@ -63,8 +59,8 @@ describe('DataObjectAssociationListener', () => {
                 validThrough: new Date('2021-12-31'),
                 seller: -1
             }
-            await expectAsync(context.model('Offer').save(newOffer))
-                .toBeRejectedWithError(new DataObjectAssociationError().message);
+            await expect(context.model('Offer').save(newOffer))
+                .rejects.toThrow(new DataObjectAssociationError().message);
             newOffer = {
                     itemOffered: {
                         name: 'Samsung Galaxy S4'
@@ -76,8 +72,8 @@ describe('DataObjectAssociationListener', () => {
                         email: 'caitlyn.barber@example.com'
                     }
                 }
-                await expectAsync(context.model('Offer').save(newOffer))
-                .toBeResolved();
+                await expect(context.model('Offer').save(newOffer))
+                    .resolves.toBeTruthy();
             const item = await context.model('Offer')
                 .where('id').equal(newOffer.id).expand('itemOffered', 'seller').getItem();
             expect(item).toBeTruthy();
@@ -93,8 +89,8 @@ describe('DataObjectAssociationListener', () => {
                 validThrough: new Date('2021-12-31'),
                 seller: null
             }
-            await expectAsync(context.model('Offer').save(newOffer))
-            .toBeResolved();
+            await expect(context.model('Offer').save(newOffer))
+                .resolves.toBeTruthy();
         });
     });
     it('should validate null association', async ()=> {
@@ -112,8 +108,8 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').save(newOffer))
-                .toBeRejectedWithError('A value is required.');
+            await expect(context.model('Offer').save(newOffer))
+                .rejects.toThrow('A value is required.');
             newOffer = {
                 itemOffered: {
                     model: null
@@ -122,8 +118,8 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').save(newOffer))
-                .toBeRejectedWithError(new DataObjectAssociationError().message);
+            await expect(context.model('Offer').save(newOffer))
+                .rejects.toThrow(new DataObjectAssociationError().message);
         });
     });
     it('should use silent mode', async () => {
@@ -140,8 +136,8 @@ describe('DataObjectAssociationListener', () => {
                 validThrough: new Date('2021-12-31'),
                 seller: -1
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer))
-                .toBeRejectedWithError(new DataObjectAssociationError().message);
+            await expect(context.model('Offer').silent().save(newOffer))
+                .rejects.toThrow(new DataObjectAssociationError().message);
                 newOffer = {
                     itemOffered: {
                         name: 'Samsung Galaxy S4'
@@ -153,8 +149,8 @@ describe('DataObjectAssociationListener', () => {
                         email: 'caitlyn.barber@example.com'
                     }
                 }
-                await expectAsync(context.model('Offer').silent().save(newOffer))
-                .toBeResolved();
+                await expect(context.model('Offer').silent().save(newOffer))
+                    .resolves.toBeTruthy();
         });
     });
     it('should use tags', async () => {
@@ -172,13 +168,13 @@ describe('DataObjectAssociationListener', () => {
                     "Console"
                 ]
             });
-            await expectAsync(Products.save(product)).toBeRejected();
+            await expect(Products.save(product)).rejects.toThrow();
             Object.assign(context, {
                 user: {
                     name: 'alexis.rees@example.com'
                 }
              });
-             await expectAsync(Products.save(product)).toBeResolved();
+             await expect(Products.save(product)).resolves.toBeTruthy();
              product = await Products.where('name').equal('Nintendo 2DS')
                 .expand('keywords')
                 .getItem();
@@ -222,7 +218,7 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
             let offer = await context.model('Offer')
                 .where('id').equal(newOffer.id).silent().getItem();
             expect(offer).toBeTruthy();
@@ -234,7 +230,7 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
             offer = await context.model('Offer')
                 .where('id').equal(newOffer.id).silent().getItem();
             expect(offer).toBeTruthy();
@@ -259,7 +255,7 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
             let offer = await context.model('Offer')
                 .where('id').equal(newOffer.id).silent().getItem();
             expect(offer).toBeTruthy();
@@ -284,7 +280,7 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
             let offer = await context.model('Offer')
                 .where('id').equal(newOffer.id).silent().getItem();
             expect(offer).toBeTruthy();
@@ -307,7 +303,7 @@ describe('DataObjectAssociationListener', () => {
                 validFrom: new Date('2021-12-20'),
                 validThrough: new Date('2021-12-31')
             }
-            await expectAsync(context.model('Offer').silent().save(newOffer)).toBeResolved();
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
             let offer = await context.model('Offer')
                 .where('id').equal(newOffer.id).silent().getItem();
             expect(offer).toBeTruthy();

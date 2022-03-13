@@ -4,7 +4,7 @@
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
-    "test": "jasmine",
+    "test": "jest",
     "install-peers": "add-peers"
   },
   "peerDependencies": {
@@ -36,9 +36,12 @@
     "symbol": "^0.3.1"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.17.2",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
     "@themost/peers": "^1.0.2",
     "@types/core-js": "^2.5.0",
-    "@types/jasmine": "^3.6.4",
+    "@types/jest": "^27.4.1",
     "@types/lodash": "^4.14.149",
     "@types/node": "^10.12.0",
     "@types/pluralize": "0.0.29",
@@ -47,8 +50,7 @@
     "dotenv": "^16.0.0",
     "eslint": "^8.10.0",
     "eslint-plugin-node": "^11.1.0",
-    "jasmine": "^3.6.4",
-    "jasmine-spec-reporter": "^6.0.0",
+    "jest": "^27.5.1",
     "sql.js": "^1.4.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"

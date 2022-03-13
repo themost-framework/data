@@ -1,7 +1,7 @@
 import { TestApplication } from './TestApplication';
-import { DataContext, DataObjectAssociationError, DataConfigurationStrategy } from '../index';
+import { DataContext } from '../index';
 import { resolve } from 'path';
-import * as moment from 'moment';
+const moment = require('moment');
 
 describe('DataNestedObjectListener', () => {
     let app: TestApplication;
@@ -9,25 +9,22 @@ describe('DataNestedObjectListener', () => {
     beforeAll((done) => {
         app = new TestApplication(resolve(__dirname, 'test2'));
         // set default adapter
-        const adapters: Array<any> = app.getConfiguration().getSourceAt('adapters');
-        adapters.unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
+        app.getConfiguration().setSourceAt('adapters', [
+            {
+                name: 'test-local',
+                invariantName: 'test',
+                default: true,
+                options: {
+                    database: resolve(__dirname, 'test2/db/local.db')
+                }
             }
-        });
+        ])
         context = app.createContext();
         return done();
     });
-    afterAll((done) => {
-        if (context) {
-            return context.finalize(() => {
-                return done();
-            });
-        }
-        return done();
+    afterAll(async () => {
+        await context.finalize();
+        await app.finalize();
     });
     it('should use zero-or-one multiplicity', async () => {
         await context.executeInTransactionAsync(async () => {

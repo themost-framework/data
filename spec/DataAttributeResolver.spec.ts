@@ -1,25 +1,28 @@
-import { QueryEntity, QueryExpression, QueryField, SqlFormatter } from '@themost/query';
 import { resolve } from 'path';
 import { DataContext } from '../index';
 import { TestApplication } from './TestApplication';
 import { TestUtils } from './adapter/TestUtils';
 
 describe('DataAttributeResolver', () => {
-    let app;
+    let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
         app = new TestApplication(resolve(__dirname, 'test2'));
-        const adapters: Array<any> = app.getConfiguration().getSourceAt('adapters');
-        adapters.unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
+        app.getConfiguration().setSourceAt('adapters', [
+            {
+                name: 'test-local',
+                invariantName: 'test',
+                default: true,
+                options: {
+                    database: resolve(__dirname, 'test2/db/local.db')
+                }
             }
-        });
+        ]);
         context = app.createContext();
     });
+    afterAll(async () => {
+        await app.finalize();
+    })
     it('should resolve child nested attributes', async () => {
         Object.assign(context, {
             user: {

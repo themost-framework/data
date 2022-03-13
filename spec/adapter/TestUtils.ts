@@ -1,7 +1,10 @@
 /**
  * @description An error for cancelling transaction in testing environments
  */
- export class CancelTransactionError extends Error {
+import {DataApplication} from '../../data-application';
+import {DataCacheFinalize, DataCacheStrategy} from '../../data-cache';
+
+export class CancelTransactionError extends Error {
     constructor() {
         super();
     }
@@ -10,7 +13,7 @@
 export class TestUtils {
     /**
      * Wraps DataAdapter.executeInTransaction() for using in testing environments
-     * @param {ExpressDataContext} context
+     * @param {DataApplication} context
      * @param {Function} func
      * @returns {Promise<any>}
      */
@@ -49,6 +52,16 @@ export class TestUtils {
                 return resolve();
             });
         });
+    }
+
+    static async finalize(app: DataApplication): Promise<void> {
+        if (app == null) {
+            return;
+        }
+        const service = app.getConfiguration().getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
+        if (typeof service.finalize === 'function') {
+            await service.finalize();
+        }
     }
 
     static cancelTransaction() {
