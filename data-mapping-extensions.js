@@ -470,7 +470,6 @@ var mappingExtensions = {
                                q.select();
                             }
                             q.query
-                               .distinct()
                                .join(thisQueryable.query.as('j0'))
                                .with(QueryUtils.where(new QueryEntity(thisArg.getParentModel().viewAdapter).select(mapping.parentField))
                                    .equal(new QueryEntity('j0').select(mapping.childField)));
