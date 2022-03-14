@@ -4,7 +4,7 @@ var sprintf = require('sprintf').sprintf;
 var Symbol = require('symbol');
 var _ = require('lodash');
 var {TextUtils} = require('@themost/common');
-var mappingExtensions = require('./data-mapping-extensions');
+var {DataMappingExtender, DataMappingOptimizedExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
 var {DataError} = require('@themost/common');
 var {QueryField} = require('@themost/query');
@@ -2376,7 +2376,6 @@ function afterExecute_(result, callback) {
     }
     if (self.$expand) {
         //get distinct values
-
         var expands = _.intersectionBy(_.reverse(self.$expand), function(x) {
            if (typeof x === 'string') {
                return x;
@@ -2494,7 +2493,7 @@ function afterExecute_(result, callback) {
                 thisMapping.options = options;
                 if (mapping.associationType==='association' || mapping.associationType==='junction') {
                     if ((mapping.parentModel===self.model.name) && (mapping.associationType==='association')) {
-                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedChildren(result)
+                        return new DataMappingExtender(thisMapping).for(self).getAssociatedChildren(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
@@ -2502,7 +2501,7 @@ function afterExecute_(result, callback) {
                             });
                     }
                     else if (mapping.childModel===self.model.name && mapping.associationType==='junction') {
-                        return mappingExtensions.extend(thisMapping).for(self).getParents(result)
+                        return new DataMappingExtender(thisMapping).for(self).getParents(result)
                             .then(function() {
                                 return cb();
                         }).catch(function(err) {
@@ -2510,7 +2509,7 @@ function afterExecute_(result, callback) {
                         });
                     }
                     else if (mapping.parentModel===self.model.name && mapping.associationType==='junction') {
-                        return mappingExtensions.extend(thisMapping).for(self).getChildren(result)
+                        return new DataMappingExtender(thisMapping).for(self).getChildren(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
@@ -2518,7 +2517,7 @@ function afterExecute_(result, callback) {
                             });
                     }
                     else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
-                        return mappingExtensions.extend(thisMapping).for(self).getAssociatedParents(result)
+                        return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {

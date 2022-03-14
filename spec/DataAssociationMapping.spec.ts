@@ -20,7 +20,7 @@ describe('DataAssociationMapping', () => {
     afterAll(async () => {
         await app.finalize();
     })
-    it('should get item children', async () => {
+    it('should get item children (for one-to-many association)', async () => {
         Object.assign(context, {
             user: {
                 name: 'luis.nash@example.com'
