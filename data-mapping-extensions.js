@@ -224,7 +224,7 @@ class DataMappingExtender {
                     if (typeof q.$levels === 'undefined') {
                         q.$levels = 0;
                     }
-                    if (q.hasFields() === false) {
+                    if (q.query.hasFields() === false) {
                         q.select();
                     }
                     //inherit silent mode
