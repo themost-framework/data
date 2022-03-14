@@ -26,7 +26,7 @@ var {TraceUtils} = require('@themost/common');
 var {DataError} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var {ModelClassLoaderStrategy} = require('./data-configuration');
-var {ModuleLoader} = require('./module-loader');
+var {ModuleLoaderStrategy} = require('@themost/common');
 var mappingsProperty = Symbol('mappings');
 var {DataPermissionEventListener} = require('./data-permission');
 var {DataField} = require('./types');
@@ -630,7 +630,7 @@ function unregisterContextListeners() {
     /**
      * @type {ModuleLoader|*}
      */
-    var moduleLoader = this.context.getConfiguration().getStrategy(ModuleLoader);
+    var moduleLoader = this.context.getConfiguration().getStrategy(ModuleLoaderStrategy);
     //register configuration listeners
     if (this.eventListeners) {
         for (var i = 0; i < this.eventListeners.length; i++) {
@@ -2805,7 +2805,7 @@ function validate_(obj, state, callback) {
     /**
      * @type {ModuleLoader|*}
      */
-    var moduleLoader = this.context.getConfiguration().getStrategy(ModuleLoader);
+    var moduleLoader = this.context.getConfiguration().getStrategy(ModuleLoaderStrategy);
 
     async.eachSeries(attributes, function(attr, cb) {
         var validationResult;
