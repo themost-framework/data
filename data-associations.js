@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var {eachSeries} = require('async');
-var {TypeParser} = require('./types');
+var {TypeParser, DataObjectState} = require('./types');
 var {DataError} = require('@themost/common');
 var {HasParentJunction} = require('./has-parent-junction');
 var {DataObjectJunction} = require('./data-object-junction');
@@ -39,7 +39,16 @@ class DataObjectAssociationListener {
                         var mapping = event.model.inferMapping(key);
                         if (mapping && mapping.associationType === 'association' &&
                             mapping.childModel===event.model.name) {
-                                mappings.push(mapping);
+                                // on update
+                                if (event.state === DataObjectState.Update) {
+                                    var field = event.model.getAttribute(key);
+                                    // exclude non-editable attributes
+                                    if (field && !!field.editable) {
+                                        mappings.push(mapping);
+                                    }
+                                } else {
+                                    mappings.push(mapping);
+                                }
                             }
                 }
             });

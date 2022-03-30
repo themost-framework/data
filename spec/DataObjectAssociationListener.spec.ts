@@ -311,4 +311,45 @@ describe('DataObjectAssociationListener', () => {
         });
     });
 
+    it('should exclude non-editable attributes', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             // get object
+             const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4').getTypedItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: product,
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
+            let offer = await context.model('Offer')
+                .where('id').equal(newOffer.id).silent().getItem();
+            expect(offer).toBeTruthy();
+            expect(offer.itemOffered).toBe(product.id);
+            newOffer = {
+                id: newOffer.id,
+                price: 888,
+                itemOffered: 0
+            }
+            await expect(context.model('Offer').silent().save(newOffer)).resolves.toBeTruthy();
+        });
+    });
+
+    fit('should fail while deleting associated object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: null
+             });
+             // get object
+             const product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4').getTypedItem();
+            await expect(context.model('Product').silent().remove(product)).rejects.toBeTruthy();
+        });
+    });
+
 });
