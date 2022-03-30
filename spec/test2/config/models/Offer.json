@@ -50,7 +50,8 @@
             "title": "itemOffered",
             "description": "The item being offered.",
             "type": "Product",
-            "nullable": false
+            "nullable": false,
+            "editable": false
         }
     ],
     "privileges": [
