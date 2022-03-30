@@ -340,7 +340,7 @@ describe('DataObjectAssociationListener', () => {
         });
     });
 
-    fit('should fail while deleting associated object', async () => {
+    it('should fail while deleting associated object', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             Object.assign(context, {
                 user: null
