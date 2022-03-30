@@ -43,8 +43,11 @@ class DataObjectAssociationListener {
                                 if (event.state === DataObjectState.Update) {
                                     var field = event.model.getAttribute(key);
                                     // exclude non-editable attributes
-                                    if (field && !!field.editable) {
-                                        mappings.push(mapping);
+                                    if (field) {
+                                        var editable = Object.prototype.hasOwnProperty.call(field,'editable') ? field.editable : true;
+                                        if (editable) {
+                                            mappings.push(mapping);
+                                        }
                                     }
                                 } else {
                                     mappings.push(mapping);
