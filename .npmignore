@@ -23,3 +23,6 @@ jsdoc.conf.json
 # docs
 docs/
 
+# gitpod
+.gitpod.yml
+

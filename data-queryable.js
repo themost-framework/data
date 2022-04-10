@@ -243,7 +243,14 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 writable: true,
                 value: childModel.name
             });
-            if (arrMember.length === 2) {
+            if (arrMember.length>2) {
+                // set joined entity alias
+                childModel[aliasProperty] = childEntity;
+                // resolve additional joins
+                expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(childModel, arrMember.slice(1).join('/'));
+                // concat and return joins
+                return [].concat(res.$expand).concat(expr);
+            } else {
                 // get child model member
                 var childMember = childModel.field(arrMember[1]);
                 if (childMember) {
@@ -251,7 +258,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                     if (childMember.name !== arrMember[1]) {
                         arrMember[1] = childMember.name;
                         // set memberExpr
-                        if (typeof memberExpr === 'object' && hasOwnProperty(memberExpr, 'name')) {
+                        if (typeof memberExpr === 'object' && Object.prototype.hasOwnProperty.call(memberExpr, 'name')) {
                             memberExpr.name = arrMember.join('/');
                         }
                     }
