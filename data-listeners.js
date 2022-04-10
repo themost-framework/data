@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var async = require('async');
-var sprintf = require('sprintf');
+var {sprintf} = require('sprintf-js');
 var _ = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var {QueryField} = require('@themost/query');
@@ -421,7 +421,7 @@ DataCachingListener.prototype.beforeExecute = function(event, callback) {
                     //log execution time (debug)
                     try {
                         if (process.env.NODE_ENV==='development') {
-                            TraceUtils.log(sprintf.sprintf('Cache (Execution Time:%sms):%s', (new Date()).getTime()-logTime, key));
+                            TraceUtils.log(sprintf('Cache (Execution Time:%sms):%s', (new Date()).getTime()-logTime, key));
                         }
                     }
                     catch(err) {
