@@ -32,6 +32,7 @@ var {DataPermissionEventListener} = require('./data-permission');
 var {DataField} = require('./types');
 var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 var {OnNestedQueryListener} = require('./OnNestedQueryListener');
+var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 
 /**
  * @this DataModel
@@ -616,6 +617,7 @@ function unregisterContextListeners() {
     if (this.caching==='always' || this.caching==='conditional') {
         this.on('before.execute', DataCachingListener.prototype.beforeExecute);
     }
+    this.on('before.execute', OnExecuteNestedQueryable.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryListener.prototype.beforeExecute);
     //register after execute caching
     if (this.caching==='always' || this.caching==='conditional') {
