@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/themost-framework/data#readme",
   "dependencies": {
-    "async": "0.2.10",
+    "async": "2.6.4",
     "lodash": "^4.17.21",
     "moment": "^2.29.2",
     "node-cache": "^1.1.0",
