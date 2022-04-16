@@ -29,11 +29,12 @@ var {ModelClassLoaderStrategy} = require('./data-configuration');
 var {ModuleLoaderStrategy} = require('@themost/common');
 var mappingsProperty = Symbol('mappings');
 var {DataPermissionEventListener} = require('./data-permission');
+// eslint-disable-next-line no-unused-vars
 var {DataField} = require('./types');
 var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 var {OnNestedQueryListener} = require('./OnNestedQueryListener');
 var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
-
+var {hasOwnProperty} = require('./has-own-property');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -934,7 +935,7 @@ DataModel.prototype.find = function(obj) {
     }
     var find = { }, findSet = false;
     if (_.isObject(obj)) {
-        if (obj.hasOwnProperty(self.primaryKey)) {
+        if (hasOwnProperty(obj, self.primaryKey)) {
             find[self.primaryKey] = obj[self.primaryKey];
             findSet = true;
         }
@@ -948,7 +949,7 @@ DataModel.prototype.find = function(obj) {
                 //search for all constrained fields
                 var findAttrs = {}, constrained = true;
                 _.forEach(constraint.fields, function(x) {
-                   if (obj.hasOwnProperty(x)) {
+                   if (hasOwnProperty(obj, x)) {
                        findAttrs[x] = obj[x];
                    }
                    else {
@@ -968,7 +969,7 @@ DataModel.prototype.find = function(obj) {
     }
     if (!findSet) {
         _.forEach(self.attributeNames, function(x) {
-            if (obj.hasOwnProperty(x)) {
+            if (hasOwnProperty(obj, x)) {
                 find[x] = obj[x];
             }
         });
@@ -977,7 +978,7 @@ DataModel.prototype.find = function(obj) {
     findSet = false;
     //enumerate properties and build query
     for(var key in find) {
-        if (find.hasOwnProperty(key)) {
+        if (hasOwnProperty(find, key)) {
             if (!findSet) {
                 result.where(key).equal(find[key]);
                 findSet = true;
@@ -1456,7 +1457,7 @@ function cast_(obj, state) {
             superModel = obj.getSuperModel();
         }
         self.attributes.filter(function(x) {
-            return x.hasOwnProperty('many') ? !x.many : true;
+            return hasOwnProperty(x, 'many') ? !x.many : true;
         }).filter(function(x) {
             if (x.model!==self.name) { return false; }
             return (!x.readonly) ||
@@ -1469,10 +1470,10 @@ function cast_(obj, state) {
             author:k.barbounakis@gmail.com
             description:exclude non editable attributes on update operation
              */
-            return (state===2) ? (y.hasOwnProperty('editable') ? y.editable : true) : true;
+            return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
         }).forEach(function(x) {
-            name = obj.hasOwnProperty(x.property) ? x.property : x.name;
-            if (obj.hasOwnProperty(name))
+            name = hasOwnProperty(obj, x.property) ? x.property : x.name;
+            if (hasOwnProperty(obj, name))
             {
                 var mapping = self.inferMapping(name);
                 //if mapping is empty and a super model is defined
@@ -1537,10 +1538,10 @@ function castForValidation_(obj, state) {
              author:k.barbounakis@gmail.com
              description:exclude non editable attributes on update operation
              */
-            return (state===2) ? (y.hasOwnProperty('editable') ? y.editable : true) : true;
+            return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
         }).forEach(function(x) {
-            name = obj.hasOwnProperty(x.property) ? x.property : x.name;
-            if (obj.hasOwnProperty(name))
+            name = hasOwnProperty(obj, x.property) ? x.property : x.name;
+            if (hasOwnProperty(obj, name))
             {
                 var mapping = self.inferMapping(name);
                 if (_.isNil(mapping))
@@ -1578,7 +1579,7 @@ DataModel.prototype.recast = function(dest, src, callback)
     }
     async.eachSeries(self.fields, function(field, cb) {
         try {
-            if (src.hasOwnProperty(field.name)) {
+            if (hasOwnProperty(src, field.name)) {
                 //ensure db property removal
                 if (field.property && field.property!==field.name)
                     delete dest[field.name];
@@ -2801,7 +2802,7 @@ function validate_(obj, state, callback) {
             (x.readonly && (typeof x.value!=='undefined') && state===1) ||
             (x.readonly && (typeof x.calculation!=='undefined') && state===1);
     }).filter(function(y) {
-        return (state===2) ? (y.hasOwnProperty('editable') ? y.editable : true) : true;
+        return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
     });
 
     /**
@@ -2816,22 +2817,22 @@ function validate_(obj, state, callback) {
         //build validators array
         var arrValidators=[];
         //-- RequiredValidator
-        if (attr.hasOwnProperty('nullable') && !attr.nullable)
+        if (hasOwnProperty(attr, 'nullable') && !attr.nullable)
         {
             if (state===1 && !attr.primary) {
                 arrValidators.push(new validators.RequiredValidator());
             }
-            else if (state===2 && !attr.primary && objCopy.hasOwnProperty(attr.name)) {
+            else if (state===2 && !attr.primary && hasOwnProperty(objCopy, attr.name)) {
                 arrValidators.push(new validators.RequiredValidator());
             }
         }
         //-- MaxLengthValidator
-        if (attr.hasOwnProperty('size') && objCopy.hasOwnProperty(attr.name)) {
+        if (hasOwnProperty(attr, 'size') && hasOwnProperty(objCopy, attr.name)) {
             if (!(attr.validation && attr.validation.maxLength))
                 arrValidators.push(new validators.MaxLengthValidator(attr.size));
         }
         //-- CustomValidator
-        if (attr.validation && attr.validation['validator'] && objCopy.hasOwnProperty(attr.name)) {
+        if (attr.validation && attr.validation['validator'] && hasOwnProperty(objCopy, attr.name)) {
             var validatorModule;
             try {
                 validatorModule = moduleLoader.require(attr.validation['validator']);
@@ -2848,7 +2849,7 @@ function validate_(obj, state, callback) {
             arrValidators.push(validatorModule.createInstance(attr));
         }
         //-- DataTypeValidator #1
-        if (attr.validation && objCopy.hasOwnProperty(attr.name)) {
+        if (attr.validation && hasOwnProperty(objCopy, attr.name)) {
             if (typeof attr.validation.type === 'string') {
                 arrValidators.push(new validators.DataTypeValidator(attr.validation.type));
             }
@@ -2861,7 +2862,7 @@ function validate_(obj, state, callback) {
             }
         }
         //-- DataTypeValidator #2
-        if (attr.type && objCopy.hasOwnProperty(attr.name)) {
+        if (attr.type && hasOwnProperty(objCopy, attr.name)) {
             arrValidators.push(new validators.DataTypeValidator(attr.type));
         }
 

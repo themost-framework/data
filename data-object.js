@@ -11,6 +11,7 @@ var {HasParentJunction} = require('./has-parent-junction');
 var {SequentialEventEmitter} = require('@themost/common');
 var {LangUtils} = require('@themost/common');
 var {DataError} = require('@themost/common');
+var {hasOwnProperty} = require('./has-own-property');
 
 var selectorsProperty = Symbol('selectors');
 var typeProperty = Symbol('type');
@@ -89,7 +90,7 @@ function attrOf_(name, callback) {
     var self = this, model = this.$$model,
         mapping = model.inferMapping(name);
     if (_.isNil(mapping)) {
-        if (self.hasOwnProperty(name)) {
+        if (hasOwnProperty(self, name)) {
             return callback(null, self[name]);
         }
         else {
@@ -103,7 +104,7 @@ function attrOf_(name, callback) {
     //if mapping association defines foreign key association
     if (mapping.associationType==='association' && mapping.childModel === model.name) {
         //if object has already this property
-        if (self.hasOwnProperty(name)) {
+        if (hasOwnProperty(self, name)) {
             //if property is an object
             if (typeof self[name] === 'object' && self[name] !== null) {
                 //return the defined parent field
@@ -160,7 +161,7 @@ function DataObject(type, obj)
     if (type)
         this[typeProperty] = type;
     else {
-        if (this.constructor.hasOwnProperty('entityTypeDecorator')) {
+        if (hasOwnProperty(this.constructor, 'entityTypeDecorator')) {
             this[typeProperty] = this.constructor['entityTypeDecorator'];
         }
         //get type from constructor name
@@ -406,13 +407,13 @@ DataObject.prototype.property = function(name) {
 
                 function getValueWithCallback(callback) {
                     //if object has already an attribute with this name
-                    if (self.hasOwnProperty(name)) {
+                    if (hasOwnProperty(self, name)) {
                         //return attribute
                         return callback(null, self[name]);
                     }
                     else {
                         //otherwise get attribute value
-                        if (self.hasOwnProperty(model.primaryKey)) {
+                        if (hasOwnProperty(self, model.primaryKey)) {
                             model.where(model.primaryKey).equal(self[model.primaryKey]).select(name).value(function(err, value) {
                                 if (err) { return callback(err); }
                                 // set property
@@ -515,7 +516,7 @@ DataObject.prototype.attrOf = function(name, callback) {
  */
 DataObject.prototype.attr = function(name, callback)
 {
-    if (this.hasOwnProperty(name)) {
+    if (hasOwnProperty(this, name)) {
         callback(null, this[name]);
     }
     else {
@@ -545,7 +546,7 @@ DataObject.prototype.attr = function(name, callback)
                                 return false;
                             for (var i = 0; i < x.fields.length; i++) {
                                 var field = x.fields[i];
-                                if (self.hasOwnProperty(field)===false) {
+                                if (hasOwnProperty(self, field)===false) {
                                     valid = false;
                                     break;
                                 }

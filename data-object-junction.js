@@ -7,7 +7,7 @@ var {QueryField} = require('@themost/query');
 var {DataAssociationMapping} = require('./types');
 var {DataQueryable} = require('./data-queryable');
 var {DataConfigurationStrategy} = require('./data-configuration');
-
+var {hasOwnProperty} = require('./has-own-property');
 
 /**
  * @classdesc Represents a many-to-many association between two data models.
@@ -379,7 +379,7 @@ function insert_(obj, callback) {
                     child[self.mapping.childField] = item;
                 }
                 //validate if child identifier exists
-                if (child.hasOwnProperty(self.mapping.childField)) {
+                if (hasOwnProperty(child, self.mapping.childField)) {
                     insertSingleObject_.call(self, child, function(err) {
                         cb(err);
                     });

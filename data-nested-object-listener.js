@@ -3,7 +3,7 @@ var _ = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
 var {DataError} = require('@themost/common');
-
+var {hasOwnProperty} = require('./has-own-property');
 
 /**
  * 
@@ -330,7 +330,7 @@ function afterSave_(attr, event, callback) {
     // get attribute
     var name = attr.property || attr.name;
     // if target object does not have a property with the specified name
-    if (event.target.hasOwnProperty(name) === false) {
+    if (hasOwnProperty(event.target, name) === false) {
         // return
         return callback();
     }

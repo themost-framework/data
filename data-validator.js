@@ -3,6 +3,7 @@ var _ = require('lodash');
 var {sprintf} = require('sprintf-js');
 var {LangUtils} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
+var {hasOwnProperty} = require('./has-own-property');
 
     /**
      * @class
@@ -87,7 +88,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
         PatternValidator.super_.call(this);
     }
     LangUtils.inherits(PatternValidator, DataValidator);
-    PatternValidator.DefaultMessage = "The value seems to be invalid.";
+    PatternValidator.DefaultMessage = 'The value seems to be invalid.';
     /**
      * Validates the given value and returns a validation result or undefined if the specified value is invalid
      * @param val
@@ -111,7 +112,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                 timezone = (offset>=0 ? '+' : '') + zeroPad_(Math.floor(offset/60),2) + ':' + zeroPad_(offset%60,2);
             valueTo = year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second + '.' + millisecond + timezone;
         }
-        var re = new RegExp(this.pattern, "ig");
+        var re = new RegExp(this.pattern, 'ig');
         if  (!re.test(valueTo)) {
 
             var innerMessage = null, message = this.message || PatternValidator.DefaultMessage;
@@ -121,9 +122,9 @@ var {DataConfigurationStrategy} = require('./data-configuration');
             }
 
             return {
-                code:"EPATTERN",
-                "message":message,
-                "innerMessage":innerMessage
+                code:'EPATTERN',
+                'message':message,
+                'innerMessage':innerMessage
             }
         }
     };
@@ -180,7 +181,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
 
     LangUtils.inherits(MinLengthValidator,DataValidator);
 
-    MinLengthValidator.DefaultMessage = "The value is too short. It should have %s characters or more.";
+    MinLengthValidator.DefaultMessage = 'The value is too short. It should have %s characters or more.';
 
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
@@ -191,7 +192,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
         if (_.isNil(val)) {
             return;
         }
-        if (val.hasOwnProperty('length')) {
+        if (hasOwnProperty(val, 'length')) {
             if (val.length<this.minLength) {
 
                 var innerMessage = null, message = sprintf(this.message || MinLengthValidator.DefaultMessage, this.minLength);
@@ -201,7 +202,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                 }
 
                 return {
-                    code:"EMINLEN",
+                    code:'EMINLEN',
                     minLength:this.minLength,
                     message:message,
                     innerMessage:innerMessage
@@ -272,7 +273,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
     }
     LangUtils.inherits(MaxLengthValidator, DataValidator);
 
-    MaxLengthValidator.DefaultMessage = "The value is too long. It should have %s characters or fewer.";
+    MaxLengthValidator.DefaultMessage = 'The value is too long. It should have %s characters or fewer.';
 
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
@@ -290,10 +291,10 @@ var {DataConfigurationStrategy} = require('./data-configuration');
             message = sprintf(this.getContext().translate(this.message || MaxLengthValidator.DefaultMessage), this.maxLength);
         }
 
-        if (val.hasOwnProperty('length')) {
+        if (hasOwnProperty(val, 'length')) {
             if (val.length>this.maxLength) {
                 return {
-                    code:"EMAXLEN",
+                    code:'EMAXLEN',
                     maxLength:this.maxLength,
                     message: message,
                     innerMessage:innerMessage
@@ -355,7 +356,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
 
     LangUtils.inherits(MinValueValidator, DataValidator);
 
-    MinValueValidator.DefaultMessage = "The value should be greater than or equal to %s.";
+    MinValueValidator.DefaultMessage = 'The value should be greater than or equal to %s.';
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
      * @param {*} val
@@ -374,7 +375,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
             }
 
             return {
-                code:"EMINVAL",
+                code:'EMINVAL',
                 minValue:this.minValue,
                 message:message,
                 innerMessage:innerMessage
@@ -435,7 +436,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
     LangUtils.inherits(MaxValueValidator, DataValidator);
 
 
-    MaxValueValidator.DefaultMessage = "The value should be lower or equal to %s.";
+    MaxValueValidator.DefaultMessage = 'The value should be lower or equal to %s.';
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
      * @param {*} val
@@ -454,7 +455,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
             }
 
             return {
-                code:"EMAXVAL",
+                code:'EMAXVAL',
                 maxValue:this.maxValue,
                 message:message,
                 innerMessage:innerMessage
@@ -518,7 +519,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
 
     LangUtils.inherits(RangeValidator, DataValidator);
 
-    RangeValidator.DefaultMessage = "The value should be between %s to %s.";
+    RangeValidator.DefaultMessage = 'The value should be between %s to %s.';
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
      * @param {*} val
@@ -544,7 +545,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                 message = sprintf(this.getContext().translate(this.message || RangeValidator.DefaultMessage), this.minValue, this.maxValue);
             }
             return {
-                code:"ERANGE",
+                code:'ERANGE',
                 maxValue:this.maxValue,
                 message:message,
                 innerMessage:innerMessage
@@ -695,7 +696,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                     return validationResult;
                 }
             }
-            if (properties.hasOwnProperty('minValue') && properties.hasOwnProperty('maxValue')) {
+            if (hasOwnProperty(properties, 'minValue') && hasOwnProperty(properties, 'maxValue')) {
                 validator = new RangeValidator(properties.minValue, properties.maxValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -703,7 +704,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                     return validationResult;
                 }
             }
-            else if (properties.hasOwnProperty('minValue')) {
+            else if (hasOwnProperty(properties, 'minValue')) {
                 validator = new MinValueValidator(properties.minValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -711,7 +712,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                     return validationResult;
                 }
             }
-            else if (properties.hasOwnProperty('maxValue')) {
+            else if (hasOwnProperty(properties, 'maxValue')) {
                 validator = new MaxValueValidator(properties.maxValue);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -719,7 +720,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                     return validationResult;
                 }
             }
-            if (properties.hasOwnProperty('minLength')) {
+            if (hasOwnProperty(properties, 'minLength')) {
                 validator = new MinLengthValidator(properties.minLength);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -727,7 +728,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
                     return validationResult;
                 }
             }
-            if (properties.hasOwnProperty('maxLength')) {
+            if (hasOwnProperty(properties, 'maxLength')) {
                 validator = new MaxLengthValidator(properties.maxLength);
                 validator.setContext(this.getContext());
                 validationResult = validator.validateSync(val);
@@ -1046,14 +1047,14 @@ var {DataConfigurationStrategy} = require('./data-configuration');
         }
         if (invalid) {
 
-            var innerMessage = null, message = "A value is required.";
+            var innerMessage = null, message = 'A value is required.';
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
                 innerMessage = message;
-                message = this.getContext().translate("A value is required.");
+                message = this.getContext().translate('A value is required.');
             }
 
             return {
-                code:"EREQUIRED",
+                code:'EREQUIRED',
                 message:message,
                 innerMessage:innerMessage
             }
