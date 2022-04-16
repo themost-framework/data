@@ -5,7 +5,7 @@ var {QueryExpression} = require('@themost/query');
 var {QueryField} = require('@themost/query');
 var {DataAssociationMapping} = require('./types');
 var {DataQueryable} = require('./data-queryable');
-
+var {hasOwnProperty} = require('./has-own-property');
 /**
  * @classdesc Represents a foreign key association between two models.
  <p>
@@ -105,11 +105,11 @@ function HasOneAssociation(obj, association)
                 throw new Error('Data association mapping cannot be empty at this context.');
             //get parent object
             var associatedValue = null;
-            if (self.parent.hasOwnProperty(self.mapping.childField)) {
+            if (hasOwnProperty(self.parent, self.mapping.childField)) {
                 // get associated object
                 var associatedObject = self.parent[self.mapping.childField];
                 // if parent object has a property for mapping child field
-                if (associatedObject && associatedObject.hasOwnProperty(self.mapping.parentField)) {
+                if (associatedObject && hasOwnProperty(associatedObject, self.mapping.parentField)) {
                     // get associated value
                     associatedValue = associatedObject[self.mapping.parentField];
                 }

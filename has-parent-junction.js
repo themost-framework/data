@@ -8,6 +8,7 @@ var {DataAssociationMapping} = require('./types');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var {DataQueryable} = require('./data-queryable');
 var {DataObjectJunction} = require('./data-object-junction');
+var {hasOwnProperty} = require('./has-own-property');
 /**
  * @classdesc Represents a many-to-many association between two data models.
  * <p>
@@ -325,7 +326,7 @@ function insert_(obj, callback) {
                     parent[self.mapping.parentField] = item;
                 }
                 //validate if child identifier exists
-                if (parent.hasOwnProperty(self.mapping.parentField)) {
+                if (hasOwnProperty(parent, self.mapping.parentField)) {
                     insertSingleObject_.call(self, parent, function(err) {
                         cb(err);
                     });

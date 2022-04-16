@@ -2,6 +2,7 @@
 var {TypeParser} = require('./types');
 var {sprintf} = require('sprintf-js');
 var {TraceUtils} = require('@themost/common');
+// eslint-disable-next-line no-unused-vars
 var moment = require('moment');
 var _ = require('lodash');
 var Q = require('q');

@@ -2,7 +2,7 @@
 var _ = require('lodash');
 var {DataNotFoundError} = require('@themost/common');
 var async = require('async');
-
+var {hasOwnProperty} = require('./has-own-property');
 /**
  * @class
  * @constructor
@@ -51,6 +51,7 @@ function DataStateValidatorListener() {
 }
 /**
  * @param {*} obj
+ * @this *
  * @param {Function} callback
  * @private
  */
@@ -59,7 +60,7 @@ function mapKey_(obj, callback) {
     if (_.isNil(obj)) {
         return callback(new Error('Object cannot be null at this context'));
     }
-    if (self.primaryKey && obj.hasOwnProperty(self.primaryKey)) {
+    if (self.primaryKey && hasOwnProperty(obj, self.primaryKey)) {
         //already mapped
         return callback(null, true);
     }
@@ -89,14 +90,14 @@ function mapKey_(obj, callback) {
             if (_.isArray(constraint.fields)) {
                 for (var i = 0; i < constraint.fields.length; i++) {
                     var attr = constraint.fields[i];
-                    if (!obj.hasOwnProperty(attr)) {
+                    if (!hasOwnProperty(obj, attr)) {
                         return cb();
                     }
                     var parentObj = obj[attr], value = parentObj;
                     //check field mapping
                     var mapping = self.inferMapping(attr);
                     if (_.isObject(mapping) && (typeof parentObj === 'object')) {
-                        if (parentObj.hasOwnProperty(mapping.parentField)) {
+                        if (hasOwnProperty(parentObj, mapping.parentField)) {
                             fnAppendQuery(attr, parentObj[mapping.parentField]);
                         }
                         else {
@@ -171,7 +172,7 @@ DataStateValidatorListener.prototype.beforeSave = function(event, callback) {
             return callback();
         }
         //get key state
-        var keyState = (model.primaryKey && target.hasOwnProperty(model.primaryKey));
+        var keyState = (model.primaryKey && hasOwnProperty(target, model.primaryKey));
         //if target has $state property defined, set this state and exit
         if (event.target.$state) {
             event.state = event.target.$state;
@@ -233,7 +234,7 @@ DataStateValidatorListener.prototype.beforeRemove = function(event, callback) {
         return callback();
     }
     //if object primary key is already defined
-    if (model.primaryKey && target.hasOwnProperty(model.primaryKey)) {
+    if (model.primaryKey && hasOwnProperty(target, model.primaryKey)) {
         // check if object exists
             return model.where(model.primaryKey).equal(target[model.primaryKey]).value().then(function (result) {
                 if (typeof result !== 'undefined' && result !== null) {
