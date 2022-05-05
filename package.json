@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.6.33",
+  "version": "2.6.34",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/themost-framework/data#readme",
   "dependencies": {
+    "@themost/promise-sequence": "^1.0.1",
     "async": "^2.6.4",
     "lodash": "^4.17.21",
     "moment": "^2.29.2",
