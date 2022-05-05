@@ -2,6 +2,7 @@
 
 // eslint-disable-next-line no-unused-vars
 const { DataEventArgs } = require('./types');
+require('@themost/promise-sequence');
 
 class OnExecuteNestedQueryable {
     beforeExecute(event, callback) {
@@ -31,18 +32,20 @@ class OnExecuteNestedQueryable {
             }
             if (Array.isArray(expand)) {
                 const sources = expand.map(function(item) {
-                    if (item.$entity && item.$entity.model) {
-                        // get nested model
-                        const model = context.model(item.$entity.model);
-                        // if model exists and it's different from the current model
-                        if (model != null && event.model.name !== model.name) {
-                            // try to upgrade
-                            return model.migrateAsync();
+                    return function() {
+                        if (item.$entity && item.$entity.model) {
+                            // get nested model
+                            const model = context.model(item.$entity.model);
+                            // if model exists and it's different from the current model
+                            if (model != null && event.model.name !== model.name) {
+                                // try to upgrade
+                                return model.migrateAsync();
+                            }
                         }
                         return Promise.resolve();
-                    } 
+                    }
                 });
-                return Promise.all(sources);
+                return Promise.sequence(sources);
             } else if (expand && expand.$entity && expand.$entity.model) {
                 // get nested model
                 const model = context.model(expand.$entity.model);
