@@ -25,122 +25,8 @@ var {DataConfigurationStrategy} = require('./data-configuration');
 var {SchemaLoaderStrategy} = require('./data-configuration');
 var {DefaultSchemaLoaderStrategy} = require('./data-configuration');
 var {instanceOf} = require('./instance-of');
-
-function Args() {
-    //
-}
-/**
- * Checks the expression and throws an exception if the condition is not met.
- * @param {*} expr
- * @param {string} message
- */
-Args.check = function(expr, message) {
-    Args.notNull(expr,'Expression');
-    if (typeof expr === 'function') {
-        expr.call()
-    }
-    var res;
-    if (typeof expr === 'function') {
-        res = !(expr.call());
-    }
-    else {
-        res = (!expr);
-    }
-    if (res) {
-        var err = new Error(message);
-        err.code = 'ECHECK';
-        throw err;
-    }
-};
-/**
- *
- * @param {*} arg
- * @param {string} name
- */
-Args.notNull = function(arg,name) {
-    if (typeof arg === 'undefined' || arg === null) {
-        var err = new Error(name + ' may not be null or undefined');
-        err.code = 'ENULL';
-        throw err;
-    }
-};
-
-/**
- * @param {*} arg
- * @param {string} name
- */
-Args.notString = function(arg, name) {
-    if (typeof arg !== 'string') {
-        var err = new Error(name + ' must be a string');
-        err.code = 'EARG';
-        throw err;
-    }
-};
-
-/**
- * @param {*} arg
- * @param {string} name
- */
-Args.notFunction = function(arg, name) {
-    if (typeof arg !== 'function') {
-        var err = new Error(name + ' must be a function');
-        err.code = 'EARG';
-        throw err;
-    }
-};
-
-/**
- * @param {*} arg
- * @param {string} name
- */
-Args.notNumber = function(arg, name) {
-    if (typeof arg !== 'string') {
-        var err = new Error(name + ' must be number');
-        err.code = 'EARG';
-        throw err;
-    }
-};
-/**
- * @param {string|*} arg
- * @param {string} name
- */
-Args.notEmpty = function(arg,name) {
-    Args.notNull(arg,name);
-    Args.notString(arg,name);
-    if (arg.length === 0) {
-        var err = new Error(name + ' may not be empty');
-        err.code = 'EEMPTY';
-        return err;
-    }
-};
-
-/**
- * @param {number|*} arg
- * @param {string} name
- */
-Args.notNegative = function(arg,name) {
-    Args.notNumber(arg,name);
-    if (arg<0) {
-        var err = new Error(name + ' may not be negative');
-        err.code = 'ENEG';
-        return err;
-    }
-};
-
-/**
- * @param {number|*} arg
- * @param {string} name
- */
-Args.positive = function(arg,name) {
-    Args.notNumber(arg,name);
-    if (arg<=0) {
-        var err = new Error(name + ' may not be negative or zero');
-        err.code = 'EPOS';
-        return err;
-    }
-};
-
-
+var {Args} = require('@themost/common');
+var {hasOwnProperty} = require('./has-own-property');
 /**
  * @enum
  */
@@ -737,10 +623,10 @@ EntityTypeConfiguration.prototype.mapInstanceSet = function(context, any) {
         }
     }
     //search for total property for backward compatibility issues
-    if (any.hasOwnProperty('total') && /^\+?\d+$/.test(any['total'])) {
+    if (hasOwnProperty(any, 'total') && /^\+?\d+$/.test(any['total'])) {
         result['@odata.count'] = parseInt(any['total']);
     }
-    if (any.hasOwnProperty('count') && /^\+?\d+$/.test(any['count'])) {
+    if (hasOwnProperty(any, 'count') && /^\+?\d+$/.test(any['count'])) {
         result['@odata.count'] = parseInt(any['count']);
     }
     result['value'] = [];
@@ -1035,13 +921,13 @@ EntitySetConfiguration.prototype.mapInstanceSet = function(context, any) {
         }
     }
     //search for total property for backward compatibility issues
-    if (any.hasOwnProperty('total') && /^\+?\d+$/.test(any['total'])) {
+    if (hasOwnProperty(any, 'total') && /^\+?\d+$/.test(any['total'])) {
         result['@odata.count'] = parseInt(any['total']);
     }
-    else if (any.hasOwnProperty('count') && /^\+?\d+$/.test(any['count'])) {
+    else if (hasOwnProperty(any, 'count') && /^\+?\d+$/.test(any['count'])) {
         result['@odata.count'] = parseInt(any['count']);
     }
-    if (any.hasOwnProperty('skip') && /^\+?\d+$/.test(any['skip'])) {
+    if (hasOwnProperty(any, 'skip') && /^\+?\d+$/.test(any['skip'])) {
         result['@odata.skip'] = parseInt(any['skip']);
     }
     result['value'] = [];
@@ -1519,7 +1405,7 @@ ODataModelBuilder.prototype.removeEntitySet = function(name) {
      * @returns {boolean}
      */
     ODataModelBuilder.prototype.hasEntity = function(name) {
-        return this[entityTypesProperty].hasOwnProperty(name);
+        return hasOwnProperty(this[entityTypesProperty], name);
     };
 
     /**
@@ -1677,7 +1563,7 @@ ODataModelBuilder.prototype.hasJsonFormatter = function(jsonFormatterFunc) {
             var result = {};
             _.forEach(_.keys(instance), function(key) {
                 if (ignoredProperty.indexOf(key)<0) {
-                    if (entityProperty.hasOwnProperty(key)) {
+                    if (hasOwnProperty(entityProperty, key)) {
                         var p = entityProperty[key];
                         if (p.type === EdmType.EdmBoolean) {
                             result[key] = parseBoolean(instance[key]);
@@ -1696,7 +1582,7 @@ ODataModelBuilder.prototype.hasJsonFormatter = function(jsonFormatterFunc) {
                             result[key] = instance[key];
                         }
                     }
-                    else if (entityNavigationProperty.hasOwnProperty(key)) {
+                    else if (hasOwnProperty(entityNavigationProperty, key)) {
                         if (_.isObject(instance[key])) {
                             var match = /^Collection\((.*?)\)$/.exec(entityNavigationProperty[key].type);
                             var entityType = match ? match[1] : entityNavigationProperty[key].type;
@@ -1761,7 +1647,7 @@ LangUtils.inherits(EntityDataContext, DataContext);
 
 EntityDataContext.prototype.model = function(name) {
     var strategy = this.getConfiguration().getStrategy(DataConfigurationStrategy);
-    if (strategy.dataTypes.hasOwnProperty(name)) {
+    if (hasOwnProperty(strategy.dataTypes, name)) {
         return;
     }
     var definition = strategy.model(name);
@@ -1861,8 +1747,8 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                         //find data type
                         var dataType = strategy.dataTypes[x.type];
                         //add property
-                        var edmType = _.isObject(dataType) ? (dataType.hasOwnProperty('edmtype') ? dataType['edmtype']: 'Edm.' + x.type) : x.type;
-                        modelEntityType.addProperty(name, edmType, x.hasOwnProperty('nullable') ? x.nullable : true);
+                        var edmType = _.isObject(dataType) ? (hasOwnProperty(dataType, 'edmtype') ? dataType['edmtype']: 'Edm.' + x.type) : x.type;
+                        modelEntityType.addProperty(name, edmType, hasOwnProperty(x, 'nullable') ? x.nullable : true);
                         if (x.primary) {
                             modelEntityType.hasKey(name, edmType);
                         }
@@ -1874,7 +1760,7 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                     else {
                         var namespacedType = x.type;
                         //add navigation property
-                        var isNullable = x.hasOwnProperty('nullable') ? x.nullable : true;
+                        var isNullable = hasOwnProperty(x, 'nullable') ? x.nullable : true;
                         // add an exception for one-to-one association
                         if (x.multiplicity === EdmMultiplicity.ZeroOrOne || x.multiplicity === EdmMultiplicity.One) {
                             modelEntityType.addNavigationProperty(name, namespacedType, x.multiplicity);
@@ -1883,7 +1769,7 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                             modelEntityType.addNavigationProperty(name, namespacedType, x.many ? EdmMultiplicity.Many: (isNullable ? EdmMultiplicity.ZeroOrOne : EdmMultiplicity.One));
                         }
                         //add navigation property entity (if type is not a primitive type)
-                        if (!strategy.dataTypes.hasOwnProperty(x.type)) {
+                        if (hasOwnProperty(strategy.dataTypes, x.type) === false) {
                             self.addEntitySet(x.type, pluralize(x.type));
                         }
                         // get entity type navigationProperty
