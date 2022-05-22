@@ -105,5 +105,7 @@ dist
 
 # ide
 .idea
+.theia
+.vscode
 .DS_Store
 *.code-workspace
