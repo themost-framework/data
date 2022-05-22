@@ -1,17 +1,17 @@
 [![npm](https://img.shields.io/npm/v/@themost%2Fdata.svg)](https://www.npmjs.com/package/@themost%2Fdata)
-![](https://img.shields.io/david/themost-framework/themost-data) ![](https://img.shields.io/david/peer/themost-framework/themost-data)
-![](https://img.shields.io/david/dev/themost-framework/themost-data)
-![GitHub top language](https://img.shields.io/github/languages/top/themost-framework/themost)
-[![License](https://img.shields.io/npm/l/@themost/data)](https://github.com/themost-framework/themost-data/blob/master/LICENSE)
-![GitHub last commit](https://img.shields.io/github/last-commit/themost-framework/themost)
-![GitHub Release Date](https://img.shields.io/github/release-date/themost-framework/themost)
+![GitHub top language](https://img.shields.io/github/languages/top/themost-framework/data)
+[![License](https://img.shields.io/npm/l/@themost/data)](https://github.com/themost-framework/data/blob/master/LICENSE)
+![GitHub last commit](https://img.shields.io/github/last-commit/themost-framework/data)
+![GitHub Release Date](https://img.shields.io/github/release-date/themost-framework/data)
 [![npm](https://img.shields.io/npm/dw/@themost/data)](https://www.npmjs.com/package/@themost%2Fdata)
 ![Snyk Vulnerabilities for npm package](https://img.shields.io/snyk/vulnerabilities/npm/@themost/data)
 
-# @themost/data
-MOST Web Framework 2.0 Codename Blueshift Data Module
+![MOST Web Framework Logo](https://github.com/themost-framework/common/raw/master/docs/img/themost_framework_v3_128.png)
 
-License: [BSD-3-Clause](https://github.com/themost-framework/themost-data/blob/master/LICENSE)
+# @themost/data
+MOST Web Framework Data Module
+
+License: [BSD-3-Clause](https://github.com/themost-framework/data/blob/master/LICENSE)
 
 ## Install 
 
@@ -19,9 +19,7 @@ License: [BSD-3-Clause](https://github.com/themost-framework/themost-data/blob/m
 
 ## Development
 
-This repo is a submodule of [MOST Web Framework](http://github.com/themost-framework/themost)
-
-    git clone http://github.com/themost-framework/themost.git
+    git clone http://github.com/themost-framework/data.git
 
 ## Features
 ### JSON schemas
