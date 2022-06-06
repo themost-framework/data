@@ -196,7 +196,7 @@ class DataMappingExtender {
                         x[mapping.refersTo] = items.filter(function(y) {
                             return y[objectField]===x[mapping.parentField];
                         }).map(function (y) {
-                            return y.value;
+                            return y[valueField];
                         });
                     });
                     return resolve();
