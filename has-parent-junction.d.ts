@@ -12,5 +12,5 @@ export declare class HasParentJunction extends DataQueryable {
     getObjectField(): string;
     insert(obj: any): Promise<any>;
     remove(obj: any): Promise<any>;
-    migrate(callback: (err?: Error) => void);
+    migrate(callback: (err?: Error) => void): void;
 }
