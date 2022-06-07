@@ -37,7 +37,8 @@ function beforeSave_(attr, event, callback) {
         //first of all get original address from db
         event.model.where(key)
             .equal(event.target[key])
-            .select(key,name)
+            .select(key, name)
+            .expand(name)
             .silent()
             .first().then(function( result) {
                 if (_.isNil(result)) { return callback(new Error('Invalid object state.')); }
