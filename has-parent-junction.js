@@ -176,9 +176,38 @@ function HasParentJunction(obj, association) {
                 var associationObjectField = self.mapping.associationObjectField || DataObjectJunction.DEFAULT_OBJECT_FIELD ;
                 var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
                 var modelDefinition = { name:adapter, title: adapter, sealed:false, hidden:true, type:'hidden', source:adapter, view:adapter, version:'1.0', fields:[
-                        { name: 'id', type:'Counter', primary: true },
-                        { name: associationObjectField, indexed: true, nullable:false, type: self.mapping.parentModel},
-                        { name: associationValueField, indexed: true, nullable:false, type: self.mapping.childModel } ],
+                        {
+                            name: 'id',
+                            type:'Counter',
+                            primary: true
+                        },
+                        {
+                            name: associationObjectField,
+                            indexed: true,
+                            nullable:false,
+                            type: self.mapping.parentModel,
+                            mapping: {
+                                associationType: 'association',
+                                parentModel: parentModel.name,
+                                parentField: self.mapping.parentField || parentModel.primaryKey,
+                                childModel: adapter,
+                                childField: associationObjectField,
+                            }
+                        },
+                        {
+                            name: associationValueField,
+                            indexed: true,
+                            nullable:false,
+                            type: self.mapping.childModel,
+                            mapping: {
+                                associationType: 'association',
+                                parentModel: childModel.name,
+                                parentField: self.mapping.childField || childModel.primaryKey,
+                                childModel: adapter,
+                                childField: associationValueField,
+                            }
+                        }
+                    ],
                     constraints: [
                         {
                             description: 'The relation between two objects must be unique.',
