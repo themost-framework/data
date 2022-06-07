@@ -28,7 +28,7 @@ function beforeSave_(attr, event, callback) {
         // on insert
         if (event.state === 1) {
             // throw error
-            return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly set during insert.', null, event.model.name, key));
+            return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly set during insert.', null, event.model.name, name));
         }
         // on update
         if (event.state === 2) {
@@ -40,7 +40,7 @@ function beforeSave_(attr, event, callback) {
                 }
                 if (value !== compareValue) {
                     // throw error
-                    return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly updated.', null, event.model.name, key));
+                    return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly updated.', null, event.model.name, name));
                 }
                 return callback();
             }).catch(function(err) {
