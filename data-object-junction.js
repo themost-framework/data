@@ -192,8 +192,8 @@ function DataObjectJunction(obj, association) {
                             type: self.mapping.parentModel,
                             mapping: {
                                 associationType: 'association',
-                                parentModel: parentModel.name,
-                                parentField: self.mapping.parentField || parentModel.primaryKey,
+                                parentModel: self.mapping.parentModel,
+                                parentField: self.mapping.parentField,
                                 childModel: adapter,
                                 childField: associationObjectField,
                             }
@@ -205,8 +205,8 @@ function DataObjectJunction(obj, association) {
                             type: self.mapping.childModel,
                             mapping: {
                                 associationType: 'association',
-                                parentModel: childModel.name,
-                                parentField: self.mapping.childField || childModel.primaryKey,
+                                parentModel: self.mapping.childModel,
+                                parentField: self.mapping.childField,
                                 childModel: adapter,
                                 childField: associationValueField,
                             }
