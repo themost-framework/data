@@ -2,7 +2,7 @@
 var _ = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
-var {DataError} = require('@themost/common');
+var {DataError, LangUtils} = require('@themost/common');
 var {hasOwnProperty} = require('./has-own-property');
 var {isObjectDeep} = require('./is-object');
 /**
@@ -33,8 +33,12 @@ function beforeSave_(attr, event, callback) {
         // on update
         if (event.state === 2) {
             return event.model.where(key).equal(event.target[key]).select(name).flatten().silent().value().then(function(value) {
-                // if the given value is different from the one which has been already set
-                if (value !== nestedObj) {
+                // if the given value is different from the one that has been already set
+                let compareValue = nestedObj;
+                if (typeof value === 'number' && typeof nestedObj !== 'number') {
+                    compareValue = Number(nestedObj);
+                }
+                if (value !== compareValue) {
                     // throw error
                     return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly updated.', null, event.model.name, key));
                 }
