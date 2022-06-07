@@ -2,9 +2,9 @@
 var _ = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
-var {DataError} = require('@themost/common');
+var {DataError, LangUtils} = require('@themost/common');
 var {hasOwnProperty} = require('./has-own-property');
-
+var {isObjectDeep} = require('./is-object');
 /**
  * 
  * @param attr
@@ -14,13 +14,39 @@ var {hasOwnProperty} = require('./has-own-property');
  * @private
  */
 function beforeSave_(attr, event, callback) {
-    var context = event.model.context,
-        name = attr.property || attr.name,
-        key = event.model.getPrimaryKey(),
-        nestedObj = event.target[name];
-    //if attribute is null or undefined do nothing
-    if (_.isNil(nestedObj)) {
+    var context = event.model.context;
+    var name = attr.property || attr.name;
+    var key = event.model.getPrimaryKey();
+    var nestedObj = event.target[name];
+    // if attribute is null or undefined do nothing
+    if (nestedObj == null) {
+        // do nothing
         return callback();
+    }
+    if (isObjectDeep(nestedObj) === false) {
+        // validate object state based on the given value
+        // on insert
+        if (event.state === 1) {
+            // throw error
+            return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly set during insert.', null, event.model.name, key));
+        }
+        // on update
+        if (event.state === 2) {
+            return event.model.where(key).equal(event.target[key]).select(name).flatten().silent().value().then(function(value) {
+                // if the given value is different from the one that has been already set
+                let compareValue = nestedObj;
+                if (typeof value === 'number' && typeof nestedObj !== 'number') {
+                    compareValue = Number(nestedObj);
+                }
+                if (value !== compareValue) {
+                    // throw error
+                    return callback(new DataError('E_NESTED', 'A nested object cannot be forcibly updated.', null, event.model.name, key));
+                }
+                return callback();
+            }).catch(function(err) {
+                return callback(err);
+            });
+        }
     }
     //get target model
     var nestedModel = context.model(attr.type);
@@ -37,7 +63,8 @@ function beforeSave_(attr, event, callback) {
         //first of all get original address from db
         event.model.where(key)
             .equal(event.target[key])
-            .select(key,name)
+            .select(key, name)
+            .expand(name)
             .silent()
             .first().then(function( result) {
                 if (_.isNil(result)) { return callback(new Error('Invalid object state.')); }
