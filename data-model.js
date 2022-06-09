@@ -996,12 +996,16 @@ DataModel.prototype.find = function(obj) {
 
 /**
  * Selects the given attribute or attributes and return an instance of DataQueryable class
- * @param {...string} attr - An array of fields, a field or a view name
+ * @param {...*} attr - An array of fields, a field or a view name
  * @returns {DataQueryable}
  */
 // eslint-disable-next-line no-unused-vars
 DataModel.prototype.select = function(attr) {
-    var result = new DataQueryable(this);
+    const result = new DataQueryable(this);
+    if (typeof attr === 'function') {
+        // use select closure
+        return result.select(attr);
+    }
     return result.select.apply(result, Array.prototype.slice.call(arguments));
 };
 
