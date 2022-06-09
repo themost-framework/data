@@ -7,7 +7,8 @@ var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
 var {DataError} = require('@themost/common');
-var {QueryField} = require('@themost/query');
+// eslint-disable-next-line no-unused-vars
+var {QueryField, QueryExpression} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var Q = require('q');
@@ -1244,55 +1245,15 @@ function select_(arg) {
 
 /**
  * Selects a field or a collection of fields of the current model.
- * @param {...string} attr  An array of fields, a field or a view name
+ * @param {...*} attr  An array of fields, a field or a view name
  * @returns {DataQueryable}
- * @example
- //retrieve the last 5 orders
- context.model('Order').select('id','customer','orderDate','orderedItem')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- * @example
- //retrieve the last 5 orders by getting the associated customer name and product name
- context.model('Order').select('id','customer/description as customerName','orderDate','orderedItem/name as productName')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- id   customerName         orderDate                      orderedItemName
- ---  -------------------  -----------------------------  ----------------------------------------------------
- 46   Nicole Armstrong     2014-12-31 13:35:41.000+02:00  LaCie Blade Runner
- 288  Cheyenne Hudson      2015-01-01 13:24:21.000+02:00  Canon Pixma MG5420 Wireless Photo All-in-One Printer
- 139  Christian Whitehead  2015-01-01 23:21:24.000+02:00  Olympus OM-D E-M1
- 3    Katelyn Kelly        2015-01-02 04:42:58.000+02:00  Kobo Aura
- 59   Cheyenne Hudson      2015-01-02 10:47:53.000+02:00  Google Nexus 7 (2013)
-
- @example
- //retrieve the best customers by getting the associated customer name and a count of orders made by the customer
- context.model('Order').select('customer/description as customerName','count(id) as orderCount')
- .orderBy('count(id)')
- .groupBy('customer/description')
- .take(3).list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- customerName      orderCount
- ----------------  ----------
- Miranda Bird      19
- Alex Miles        16
- Isaiah Morton     16
  */
 DataQueryable.prototype.select = function(attr) {
+
+    if (typeof attr === 'function') {
+        this.query.select(attr);
+        return this;
+    }
 
     var self = this, arr, expr,
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;

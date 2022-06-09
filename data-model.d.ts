@@ -39,6 +39,8 @@ export declare class DataModel extends SequentialEventEmitter{
     filter(params: any, callback?: (err?: Error, res?: any) => void): void;
     find(obj: any):DataQueryable;
     select(...attr: any[]): DataQueryable;
+    select<T>(expr: (value: T, ...param: any) => any, params?: any): this;
+    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): this;
     orderBy(attr: any): DataQueryable;
     orderByDescending(attr: any): DataQueryable;
     take(n: number): DataQueryable;

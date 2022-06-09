@@ -30,6 +30,8 @@ export declare class DataQueryable implements DataContextEmitter {
     notContains(value: any): this;
     between(value1: any, value2: any): this;
     select(...attr: any[]): this;
+    select<T>(expr: (value: T, ...param: any) => any, params?: any): this;
+    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): this;
     orderBy(attr: any): this;
     orderByDescending(attr: any): this;
     thenBy(attr: any): this;
