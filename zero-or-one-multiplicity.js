@@ -64,6 +64,10 @@ ZeroOrOneMultiplicityListener.prototype.afterSaveAsync = function(event) {
                 var target = event.model.convert(event.target);
                 // get attribute mapping
                 var mapping = event.model.inferMapping(attribute.name);
+                // force set refersTo
+                if (mapping && mapping.refersTo == null) {
+                    mapping.refersTo = attribute.name;
+                }
                 // get association def
                 var association = new DataObjectJunction(target, mapping);
                 if (child != null) {

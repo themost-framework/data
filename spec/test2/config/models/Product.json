@@ -134,6 +134,38 @@
                 "nested": true,
                 "expandable": true,
                 "many": false
+            },
+            {
+                "name": "madeIn",
+                "type": "Country",
+                "nullable": true,
+                "many": true,
+                "multiplicity": "ZeroOrOne",
+                "mapping": {
+                    "associationType": "junction",
+                    "associationObjectField": "product",
+                    "associationValueField": "country",
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "Country",
+                    "childField": "id",
+                    "privileges": [
+                        {
+                            "mask": 1,
+                            "type": "global",
+                            "account": "*"
+                        },
+                        {
+                            "mask": 15,
+                            "type": "global"
+                        },
+                        {
+                            "mask": 15,
+                            "type": "global",
+                            "account": "Administrators"
+                        }
+                    ]
+                }
             }
     ],
     "constraints": [
