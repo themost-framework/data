@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@themost/common": "^2.5.11",
-    "@themost/query": "^2.5.9",
+    "@themost/query": "^2.7.2",
     "@themost/xml": "^2.5.2"
   },
   "engines": {
@@ -27,6 +27,7 @@
   "homepage": "https://github.com/themost-framework/data#readme",
   "dependencies": {
     "@themost/promise-sequence": "^1.0.1",
+    "@themost/query": "^2.7.2",
     "async": "^2.6.4",
     "lodash": "^4.17.21",
     "moment": "^2.29.2",
