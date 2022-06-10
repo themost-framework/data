@@ -9,6 +9,7 @@ export declare class DataQueryable implements DataContextEmitter {
     readonly query: QueryExpression;
     clone(): this;
     where(attr: string): this;
+    where<T>(expr: (value: T, ...param: any) => any, params?: any): this;
     search(text: string): this;
     join(model: string): this;
     and(attr: string): this;
@@ -33,10 +34,15 @@ export declare class DataQueryable implements DataContextEmitter {
     select<T>(expr: (value: T, ...param: any) => any, params?: any): this;
     select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): this;
     orderBy(attr: any): this;
+    orderBy<T>(expr: (value: T) => any): this;
     orderByDescending(attr: any): this;
+    orderByDescending<T>(expr: (value: T) => any): this;
     thenBy(attr: any): this;
+    thenBy<T>(expr: (value: T) => any): this;
     thenByDescending(attr: any): this;
+    thenByDescending<T>(expr: (value: T) => any): this;
     groupBy(...attr: any[]): this;
+    groupBy<T>(expr: (value: T) => any): this;
     skip(n:number): this;
     take(n:number): this;
     getItem(): Promise<any>;

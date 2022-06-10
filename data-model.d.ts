@@ -34,6 +34,7 @@ export declare class DataModel extends SequentialEventEmitter{
     clone(): DataModel;
     join(model: string): DataModel;
     where(attr: string): DataQueryable;
+    where<T>(expr: (value: T, ...param: any) => any, params?: any): DataQueryable;
     search(text: string): DataQueryable;
     asQueryable(): DataQueryable;
     filter(params: any, callback?: (err?: Error, res?: any) => void): void;
@@ -42,6 +43,8 @@ export declare class DataModel extends SequentialEventEmitter{
     select<T>(expr: (value: T, ...param: any) => any, params?: any): this;
     select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): this;
     orderBy(attr: any): DataQueryable;
+    orderBy<T>(expr: (value: T) => any): DataQueryable;
+    orderByDescending<T>(expr: (value: T) => any): DataQueryable;
     orderByDescending(attr: any): DataQueryable;
     take(n: number): DataQueryable;
     getList():Promise<any>;
