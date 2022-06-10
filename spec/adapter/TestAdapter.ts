@@ -5,7 +5,7 @@ import {TraceUtils} from '@themost/common';
 import {readFileSync} from 'fs';
 
 const INSTANCE_DB = new Map();
-const DateTimeRegex = /^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])(?:[T ](\d+):(\d+)(?::(\d+)(?:\.(\d+))?)?)(?:Z(-?\d*))?([+-](\d+):(\d+))?$/;
+const DateTimeRegex = /^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])[T ](\d+):(\d+)(?::(\d+)(?:\.(\d+))?)?(?:Z(-?\d*))?([+-](\d+):(\d+))?$/;
 
 /**
  *
@@ -871,7 +871,7 @@ export class TestAdapter {
                     //prepare statement - the traditional way
                     const prepared = self.prepare(sql, values);
                     //log statement (optional)
-                    if (process.env.NODE_ENV==='development') {
+                    if (process.env.NODE_ENV==='development' || process.env.NODE_ENV==='test') {
                         TraceUtils.log(`SQL:${prepared}, Parameters:${JSON.stringify(values)}`);
                     }
                     let results: any;

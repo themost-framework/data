@@ -1251,6 +1251,24 @@ function select_(arg) {
 DataQueryable.prototype.select = function(attr) {
 
     if (typeof attr === 'function') {
+        const self = this;
+        self.query.resolvingJoinMember(
+            /**
+             * @param {{target: QueryExpression, member: string, fullyQualifiedMember: string}} event
+             */
+            function(event) {
+            if (event.fullyQualifiedMember) {
+                // format qualified name
+                const qualifiedName = event.fullyQualifiedMember.replace('.', '/');
+                // test member by using attribute resolver
+                const attribute = DataAttributeResolver.prototype.testNestedAttribute.call(self, qualifiedName);
+                if (attribute != null) {
+                    // select nested attribute
+                    // this operation will include (join) all the required entities
+                    DataAttributeResolver.prototype.selecteNestedAttribute.call(self, qualifiedName);
+                }
+            }
+        });
         this.query.select(attr);
         return this;
     }
