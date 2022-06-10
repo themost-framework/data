@@ -684,6 +684,10 @@ function unregisterContextListeners() {
 
 }
 
+/**
+ * @param {*} model
+ * @returns {DataQueryable}
+ */
 DataModel.prototype.join = function(model) {
     var result = new DataQueryable(this);
     return result.join(model);
@@ -691,12 +695,11 @@ DataModel.prototype.join = function(model) {
 
 /**
  * Initializes a where statement and returns an instance of DataQueryable class.
- * @param {String|*} attr - A string that represents the name of a field
+ * @param {*} attr
  * @returns DataQueryable
 */
 DataModel.prototype.where = function(attr) {
-    var result = new DataQueryable(this);
-    return result.where(attr);
+    return new DataQueryable(this).where(attr);
 };
 
 /**
@@ -1013,18 +1016,11 @@ DataModel.prototype.select = function(attr) {
 
 /**
  * Prepares an ascending order by expression and returns an instance of DataQueryable class.
- * @param {string|*} attr - A string that is going to be used in this expression.
+ * @param {*} attr
  * @returns DataQueryable
- * @example
- context.model('Person').orderBy('givenName').list().then(function(result) {
-    done(null, result);
- }).catch(function(err) {
-    done(err);
- });
 */
 DataModel.prototype.orderBy = function(attr) {
-    var result = new DataQueryable(this);
-    return result.orderBy(attr);
+    return new DataQueryable(this).orderBy(attr);
 };
 
 /**
@@ -1134,18 +1130,11 @@ DataModel.prototype.skip = function(n) {
 
 /**
  * Prepares an descending order by expression and returns an instance of DataQueryable class.
- * @param {string|*} attr - A string that is going to be used in this expression.
+ * @param {*} attr - A string that is going to be used in this expression.
  * @returns DataQueryable
- * @example
- context.model('Person').orderByDescending('givenName').list().then(function(result) {
-    done(null, result);
- }).catch(function(err) {
-    done(err);
- });
  */
 DataModel.prototype.orderByDescending = function(attr) {
-    var result = new DataQueryable(this);
-    return result.orderBy(attr);
+    return new DataQueryable(this).orderByDescending(attr);
 };
 
 /**
