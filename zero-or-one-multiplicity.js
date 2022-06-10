@@ -3,6 +3,8 @@ var Q = require('q');
 var _ = require('lodash');
 var {DataError} = require('@themost/common');
 var {DataObjectJunction} = require('./data-object-junction');
+require('@themost/promise-sequence');
+
 function ZeroOrOneMultiplicityListener() {
     //
 }
@@ -45,67 +47,69 @@ ZeroOrOneMultiplicityListener.prototype.afterSaveAsync = function(event) {
             return resolve();
         }
         var sources = _.map(attributes, function(attribute) {
-            return Q.Promise(function(_resolve, _reject) {
-                // exclude readonly attributes
-                if (Object.prototype.hasOwnProperty.call(attribute, 'readonly')) {
-                    if (attribute.readonly) {
-                        return _resolve();
-                    }
-                }
-                // exclude non-editable attributes while updating object
-                if (Object.prototype.hasOwnProperty.call(attribute, 'editable') && event.state === 2) {
-                    if (!attribute.editable) {
-                        return _resolve();
-                    }
-                }
-                const child = event.target[attribute.name];
-                var context = event.model.context;
-                // get target
-                var target = event.model.convert(event.target);
-                // get attribute mapping
-                var mapping = event.model.inferMapping(attribute.name);
-                // force set refersTo
-                if (mapping && mapping.refersTo == null) {
-                    mapping.refersTo = attribute.name;
-                }
-                // get association def
-                var association = new DataObjectJunction(target, mapping);
-                if (child != null) {
-                    // get silent model of parent model
-                    var silent = event.model.isSilent();
-                    // find child
-                    var childModel = context.model(mapping.childModel);
-                    return childModel.silent(silent).find(child).getItem().then(function(item) {
-                        if (item == null) {
-                            return _reject(new DataError('EDATA','An associated object cannot be found.',null, event.model.name, attribute.name));
-                        }
-                        // try to create association between parent and child
-                        return association.silent(silent).insert(item).then(function() {
+            return function() {
+                return Q.Promise(function(_resolve, _reject) {
+                    // exclude readonly attributes
+                    if (Object.prototype.hasOwnProperty.call(attribute, 'readonly')) {
+                        if (attribute.readonly) {
                             return _resolve();
-                        });
-                    }).catch(function(err) {
-                        return _reject(err);
-                    });
-                } else {
-                    // remove zero or one association
-                    // get item
-                    return association.silent(silent).getItem().then(function(item) {
-                        // if child already exists remove association
-                        if (item) {
-                            return association.silent(silent).remove(item).then(function() {
+                        }
+                    }
+                    // exclude non-editable attributes while updating object
+                    if (Object.prototype.hasOwnProperty.call(attribute, 'editable') && event.state === 2) {
+                        if (!attribute.editable) {
+                            return _resolve();
+                        }
+                    }
+                    const child = event.target[attribute.name];
+                    var context = event.model.context;
+                    // get target
+                    var target = event.model.convert(event.target);
+                    // get attribute mapping
+                    var mapping = event.model.inferMapping(attribute.name);
+                    // force set refersTo
+                    if (mapping && mapping.refersTo == null) {
+                        mapping.refersTo = attribute.name;
+                    }
+                    // get association def
+                    var association = new DataObjectJunction(target, mapping);
+                    if (child != null) {
+                        // get silent model of parent model
+                        var silent = event.model.isSilent();
+                        // find child
+                        var childModel = context.model(mapping.childModel);
+                        return childModel.silent(silent).find(child).getItem().then(function(item) {
+                            if (item == null) {
+                                return _reject(new DataError('EDATA','An associated object cannot be found.',null, event.model.name, attribute.name));
+                            }
+                            // try to create association between parent and child
+                            return association.silent(silent).insert(item).then(function() {
                                 return _resolve();
                             });
-                        }
-                        // otherwise do nothing
-                        return _resolve();
-                    }).catch(function(err) {
-                        return _reject(err);
-                    });
-                }
-            });
+                        }).catch(function(err) {
+                            return _reject(err);
+                        });
+                    } else {
+                        // remove zero or one association
+                        // get item
+                        return association.silent(silent).getItem().then(function(item) {
+                            // if child already exists remove association
+                            if (item) {
+                                return association.silent(silent).remove(item).then(function() {
+                                    return _resolve();
+                                });
+                            }
+                            // otherwise do nothing
+                            return _resolve();
+                        }).catch(function(err) {
+                            return _reject(err);
+                        });
+                    }
+                });
+            }
         });
         // execute all promises
-        Q.all(sources).then(function() {
+        Promise.sequence(sources).then(function() {
             return resolve();
         }).catch(function(err) {
             return reject(err);
