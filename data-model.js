@@ -698,8 +698,10 @@ DataModel.prototype.join = function(model) {
  * @param {*} attr
  * @returns DataQueryable
 */
+// eslint-disable-next-line no-unused-vars
 DataModel.prototype.where = function(attr) {
-    return new DataQueryable(this).where(attr);
+    const res = new DataQueryable(this);
+    return res.where.apply(res, Array.from(arguments));
 };
 
 /**

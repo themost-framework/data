@@ -2,6 +2,7 @@ import {resolve} from 'path';
 import {DataContext} from '../index';
 import {TestApplication} from './TestApplication';
 import {count} from "@themost/query";
+import {Product} from './test2/models/Product';
 
 describe('DataQueryable', () => {
     let app: TestApplication;
@@ -111,16 +112,61 @@ describe('DataQueryable', () => {
     });
 
     it('should use lower than or equal', async () => {
-        let results = await context.model('Product').select((x: any) => {
-            x.id,
-            x.name,
-            x.price
-        }).where((x: any) => {
-            return x.price <= 545.16;
-        }).silent().getItems();
+        let results = await context.model(Product).where((x: Product) => {
+            return x.price <= 545.16 && x.category === 'Laptops';
+        }).silent().getTypedItems<Product>();
         expect(results.length).toBeTruthy();
         results.forEach(x => {
+            expect(x).toBeInstanceOf(Product)
             expect(x.price).toBeLessThanOrEqual(545.16);
+        });
+    });
+
+    it('should use order by', async () => {
+        let results = await context.model(Product).where((x: Product) => {
+            return x.price <= 545.16 && x.category === 'Laptops';
+        }).orderBy((x: Product) => x.price)
+            .silent().getTypedItems<Product>();
+        expect(results.length).toBeTruthy();
+        results.forEach((x, index) => {
+            expect(x).toBeInstanceOf(Product)
+            expect(x.price).toBeLessThanOrEqual(545.16);
+            if (index > 0) {
+                expect(x.price).toBeGreaterThanOrEqual(results[index - 1].price);
+            }
+        });
+    });
+
+    it('should use order by descending', async () => {
+        let results = await context.model(Product).where((x: Product) => {
+            return x.price <= 545.16 && x.category === 'Laptops';
+        }).orderByDescending((x: Product) => x.price)
+            .silent().getTypedItems<Product>();
+        expect(results.length).toBeTruthy();
+        results.forEach((x, index) => {
+            expect(x).toBeInstanceOf(Product)
+            expect(x.price).toBeLessThanOrEqual(545.16);
+            if (index > 0) {
+                expect(x.price).toBeLessThanOrEqual(results[index - 1].price);
+            }
+        });
+    });
+
+    it('should use params', async () => {
+        const checkPrice = 545.16;
+        let results = await context.model(Product).where((x: Product) => {
+            return x.price <= checkPrice && x.category === 'Laptops';
+        }, {
+            checkPrice
+        }).orderByDescending((x: Product) => x.price)
+            .silent().getTypedItems<Product>();
+        expect(results.length).toBeTruthy();
+        results.forEach((x, index) => {
+            expect(x).toBeInstanceOf(Product)
+            expect(x.price).toBeLessThanOrEqual(checkPrice);
+            if (index > 0) {
+                expect(x.price).toBeLessThanOrEqual(results[index - 1].price);
+            }
         });
     });
 

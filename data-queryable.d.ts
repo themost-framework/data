@@ -48,7 +48,9 @@ export declare class DataQueryable implements DataContextEmitter {
     getItem(): Promise<any>;
     getItems(): Promise<Array<any>>;
     getTypedItem(): Promise<any>;
+    getTypedItem<T>(): Promise<T>;
     getTypedItems(): Promise<Array<any>>;
+    getTypedItems<T>(): Promise<Array<T>>;
     getList(): Promise<any>;
     getTypedList(): Promise<any>;
     getAllItems(): Promise<Array<any>>;
