@@ -672,7 +672,7 @@ DataQueryable.prototype.where = function(attr) {
     if (typeof attr === 'function') {
         var onResolveJoinMember = this.onResolveJoinMember.bind(this);
         this.query.resolvingJoinMember(onResolveJoinMember);
-        this.query.where(attr);
+        this.query.where.apply(this.query, Array.from(arguments));
         return this;
     }
     if (typeof attr === 'string' && /\//.test(attr)) {
