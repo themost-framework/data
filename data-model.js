@@ -698,8 +698,8 @@ DataModel.prototype.join = function(model) {
 */
 // eslint-disable-next-line no-unused-vars
 DataModel.prototype.where = function(attr) {
-    const res = new DataQueryable(this);
-    return res.where.apply(res, Array.from(arguments));
+    const result = new DataQueryable(this);
+    return result.where.apply(result, Array.from(arguments));
 };
 
 /**
@@ -1007,11 +1007,7 @@ DataModel.prototype.find = function(obj) {
 // eslint-disable-next-line no-unused-vars
 DataModel.prototype.select = function(attr) {
     const result = new DataQueryable(this);
-    if (typeof attr === 'function') {
-        // use select closure
-        return result.select(attr);
-    }
-    return result.select.apply(result, Array.prototype.slice.call(arguments));
+    return result.select.apply(result, Array.from(arguments));
 };
 
 /**

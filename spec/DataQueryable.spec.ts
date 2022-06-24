@@ -1,7 +1,7 @@
 import {resolve} from 'path';
 import {DataContext} from '../index';
 import {TestApplication} from './TestApplication';
-import {count} from "@themost/query";
+import {count, mean, round} from "@themost/query";
 import {Product} from './test2/models/Product';
 
 describe('DataQueryable', () => {
@@ -166,6 +166,32 @@ describe('DataQueryable', () => {
             expect(x.price).toBeLessThanOrEqual(checkPrice);
             if (index > 0) {
                 expect(x.price).toBeLessThanOrEqual(results[index - 1].price);
+            }
+        });
+    });
+
+    it('should use order by aggregated data', async () => {
+        let results = await context.model(Product)
+            .select((x: Product) => {
+                return {
+                    total: count(x.id),
+                    averagePrice: round(mean(x.price), 2),
+                    category: x.category
+                }
+            })
+            .groupBy(
+            (x: Product) => x.category
+            )
+            .orderByDescending(
+                (x: Product) => count(x.id)
+            )
+            .silent()
+            .getTypedItems<{category: string, averagePrice: number, total: number}>();
+        expect(results.length).toBeTruthy();
+        expect(results.length).toBeGreaterThan(1);
+        results.forEach((x, index) => {
+            if (index > 0) {
+                expect(x.total).toBeLessThanOrEqual(results[index - 1].total);
             }
         });
     });
