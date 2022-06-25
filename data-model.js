@@ -35,6 +35,8 @@ var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 var {OnNestedQueryListener} = require('./OnNestedQueryListener');
 var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
+require('@themost/promise-sequence');
+var DataObjectState = types.DataObjectState;
 /**
  * @this DataModel
  * @param {DataField} field
@@ -3145,9 +3147,74 @@ DataModel.prototype.getList = function() {
     });
     return d.promise;
 };
+/**
+ * @param obj {*|Array<*>}
+ * @param callback {Function}
+ * @returns {void|Promise<*>}
+ */
+DataModel.prototype.upsert = function(obj, callback) {
+    if (typeof callback === 'undefined') {
+        return this.upsertAsync(obj);
+    } else {
+        return this.upsertAsync(obj).then(function(result) {
+            return callback(null, result);
+        }).catch(function(err) {
+            return callback(err);
+        });
+    }
+};
+
+/**
+ * @param {*|Array<*>} obj
+ * @returns {Promise<*>}
+ */
+DataModel.prototype.upsertAsync = function(obj) {
+    var items = [];
+    var self = this;
+    // create a clone
+    var thisModel = this.clone(this.context);
+    // format object(s) to array
+    if (Array.isArray(obj)) {
+        items = obj;
+    } else {
+        items.push(obj);
+    }
+    return Promise.sequence(items.map(function(item) {
+        return function() {
+            if (thisModel.primaryKey == null) {
+                throw new DataError('E_PKEY', 'Primary key cannot be empty at this context', null, thisModel.name);
+            }
+            if (Object.prototype.hasOwnProperty.call(item, thisModel.primaryKey) === false) {
+                // do nothing DataMode.save() will try to find object state based on its attributes
+                return Promise.resolve(item);
+            } else if (item[thisModel.primaryKey] == null) {
+                // delete null primary key
+                delete item[thisModel.primaryKey];
+                // and continue
+                return Promise.resolve(item);
+            }
+            // try to find object by primary key
+            return thisModel.where(thisModel.primaryKey).equal(item[thisModel.primaryKey]).silent().count().then(function(result) {
+                // if object does not exist, set state to insert
+                Object.assign(item, {
+                    $state: (result === 0) ? DataObjectState.Insert : DataObjectState.Update
+                });
+                // and return item
+                return Promise.resolve(item);
+            });
+        }
+    })).then(function() {
+        // finally do update
+        return self.save(items).then(function(results) {
+            // delete $state
+            items.forEach(function (item) {
+                delete item.$state;
+            });
+            return Array.isArray(obj) ? results : results[0];
+        });
+    });
+}
 
 module.exports = {
     DataModel
-}
-
-
+};

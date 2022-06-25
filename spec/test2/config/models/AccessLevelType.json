@@ -24,7 +24,7 @@
             "account": "*"
         },
         {
-            "mask": 1,
+            "mask": 15,
             "type": "global",
             "account": "Administrators"
         },
