@@ -3205,7 +3205,13 @@ DataModel.prototype.upsertAsync = function(obj) {
         }
     })).then(function() {
         // finally do update
-        return self.save(items);
+        return self.save(items).then(function(results) {
+            // delete $state
+            items.forEach(function (item) {
+                delete item.$state;
+            });
+            return Array.isArray(obj) ? results : results[0];
+        });
     });
 }
 
