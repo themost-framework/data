@@ -3184,14 +3184,19 @@ DataModel.prototype.upsertAsync = function(obj) {
             if (thisModel.primaryKey == null) {
                 throw new DataError('E_PKEY', 'Primary key cannot be empty at this context', null, thisModel.name);
             }
-            if (Object.prototype.hasOwnProperty.call(item, thisModel.primaryKey) === false) {
-                // do nothing DataMode.save() will try to find object state based on its attributes
-                return Promise.resolve(item);
-            } else if (item[thisModel.primaryKey] == null) {
-                // delete null primary key
+            if (item[thisModel.primaryKey] == null) {
                 delete item[thisModel.primaryKey];
-                // and continue
-                return Promise.resolve(item);
+                return new Promise(function(resolve, reject) {
+                    self.inferState(item, function(err, state) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        Object.assign(item, {
+                            $state: state
+                        });
+                        return resolve(item);
+                    });
+                });
             }
             // try to find object by primary key
             return thisModel.where(thisModel.primaryKey).equal(item[thisModel.primaryKey]).silent().count().then(function(result) {
