@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@themost/common": "^2.5.11",
-    "@themost/query": "^2.7.2",
+    "@themost/query": "^2.5.9",
     "@themost/xml": "^2.5.2"
   },
   "engines": {
@@ -30,7 +30,7 @@
     "@themost/query": "^2.7.3",
     "async": "^2.6.4",
     "lodash": "^4.17.21",
-    "moment": "^2.29.2",
+    "moment": "^2.29.4",
     "node-cache": "^1.1.0",
     "pluralize": "^7.0.0",
     "q": "^1.4.1",
