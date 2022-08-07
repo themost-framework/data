@@ -8,8 +8,8 @@
     "install-peers": "add-peers"
   },
   "peerDependencies": {
-    "@themost/common": "^2.5.11",
-    "@themost/query": "^2.7.2",
+    "@themost/common": "^2.5.12",
+    "@themost/query": "^2.7.4",
     "@themost/xml": "^2.5.2"
   },
   "engines": {
