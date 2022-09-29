@@ -90,7 +90,7 @@ export declare interface DataModelPrivilege {
 }
 
 export declare class DataAssociationMapping {
-    constructor(obj: any);
+    constructor(obj?: any);
     associationAdapter?: string;
     parentModel?: string;
     childModel?: string;
