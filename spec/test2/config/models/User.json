@@ -51,7 +51,23 @@
                 "childModel":"User",
                 "childField":"id",
                 "associationType":"junction",
-                "cascade":"delete"
+                "cascade":"delete",
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "type": "self",
+                        "mask": 1,
+                        "filter": "valueId eq me()"
+                    }
+                ]
             }
         },
         {

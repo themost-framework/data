@@ -594,7 +594,7 @@ function removeAnyObject(obj, callback) {
                 var childModel = self.parent.context.model(self.mapping.childModel);
                 // and silent state
                 var isSilent = !!self.$silent;
-                //find object by querying child object
+                // find object by querying child object
                 childModel.find(child).silent(isSilent).select(self.mapping.childField).value().then(function(result) {
                     if (result == null) {
                         return cb(new DataError('E_ASSOCIATION', 'An associated object cannot be found', null, self.mapping.childModel, self.mapping.childField));

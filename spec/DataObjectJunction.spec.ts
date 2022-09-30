@@ -92,7 +92,8 @@ describe('DataObjectJunction', () => {
             }
         });
         await TestUtils.executeInTransaction(context, async () => {
-            let newGroup = await context.model('Group').save({
+            let newGroup: any;
+            await context.model('Group').save({
                 name: 'Contributors',
                 alternateName: 'contributors'
             });
