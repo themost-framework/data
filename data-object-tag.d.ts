@@ -14,4 +14,5 @@ export declare class DataObjectTag extends DataQueryable {
     remove(obj: any): Promise<any>;
     removeAll(): Promise<any>;
     migrate(callback: (err?: Error) => void): void;
+    migrateAsync(): Promise<void>;
 }

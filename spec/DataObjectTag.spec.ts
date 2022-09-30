@@ -85,6 +85,15 @@ describe('DataObjectTag', () => {
             expect(user.tags).toEqual([
                 'NewUser'
             ]);
+
+            await user.property('tags').removeAll();
+            user = await context.model('User')
+                .where('name').equal('luis.nash@example.com')
+                .expand('tags')
+                .getTypedItem();
+            expect(user.tags).toBeInstanceOf(Array);
+            expect(user.tags.length).toBeFalsy();
+
         });
     });
 

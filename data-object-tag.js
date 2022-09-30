@@ -6,84 +6,11 @@ var {LangUtils} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var {QueryField} = require('@themost/query');
 var _ = require('lodash');
-var Q = require('q');
 var types = require('./types');
 var {DataObjectJunction} = require('./data-object-junction');
 var {DataQueryable} = require('./data-queryable');
 
 /**
- * @classdesc Represents a collection of values associated with a data object e.g. a collection of tags of an article, a set of skills of a person etc.
- * <p>
- *     This association may be defined in a field of a data model as follows:
- * </p>
- * <pre class="prettyprint"><code>
- {
-     "name": "Person", "title": "Persons", "inherits":"Party", "version": "1.1",
-     "fields": [
-        ...
-        {
-            "@id": "https://themost.io/skills",
-            "name": "skills",
-            "title": "Skills",
-            "description": "A collection of skills of this person.",
-            "many": true,
-            "type": "Text"
-        }
-        ...
-     ]
-     }
- </code></pre>
- <p>
- where model [Person] has a one-to-many association with a collection of strings in order to define the skills of a person.
- </p>
- <p>
- An instance of DataObjectTag class overrides DataQueryable methods for filtering associated values:
- </p>
- <pre class="prettyprint"><code>
- var persons = context.model('Person');
- persons.where('email').equal('veronica.fletcher@example.com')
-     .getTypedItem().then(function(person) {
-            person.property('skills').all().then(function(result) {
-                return done(null, result);
-            });
-        }).catch(function(err) {
-            return done(err);
-        });
- </code></pre>
- <p>
- Insert item(s):
- </p>
- <pre class="prettyprint"><code>
- var persons = context.model('Person');
- persons.where('email').equal('veronica.fletcher@example.com')
-     .getTypedItem().then(function(person) {
-                person.property('skills').insert([
-                    "node.js",
-                    "C#.NET",
-                    "PHP"
-                ]).then(function() {
-                    return done();
-                });
-            }).catch(function(err) {
-                return done(err);
-            });
- </code></pre>
- <p>
- Remove item(s):
- </p>
- <pre class="prettyprint"><code>
- var persons = context.model('Person');
- persons.where('email').equal('veronica.fletcher@example.com')
- .getTypedItem().then(function(person) {
-                person.property('skills').remove([
-                    "C#.NET"
-                ]).then(function() {
-                    return done();
-                });
-            }).catch(function(err) {
-                return done(err);
-            });
- </code></pre>
  * @class
  * @constructor
  * @augments DataQueryable
@@ -98,7 +25,7 @@ function DataObjectTag(obj, association) {
      * @type {DataObject}
      * @private
      */
-    var parent_ = obj;
+    var _parent = obj;
     var model;
     var DataModel = require('./data-model').DataModel;
 
@@ -107,9 +34,9 @@ function DataObjectTag(obj, association) {
      * @type DataObject
      */
     Object.defineProperty(this, 'parent', { get: function () {
-        return parent_;
+        return _parent;
     }, set: function (value) {
-        parent_ = value;
+        _parent = value;
     }, configurable: false, enumerable: false});
     var self = this;
     if (typeof association === 'string') {
@@ -129,11 +56,11 @@ function DataObjectTag(obj, association) {
             self.mapping = _.assign(new types.DataAssociationMapping(), association);
     }
     //validate mapping
-    var baseModel_;
+    var _baseModel;
     Object.defineProperty(this, 'baseModel', {
         get: function() {
-            if (baseModel_)
-                return baseModel_;
+            if (_baseModel)
+                return _baseModel;
             //get parent context
             var context = self.parent.context;
             /**
@@ -207,9 +134,9 @@ function DataObjectTag(obj, association) {
 
                 strategy.setModelDefinition(definition);
             }
-            baseModel_ = new DataModel(definition);
-            baseModel_.context = self.parent.context;
-            return baseModel_;
+            _baseModel = new DataModel(definition);
+            _baseModel.context = self.parent.context;
+            return _baseModel;
         },configurable:false, enumerable:false
     });
 
@@ -266,6 +193,21 @@ DataObjectTag.prototype.migrate = function(callback) {
 };
 
 /**
+ * @return Promise<void>
+ */
+DataObjectTag.prototype.migrateAsync = function () {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self.migrate(function (err) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
+    });
+}
+
+/**
  * Overrides DataQueryable.count() method
  * @param callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
  * @ignore
@@ -273,7 +215,7 @@ DataObjectTag.prototype.migrate = function(callback) {
 DataObjectTag.prototype.count = function(callback) {
     var self = this;
     if (typeof callback === 'undefined') {
-        return Q.Promise(function(resolve, reject) {
+        return new Promise(function(resolve, reject) {
             return self.migrate(function(err) {
                 if (err) {
                     return reject(err);
@@ -318,18 +260,13 @@ DataObjectTag.prototype.execute = function(callback) {
  * @param callback
  * @private
  */
-function insert_(obj, callback) {
+function _insert(obj, callback) {
     var self = this;
-    var values = [];
-    if (_.isArray(obj)) {
-        values = obj;
-    }
-    else {
-        values.push(obj);
-    }
+    var values = Array.isArray(obj) ? obj : [ obj ];
     self.migrate(function(err) {
-        if (err)
+        if (err) {
             return callback(err);
+        }
         // get object field name
         var objectField = self.getObjectField();
         // get value field name
@@ -344,7 +281,7 @@ function insert_(obj, callback) {
             return res;
         });
         // and finally save items
-        return self.getBaseModel().silent(self.$silent).save(items).then(function() {
+        return self.getBaseModel().save(items).then(function() {
             return callback();
         }).catch(function(err) {
             return callback(err);
@@ -356,25 +293,12 @@ function insert_(obj, callback) {
  * Inserts an array of values
  * @param {*} item
  * @param {Function=} callback
- * @example
- context.model('Person').where('email').equal('veronica.fletcher@example.com')
- .getTypedItem().then(function(person) {
-        person.property('skills').insert([
-            "node.js",
-            "C#.NET"
-        ]).then(function() {
-            return done();
-        });
-    }).catch(function(err) {
-        return done(err);
-    });
- *
  */
 DataObjectTag.prototype.insert = function(item, callback) {
     var self = this;
     if (typeof callback === 'undefined') {
-        return Q.Promise(function (resolve, reject) {
-            return insert_.bind(self)(item, function(err) {
+        return new Promise(function (resolve, reject) {
+            return _insert.bind(self)(item, function(err) {
                 if (err) {
                     return reject(err);
                 }
@@ -382,7 +306,7 @@ DataObjectTag.prototype.insert = function(item, callback) {
             });
         });
     }
-    return insert_.call(self, item, callback);
+    return _insert.call(self, item, callback);
 };
 
 /**
@@ -390,20 +314,24 @@ DataObjectTag.prototype.insert = function(item, callback) {
  * @param callback
  * @private
  */
-function clear_(callback) {
+function _removeAll(callback) {
     var self = this;
-    self.migrate(function(err) {
-        if (err) {
-            return callback(err);
-        }
-        self.getBaseModel().silent(self.$silent).where(self.getObjectField()).equal(self.parent[self.mapping.parentField]).select('id').getAllItems().then(function(result) {
-            if (result.length===0) { return callback(); }
-            return self.getBaseModel().remove(result).then(function () {
-               return callback();
-            });
-        }).catch(function(err) {
-           return callback(err);
+    return self.migrateAsync().then(function() {
+        var isSilent = self.$silent;
+        var objectField = self.getObjectField();
+        return self.getBaseModel().silent(isSilent)
+            .where(objectField).equal(self.parent[self.mapping.parentField])
+            .select('id')
+            .getAllItems().then(function(result) {
+                if (result.length === 0) {
+                    return Promise.resolve();
+                }
+                return self.getBaseModel().remove(result);
         });
+    }).then(function() {
+        return callback();
+    }).catch(function(err) {
+        return callback(err);
     });
 }
 
@@ -411,29 +339,19 @@ function clear_(callback) {
  * Removes all values
  * @param {Function=} callback
  * @returns Promise<T>|*
- * @example
- context.model('Person').where('email').equal('veronica.fletcher@example.com')
- .getTypedItem().then(function(person) {
-        person.property('skills').removeAll().then(function() {
-            return done();
-        });
-    }).catch(function(err) {
-        return done(err);
-    });
- *
  */
 DataObjectTag.prototype.removeAll = function(callback) {
     var self = this;
     if (typeof callback !== 'function') {
-        return Q.Promise(function (resolve, reject) {
-            return clear_.bind(self)(function(err) {
+        return new Promise(function (resolve, reject) {
+            return _removeAll.bind(self)(function(err) {
                 if (err) { return reject(err); }
                 return resolve();
             });
         });
     }
     else {
-        return clear_.call(self, callback);
+        return _removeAll.call(self, callback);
     }
 };
 
@@ -443,14 +361,9 @@ DataObjectTag.prototype.removeAll = function(callback) {
  * @param {Function} callback
  * @private
  */
-function remove_(obj, callback) {
+function _remove(obj, callback) {
     var self = this;
-    var values = [];
-    if (_.isArray(obj))
-        values = obj;
-    else {
-        values.push(obj);
-    }
+    var values = Array.isArray(obj) ? obj : [ obj ];
     self.migrate(function(err) {
         if (err) {
             return callback(err);
@@ -476,30 +389,20 @@ function remove_(obj, callback) {
  * @param {Array|*} item
  * @param {Function=} callback
  * @returns Promise<T>|*
- * @example
- context.model('Person').where('email').equal('veronica.fletcher@example.com')
- .getTypedItem().then(function(person) {
-        person.property('skills').remove([
-            "node.js"
-        ]).then(function() {
-            return done();
-        });
-    }).catch(function(err) {
-        return done(err);
-    });
- *
  */
 DataObjectTag.prototype.remove = function(item, callback) {
     var self = this;
     if (typeof callback !== 'function') {
-        return Q.Promise(function (resolve, reject) {
-            return remove_.bind(self)(item, function(err) {
-                if (err) { return reject(err); }
+        return new Promise(function (resolve, reject) {
+            return _remove.bind(self)(item, function(err) {
+                if (err) {
+                    return reject(err);
+                }
                 return resolve();
             });
         });
     }
-    return remove_.call(self, item, callback);
+    return _remove.call(self, item, callback);
 };
 
 module.exports = {
