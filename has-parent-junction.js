@@ -3,7 +3,6 @@
 // noinspection ES6ConvertVarToLetConst
 
 var {LangUtils, DataError} = require('@themost/common');
-var _ = require('lodash');
 var async = require('async');
 var {QueryField} = require('@themost/query');
 var {DataAssociationMapping} = require('./types');
@@ -12,8 +11,6 @@ var {DataQueryable} = require('./data-queryable');
 var {DataObjectJunction} = require('./data-object-junction');
 var {hasOwnProperty} = require('./has-own-property');
 const {isObjectDeep} = require('./is-object');
-const Q = require('q');
-const {rejects} = require('assert');
 /**
  * @class
  * @constructor
@@ -59,9 +56,8 @@ function HasParentJunction(obj, association) {
         if (association instanceof DataAssociationMapping)
             self.mapping = association;
         else
-            self.mapping = _.assign(new DataAssociationMapping(), association);
+            self.mapping = Object.assign(new DataAssociationMapping(), association);
     }
-
     var relatedModel = this.parent.context.model(self.mapping.parentModel);
     //call super class constructor
     HasParentJunction.super_.call(this, relatedModel);
@@ -94,7 +90,7 @@ function HasParentJunction(obj, association) {
             var childModel = self.parent.context.model(self.mapping.childModel);
             var adapter = self.mapping.associationAdapter;
             baseModel = self.parent.context.model(adapter);
-            if (_.isNil(baseModel)) {
+            if (baseModel == null) {
                 var associationObjectField = self.mapping.associationObjectField || DataObjectJunction.DEFAULT_OBJECT_FIELD ;
                 var associationValueField = self.mapping.associationValueField || DataObjectJunction.DEFAULT_VALUE_FIELD;
                 var modelDefinition = { name:adapter, title: adapter, sealed:false, hidden:true, type:'hidden', source:adapter, view:adapter, version:'1.0', fields:[
@@ -260,12 +256,7 @@ function insertSingleObject(obj, callback) {
  */
 function insertAnyObject(obj, callback) {
     var self = this;
-    var arr = [];
-    if (_.isArray(obj))
-        arr = obj;
-    else {
-        arr.push(obj);
-    }
+    var arr = Array.isArray(obj) ? obj : [ obj ];
     self.migrate(function(err) {
         if (err)
             callback(err);
