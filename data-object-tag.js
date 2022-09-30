@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var {LangUtils} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var {QueryField} = require('@themost/query');
@@ -190,6 +193,18 @@ function DataObjectTag(obj, association) {
                         }
                     ]
                 };
+
+                if (refersTo.size) {
+                    var attribute = definition.fields.find(function(item) {
+                       return item.name === associationValueField;
+                    });
+                    if (attribute) {
+                        Object.assign(attribute, {
+                            size: refersTo.size
+                        });
+                    }
+                }
+
                 strategy.setModelDefinition(definition);
             }
             baseModel_ = new DataModel(definition);
@@ -229,14 +244,14 @@ DataObjectTag.DEFAULT_OBJECT_FIELD = 'object';
 DataObjectTag.DEFAULT_VALUE_FIELD = 'value';
 
 /**
- * @returns {string=}
+ * @returns {string}
  */
 DataObjectTag.prototype.getObjectField = function() {
     return DataObjectJunction.prototype.getObjectField.bind(this)();
 };
 
 /**
- * @returns {string=}
+ * @returns {string}
  */
 DataObjectTag.prototype.getValueField = function() {
     return DataObjectJunction.prototype.getValueField.bind(this)();

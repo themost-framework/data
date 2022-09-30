@@ -76,6 +76,13 @@
             "title": "userFlags",
             "description": "This field contains additional user flags.",
             "type": "Integer"
+        },
+        {
+            "@id": "https://themost.io/schemas/tags",
+            "name": "tags",
+            "type": "Text",
+            "many": true,
+            "size": 64
         }
     ],
     "privileges": [
