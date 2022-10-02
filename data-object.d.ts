@@ -17,6 +17,6 @@ export declare class DataObject extends SequentialEventEmitter {
     getModel(): DataModel;
     getAdditionalModel():Promise<DataModel>;
     getAdditionalObject():Promise<DataObject|any>;
-    attr(name: string, callback?:(err?: Error,res?: any) => void);
-    property(name: string);
+    attr(name: string, callback?:(err?: Error,res?: any) => void): any;
+    property(name: string): any;
 }

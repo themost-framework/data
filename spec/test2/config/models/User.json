@@ -51,7 +51,23 @@
                 "childModel":"User",
                 "childField":"id",
                 "associationType":"junction",
-                "cascade":"delete"
+                "cascade":"delete",
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "type": "self",
+                        "mask": 1,
+                        "filter": "valueId eq me()"
+                    }
+                ]
             }
         },
         {
@@ -60,6 +76,31 @@
             "title": "userFlags",
             "description": "This field contains additional user flags.",
             "type": "Integer"
+        },
+        {
+            "@id": "https://themost.io/schemas/tags",
+            "name": "tags",
+            "type": "Text",
+            "many": true,
+            "size": 64,
+            "mapping": {
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "mask": 1,
+                        "type": "self",
+                        "filter": "object eq me()"
+                    }
+                ]
+            }
         }
     ],
     "privileges": [

@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var {LangUtils} = require('@themost/common');
 var _ = require('lodash');
 var {QueryExpression} = require('@themost/query');
@@ -54,6 +57,12 @@ var {hasOwnProperty} = require('./has-own-property');
  */
 function HasOneAssociation(obj, association)
 {
+    /**
+     * @property super_
+     * @memberof HasOneAssociation
+     * @static
+     */
+
     /**
      * @type {DataObject}
      * @private
@@ -177,6 +186,7 @@ HasOneAssociation.prototype.getList = function() {
 };
 
 HasOneAssociation.prototype.getItem = function() {
+    // noinspection JSPotentiallyInvalidConstructorUsage
     return HasOneAssociation.super_.prototype.getItem.bind(this)();
 };
 
