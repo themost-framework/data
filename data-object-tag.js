@@ -280,8 +280,9 @@ function _insert(obj, callback) {
             res[valueField] = x;
             return res;
         });
+        var isSilent = self.$silent;
         // and finally save items
-        return self.getBaseModel().save(items).then(function() {
+        return self.getBaseModel().silent(isSilent).save(items).then(function() {
             return callback();
         }).catch(function(err) {
             return callback(err);
@@ -380,7 +381,8 @@ function _remove(obj, callback) {
             res[valueField] = x;
             return res;
         });
-        return self.getBaseModel().silent(self.$silent).remove(items, callback);
+        var isSilent = self.$silent;
+        return self.getBaseModel().silent(isSilent).remove(items, callback);
     });
 }
 
