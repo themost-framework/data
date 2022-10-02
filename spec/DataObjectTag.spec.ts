@@ -50,6 +50,39 @@ describe('DataObjectTag', () => {
         });
     });
 
+    it('should try to insert item', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            /**
+             * @type {DataObject}
+             */
+            let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
+            await expect(user.property('tags').insert([
+                'NewUser',
+                'ValidUser'
+            ])).rejects.toThrowError('Access Denied');
+
+            await user.property('tags').silent().insert([
+                'NewUser',
+                'ValidUser'
+            ]);
+            user = await context.model('User')
+                .where('name').equal('luis.nash@example.com')
+                .expand('tags')
+                .getTypedItem();
+            expect(user.tags).toBeInstanceOf(Array);
+            expect(user.tags.length).toEqual(2);
+            expect(user.tags).toEqual([
+                'NewUser',
+                'ValidUser'
+            ]);
+        });
+    });
+
     it('should remove item', async () => {
         Object.assign(context, {
             user: {
@@ -94,6 +127,68 @@ describe('DataObjectTag', () => {
             expect(user.tags).toBeInstanceOf(Array);
             expect(user.tags.length).toBeFalsy();
 
+        });
+    });
+
+    it('should try to remove item', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            /**
+             * @type {DataObject}
+             */
+            let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
+            await user.property('tags').silent().insert([
+                'NewUser',
+                'ValidUser'
+            ]);
+            await expect(user.property('tags').remove([
+                'ValidUser'
+            ])).rejects.toThrowError('Access Denied');
+
+            user = await context.model('User')
+            .where('name').equal('luis.nash@example.com')
+            .expand('tags')
+            .getTypedItem();
+            expect(user.tags).toBeInstanceOf(Array);
+            expect(user.tags.length).toEqual(2);
+            expect(user.tags).toEqual([
+                'NewUser',
+                'ValidUser'
+            ]);
+        });
+    });
+
+    it('should try to remove all', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            /**
+             * @type {DataObject}
+             */
+            let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
+            await user.property('tags').silent().insert([
+                'NewUser',
+                'ValidUser'
+            ]);
+            await expect(user.property('tags').removeAll()).rejects.toThrowError('Access Denied');
+
+            user = await context.model('User')
+                .where('name').equal('luis.nash@example.com')
+                .expand('tags')
+                .getTypedItem();
+            expect(user.tags).toBeInstanceOf(Array);
+            expect(user.tags.length).toEqual(2);
+            expect(user.tags).toEqual([
+                'NewUser',
+                'ValidUser'
+            ]);
         });
     });
 

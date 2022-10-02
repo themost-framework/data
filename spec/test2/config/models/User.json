@@ -82,7 +82,25 @@
             "name": "tags",
             "type": "Text",
             "many": true,
-            "size": 64
+            "size": 64,
+            "mapping": {
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "mask": 1,
+                        "type": "self",
+                        "filter": "object eq me()"
+                    }
+                ]
+            }
         }
     ],
     "privileges": [
