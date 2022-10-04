@@ -3,10 +3,9 @@
 // noinspection ES6ConvertVarToLetConst
 
 var _ = require('lodash');
-var {QueryUtils, QueryExpression} = require('@themost/query');
+var {QueryUtils} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
 var {QueryField} = require('@themost/query');
-var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 
 class DataMappingExtender {

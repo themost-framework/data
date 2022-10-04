@@ -168,8 +168,7 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
     if (mapping.parentModel !== event.model.name) {
         return callback();
     }
-    var childModel = context.model(mapping.childModel),
-        silent = event.model.$silent,
+    var silent = event.model.$silent,
         target = event.model.convert(event.target),
         parentModel =  event.model,
         parentField = parentModel.getAttribute(mapping.parentField);

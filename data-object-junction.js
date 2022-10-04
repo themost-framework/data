@@ -101,9 +101,6 @@ function DataObjectJunction(obj, association) {
             }
             //get parent and child field in order to get junction field types
             var parentModel = self.parent.getModel();
-            var parentField = parentModel.field(self.mapping.parentField);
-            var childModel = self.parent.context.model(self.mapping.childModel);
-            var childField = childModel.field(self.mapping.childField);
             var adapter = self.mapping.associationAdapter;
             baseModel = self.parent.context.model(adapter);
             if (_.isNil(baseModel)) {
