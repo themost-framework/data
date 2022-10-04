@@ -2,9 +2,10 @@
 import {DataQueryable} from "./data-queryable";
 import {DataAssociationMapping} from "./types";
 import {DataObject} from "./data-object";
+import {DataAssociationMappingBase} from '@themost/common';
 
 export declare class HasManyAssociation extends DataQueryable{
-    constructor(parent: any, association: DataAssociationMapping);
+    constructor(object: any, association: DataAssociationMapping | DataAssociationMappingBase | string);
     parent: DataObject;
     mapping: DataAssociationMapping;
 }

@@ -51,6 +51,7 @@ export declare class DataQueryable implements DataContextEmitter {
     average(): Promise<any>;
     migrate(callback:(err?: Error) => void): void;
     silent(value?: boolean): this;
+    isSilent(): boolean;
     flatten(value?: boolean): this;
     cache(value?: boolean): this;
     data(name: string): any;

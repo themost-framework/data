@@ -2,13 +2,14 @@
 /*eslint no-var: "off"*/
 // noinspection ES6ConvertVarToLetConst
 
-var {LangUtils} = require('@themost/common');
+var {LangUtils, DataError, Args} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var {QueryField} = require('@themost/query');
 var _ = require('lodash');
-var types = require('./types');
+var { DataAssociationMapping } = require('./types');
 var {DataObjectJunction} = require('./data-object-junction');
 var {DataQueryable} = require('./data-queryable');
+var {isObjectDeep} = require('./is-object');
 
 /**
  * @class
@@ -21,6 +22,13 @@ var {DataQueryable} = require('./data-queryable');
  * @property {DataAssociationMapping} mapping - Gets or sets the mapping definition of this data object association.
  */
 function DataObjectTag(obj, association) {
+
+    /**
+     * @property parent
+     * @memberOf DataObjectTag
+     * @type {DataObject}
+     */
+
     /**
      * @type {DataObject}
      * @private
@@ -29,10 +37,6 @@ function DataObjectTag(obj, association) {
     var model;
     var DataModel = require('./data-model').DataModel;
 
-    /**
-     * Gets or sets the parent data object
-     * @type DataObject
-     */
     Object.defineProperty(this, 'parent', { get: function () {
         return _parent;
     }, set: function (value) {
@@ -42,19 +46,21 @@ function DataObjectTag(obj, association) {
     if (typeof association === 'string') {
         //infer mapping from field name
         //set relation mapping
-        if (self.parent!=null) {
+        if (self.parent != null) {
             model = self.parent.getModel();
-            if (model!=null)
+            if (model != null)
                 self.mapping = model.inferMapping(association);
         }
-    }
-    else if (typeof association === 'object' && association !=null) {
+    } else if (isObjectDeep(association)) {
         //get the specified mapping
-        if (association instanceof types.DataAssociationMapping)
+        if (association instanceof DataAssociationMapping) {
             self.mapping = association;
-        else
-            self.mapping = _.assign(new types.DataAssociationMapping(), association);
+        } else {
+            self.mapping = _.assign(new DataAssociationMapping(), association);
+        }
     }
+    Args.check(self.mapping != null, new DataError('E_MAPPING', 'DataObjectTag.mapping cannot be empty at this context', null))
+
     //validate mapping
     var _baseModel;
     Object.defineProperty(this, 'baseModel', {
@@ -280,9 +286,9 @@ function _insert(obj, callback) {
             res[valueField] = x;
             return res;
         });
-        var isSilent = self.$silent;
+        var silentMode = self.isSilent();
         // and finally save items
-        return self.getBaseModel().silent(isSilent).save(items).then(function() {
+        return self.getBaseModel().silent(silentMode).save(items).then(function() {
             return callback();
         }).catch(function(err) {
             return callback(err);
@@ -318,9 +324,9 @@ DataObjectTag.prototype.insert = function(item, callback) {
 function _removeAll(callback) {
     var self = this;
     return self.migrateAsync().then(function() {
-        var isSilent = self.$silent;
+        var silentMode = self.isSilent();
         var objectField = self.getObjectField();
-        return self.getBaseModel().silent(isSilent)
+        return self.getBaseModel().silent(silentMode)
             .where(objectField).equal(self.parent[self.mapping.parentField])
             .select('id')
             .getAllItems().then(function(result) {
@@ -381,8 +387,8 @@ function _remove(obj, callback) {
             res[valueField] = x;
             return res;
         });
-        var isSilent = self.$silent;
-        return self.getBaseModel().silent(isSilent).remove(items, callback);
+        var silentMode = self.isSilent();
+        return self.getBaseModel().silent(silentMode).remove(items, callback);
     });
 }
 

@@ -3,8 +3,10 @@ import {DataQueryable} from "./data-queryable";
 import {DataAssociationMapping} from "./types";
 import {DataModel} from "./data-model";
 import {DataObject} from "./data-object";
+import {DataAssociationMappingBase} from '@themost/common';
 
 export declare class DataObjectTag extends DataQueryable {
+    constructor(object: any, association: DataAssociationMapping | DataAssociationMappingBase | string);
     parent: DataObject;
     mapping: DataAssociationMapping;
     getBaseModel(): DataModel;

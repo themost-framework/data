@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var {eachSeries} = require('async');
 var {TypeParser, DataObjectState} = require('./types');
 var {DataError} = require('@themost/common');

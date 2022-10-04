@@ -1,6 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
 import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
+import {DataAssociationMappingBase} from '@themost/common/data';
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
@@ -83,13 +84,14 @@ export declare class DataContextEmitter {
 }
 
 export declare interface DataModelPrivilege {
-    type: string;
+    type: 'self' | 'global' | 'parent' | 'item';
     mask: number;
     account?: string;
     filter?: string;
+    [k: string]: unknown;
 }
 
-export declare class DataAssociationMapping {
+export declare class DataAssociationMapping implements DataAssociationMappingBase {
     constructor(obj?: any);
     associationAdapter?: string;
     parentModel?: string;
@@ -100,10 +102,10 @@ export declare class DataAssociationMapping {
     associationObjectField?: string;
     associationValueField?: string;
     cascade?: any;
-    associationType?: string;
+    associationType?: 'association' | 'junction';
     select?: Array<string>;
     privileges?: Array<DataModelPrivilege>;
-  
+    [k: string]: unknown;
 }
 
 export declare class DataField {
