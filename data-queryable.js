@@ -2624,6 +2624,13 @@ DataQueryable.prototype.silent = function(value) {
     }
     return this;
 };
+/**
+ * Returns true or false to indicate whether this queryable object is in silent mode or not
+ * @returns {boolean}
+ */
+DataQueryable.prototype.isSilent = function() {
+    return !!this.$silent;
+}
 
 /**
  * Generates a MD5 hashed string for this DataQueryable instance

@@ -3,8 +3,10 @@ import {DataQueryable} from "./data-queryable";
 import {DataObject} from "./data-object";
 import {DataAssociationMapping, DataField} from "./types";
 import {DataModel} from "./data-model";
+import {DataAssociationMappingBase} from '@themost/common';
 
 export declare class HasParentJunction extends DataQueryable {
+    constructor(object: any, association: DataAssociationMapping | DataAssociationMappingBase | string);
     parent: DataObject;
     mapping: DataAssociationMapping;
     getBaseModel(): DataModel;
