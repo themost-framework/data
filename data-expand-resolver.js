@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var _ = require('lodash');
 /**
  * @param {string} s
@@ -21,7 +24,7 @@ function testSplitExpandExpression(s) {
                 match[0] = s.substr(lastSplitIndex, ix-lastSplitIndex);
                 paren = 0;
             }
-            if (ix1==-1) { ix1 = ix; }
+            if (ix1 === -1) { ix1 = ix; }
             hasParen = true;
             paren += 1;
         }
@@ -31,7 +34,7 @@ function testSplitExpandExpression(s) {
         else if (charAt==='\'') {
             isLiteral = !isLiteral;
         }
-        else if ((charAt===',') && (paren ==-1)) {
+        else if ((charAt === ',') && (paren === -1)) {
             if (match==null) {
                 matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex)]);
             }
@@ -39,11 +42,11 @@ function testSplitExpandExpression(s) {
             hasParen = false;
         }
 
-        if ((ix === s.length - 1) && (paren == -1)) {
+        if ((ix === s.length - 1) && (paren === -1)) {
             matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex+1)]);
             match = null;
         }
-        else if (paren == 0) {
+        else if (paren === 0) {
             match = match || [ ];
             match[1] = s.substr(ix1+1, ix-ix1-1);
             matches.push(match);

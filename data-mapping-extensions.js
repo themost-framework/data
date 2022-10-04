@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var _ = require('lodash');
 var {QueryUtils, QueryExpression} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
@@ -449,7 +452,7 @@ class DataMappingExtender {
                     else {
                         q.where(mapping.childField).in(values);
                     }
-                    if (q.query.hasFields() == false) {
+                    if (q.query.hasFields() === false) {
                         q.select();
                     }
                     //inherit silent mode
