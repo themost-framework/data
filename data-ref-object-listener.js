@@ -161,7 +161,6 @@ function beforeRemoveParentConnectedObjects(event, mapping, callback) {
  * @param {Function} callback
  */
 function beforeRemoveChildConnectedObjects(event, mapping, callback) {
-    var context = event.model.context;
     if (mapping.associationType !== 'junction') {
         return callback(new TypeError('Invalid association type. Expected a valid junction.'));
     }

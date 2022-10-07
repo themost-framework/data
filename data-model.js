@@ -2,7 +2,6 @@
 var _ = require('lodash');
 var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
-var path = require('path');
 var pluralize = require('pluralize');
 var async = require('async');
 var {QueryUtils} = require('@themost/query');
@@ -1223,73 +1222,6 @@ DataModel.prototype.base = function()
             }
         }
     });
-}
-
-function dasherize(data) {
-    if (typeof data === 'string')
-    {
-        return data.replace(/(^\s*|\s*$)/g, '').replace(/[_\s]+/g, '-').replace(/([A-Z])/g, '-$1').replace(/-+/g, '-').replace(/^-/,'').toLowerCase();
-    }
-}
-
-/**
- * @this DataModel
- * @returns {*}
- * @constructor
- * @private
- */
-function getDataObjectClass_() {
-    var self = this;
-    var DataObjectClass = self['DataObjectClass'];
-    if (typeof DataObjectClass === 'undefined')
-    {
-        if (typeof self.classPath === 'string') {
-            DataObjectClass = require(self.classPath);
-        }
-        else {
-            //try to find class file with data model's name in lower case
-            // e.g. OrderDetail -> orderdetail-model.js (backward compatibility naming convention)
-            var classPath = path.join(process.cwd(),'app','models',self.name.toLowerCase().concat('-model.js'));
-            try {
-                DataObjectClass = require(classPath);
-            }
-            catch(e) {
-                if (e.code === 'MODULE_NOT_FOUND') {
-                    try {
-                        //if the specified class file was not found try to dasherize model name
-                        // e.g. OrderDetail -> order-detail-model.js
-                        classPath = path.join(process.cwd(),'app','models',dasherize(self.name).concat('-model.js'));
-                        DataObjectClass = require(classPath);
-                    }
-                    catch(e) {
-                        if (e.code === 'MODULE_NOT_FOUND') {
-                            if (_.isNil(self.inherits)) {
-                                //if , finally, we are unable to find class file, load default DataObject class
-                                DataObjectClass = require('./data-object').DataObject;
-                            }
-                            else {
-                                DataObjectClass = getDataObjectClass_.call(self.base());
-                            }
-                        }
-                        else {
-                            throw e;
-                        }
-                    }
-                }
-                else {
-                    throw e;
-                }
-            }
-        }
-        //cache DataObject class property
-        /**
-         * @type {DataConfigurationStrategy}
-         */
-        var strategy = self.context.getConfiguration().getStrategy(DataConfigurationStrategy);
-        var modelDefinition = strategy.getModelDefinition(self.name);
-        modelDefinition['DataObjectClass'] = self['DataObjectClass'] = DataObjectClass;
-    }
-    return DataObjectClass;
 }
 
 /**

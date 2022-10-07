@@ -39,7 +39,6 @@ function testSplitExpandExpression(s) {
                 matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex)]);
             }
             lastSplitIndex = ix+1;
-            hasParen = false;
         }
 
         if ((ix === s.length - 1) && (paren === -1)) {
