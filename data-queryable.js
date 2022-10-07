@@ -1901,7 +1901,7 @@ DataQueryable.prototype.getItems = function() {
     var self = this, d = Q.defer();
     process.nextTick(function() {
         delete self.query.$inlinecount;
-        if ((parseInt(self.query.$take) || 0) < 0) {
+        if ((parseInt(self.query.$take, 10) || 0) < 0) {
             delete self.query.$take;
             delete self.query.$skip;
         }
@@ -1951,7 +1951,7 @@ function listInternal(callback) {
                     }
                     else {
                         //and finally create result set
-                        var res = { total: total, skip: parseInt(self.query.$skip) || 0 , value: (result || []) };
+                        var res = { total: total, skip: parseInt(self.query.$skip, 10) || 0 , value: (result || []) };
                         callback(null, res);
                     }
                 });
@@ -3276,14 +3276,14 @@ DataQueryable.prototype.levels = function(value) {
      * @private
      */
     this.$levels = 1;
-    if (typeof value === 'undefined') {
+    if (value == null) {
         this.$levels = 1;
     }
     else if (typeof value === 'number') {
-        this.$levels = parseInt(value);
+        this.$levels = parseInt(value, 10);
     }
     //set flatten property (backward compatibility issue)
-    this.$flatten = (this.$levels<1);
+    this.$flatten = (this.$levels < 1);
     return this;
 };
 

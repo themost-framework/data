@@ -726,7 +726,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
             });
 
             // set query lastIndex
-            event.query.$lastIndex = parseInt(event.query.$lastIndex) || 0;
+            event.query.$lastIndex = parseInt(event.query.$lastIndex, 10) || 0;
             var cancel = false, assigned = false, entity = new QueryEntity(model.viewAdapter), expand = null,
                 perms1 = new QueryEntity(permissions.viewAdapter).as(permissions.viewAdapter + event.query.$lastIndex.toString()), expr = null;
             async.eachSeries(privileges, function(item, cb) {

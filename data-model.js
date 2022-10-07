@@ -828,7 +828,7 @@ function filterInternal(params, callback) {
                         orderBy = params.$orderby || params.$order,
                         groupBy = params.$groupby || params.$group,
                         expand = params.$expand,
-                        levels = parseInt(params.$levels),
+                        levels = parseInt(params.$levels, 10),
                         top = params.$top || params.$take;
                     //select fields
                     if (typeof select === 'string') {

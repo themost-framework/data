@@ -858,7 +858,7 @@ class TypeParser {
         else if (typeof val === 'boolean')
             return val===true ? 1 : 0;
         else {
-            return parseInt(val) || 0;
+            return parseInt(val, 10) || 0;
         }
     }
 
