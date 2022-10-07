@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e393d6378ace41b8bcce1db272d85fb5)](https://app.codacy.com/gh/themost-framework/data?utm_source=github.com&utm_medium=referral&utm_content=themost-framework/data&utm_campaign=Badge_Grade_Settings)
 [![npm](https://img.shields.io/npm/v/@themost%2Fdata.svg)](https://www.npmjs.com/package/@themost%2Fdata)
 ![GitHub top language](https://img.shields.io/github/languages/top/themost-framework/data)
 [![License](https://img.shields.io/npm/l/@themost/data)](https://github.com/themost-framework/data/blob/master/LICENSE)
