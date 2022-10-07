@@ -286,7 +286,7 @@ function insertAnyObject(obj, callback) {
                     // get related model
                     var relatedModel = self.parent.context.model(self.mapping.parentModel);
                     // ensure silent mode
-                    var isSilent = self.getBaseModel().isSilent();
+                    var isSilent = !!self.$silent;
                     // find object by querying child object
                     return relatedModel.find(item).select(self.mapping.parentField).silent(isSilent).value().then(function(result) {
                         if (result == null) {
