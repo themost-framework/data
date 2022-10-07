@@ -5,6 +5,7 @@
 ![GitHub Release Date](https://img.shields.io/github/release-date/themost-framework/data)
 [![npm](https://img.shields.io/npm/dw/@themost/data)](https://www.npmjs.com/package/@themost%2Fdata)
 ![Snyk Vulnerabilities for npm package](https://img.shields.io/snyk/vulnerabilities/npm/@themost/data)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/28a4b63e2dc84477b9dd3d54ae122cb7)](https://www.codacy.com/gh/themost-framework/data/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=themost-framework/data&amp;utm_campaign=Badge_Grade)
 
 ![MOST Web Framework Logo](https://github.com/themost-framework/common/raw/master/docs/img/themost_framework_v3_128.png)
 
