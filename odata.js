@@ -624,10 +624,10 @@ EntityTypeConfiguration.prototype.mapInstanceSet = function(context, any) {
     }
     //search for total property for backward compatibility issues
     if (hasOwnProperty(any, 'total') && /^\+?\d+$/.test(any['total'])) {
-        result['@odata.count'] = parseInt(any['total']);
+        result['@odata.count'] = parseInt(any['total'], 10);
     }
     if (hasOwnProperty(any, 'count') && /^\+?\d+$/.test(any['count'])) {
-        result['@odata.count'] = parseInt(any['count']);
+        result['@odata.count'] = parseInt(any['count'], 10);
     }
     result['value'] = [];
     if (_.isArray(any)) {
@@ -922,13 +922,13 @@ EntitySetConfiguration.prototype.mapInstanceSet = function(context, any) {
     }
     //search for total property for backward compatibility issues
     if (hasOwnProperty(any, 'total') && /^\+?\d+$/.test(any['total'])) {
-        result['@odata.count'] = parseInt(any['total']);
+        result['@odata.count'] = parseInt(any['total'], 10);
     }
     else if (hasOwnProperty(any, 'count') && /^\+?\d+$/.test(any['count'])) {
-        result['@odata.count'] = parseInt(any['count']);
+        result['@odata.count'] = parseInt(any['count'], 10);
     }
     if (hasOwnProperty(any, 'skip') && /^\+?\d+$/.test(any['skip'])) {
-        result['@odata.skip'] = parseInt(any['skip']);
+        result['@odata.skip'] = parseInt(any['skip'], 10);
     }
     result['value'] = [];
     if (_.isArray(any)) {

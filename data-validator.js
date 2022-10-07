@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var _ = require('lodash');
 var {sprintf} = require('sprintf-js');
 var {LangUtils} = require('@themost/common');
@@ -92,11 +95,11 @@ var {hasOwnProperty} = require('./has-own-property');
     /**
      * Validates the given value and returns a validation result or undefined if the specified value is invalid
      * @param val
-     * @returns {{code: string, message: string, innerMessage: *}|undefined}
+     * @returns {{code: string, message: string, innerMessage: *}|undefined|null}
      */
     PatternValidator.prototype.validateSync = function(val) {
-        if (_.isNil(val)) {
-            return;
+        if (val == null) {
+            return null;
         }
         var valueTo = val;
         if (val instanceof Date) {
@@ -186,11 +189,11 @@ var {hasOwnProperty} = require('./has-own-property');
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
      * @param {*} val
-     * @returns {{code: string, minLength: number, message:string, innerMessage: string}|undefined}
+     * @returns {{code: string, minLength: number, message:string, innerMessage: string}|undefined|null}
      */
     MinLengthValidator.prototype.validateSync = function(val) {
-        if (_.isNil(val)) {
-            return;
+        if (val == null) {
+            return null;
         }
         if (hasOwnProperty(val, 'length')) {
             if (val.length<this.minLength) {
@@ -363,8 +366,8 @@ var {hasOwnProperty} = require('./has-own-property');
      * @returns {{code: string, maxLength: number, message:string, innerMessage: string}|undefined|*}
      */
     MinValueValidator.prototype.validateSync = function(val) {
-        if (_.isNil(val)) {
-            return;
+        if (val == null) {
+            return null;
         }
         if (val<this.minValue) {
 
@@ -440,11 +443,11 @@ var {hasOwnProperty} = require('./has-own-property');
     /**
      * Validates the given value. If validation fails, the operation will return a validation result.
      * @param {*} val
-     * @returns {{code: string, maxLength: number, message:string, innerMessage: string}|undefined|*}
+     * @returns {{code: string, maxLength: number, message:string, innerMessage: string}|undefined|null}
      */
     MaxValueValidator.prototype.validateSync = function(val) {
-        if (_.isNil(val)) {
-            return;
+        if (val == null) {
+            return null;
         }
         if (val>this.maxValue) {
 
@@ -526,8 +529,8 @@ var {hasOwnProperty} = require('./has-own-property');
      * @returns {{code: string, maxLength: number, message:string, innerMessage: string}|undefined|*}
      */
     RangeValidator.prototype.validateSync = function(val) {
-        if (_.isNil(val)) {
-            return;
+        if (val == null) {
+            return null;
         }
         var minValidator, maxValidator, minValidation, maxValidation;
         if (!_.isNil(this.minValue)) {
@@ -671,7 +674,7 @@ var {hasOwnProperty} = require('./has-own-property');
      */
     DataTypeValidator.prototype.validateSync = function(val) {
         if (typeof this.dataType === 'undefined') {
-            return;
+            return null;
         }
         /**
          * @type {{pattern:string,patternMessage:string,minValue:*,maxValue:*,minLength:number,maxLength:number}}

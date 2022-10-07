@@ -1,0 +1,6 @@
+---
+exclude_paths:
+  - "docs/**"
+  - "spec/**/*"
+  - ".github/**/*"
+  - "babel.config.js"

@@ -1,11 +1,12 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var {TypeParser} = require('./types');
-var {sprintf} = require('sprintf-js');
 var {TraceUtils} = require('@themost/common');
 // eslint-disable-next-line no-unused-vars
 var moment = require('moment');
 var _ = require('lodash');
-var Q = require('q');
 
 /**
  * @class
@@ -74,7 +75,6 @@ FunctionContext.prototype.eval = function(expr, callback) {
         }
     }
     else {
-        console.log(sprintf('Cannot evaluate %s.', expr1));
         callback(new Error('Cannot evaluate expression.'));
     }
 
@@ -82,69 +82,34 @@ FunctionContext.prototype.eval = function(expr, callback) {
 /**
  * Returns the current date and time
  * @returns {Promise<Date>}
- * @description
- * Use this method for calculating the current date and time in a data field definition.
- *
- * The following data model definition contains a field named [dateModified] which accepts a calculated value through DataField.value attribute.
- * FunctionContext.now() method is used for calculating the current date and time.
- ```
-    ...
-    "fields": [
-        {
-            "@id": "https://themost.io/schemas/dateModified",
-            "name": "dateModified",
-            "title": "dateModified",
-            "description": "The date on which this item was most recently modified.",
-            "type": "DateTime"
-            "value": "return this.now();"
-        }
-    ]
-    ...
- ```
  */
 FunctionContext.prototype.now = function() {
-    return Q.Promise(function(resolve) {
+    return new Promise(function(resolve) {
         return resolve(new Date());
     });
 };
 /**
  * Returns the current date
  * @returns {Promise<Date>}
- * Use this method for calculating the current date in a data field definition.
- *
- * The following data model definition contains a field named [orderDate] which accepts a calculated value through DataField.value attribute.
- * FunctionContext.today() method is used for calculating the current date.
- ```
-     ...
-     "fields": [
-         {
-             "@id": "https://themost.io/schemas/orderDate",
-             "name": "orderDate",
-             "title": "orderDate",
-             "type": "DateTime"
-             "value": "return this.today();"
-         }
-     ]
-     ...
- ```
  */
 FunctionContext.prototype.today = function() {
-    return Q.Promise(function(resolve) {
-        return resolve(new Date().getDate());
+    return new Promise(function(resolve) {
+        return resolve(moment(new Date()).startOf('day').toDate());
     });
 };
 /**
  * @returns {Promise|*}
  */
 FunctionContext.prototype.newid = function() {
-    var deferred = Q.defer();
-    this.model.context.db.selectIdentity(this.model.sourceAdapter, this.model.primaryKey, function(err, result) {
-        if (err) {
-            return deferred.reject(err);
-        }
-        deferred.resolve(result);
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self.model.context.db.selectIdentity(self.model.sourceAdapter, self.model.primaryKey, function(err, result) {
+            if (err) {
+                return reject(err);
+            }
+            resolve(result);
+        });
     });
-    return deferred.promise;
 };
 
 var UUID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
@@ -171,36 +136,31 @@ function newGuidInternal() {
  * @returns {Promise|*}
  */
 FunctionContext.prototype.newGuid = function() {
-    var deferred = Q.defer();
-    process.nextTick(function() {
+    return new Promise(function(resolve, reject) {
         try {
-            deferred.resolve(newGuidInternal());
+            resolve(newGuidInternal());
         }
         catch(err) {
-            deferred.reject(err)
+            reject(err)
         }
     });
-    return deferred.promise;
 };
 
 /**
  * Generates a random integer value between the given minimum and maximum value
  * @param {number} min
  * @param {number} max
- * @returns {Promise|*}
+ * @returns {Promise<number>}
  */
 FunctionContext.prototype.int = function(min, max) {
-    var deferred = Q.defer();
-    process.nextTick(function() {
+    return new Promise(function(resolve, reject) {
         try {
-            return deferred.resolve(_.random(min, max));
+            resolve(_.random(min, max));
         }
         catch (err) {
-            deferred.reject(err);
+            reject(err);
         }
-        deferred.resolve((new Date()).getDate());
     });
-    return deferred.promise;
 };
 
 /**
@@ -209,28 +169,27 @@ FunctionContext.prototype.int = function(min, max) {
  * @returns {Promise|*}
  */
 FunctionContext.prototype.numbers = function(length) {
-    var deferred = Q.defer();
-    process.nextTick(function() {
+
+    return new Promise(function(resolve, reject) {
         try {
             length = length || 8;
             if (length<0) {
-                return deferred.reject(new Error('Number sequence length must be greater than zero.'));
+                return reject(new Error('Number sequence length must be greater than zero.'));
             }
             if (length>255) {
-                return deferred.reject(new Error('Number sequence length exceeds the maximum of 255 characters.'));
+                return reject(new Error('Number sequence length exceeds the maximum of 255 characters.'));
             }
             var times = Math.ceil(length / 10);
             var res = '';
             _.times(times, function() {
-                 res += _.random(1000000000, 9000000000)
+                res += _.random(1000000000, 9000000000)
             });
-            return deferred.resolve(res.substr(0,length));
+            return resolve(res.substring(0,length));
         }
         catch (err) {
-            deferred.reject(err);
+            reject(err);
         }
     });
-    return deferred.promise;
 };
 
 /**
@@ -238,57 +197,67 @@ FunctionContext.prototype.numbers = function(length) {
  * @returns {Promise|*}
  */
 FunctionContext.prototype.chars = function(length) {
-
-    var deferred = Q.defer();
-    process.nextTick(function() {
+    return new Promise(function(resolve, reject) {
         try {
             length = length || 8;
             var chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ';
             var str = '';
+            var rnd;
             for(var i = 0; i < length; i++) {
-                str += chars.substr(_.random(0, chars.length-1),1);
+                rnd = _.random(0, chars.length - 1);
+                str += chars.substring(rnd, rnd + 1);
             }
-            deferred.resolve(str);
+            resolve(str);
         }
         catch (err) {
-            return deferred.reject(err);
+            reject(err);
         }
     });
-    return deferred.promise;
 };
 /**
  * @param {number} length
- * @returns {Promise|*}
+ * @returns {Promise<string>}
  */
 FunctionContext.prototype.password = function(length) {
-    var deferred = Q.defer();
-    process.nextTick(function() {
+    return new Promise(function(resolve, reject) {
         try {
             length = length || 8;
-            var chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ',
-                str = '';
+            var specialChars = '%=+-!$()#@[]?{}^|';
+            var chars = 'abcdefghkmnopqursuvwxz2456789ABCDEFHJKLMNPQURSTUVWXYZ';
+            var str = '';
+            var rnd = 0;
+            var specialCharIndex = _.random(0, length-1)
             for(var i = 0; i < length; i++) {
-                str += chars.substr(_.random(0, chars.length-1),1);
+                if (i === specialCharIndex) {
+                    rnd = _.random(0, specialChars.length - 1);
+                    str += specialChars.substring(rnd, rnd + 1);
+                } else {
+                    rnd = _.random(0, chars.length-1);
+                    str += chars.substring(rnd, rnd + 1);
+                }
             }
-            deferred.resolve('{clear}' + str);
+            resolve('{clear}' + str);
         }
         catch (err) {
-            return deferred.reject(err);
+            return reject(err);
         }
     });
-    return deferred.promise;
 };
 /**
- * @returns {Promise|*}
+ * @returns {Promise<any>}
  */
 FunctionContext.prototype.user = function() {
-    var self = this, context = self.model.context, deferred = Q.defer();
+    var self = this;
+    // backward compatibility issue (get FunctionContext.model.context first)
+    var context = (self.model && self.model.context) || self.context;
     var user = context.interactiveUser || context.user || { };
-    process.nextTick(function() {
+    return new Promise(function(resolve) {
         if (typeof user.id !== 'undefined') {
-            return deferred.resolve(user.id);
+            return resolve(user.id);
         }
-        var userModel = context.model('User'), parser, undefinedUser = null;
+        var userModel = context.model('User');
+        var parser;
+        var undefinedUser = null;
         userModel.where('name').equal(user.name).silent().select('id').first(function(err, result) {
             if (err) {
                 TraceUtils.log(err);
@@ -298,31 +267,30 @@ FunctionContext.prototype.user = function() {
                     undefinedUser = parser(null);
                 //set id for next calls
                 user.id = undefinedUser;
-                if (_.isNil(context.user)) {
+                if (context.user == null) {
                     context.user = user;
                 }
-                return deferred.resolve(undefinedUser);
+                return resolve(undefinedUser);
             }
-            else if (_.isNil(result)) {
+            else if (result == null) {
                 //try to get undefined user
                 parser = TypeParser.hasParser(userModel.field('id').type);
                 if (typeof parser === 'function')
                     undefinedUser = parser(null);
                 //set id for next calls
                 user.id = undefinedUser;
-                if (_.isNil(context.user)) {
+                if (context.user == null) {
                     context.user = user;
                 }
-                return deferred.resolve(undefinedUser);
+                return resolve(undefinedUser);
             }
             else {
                 //set id for next calls
                 user.id = result.id;
-                return deferred.resolve(result.id);
+                return resolve(result.id);
             }
         });
     });
-    return deferred.promise;
 };
 /**
  * @returns {Promise|*}

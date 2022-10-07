@@ -1,4 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/*eslint no-var: "off"*/
+// noinspection ES6ConvertVarToLetConst
+
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
@@ -671,7 +674,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         //get model privileges (and clone them)
         var modelPrivileges = _.cloneDeep(model.privileges || []);
         // if there are no privileges
-        if (modelPrivileges.length == 0) {
+        if (modelPrivileges.length === 0) {
             // add defaults
             modelPrivileges.push.apply(modelPrivileges, [
                 {
@@ -723,7 +726,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
             });
 
             // set query lastIndex
-            event.query.$lastIndex = parseInt(event.query.$lastIndex) || 0;
+            event.query.$lastIndex = parseInt(event.query.$lastIndex, 10) || 0;
             var cancel = false, assigned = false, entity = new QueryEntity(model.viewAdapter), expand = null,
                 perms1 = new QueryEntity(permissions.viewAdapter).as(permissions.viewAdapter + event.query.$lastIndex.toString()), expr = null;
             async.eachSeries(privileges, function(item, cb) {
