@@ -74,7 +74,6 @@ FunctionContext.prototype.eval = function(expr, callback) {
         }
     }
     else {
-        console.log(sprintf('Cannot evaluate %s.', expr1));
         callback(new Error('Cannot evaluate expression.'));
     }
 
