@@ -2220,10 +2220,10 @@ DataModel.prototype.migrate = function(callback)
     migration.add = _.map(fields, function(x) {
         return _.assign({ }, x);
     });
-    migration.version = _.isNil(self.version) ? '0.0' : self.version;
+    migration.version = self.version != null ? self.version : '0.0';
     migration.appliesTo = self.sourceAdapter;
     migration.model = self.name;
-    migration.description = sprintf('%s migration (version %s)', this.title, migration.version);
+    migration.description = sprintf('%s migration (version %s)', this.title || this.name, migration.version);
     if (context===null)
         throw new Error('The underlying data context cannot be empty.');
 
