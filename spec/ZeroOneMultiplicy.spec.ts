@@ -59,12 +59,12 @@ describe('ZeroOrOneMultiplicity', () => {
              */
             const Orders = context.model('Order');
             const filterAsync = promisify(Orders.filter).bind(Orders);
-            const query = await filterAsync({
-                $select: 'id,orderedItem/madeIn/cioc as country',
+            let query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as country',
                 $filter: 'orderedItem/madeIn/cioc eq \'CHN\' or orderedItem/madeIn/cioc eq \'USA\''
             });
             expect(query).toBeTruthy();
-            const items = await query.silent().getItems();
+            let items = await query.silent().getItems();
             expect(items).toBeInstanceOf(Array);
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
@@ -73,6 +73,12 @@ describe('ZeroOrOneMultiplicity', () => {
                     'USA'
                 ].includes(item.country)).toBeTruthy();
             }
+            query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as madeInCountry'
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
         });
     });
 });

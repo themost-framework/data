@@ -498,6 +498,9 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             // init an entity based on association adapter (e.g. GroupMembers as members)
             var associationAlias = mapping.associationAdapter;
             entity = new QueryEntity(mapping.associationAdapter).as(associationAlias);
+            if (field.multiplicity === 'ZeroOrOne') {
+                entity.$join = 'left';
+            }
             // set model
             Object.defineProperty(entity, 'model', {
                 configurable: true,
@@ -538,6 +541,9 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 // create new join
                 var alias = field.name; // + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
+                if (field.multiplicity === 'ZeroOrOne') {
+                    entity.$join = 'left';
+                }
                 // set model
                 Object.defineProperty(entity, 'model', {
                     configurable: true,
