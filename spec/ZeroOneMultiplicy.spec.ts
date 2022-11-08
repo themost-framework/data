@@ -2,8 +2,9 @@ import { resolve } from 'path';
 import { DataContext } from '../index';
 import { TestApplication } from './TestApplication';
 import {TestUtils} from "./adapter/TestUtils";
+import {promisify} from 'util';
 
-fdescribe('ZeroOrOneMultiplicity', () => {
+describe('ZeroOrOneMultiplicity', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
@@ -45,6 +46,33 @@ fdescribe('ZeroOrOneMultiplicity', () => {
         });
     });
 
-
-
+    it('should query zero or one multiplicity association', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Orders = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            const query = await filterAsync({
+                $select: 'id,orderedItem/madeIn/cioc as country',
+                $filter: 'orderedItem/madeIn/cioc eq \'CHN\' or orderedItem/madeIn/cioc eq \'USA\''
+            });
+            expect(query).toBeTruthy();
+            const items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect([
+                    'CHN',
+                    'USA'
+                ].includes(item.country)).toBeTruthy();
+            }
+        });
+    });
 });

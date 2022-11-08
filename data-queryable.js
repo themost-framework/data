@@ -168,6 +168,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
         //if the specified member contains '/' e.g. user/name then prepare join
         var arrMember = memberExprString.split('/');
         var attrMember = self.field(arrMember[0]);
+        var childModel;
         if (_.isNil(attrMember)) {
             throw new Error(sprintf('The target model does not have an attribute named as %s',arrMember[0]));
         }
@@ -194,7 +195,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             var childFieldName = childField.property || childField.name;
             /**
              * store temp query expression
-             * @type QueryExpression
+             * @type {import("@themost/query").QueryExpression}
              */
             res =QueryUtils.query(self.viewAdapter).select(['*']);
             expr = QueryUtils.query().where(QueryField.select(childField.name)
@@ -217,7 +218,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             return res.$expand;
         }
         else if (mapping.parentModel===self.name && mapping.associationType==='association') {
-            var childModel = self.context.model(mapping.childModel);
+            childModel = self.context.model(mapping.childModel);
             if (_.isNil(childModel)) {
                 throw new Error(sprintf('Association child model (%s) cannot be found.', mapping.childModel));
             }
@@ -265,6 +266,10 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 }
             }
             return res.$expand;
+        }
+        else if (attrMember.multiplicity === 'ZeroOrOne' && mapping.associationType === 'junction' && mapping.parentModel === self.name) {
+            var res1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, memberExpr);
+            return res1.$expand;
         }
         else {
             throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel , mapping.childModel));
@@ -476,52 +481,73 @@ DataAttributeResolver.prototype.testNestedAttribute = function(s) {
  */
 DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
     var self = this, member = attr.split('/');
-    //get the data association mapping
+    // get the data association mapping
     var mapping = self.inferMapping(member[0]);
-    //if mapping defines a junction between two models
+    // get in-process alias for this model
+    // this operation is very important for nested attributes e.g. orderedItem/madeIn/name
+    // where current model should be queried by using this alias
+    var thisAlias = self[aliasProperty] || self.viewAdapter;
+    // if mapping defines a junction between two models
     if (mapping && mapping.associationType === 'junction') {
-        //get field
+        // get field
         var field = self.field(member[0]), entity, expr, q;
-        //first approach (default association adapter)
-        //the underlying model is the parent model e.g. Group > Group Members
+        // first approach (default association adapter)
+        // the underlying model is the parent model e.g. Group > Group Members
         if (mapping.parentModel === self.name) {
-
-            q =QueryUtils.query(self.viewAdapter).select(['*']);
-            //init an entity based on association adapter (e.g. GroupMembers as members)
-            entity = new QueryEntity(mapping.associationAdapter).as(field.name);
-            //init join expression between association adapter and current data model
-            //e.g. Group.id = GroupMembers.parent
-            expr = QueryUtils.query().where(QueryField.select(mapping.parentField).from(self.viewAdapter))
-                    .equal(QueryField.select(mapping.associationObjectField).from(field.name));
+            q = QueryUtils.query(self.viewAdapter).select(['*']);
+            // init an entity based on association adapter (e.g. GroupMembers as members)
+            var associationAlias = mapping.associationAdapter;
+            entity = new QueryEntity(mapping.associationAdapter).as(associationAlias);
+            // set model
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: associationAlias
+            });
+            // init join expression between association adapter and current data model
+            // e.g. Group.id = GroupMembers.parent
+            expr = QueryUtils.query().where(QueryField.select(mapping.parentField).from(thisAlias))
+                    .equal(QueryField.select(mapping.associationObjectField).from(associationAlias));
             //append join
             q.join(entity).with(expr);
-            //data object tagging
+            // data object tagging
             if (typeof mapping.childModel === 'undefined') {
                 return {
                     $expand:[q.$expand],
-                    $select:QueryField.select(mapping.associationValueField).from(field.name)
+                    $select:QueryField.select(mapping.associationValueField).from(associationAlias)
                 }
             }
 
-            //return the resolved attribute for futher processing e.g. members.id
+            // return the resolved attribute for further processing e.g. members.id
             if (member[1] === mapping.childField) {
                 return {
                     $expand:[q.$expand],
-                    $select:QueryField.select(mapping.associationValueField).from(field.name)
+                    $select:QueryField.select(mapping.associationValueField).from(associationAlias)
                 }
             }
             else {
-                //get child model
+                /**
+                 * get child model
+                 * @type {import("./data-model").DataModel}
+                 */
                 var childModel = self.context.model(mapping.childModel);
                 if (_.isNil(childModel)) {
-                    throw new DataError('EJUNC','The associated model cannot be found.');
+                    throw new DataError('E_JUNCTION','The associated model cannot be found.');
                 }
-                //create new join
-                var alias = field.name + '_' + childModel.name;
+                // create new join
+                var alias = field.name; // + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
-                expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
+                // set model
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: childModel.name
+                });
+                expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(associationAlias))
                     .equal(QueryField.select(mapping.childField).from(alias));
-                //append join
+                // append join
                 q.join(entity).with(expr);
                 return {
                     $expand:q.$expand,
@@ -531,16 +557,16 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
         }
         else {
             q =QueryUtils.query(self.viewAdapter).select(['*']);
-            //the underlying model is the child model
-            //init an entity based on association adapter (e.g. GroupMembers as groups)
+            // the underlying model is the child model
+            // init an entity based on association adapter (e.g. GroupMembers as groups)
             entity = new QueryEntity(mapping.associationAdapter).as(field.name);
-            //init join expression between association adapter and current data model
-            //e.g. Group.id = GroupMembers.parent
+            // init join expression between association adapter and current data model
+            // e.g. Group.id = GroupMembers.parent
             expr = QueryUtils.query().where(QueryField.select(mapping.childField).from(self.viewAdapter))
                 .equal(QueryField.select(mapping.associationValueField).from(field.name));
             //append join
             q.join(entity).with(expr);
-            //return the resolved attribute for further processing e.g. members.id
+            // return the resolved attribute for further processing e.g. members.id
             if (member[1] === mapping.parentField) {
                 return {
                     $expand:[q.$expand],
@@ -548,17 +574,17 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 }
             }
             else {
-                //get parent model
+                // get parent model
                 var parentModel = self.context.model(mapping.parentModel);
                 if (_.isNil(parentModel)) {
-                    throw new DataError('EJUNC','The associated model cannot be found.');
+                    throw new DataError('E_JUNCTION','The associated model cannot be found.');
                 }
-                //create new join
+                // create new join
                 var parentAlias = field.name + '_' + parentModel.name;
                 entity = new QueryEntity(parentModel.viewAdapter).as(parentAlias);
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationObjectField).from(field.name))
                     .equal(QueryField.select(mapping.parentField).from(parentAlias));
-                //append join
+                // append join
                 q.join(entity).with(expr);
                 return {
                     $expand:q.$expand,
@@ -568,7 +594,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
         }
     }
     else {
-        throw new DataError('EJUNC','The target model does not have a many to many association defined by the given attribute.','', self.name, attr);
+        throw new DataError('E_JUNCTION','The target model does not have a many to many association defined by the given attribute.','', self.name, attr);
     }
 };
 
