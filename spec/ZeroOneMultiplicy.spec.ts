@@ -81,4 +81,31 @@ describe('ZeroOrOneMultiplicity', () => {
             expect(items.length).toBeGreaterThan(0);
         });
     });
+
+    it('should query zero or one items', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Orders = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            let query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as country',
+                $filter: 'orderedItem/madeIn/id ne null'
+            });
+            expect(query).toBeTruthy();
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(item.country).toBeTruthy();
+            }
+        });
+    });
 });

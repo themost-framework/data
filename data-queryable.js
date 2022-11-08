@@ -209,7 +209,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 writable: true,
                 value: parentModel.name
             });
-            if (arrMember.length>2) {
+            if (arrMember.length > 2) {
                 parentModel[aliasProperty] = mapping.childField;
                 expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
                 return [].concat(res.$expand).concat(expr);

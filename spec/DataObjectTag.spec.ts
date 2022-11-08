@@ -2,6 +2,7 @@ import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
 import {TestApplication} from './TestApplication';
 import {DataContext} from '../types';
+import {promisify} from 'util';
 
 describe('DataObjectTag', () => {
     let app: TestApplication;
@@ -80,6 +81,43 @@ describe('DataObjectTag', () => {
                 'NewUser',
                 'ValidUser'
             ]);
+        });
+    });
+
+    it('should try to query item', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            /**
+             * @type {DataObject}
+             */
+            let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
+
+            await user.property('tags').silent().insert([
+                'NewUser',
+                'ValidUser'
+            ]);
+
+            const Users = context.model('User');
+            const filterAsync = promisify(Users.filter).bind(Users);
+            let query = await filterAsync({
+                $select: 'id,name,tags/value as tag',
+                $filter: 'tags/value eq \'NewUser\''
+            });
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            query = await filterAsync({
+                $select: 'id,name',
+                $filter: 'tags/value eq \'NewUser\' or tags/value eq \'ValidUser\''
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
         });
     });
 
