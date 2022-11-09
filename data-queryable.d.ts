@@ -97,7 +97,7 @@ export declare class DataAttributeResolver {
     selectNestedAttribute(attr: string): any;
     selectAggregatedAttribute(aggregation: string, attribute: string, alias: string): any;
     resolveNestedAttribute(attr: string): any;
-    resolveNestedAttributeJoin(memberExpr: string): any;
+    resolveNestedAttributeJoin(memberExpr: string): { $select: any, $expand: any };
     testAttribute(s: string): any;
     testAggregatedNestedAttribute(s: string): any;
     testNestedAttribute(s: string): any;

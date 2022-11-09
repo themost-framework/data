@@ -755,13 +755,17 @@ function filterInternal(params, callback) {
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
+                    if (expr.$select) {
+                        member = expr.$select.$name.replace(/\./g,'/');
+                    }
                 }
-                if (expr) {
+                if (expr && expr.$expand) {
                     var arrExpr = [];
-                    if (_.isArray(expr))
-                        arrExpr.push.apply(arrExpr, expr);
-                    else
-                        arrExpr.push(expr);
+                    if (_.isArray(expr.$expand)) {
+                        arrExpr.push.apply(arrExpr, expr.$expand);
+                    } else {
+                        arrExpr.push(expr.$expand);
+                    }
                     arrExpr.forEach(function(y) {
                         var joinExpr = $joinExpressions.find(function(x) {
                             if (x.$entity && x.$entity.$as) {
