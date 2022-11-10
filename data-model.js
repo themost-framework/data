@@ -740,8 +740,17 @@ function filterInternal(params, callback) {
             if (field) { member = field.name; }
         }
         var attr = self.field(member);
-        if (attr)
+        if (attr) {
             member = attr.name;
+            if (attr.multiplicity === 'ZeroOrOne') {
+                var mapping1 = self.inferMapping(member);
+                if (mapping1 && mapping1.associationType === 'junction' && mapping1.parentModel === self.name) {
+                    member = attr.name.concat('/', mapping1.childField);
+                } else if (mapping1 && mapping1.associationType === 'junction' && mapping1.childModel === self.name) {
+                    member = attr.name.concat('/', mapping1.parentField);
+                }
+            }
+        }
         if (DataAttributeResolver.prototype.testNestedAttribute.call(self,member)) {
             try {
                 var member1 = member.split('/'),
@@ -749,7 +758,9 @@ function filterInternal(params, callback) {
                     expr;
                 if (mapping && mapping.associationType === 'junction') {
                     var expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, member);
-                    expr = expr1.$expand;
+                    expr = {
+                        $expand: expr1.$expand
+                    };
                     //replace member expression
                     member = expr1.$select.$name.replace(/\./g,'/');
                 }

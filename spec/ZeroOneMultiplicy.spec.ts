@@ -149,5 +149,32 @@ describe('ZeroOrOneMultiplicity', () => {
         });
     });
 
+    it('should use privileges', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            const newReview =  await context.model('Review').silent().save({
+                reviewBody: 'This an internal review for a product and it can be accessed by admins only',
+                reviewRating: 85
+            })
+            await context.model('Product').silent().save(Object.assign(product, {
+                internalReview: newReview
+            }));
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Products = context.model('Product');
+            const filterAsync = promisify(Products.filter).bind(Products);
+            let query = await filterAsync({
+                $filter: 'internalReview ne null',
+                $expand: 'internalReview'
+            });
+            expect(query).toBeTruthy();
+            let items = await query.getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBe(0);
+        });
+    });
+
     
 });
