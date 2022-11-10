@@ -91,15 +91,3 @@ export declare class DataQueryable implements DataContextEmitter {
 
     ensureContext: void;
 }
-
-export declare class DataAttributeResolver {
-    orderByNestedAttribute(attr: string): any;
-    selectNestedAttribute(attr: string): any;
-    selectAggregatedAttribute(aggregation: string, attribute: string, alias: string): any;
-    resolveNestedAttribute(attr: string): any;
-    resolveNestedAttributeJoin(memberExpr: string): { $select: any, $expand: any };
-    testAttribute(s: string): any;
-    testAggregatedNestedAttribute(s: string): any;
-    testNestedAttribute(s: string): any;
-    resolveJunctionAttributeJoin(attr: string): any;
-}

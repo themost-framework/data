@@ -133,6 +133,21 @@ describe('ZeroOrOneMultiplicity', () => {
             for (const item of items) {
                 expect(item.orderedItem.madeIn).toBeTruthy();
             }
+
+            query = await filterAsync({
+                $filter: 'orderedItem/madeIn/cioc eq \'CHN\' or orderedItem/madeIn/name eq \'Greece\' ',
+                $expand: 'orderedItem($expand=madeIn)'
+            });
+
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(item.orderedItem.madeIn).toBeTruthy();
+            }
+
         });
     });
+
+    
 });
