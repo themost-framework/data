@@ -4,7 +4,7 @@ import { TestApplication } from './TestApplication';
 import {TestUtils} from "./adapter/TestUtils";
 import {promisify} from 'util';
 
-fdescribe('ZeroOrOneMultiplicity', () => {
+describe('ZeroOrOneMultiplicity', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
@@ -123,7 +123,7 @@ fdescribe('ZeroOrOneMultiplicity', () => {
             const Orders = context.model('Order');
             const filterAsync = promisify(Orders.filter).bind(Orders);
             let query = await filterAsync({
-                $filter: 'orderedItem/madeIn ne null',
+                $filter: 'orderedItem/madeIn/id ne null',
                 $expand: 'orderedItem($expand=madeIn)'
             });
             expect(query).toBeTruthy();

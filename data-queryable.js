@@ -3,7 +3,7 @@ var async = require('async');
 var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var _ = require('lodash');
-var {TextUtils, Args} = require('@themost/common');
+var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
 var {DataError} = require('@themost/common');
@@ -213,7 +213,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
                 return {
                     $select: expr.$select,
-                    $expand: [].concat(res.$expand).concat(expr)
+                    $expand: [].concat(res.$expand).concat(expr.$expand)
                 };
             } else if (arrMember.length === 2) {
                 // try to find if the nested member is an association of type junction
@@ -292,7 +292,11 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             };
         }
         else {
-            throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel , mapping.childModel));
+            if (mapping.associationType === 'junction' && mapping.parentModel === self.name) {
+                return DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, memberExpr);
+            } else {
+                throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel , mapping.childModel));
+            }
         }
     }
 };
@@ -497,7 +501,7 @@ DataAttributeResolver.prototype.testNestedAttribute = function(s) {
 
 /**
  * @param {string} attr
- * @returns {*}
+ * @returns {{$select?:QueryField,$expand?:{QueryEntity}[]}}
  */
 DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
     var self = this, member = attr.split('/');
@@ -511,21 +515,30 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
         //first approach (default association adapter)
         //the underlying model is the parent model e.g. Group > Group Members
         if (mapping.parentModel === self.name) {
-
+            var associationAlias = mapping.associationAdapter;
             q =QueryUtils.query(self.viewAdapter).select(['*']);
             //init an entity based on association adapter (e.g. GroupMembers as members)
-            entity = new QueryEntity(mapping.associationAdapter).as(field.name);
+            entity = new QueryEntity(mapping.associationAdapter).as(associationAlias);
+            if (field.multiplicity === 'ZeroOrOne') {
+                entity.$join = 'left';
+            }
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: mapping.associationAdapter
+            });
             //init join expression between association adapter and current data model
             //e.g. Group.id = GroupMembers.parent
             expr = QueryUtils.query().where(QueryField.select(mapping.parentField).from(thisAlias))
-                    .equal(QueryField.select(mapping.associationObjectField).from(field.name));
+                    .equal(QueryField.select(mapping.associationObjectField).from(associationAlias));
             //append join
             q.join(entity).with(expr);
             //data object tagging
             if (typeof mapping.childModel === 'undefined') {
                 return {
                     $expand:[q.$expand],
-                    $select:QueryField.select(mapping.associationValueField).from(field.name)
+                    $select:QueryField.select(mapping.associationValueField).from(associationAlias)
                 }
             }
 
@@ -533,7 +546,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             if (member[1] === mapping.childField) {
                 return {
                     $expand:[q.$expand],
-                    $select:QueryField.select(mapping.associationValueField).from(field.name)
+                    $select:QueryField.select(mapping.associationValueField).from(associationAlias)
                 }
             }
             else {
@@ -543,9 +556,19 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                     throw new DataError('EJUNC','The associated model cannot be found.');
                 }
                 //create new join
-                var alias = field.name + '_' + childModel.name;
+                var alias = field.name; // + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
-                expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
+                if (field.multiplicity === 'ZeroOrOne') {
+                    entity.$join = 'left';
+                }
+                // set model
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: childModel.name
+                });
+                expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(associationAlias))
                     .equal(QueryField.select(mapping.childField).from(alias));
                 //append join
                 q.join(entity).with(expr);
