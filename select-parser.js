@@ -35,6 +35,9 @@ class SelectDataParser extends OpenDataParser {
 
     parseCommon(callback) {
         const self = this;
+        if (self.nextToken == null) {
+            return callback();
+        }
         super.parseCommon(function (err, result) {
             if (err && err.message === 'Expected operator.') {
                 if (self.currentToken.identifier === 'as') {
@@ -50,6 +53,11 @@ class SelectDataParser extends OpenDataParser {
             return callback(null, result);
         });
     }
+
+    parseCommonItem(callback) {
+        return super.parseCommonItem(callback);
+    }
+
 }
 
 class OrderByDataParser extends SelectDataParser {
@@ -100,7 +108,7 @@ class SelectParser {
             while (token) {
                 if (token.isComma() && paren === 0) {
                     indexEnd = tokens[i - 1].offset + tokens[i - 1].source.length;
-                    results.push(parser.source.substring(indexStart, indexEnd));
+                    results.push(parser.source.substring(indexStart, indexEnd).trim());
                     // set offset
                     indexStart = indexEnd + 1;
                 } else {
@@ -112,7 +120,7 @@ class SelectParser {
                 }
                 i += 1;
                 if (i === tokens.length) {
-                    results.push(parser.source.substring(indexStart, parser.source.length));
+                    results.push(parser.source.substring(indexStart, parser.source.length).trim());
                 }
                 token = tokens[i];
             }

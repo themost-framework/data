@@ -2,7 +2,19 @@ import { SelectParser, OrderByParser } from '../select-parser';
 
 describe('SelectParser', () => {
     it('should split $select statement #1', async () => {
-        const items = await new SelectParser().parseAsync('id,name,dateCreated,dateModified');
+        let items = await new SelectParser().parseAsync(null);
+        expect(items).toBeInstanceOf(Array);
+        expect(items.length).toEqual(0);
+
+        items = await new SelectParser().parseAsync('name');
+        expect(items).toBeInstanceOf(Array);
+        expect(items.length).toBeGreaterThan(0);
+
+        items = await new SelectParser().parseAsync('name as objectName');
+        expect(items).toBeInstanceOf(Array);
+        expect(items.length).toBeGreaterThan(0);
+        
+        items = await new SelectParser().parseAsync('id,name,dateCreated,dateModified');
         expect(items).toBeInstanceOf(Array);
         expect(items).toEqual([
             'id',
