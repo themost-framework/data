@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { DataContext } from '../index';
+import { DataContext, DataModel } from '../index';
 import { TestApplication } from './TestApplication';
 import {TestUtils} from "./adapter/TestUtils";
 import {promisify} from 'util';
@@ -106,6 +106,41 @@ describe('ZeroOrOneMultiplicity', () => {
             for (const item of items) {
                 expect(item.country).toBeTruthy();
             }
+        });
+    });
+
+    it('should query and select object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            const Orders: DataModel = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            let query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn as madeIn',
+                $filter: 'orderedItem/madeIn ne null'
+            });
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/id as madeIn,orderedItem/madeIn/name as madeInCountry',
+                $filter: 'orderedItem/madeIn/cioc eq \'CHN\''
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
+            query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/id as madeIn,orderedItem/madeIn/name as madeInCountry',
+                $filter: 'orderedItem/madeIn eq null'
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
         });
     });
 
