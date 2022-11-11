@@ -173,6 +173,29 @@ describe('ZeroOrOneMultiplicity', () => {
             let items = await query.getItems();
             expect(items).toBeInstanceOf(Array);
             expect(items.length).toBe(0);
+            // use admin
+            Object.assign(context, {
+                user: {
+                    name: 'alexis.rees@example.com'
+                }
+            });
+            // create query again
+            query = await filterAsync({
+                $filter: 'internalReview ne null',
+                $expand: 'internalReview'
+            });
+            items = await query.getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
+            query = await filterAsync({
+                $select: 'id, name, internalReview/reviewRating as reviewRating',
+                $filter: 'internalReview ne null',
+            });
+            items = await query.getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            expect(items[0].reviewRating).toBeTruthy();
         });
     });
 
