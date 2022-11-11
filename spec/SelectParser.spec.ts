@@ -30,6 +30,16 @@ describe('SelectParser', () => {
         ]);
     });
 
+    it('should split $select statement with methods', async () => {
+        const items = await new SelectParser().parseAsync('id,name,indexof(name,\'admin\') as findIndex');
+        expect(items).toBeInstanceOf(Array);
+        expect(items).toEqual([
+            'id',
+            'name',
+            'indexof(name,\'admin\') as findIndex'
+        ]);
+    });
+
     it('should split $orderby', async () => {
         const items = await new OrderByParser().parseAsync('familyName asc,givenName desc');
         expect(items).toBeInstanceOf(Array);
