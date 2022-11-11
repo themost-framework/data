@@ -311,7 +311,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
  */
 DataAttributeResolver.prototype.testAttribute = function(s) {
     if (typeof s !== 'string')
-        return;
+        return null;
     /**
      * @private
      */
@@ -352,7 +352,7 @@ DataAttributeResolver.prototype.testAttribute = function(s) {
  */
 DataAttributeResolver.prototype.testAggregatedNestedAttribute = function(s) {
     if (typeof s !== 'string')
-        return;
+        return null;
     /**
      * @private
      */
@@ -397,7 +397,7 @@ DataAttributeResolver.prototype.testAggregatedNestedAttribute = function(s) {
  */
 DataAttributeResolver.prototype.testNestedAttribute = function(s) {
     if (typeof s !== 'string')
-        return;
+        return null;
     /**
      * @private
      */
