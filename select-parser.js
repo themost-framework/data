@@ -127,6 +127,60 @@ class SelectParser {
             return Promise.resolve(results);
         });
     }
+
+    /**
+     * @param {string} str 
+     * @returns {string[]}
+     */
+    parse(str) {
+        if (typeof str !== 'string') {
+            return [];
+        }
+        if (str.length === 0) {
+            return [];
+        } 
+        let offset = 0;
+        let start = 0;
+        let paren = 0;
+        let quote = 0;
+        let charAt = '';
+        const results = [];
+        while(offset < str.length) {
+            charAt = str.charAt(offset);
+            if (charAt === ',' && paren === 0 && quote === 0) {
+                results.push(str.substring(start, offset).trim());
+                start = offset + 1;
+            }
+            // wait for paren close
+            if (charAt === '(' && quote === 0) {
+                paren += 1;
+            }
+            // handle paren close
+            if (charAt === ')' && quote === 0) {
+                paren -= 1;
+            }
+            // handle quote (or quote inside quotes)
+            // e.g indexOf(giveName, 'Alexis') or indexOf(name, 'Tablet\'s')
+            if (charAt === '\'' && quote === 0) {
+                quote += 1;
+            } else if (charAt === '\'' && quote > 0) {
+                quote -= 1;
+            }
+            offset += 1;
+            if (offset === str.length) {
+                results.push(str.substring(start, offset).trim());
+            }
+        }
+        if (quote !== 0) {
+            throw new Error('Unterminated string constant');
+        }
+        if (paren !== 0) {
+            throw new Error('Expected closing parenthesis');
+        }
+        return results;
+
+    }
+
 }
 
 class OrderByParser extends SelectParser {

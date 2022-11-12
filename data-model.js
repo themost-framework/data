@@ -845,57 +845,50 @@ function filterInternal(params, callback) {
                         levels = parseInt(params.$levels, 10),
                         top = params.$top || params.$take;
 
-                    return Promise.sequence([
-                        function() { return new SelectParser().parseAsync(select) },
-                        function() { return new OrderByParser().parseAsync(orderBy) },
-                        function() { return new SelectParser().parseAsync(groupBy) } 
-                    ]).then(function(results) {
-                        var select1 = results[0];
-                        var orderBy1 = results[1];
-                        var groupBy1 = results[2];
-                        if (select1.length) {
-                            q.select.apply(q, select1);
-                        }
-                        if (groupBy1.length) {
-                            q.groupBy.apply(q, groupBy1);
-                        }
-                        if ((typeof levels === 'number') && !isNaN(levels)) {
-                            //set expand levels
-                            q.levels(levels);
-                        }
-                        //set $skip
-                        q.skip(skip);
-                        if (top) {
-                            q.query.take(top);
-                        }
-                        //set caching
-                        if (params.$cache && self.caching === 'conditional') {
-                            q.cache(true);
-                        }
-                        if (orderBy1.length) {
-                            orderBy1.forEach(function(x) {
-                                if (/\s+desc$/i.test(x)) {
-                                    q.orderByDescending(x.replace(/\s+desc$/i, ''));
-                                }
-                                else if (/\s+asc/i.test(x)) {
-                                    q.orderBy(x.replace(/\s+asc/i, ''));
-                                }
-                                else {
-                                    q.orderBy(x);
-                                }
-                            });
-                        }
-                        if (expand) {
-                            var resolver = require('./data-expand-resolver');
-                            var matches = resolver.testExpandExpression(expand);
-                            if (matches && matches.length>0) {
-                                q.expand.apply(q, matches);
+                    var selectParts = new SelectParser().parse(select);
+                    var orderByParts = new SelectParser().parse(orderBy);
+                    var groupByParts = new SelectParser().parse(groupBy);
+
+                    if (selectParts.length) {
+                        q.select.apply(q, selectParts);
+                    }
+                    if (groupByParts.length) {
+                        q.groupBy.apply(q, groupByParts);
+                    }
+                    if ((typeof levels === 'number') && !isNaN(levels)) {
+                        //set expand levels
+                        q.levels(levels);
+                    }
+                    //set $skip
+                    q.skip(skip);
+                    if (top) {
+                        q.query.take(top);
+                    }
+                    //set caching
+                    if (params.$cache && self.caching === 'conditional') {
+                        q.cache(true);
+                    }
+                    if (orderByParts.length) {
+                        orderByParts.forEach(function(x) {
+                            if (/\s+desc$/i.test(x)) {
+                                q.orderByDescending(x.replace(/\s+desc$/i, ''));
                             }
+                            else if (/\s+asc/i.test(x)) {
+                                q.orderBy(x.replace(/\s+asc/i, ''));
+                            }
+                            else {
+                                q.orderBy(x);
+                            }
+                        });
+                    }
+                    if (expand) {
+                        var resolver = require('./data-expand-resolver');
+                        var matches = resolver.testExpandExpression(expand);
+                        if (matches && matches.length>0) {
+                            q.expand.apply(q, matches);
                         }
-                        return callback(null, q);
-                    }).catch(function(err) {
-                        return callback(err);
-                    });
+                    }
+                    return callback(null, q);
                 }
                 else {
                     //and finally return DataQueryable instance
