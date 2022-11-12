@@ -845,9 +845,9 @@ function filterInternal(params, callback) {
                         levels = parseInt(params.$levels, 10),
                         top = params.$top || params.$take;
 
-                    var selectParts = new SelectParser().parse(select);
-                    var orderByParts = new SelectParser().parse(orderBy);
-                    var groupByParts = new SelectParser().parse(groupBy);
+                    var selectParts = new SelectParser().split(select);
+                    var orderByParts = new SelectParser().split(orderBy);
+                    var groupByParts = new SelectParser().split(groupBy);
 
                     if (selectParts.length) {
                         q.select.apply(q, selectParts);

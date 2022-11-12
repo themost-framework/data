@@ -92,7 +92,7 @@ class SelectParser {
         this.parser = new SelectDataParser();
     }
 
-    parseAsync(str) {
+    splitAsync(str) {
         const parser = this.parser;
         return parser.parseAsync(str).then(function () {
             const tokens = parser.toList();
@@ -132,7 +132,7 @@ class SelectParser {
      * @param {string} str 
      * @returns {string[]}
      */
-    parse(str) {
+    split(str) {
         if (typeof str !== 'string') {
             return [];
         }
