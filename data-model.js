@@ -36,7 +36,7 @@ var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
-var {SelectParser, OrderByParser} = require('./select-parser');
+var {SelectParser} = require('./select-parser');
 /**
  * @this DataModel
  * @param {DataField} field
