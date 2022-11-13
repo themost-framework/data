@@ -1,0 +1,45 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "@id": "https://themost.io/schemas/Review",
+    "name": "Review",
+    "description": "A review of an item",
+    "title": "Reviews",
+    "abstract": false,
+    "sealed": false,
+    "hidden": true,
+    "implements": "Thing",
+    "version": "1.1",
+    "fields": [
+      {
+        "name": "reviewBody",
+        "title": "Body",
+        "description": "The actual body of the review.",
+        "type": "Text",
+        "size": 4000
+      },
+      {
+        "name": "reviewAspect",
+        "title": "Review aspect",
+        "description": "This Review or Rating is relevant to this value.",
+        "type": "Text"
+      },
+      {
+        "name": "reviewRating",
+        "title": "Review rating",
+        "description": "The rating given in this review.",
+        "type": "Number"
+      }
+    ],
+    "privileges": [
+      {
+        "mask": 15,
+        "type": "global"
+      },
+      {
+        "mask": 15,
+        "type": "global",
+        "account": "Administrators"
+      }
+    ]
+  }
+  

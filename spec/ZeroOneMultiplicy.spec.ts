@@ -1,9 +1,10 @@
 import { resolve } from 'path';
-import { DataContext } from '../index';
+import { DataContext, DataModel } from '../index';
 import { TestApplication } from './TestApplication';
 import {TestUtils} from "./adapter/TestUtils";
+import {promisify} from 'util';
 
-fdescribe('ZeroOrOneMultiplicity', () => {
+describe('ZeroOrOneMultiplicity', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
@@ -45,6 +46,193 @@ fdescribe('ZeroOrOneMultiplicity', () => {
         });
     });
 
+    it('should query zero or one multiplicity association', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Orders = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            let query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as country',
+                $filter: 'orderedItem/madeIn/cioc eq \'CHN\' or orderedItem/madeIn/cioc eq \'USA\''
+            });
+            expect(query).toBeTruthy();
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect([
+                    'CHN',
+                    'USA'
+                ].includes(item.country)).toBeTruthy();
+            }
+            query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as madeInCountry'
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+        });
+    });
 
+    it('should query zero or one association items', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Orders = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            let query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as country',
+                $filter: 'orderedItem/madeIn/id ne null'
+            });
+            expect(query).toBeTruthy();
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(item.country).toBeTruthy();
+            }
+        });
+    });
 
+    it('should query and select object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            const Orders: DataModel = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            let query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn as madeIn',
+                $filter: 'orderedItem/madeIn ne null'
+            });
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/id as madeIn,orderedItem/madeIn/name as madeInCountry',
+                $filter: 'orderedItem/madeIn/cioc eq \'CHN\''
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
+            query = await filterAsync({
+                $select: 'id,orderedItem/name as productName,orderedItem/madeIn/id as madeIn,orderedItem/madeIn/name as madeInCountry',
+                $filter: 'orderedItem/madeIn eq null'
+            });
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+        });
+    });
+
+    it('should expand zero or one associated items', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country').where('cioc').equal('CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Orders = context.model('Order');
+            const filterAsync = promisify(Orders.filter).bind(Orders);
+            let query = await filterAsync({
+                $filter: 'orderedItem/madeIn/id ne null',
+                $expand: 'orderedItem($expand=madeIn)'
+            });
+            expect(query).toBeTruthy();
+            let items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(item.orderedItem.madeIn).toBeTruthy();
+            }
+
+            query = await filterAsync({
+                $filter: 'orderedItem/madeIn/cioc eq \'CHN\' or orderedItem/madeIn/name eq \'Greece\' ',
+                $expand: 'orderedItem($expand=madeIn)'
+            });
+
+            items = await query.silent().getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(item.orderedItem.madeIn).toBeTruthy();
+            }
+
+        });
+    });
+
+    it('should use privileges', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            const newReview =  await context.model('Review').silent().save({
+                reviewBody: 'This an internal review for a product and it can be accessed by admins only',
+                reviewRating: 85
+            })
+            await context.model('Product').silent().save(Object.assign(product, {
+                internalReview: newReview
+            }));
+            /**
+             * @type {import("../data-model").DataModel}
+             */
+            const Products = context.model('Product');
+            const filterAsync = promisify(Products.filter).bind(Products);
+            let query = await filterAsync({
+                $filter: 'internalReview ne null',
+                $expand: 'internalReview'
+            });
+            expect(query).toBeTruthy();
+            let items = await query.getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBe(0);
+            // use admin
+            Object.assign(context, {
+                user: {
+                    name: 'alexis.rees@example.com'
+                }
+            });
+            // create query again
+            query = await filterAsync({
+                $filter: 'internalReview ne null',
+                $expand: 'internalReview'
+            });
+            items = await query.getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
+            query = await filterAsync({
+                $select: 'id, name, internalReview/reviewRating as reviewRating',
+                $filter: 'internalReview ne null',
+            });
+            items = await query.getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            expect(items[0].reviewRating).toBeTruthy();
+        });
+    });
+
+    
 });

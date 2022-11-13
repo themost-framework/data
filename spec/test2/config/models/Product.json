@@ -166,6 +166,33 @@
                         }
                     ]
                 }
+            },
+            {
+                "name": "internalReview",
+                "type": "Review",
+                "nullable": true,
+                "many": true,
+                "multiplicity": "ZeroOrOne",
+                "mapping": {
+                    "associationType": "junction",
+                    "associationObjectField": "product",
+                    "associationValueField": "review",
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "Review",
+                    "childField": "id",
+                    "privileges": [
+                        {
+                            "mask": 15,
+                            "type": "global"
+                        },
+                        {
+                            "mask": 15,
+                            "type": "global",
+                            "account": "Administrators"
+                        }
+                    ]
+                }
             }
     ],
     "constraints": [

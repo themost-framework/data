@@ -14,7 +14,7 @@ var dataAssociations = require('./data-associations');
 var {DataNestedObjectListener} = require('./data-nested-object-listener');
 var {DataReferencedObjectListener} = require('./data-ref-object-listener');
 var {DataQueryable} = require('./data-queryable');
-var {DataAttributeResolver} = require('./data-queryable');
+var {DataAttributeResolver} = require('./data-attribute-resolver');
 var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListener;
 var {DataModelView} = require('./data-model-view');
 var {DataFilterResolver} = require('./data-filter-resolver');
@@ -36,6 +36,7 @@ var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
+var {SelectParser} = require('./select-parser');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -740,8 +741,17 @@ function filterInternal(params, callback) {
             if (field) { member = field.name; }
         }
         var attr = self.field(member);
-        if (attr)
+        if (attr) {
             member = attr.name;
+            if (attr.multiplicity === 'ZeroOrOne') {
+                var mapping1 = self.inferMapping(member);
+                if (mapping1 && mapping1.associationType === 'junction' && mapping1.parentModel === self.name) {
+                    member = attr.name.concat('/', mapping1.childField);
+                } else if (mapping1 && mapping1.associationType === 'junction' && mapping1.childModel === self.name) {
+                    member = attr.name.concat('/', mapping1.parentField);
+                }
+            }
+        }
         if (DataAttributeResolver.prototype.testNestedAttribute.call(self,member)) {
             try {
                 var member1 = member.split('/'),
@@ -749,19 +759,25 @@ function filterInternal(params, callback) {
                     expr;
                 if (mapping && mapping.associationType === 'junction') {
                     var expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, member);
-                    expr = expr1.$expand;
+                    expr = {
+                        $expand: expr1.$expand
+                    };
                     //replace member expression
                     member = expr1.$select.$name.replace(/\./g,'/');
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
+                    if (expr.$select) {
+                        member = expr.$select.$name.replace(/\./g,'/');
+                    }
                 }
-                if (expr) {
+                if (expr && expr.$expand) {
                     var arrExpr = [];
-                    if (_.isArray(expr))
-                        arrExpr.push.apply(arrExpr, expr);
-                    else
-                        arrExpr.push(expr);
+                    if (_.isArray(expr.$expand)) {
+                        arrExpr.push.apply(arrExpr, expr.$expand);
+                    } else {
+                        arrExpr.push(expr.$expand);
+                    }
                     arrExpr.forEach(function(y) {
                         var joinExpr = $joinExpressions.find(function(x) {
                             if (x.$entity && x.$entity.$as) {
@@ -819,7 +835,6 @@ function filterInternal(params, callback) {
                     q.query.$expand = $joinExpressions;
                 //prepare
                 q.query.prepare();
-
                 if (typeof params === 'object') {
                     //apply query parameters
                     var select = params.$select,
@@ -829,17 +844,16 @@ function filterInternal(params, callback) {
                         expand = params.$expand,
                         levels = parseInt(params.$levels, 10),
                         top = params.$top || params.$take;
-                    //select fields
-                    if (typeof select === 'string') {
-                        q.select.apply(q, select.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
+
+                    var selectParts = new SelectParser().split(select);
+                    var orderByParts = new SelectParser().split(orderBy);
+                    var groupByParts = new SelectParser().split(groupBy);
+
+                    if (selectParts.length) {
+                        q.select.apply(q, selectParts);
                     }
-                    //apply group by fields
-                    if (typeof groupBy === 'string') {
-                        q.groupBy.apply(q, groupBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
+                    if (groupByParts.length) {
+                        q.groupBy.apply(q, groupByParts);
                     }
                     if ((typeof levels === 'number') && !isNaN(levels)) {
                         //set expand levels
@@ -847,17 +861,15 @@ function filterInternal(params, callback) {
                     }
                     //set $skip
                     q.skip(skip);
-                    if (top)
+                    if (top) {
                         q.query.take(top);
+                    }
                     //set caching
                     if (params.$cache && self.caching === 'conditional') {
                         q.cache(true);
                     }
-                    //set $orderby
-                    if (orderBy) {
-                        orderBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }).forEach(function(x) {
+                    if (orderByParts.length) {
+                        orderByParts.forEach(function(x) {
                             if (/\s+desc$/i.test(x)) {
                                 q.orderByDescending(x.replace(/\s+desc$/i, ''));
                             }
@@ -870,15 +882,13 @@ function filterInternal(params, callback) {
                         });
                     }
                     if (expand) {
-
                         var resolver = require('./data-expand-resolver');
                         var matches = resolver.testExpandExpression(expand);
                         if (matches && matches.length>0) {
                             q.expand.apply(q, matches);
                         }
                     }
-                    //return
-                    callback(null, q);
+                    return callback(null, q);
                 }
                 else {
                     //and finally return DataQueryable instance
