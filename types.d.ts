@@ -131,6 +131,7 @@ export declare class DataField {
     multiplicity?: string;
     indexed?: boolean;
     size?: number;
+    query?: any;
 }
 
 export declare class DataEventArgs {

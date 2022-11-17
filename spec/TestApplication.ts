@@ -74,3 +74,17 @@ export class TestApplication extends IApplication {
     }
 
 }
+
+export class TestApplication2 extends TestApplication {
+    constructor() {
+        super(resolve(__dirname, 'test2'));
+        this.getConfiguration().getSourceAt('adapters').unshift({
+            name: 'test-local',
+            invariantName: 'test',
+            default: true,
+            options: {
+                database: resolve(__dirname, 'test2/db/local.db')
+            }
+        });
+    }
+}

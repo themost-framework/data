@@ -5,11 +5,14 @@ var _ = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var {QueryField} = require('@themost/query');
 var {QueryFieldRef} = require('@themost/query');
-var {NotNullError} = require('@themost/common');
+var {NotNullError, DataError} = require('@themost/common');
 var {UniqueConstraintError} = require('@themost/common');
 var {TraceUtils} = require('@themost/common');
 var {TextUtils} = require('@themost/common');
 var {DataCacheStrategy} = require('./data-cache');
+var {hasOwnProperty} = require('./has-own-property');
+var {DataFieldQueryResolver} = require('./data-field-query-resolver');
+const {add} = require('lodash');
 
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
@@ -668,14 +671,27 @@ DataModelCreateViewListener.prototype.afterUpgrade = function(event, callback) {
     }
     // get base model
     var baseModel = self.base();
+    var additionalExpand = [];
     // get array of fields
     var fields = self.attributes.filter(function(x) {
         return (self.name=== x.model) && (!x.many);
     }).map(function(x) {
+        if (x.readonly && x.query) {
+            // resolve field expression (and additional joins)
+            var expr = new DataFieldQueryResolver(self).resolve(x.name);
+            if (expr) {
+                // hold additional joins
+                additionalExpand.push.apply(additionalExpand, expr.$expand);
+                // and return the resolved query expression for this field
+                return expr.$select;
+            }
+            // throw error
+            throw new DataError('E_QUERY', 'A data field defines a custom query expression but it cannot be resolved', null, self.name, x.name);
+        }
         return QueryField.select(x.name).from(adapter);
     });
     /**
-     * @type {QueryExpression}
+     * @type {import("@themost/query").QueryExpression}
      */
     var q = QueryUtils.query(adapter).select(fields);
     var baseAdapter = null;
@@ -699,6 +715,9 @@ DataModelCreateViewListener.prototype.afterUpgrade = function(event, callback) {
         q.$expand.$entity[baseAdapter]=baseFields;
         q.$expand.$with.push(from);
         q.$expand.$with.push(to);
+    }
+    if (additionalExpand.length > 0) {
+        q.$expand = q.$expand ? additionalExpand.concat(q.$expand) : additionalExpand;
     }
     //execute query
     return db.createView(view, q, function(err) {
