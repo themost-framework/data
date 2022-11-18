@@ -1,7 +1,6 @@
 const {Args, DataError} = require('@themost/common');
 const {hasOwnProperty} = require('./has-own-property');
-const {DataAttributeResolver} = require('./data-attribute-resolver');
-
+const {QueryEntity, QueryExpression, QueryField} = require('@themost/query');
 class DataFieldQueryResolver {
     /**
      * @param {import("./data-model").DataModel} target
@@ -15,47 +14,66 @@ class DataFieldQueryResolver {
      * @param {string} value
      * @returns {string}
      */
-    escapeName(value) {
+    formatName(value) {
         if (/^\$/.test(value)) {
-            return value.replace(/(\$?(\w+)?)/g, '$2').replace(/\.(\w+)/g, '/$1')
+            return value.replace(/(\$?(\w+)?)/g, '$2').replace(/\.(\w+)/g, '.$1')
         }
+        return value;
     }
 
     /**
-     * @param {string} name
+     * @param {import("./types").DataField} field
      * @returns {{$select?: import("@themost/query").QueryField, $expand?: import("@themost/query").QueryEntity[]}|null}
      */
-    resolve(name) {
-        const field = this.target.getAttribute(name);
-        Args.check(field != null, new DataError('E_FIELD','The specified field cannot be found', null, this.target.name, name));
+    resolve(field) {
+        Args.check(field != null, new DataError('E_FIELD','Field may not be null', null, this.target.name));
         if (field.query == null) {
             return null;
         }
-        /**
-         * @type {{$project: *, $lookup: *}}
-         */
-        var customQuery = field.query;
-        // try to find $project[x.name] property e.g. { orderEmail: "$customer.email" }
-        if (customQuery.$project && hasOwnProperty(customQuery.$project, field.name)) {
-            // get expr
-            const expr = Object.getOwnPropertyDescriptor(customQuery.$project, field.name).value;
-            if (typeof expr === 'string') {
-                // convert expression to an equivalent $select expression
-                // e.g. $customer.email -> customer/email
-                const selectAttribute = this.escapeName(expr);
-                // resolve nested attribute ($select and $expand expressions)
-                /**
-                 * @type {DataQueryable}
-                 */
-                const q = this.target.asQueryable();
-                const result = new DataAttributeResolver().resolveNestedAttribute.call(q, selectAttribute);
-                return {
-                    $select: result,
-                    $expand: q.query.$expand ? [].concat(q.query.$expand) : []
+        let expand = [];
+        let select = null;
+        for (const stage of field.query) {
+            if (stage.$lookup) {
+                let localField = this.formatName(stage.$lookup.localField);
+                if (/\./g.test(localField) === false) {
+                    // get local field expression
+                    let localFieldAttribute = this.target.getAttribute(localField);
+                    if (localFieldAttribute && localFieldAttribute.model === this.target.name) {
+                        localField = `${this.target.sourceAdapter}.${localField}`;
+                    } else {
+                        //get base
+                        const baseModel = this.target.base();
+                        if (baseModel) {
+                            localFieldAttribute = baseModel.getAttribute(localField);
+                            if (localFieldAttribute) {
+                                localField = `${baseModel.viewAdapter}.${localField}`;
+                            }
+                        }
+                    }
                 }
-            } else {
-                throw new Error('Resolving advanced expression is not yet implemented');
+                const foreignField = this.formatName(stage.$lookup.foreignField);
+                const q = new QueryExpression().select('*').from(this.target.sourceAdapter);
+                const joinCollection = new QueryEntity(stage.$lookup.from).as(stage.$lookup.as).left();
+                q.join(joinCollection).with(
+                    new QueryExpression().where(new QueryField(localField))
+                        .equal(new QueryField(foreignField).from(stage.$lookup.as))
+                );
+                const appendExpand = [].concat(q.$expand);
+                expand.push.apply(expand, appendExpand);
             }
+            const name = field.property || field.name;
+            if (stage.$project && hasOwnProperty(stage.$project, name)) {
+                const expr = Object.getOwnPropertyDescriptor(stage.$project, name).value;
+                if (typeof expr === 'string') {
+                    select = new QueryField(this.formatName(expr)).as(name)
+                } else {
+                    throw new Error('Not yet implemented')
+                }
+            }
+        }
+        return {
+            $select: select,
+            $expand: expand
         }
     }
 

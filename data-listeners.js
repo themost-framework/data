@@ -2,6 +2,7 @@
 var async = require('async');
 var {sprintf} = require('sprintf-js');
 var _ = require('lodash');
+var {isEqual} = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var {QueryField} = require('@themost/query');
 var {QueryFieldRef} = require('@themost/query');
@@ -10,9 +11,7 @@ var {UniqueConstraintError} = require('@themost/common');
 var {TraceUtils} = require('@themost/common');
 var {TextUtils} = require('@themost/common');
 var {DataCacheStrategy} = require('./data-cache');
-var {hasOwnProperty} = require('./has-own-property');
 var {DataFieldQueryResolver} = require('./data-field-query-resolver');
-const {add} = require('lodash');
 
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
@@ -673,23 +672,28 @@ DataModelCreateViewListener.prototype.afterUpgrade = function(event, callback) {
     var baseModel = self.base();
     var additionalExpand = [];
     // get array of fields
-    var fields = self.attributes.filter(function(x) {
-        return (self.name=== x.model) && (!x.many);
-    }).map(function(x) {
-        if (x.readonly && x.query) {
-            // resolve field expression (and additional joins)
-            var expr = new DataFieldQueryResolver(self).resolve(x.name);
-            if (expr) {
-                // hold additional joins
-                additionalExpand.push.apply(additionalExpand, expr.$expand);
-                // and return the resolved query expression for this field
-                return expr.$select;
+    var fields = [];
+    try {
+        fields = self.attributes.filter(function(x) {
+            return (self.name=== x.model) && (!x.many);
+        }).map(function(x) {
+            if (x.readonly && x.query) {
+                // resolve field expression (and additional joins)
+                var expr = new DataFieldQueryResolver(self).resolve(x);
+                if (expr) {
+                    // hold additional joins
+                    additionalExpand.push.apply(additionalExpand, expr.$expand);
+                    // and return the resolved query expression for this field
+                    return expr.$select;
+                }
+                // throw error
+                throw new DataError('E_QUERY', 'The given field defines a custom query expression but it cannot be resolved', null, self.name, x.name);
             }
-            // throw error
-            throw new DataError('E_QUERY', 'A data field defines a custom query expression but it cannot be resolved', null, self.name, x.name);
-        }
-        return QueryField.select(x.name).from(adapter);
-    });
+            return QueryField.select(x.name).from(adapter);
+        });
+    } catch (error) {
+        return callback(error);
+    }
     /**
      * @type {import("@themost/query").QueryExpression}
      */
@@ -707,17 +711,23 @@ DataModelCreateViewListener.prototype.afterUpgrade = function(event, callback) {
                 baseFields.push(QueryField.select(x.name).from(baseAdapter))
         });
     }
-    if (baseFields.length>0)
-    {
+    q.$expand = [];
+    if (baseFields.length > 0) {
         var from = new QueryFieldRef(adapter, self.key().name);
         var to = new QueryFieldRef(baseAdapter, self.base().key().name);
-        q.$expand = { $entity: { },$with:[] };
-        q.$expand.$entity[baseAdapter]=baseFields;
-        q.$expand.$with.push(from);
-        q.$expand.$with.push(to);
+        var addExpand = { $entity: { },$with:[] }
+        addExpand.$entity[baseAdapter] = baseFields;
+        addExpand.$with.push(from);
+        addExpand.$with.push(to);
+        q.$expand.push(addExpand);
     }
-    if (additionalExpand.length > 0) {
-        q.$expand = q.$expand ? additionalExpand.concat(q.$expand) : additionalExpand;
+    for (var expand of additionalExpand) {
+        var findIndex = q.$expand.findIndex(function(item) {
+            return isEqual(expand, item);
+        });
+        if (findIndex < 0) {
+            q.$expand.push(expand);
+        }
     }
     //execute query
     return db.createView(view, q, function(err) {
