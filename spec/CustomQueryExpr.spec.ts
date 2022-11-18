@@ -44,7 +44,7 @@ const TempOrderSchema = {
             "query": [
                 {
                     "$lookup": {
-                        "from": "PersonData",
+                        "from": "Person",
                         "foreignField": "id",
                         "localField": "customer",
                         "as": "customer"
@@ -65,7 +65,7 @@ const TempOrderSchema = {
             "query": [
                 {
                     "$lookup": {
-                        "from": "PersonData",
+                        "from": "Person",
                         "foreignField": "id",
                         "localField": "customer",
                         "as": "customer"
@@ -73,7 +73,7 @@ const TempOrderSchema = {
                 },
                 {
                     "$lookup": {
-                        "from": "PostalAddressData",
+                        "from": "PostalAddress",
                         "foreignField": "id",
                         "localField": "$customer.address",
                         "as": "address"

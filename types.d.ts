@@ -125,9 +125,9 @@ export declare interface QueryPipelineProject {
     [name: string]: string | (1 | 0) | any;
 }
 
-export declare interface QueryPipelineItem {
+export declare interface QueryPipelineStage {
     $lookup?: QueryPipelineLookup;
-    $project?: QueryPipelineProject
+    $project?: QueryPipelineProject;
 }
 
 export declare class DataField {
@@ -153,7 +153,7 @@ export declare class DataField {
     multiplicity?: string;
     indexed?: boolean;
     size?: number;
-    query?: QueryPipelineItem[];
+    query?: QueryPipelineStage[];
 }
 
 export declare class DataEventArgs {

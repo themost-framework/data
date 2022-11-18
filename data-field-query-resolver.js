@@ -41,7 +41,7 @@ class DataFieldQueryResolver {
                     if (localFieldAttribute && localFieldAttribute.model === this.target.name) {
                         localField = `${this.target.sourceAdapter}.${localField}`;
                     } else {
-                        //get base
+                        // get base model
                         const baseModel = this.target.base();
                         if (baseModel) {
                             localFieldAttribute = baseModel.getAttribute(localField);
@@ -53,16 +53,28 @@ class DataFieldQueryResolver {
                 }
                 const foreignField = this.formatName(stage.$lookup.foreignField);
                 const q = new QueryExpression().select('*').from(this.target.sourceAdapter);
-                const joinCollection = new QueryEntity(stage.$lookup.from).as(stage.$lookup.as).left();
+                // get from model
+                const from = stage.$lookup.from;
+                const fromModel = this.target.context.model(from);
+                Args.check(fromModel != null, new DataError('E_MODEL', 'Data model cannot be found', null, from));
+                const joinCollection = new QueryEntity(fromModel.viewAdapter).as(stage.$lookup.as).left();
+                Object.defineProperty(joinCollection, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: fromModel.name
+                });
                 q.join(joinCollection).with(
                     new QueryExpression().where(new QueryField(localField))
                         .equal(new QueryField(foreignField).from(stage.$lookup.as))
                 );
+                
                 const appendExpand = [].concat(q.$expand);
                 expand.push.apply(expand, appendExpand);
             }
             const name = field.property || field.name;
-            if (stage.$project && hasOwnProperty(stage.$project, name)) {
+            if (stage.$project) {
+                Args.check(hasOwnProperty(stage.$project, name), new DataError('E_QUERY', 'Field projection expression is missing.', null, this.target.name, field.name));
                 const expr = Object.getOwnPropertyDescriptor(stage.$project, name).value;
                 if (typeof expr === 'string') {
                     select = new QueryField(this.formatName(expr)).as(name)
