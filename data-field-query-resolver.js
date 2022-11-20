@@ -27,8 +27,11 @@ class DataFieldQueryResolver {
      */
     resolve(field) {
         Args.check(field != null, new DataError('E_FIELD','Field may not be null', null, this.target.name));
-        if (field.query == null) {
-            return null;
+        if (Array.isArray(field.query) === false) {
+            return {
+                select: null,
+                expand: []
+            };
         }
         let expand = [];
         let select = null;
