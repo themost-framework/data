@@ -79,7 +79,20 @@ class DataFieldQueryResolver {
                 if (typeof expr === 'string') {
                     select = new QueryField(this.formatName(expr)).as(name)
                 } else {
-                    throw new Error('Not yet implemented')
+                    const expr1 = Object.defineProperty({}, name, {
+                        configurable: true,
+                        enumerable: true,
+                        writable: true,
+                        value: expr
+                    });
+                    // Important note: Field references e.g. $customer.email
+                    // are not supported by @themost/query@Formatter
+                    // and should be replaced by name references e.g. { "$name": "customer.email" }
+                    // A workaround is being used here is a regular expression replacer which 
+                    // will try to replace  "$customer.email" with { "$name": "customer.email" }
+                    // but this operation is definitely a feature request for @themost/query
+                    const finalExpr = JSON.parse(JSON.stringify(expr1).replace(/"\$((\w+)(\.(\w+)){1,})"/g, '{ "$name": "$1" }'));
+                    select = Object.assign(new QueryField(), finalExpr);
                 }
             }
         }
