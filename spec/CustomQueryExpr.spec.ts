@@ -114,6 +114,97 @@ const TempOrderSchema = {
     ]
 };
 
+const NewOrderSchema = {
+    "name": "NewOrder",
+    "version": "3.0.0",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/id",
+            "name": "id",
+            "type": "Counter",
+            "primary": true
+        },
+        {
+            "name": "acceptedOffer",
+            "type": "Offer"
+        },
+        {
+            "name": "customer",
+            "type": "Person",
+            "editable": false,
+            "nullable": false
+        },
+        {
+            "name": "orderDate",
+            "type": "DateTime",
+            "value": "javascript:return new Date();"
+        },
+        {
+            "name": "orderedItem",
+            "type": "Product",
+            "expandable": true,
+            "editable": true,
+            "nullable": false
+        },
+        {
+            "name": "priceCategory",
+            "readonly": true,
+            "type": 'Text',
+            "nullable": true,
+            "query": [
+                {
+                    "$lookup": {
+                        "from": "Person",
+                        "foreignField": "id",
+                        "localField": "customer",
+                        "as": "customer"
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "Product",
+                        "foreignField": "id",
+                        "localField": "orderedItem",
+                        "as": "orderedItem"
+                    }
+                },
+                {
+                    "$project": {
+                        "priceCategory": {
+                            "$cond": [
+                                {
+                                    "$gt": [
+                                        "$orderedItem.price",
+                                        1000
+                                    ]
+                                },
+                                'Expensive',
+                                'Normal'
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 1,
+            "type": "self",
+            "filter": "customer/user eq me()"
+        }
+    ]
+};
+
 describe('CustomQueryExpression', () => {
 
     let app: TestApplication2;
@@ -152,6 +243,32 @@ describe('CustomQueryExpression', () => {
                 .where('email').equal('luis.nash@example.com')
                 .select('address/addressLocality').silent().value();
             expect(item.orderAddressLocality).toEqual(orderAddressLocality);
+
+        });
+    });
+
+    it('should use custom query with expression', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            configuration.setModelDefinition(NewOrderSchema);
+            await context.model('NewOrder').migrateAsync();
+            // insert a temporary object
+            const newOrder: any = {
+                orderDate: new Date(),
+                orderedItem: {
+                    name: 'Samsung Galaxy S4'
+                },
+                customer: {
+                    email: 'luis.nash@example.com'
+                }
+            };
+            await context.model('NewOrder').silent().save(newOrder);
+            const item = await context.model('NewOrder').where('id').equal(newOrder.id).silent().getItem();
+            expect(item).toBeTruthy();
+            const price = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .select('price').silent().value();
+            expect(item.priceCategory).toEqual(price <= 1000 ? 'Normal' : 'Expensive');
 
         });
     });
