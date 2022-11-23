@@ -108,16 +108,12 @@ export declare class DataAssociationMapping implements DataAssociationMappingBas
     [k: string]: unknown;
 }
 
-
-
 export declare interface QueryPipelineLookup {
     from: string;
     localField?: string;
     foreignField?: string;
     let?: string;
-    pipeline?: {
-        $match: any;
-    }
+    pipeline?: { $match: { $expr: any } }[],
     as?: string
 }
 
