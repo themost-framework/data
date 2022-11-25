@@ -294,6 +294,54 @@ const NewLocalOrderSchema = {
     ]
 };
 
+const ExtendedProductSchema = {
+    "name": "ExtendedProduct",
+    "version": "3.0.0",
+    "inherits": "Product",
+    "fields": [
+        {
+            "name": "priceCategory",
+            "type": "Text",
+            "readonly": true,
+            "nullable": true,
+            "query": [
+                {
+                    "$project": {
+                        "priceCategory": {
+                            "$cond": [
+                                {
+                                    "$gt": [
+                                        "$price",
+                                        1000
+                                    ]
+                                },
+                                'Expensive',
+                                'Normal'
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 1,
+            "type": "self",
+            "filter": "customer/user eq me()"
+        }
+    ]
+}
+
 describe('CustomQueryExpression', () => {
 
     let app: TestApplication2;
@@ -384,6 +432,24 @@ describe('CustomQueryExpression', () => {
                 .where('name').equal('Samsung Galaxy S4')
                 .select('price').silent().value();
             expect(item.orderEmail).toEqual('luis.nash@example.com');
+
+        });
+    });
+
+    it('should use custom query to project a readonly attribute', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            configuration.setModelDefinition(ExtendedProductSchema);
+            await context.model('ExtendedProduct').migrateAsync();
+            // insert a temporary object
+            const newProduct: any = {
+                name: 'Samsung Galaxy S4 XL',
+                price: 560
+            };
+            await context.model('ExtendedProduct').silent().save(newProduct);
+            const item = await context.model('ExtendedProduct').where('id').equal(newProduct.id).silent().getItem();
+            expect(item).toBeTruthy();
+            expect(item.priceCategory).toEqual('Normal');
 
         });
     });

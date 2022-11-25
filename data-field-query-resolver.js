@@ -21,6 +21,37 @@ class DataFieldQueryResolver {
         return value;
     }
 
+    nameReplacer(key, value) {
+        if (typeof value === 'string') {
+            if (/^\$(\w+)$/.test(value)) {
+                const baseModel = this.target.base();
+                const name = value.replace(/^\$/, '');
+                let field = null;
+                let collection = null;
+                // try to find if field belongs to base model
+                if (baseModel) {
+                    field = baseModel.getAttribute(name);
+                    collection = baseModel.viewAdapter;
+                }
+                if (field == null) {
+                    collection = this.target.sourceAdapter;
+                    field = this.target.getAttribute(name);
+                }
+                if (field) {
+                    return {
+                        $name: collection + '.' + name
+                    }
+                }
+                throw new DataError('An expression contains an attribute that cannot be found', null, this.target.name, name);
+            } else if (/^\$((\w+)(\.(\w+)){1,})$/.test(value)) {
+                return {
+                    $name: value.replace(/^\$/, '')
+                }
+            }
+        }
+        return value;
+    }
+
     /**
      * @param {import("./types").DataField} field
      * @returns {{$select?: import("@themost/query").QueryField, $expand?: import("@themost/query").QueryEntity[]}|null}
@@ -35,36 +66,42 @@ class DataFieldQueryResolver {
         }
         let expand = [];
         let select = null;
+        const self = this;
+        // get base model
+        const baseModel = this.target.base();
         for (const stage of field.query) {
             if (stage.$lookup) {
                 // get from model
                 const from = stage.$lookup.from;
                 const fromModel = this.target.context.model(from);
                 if (stage.$lookup.pipeline && stage.$lookup.pipeline.length) {
-                    
-                    const self = this;
                     stage.$lookup.pipeline.forEach(function(pipelineStage) {
                         if (pipelineStage.$match && pipelineStage.$match.$expr) {
                             const q = new QueryExpression().select('*').from(self.target.sourceAdapter);
                             // get expression as string
-                            const exprString = JSON.stringify(pipelineStage.$match.$expr);
-                            // and parse $$field expression
-                            const finalExpr = exprString.replace(/("\$\$(\w+)")/g, function(replaceValue) {
-                                let localField = /\$\$(\w+)/.exec(replaceValue)[1];
-                                let localFieldAttribute = self.target.getAttribute(localField);
-                                if (localFieldAttribute && localFieldAttribute.model === self.target.name) {
-                                    return `{"$name":"${self.target.sourceAdapter}.${localField}"}`;
-                                }
-                                // get base model
-                                const baseModel = self.target.base();
-                                if (baseModel) {
-                                    localFieldAttribute = baseModel.getAttribute(localField);
-                                    if (localFieldAttribute) {
-                                        return `{"$name":"${baseModel.viewAdapter}.${localField}"}`;
+                            const exprString = JSON.stringify(pipelineStage.$match.$expr, function(key, value) {
+                                if (typeof value === 'string') {
+                                    if (/\$\$(\w+)/g.test(value)) {
+                                        let localField = /\$\$(\w+)/.exec(value)[1];
+                                        let localFieldAttribute = self.target.getAttribute(localField);
+                                        if (localFieldAttribute && localFieldAttribute.model === self.target.name) {
+                                            return { 
+                                                $name: self.target.sourceAdapter + '.' + localField
+                                            }
+                                        }
+                                        if (baseModel) {
+                                            localFieldAttribute = baseModel.getAttribute(localField);
+                                            if (localFieldAttribute) {
+                                                return { 
+                                                    $name: baseModel.viewAdapter + '.' + localField
+                                                }
+                                            }
+                                        }
+                                        throw new DataError('E_FIELD', 'Data field cannot be found', null, self.target.name, localField);
                                     }
                                 }
-                                throw new DataError('E_FIELD', 'Data field cannot be found', null, self.target.name, localField);
-                             }).replace(/"\$((\w+)(\.(\w+)){1,})"/g, '{ "$name": "$1" }');
+                                return self.nameReplacer(key, value);
+                            });
                              const joinCollection = new QueryEntity(fromModel.viewAdapter).as(stage.$lookup.as).left();
                              Object.defineProperty(joinCollection, 'model', {
                                  configurable: true,
@@ -73,7 +110,7 @@ class DataFieldQueryResolver {
                                  value: fromModel.name
                              });
                              const joinExpression = Object.assign(new QueryExpression(), {
-                                $where: JSON.parse(finalExpr)
+                                $where: JSON.parse(exprString)
                              });
                             q.join(joinCollection).with(joinExpression);
                             const appendExpand = [].concat(q.$expand);
@@ -135,7 +172,9 @@ class DataFieldQueryResolver {
                     // A workaround is being used here is a regular expression replacer which 
                     // will try to replace  "$customer.email" with { "$name": "customer.email" }
                     // but this operation is definitely a feature request for @themost/query
-                    const finalExpr = JSON.parse(JSON.stringify(expr1).replace(/"\$((\w+)(\.(\w+)){1,})"/g, '{ "$name": "$1" }'));
+                    const finalExpr = JSON.parse(JSON.stringify(expr1, function(key, value) {
+                        return self.nameReplacer(key, value);
+                    }));
                     select = Object.assign(new QueryField(), finalExpr);
                 }
             }
