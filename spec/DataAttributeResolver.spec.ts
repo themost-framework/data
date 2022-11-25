@@ -2,6 +2,7 @@ import { resolve } from 'path';
 import { DataContext } from '../index';
 import { TestApplication } from './TestApplication';
 import { TestUtils } from './adapter/TestUtils';
+import { promisify } from 'util';
 
 describe('DataAttributeResolver', () => {
     let app: TestApplication;
@@ -136,6 +137,19 @@ describe('DataAttributeResolver', () => {
             let item = await context.model('Product').where('id').equal(product.id).getItem();
             expect(item.productImage).toBeTruthy();
         });
+    });
+
+    it('should use $it method', async () => {
+        const Orders = await context.model('Order');
+        const filterAsync = promisify(Orders.filter).bind(Orders);
+        const q = await filterAsync({
+            $select: 'id,orderedItem',
+            $filter: 'customer/user eq $it/createdBy'
+        });
+        const items = await q.getItems();
+        expect(items).toBeTruthy();
+        expect(items).toBeInstanceOf(Array);
+        expect(items.length).toBe(0);
     });
     
 });
