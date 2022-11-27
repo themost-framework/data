@@ -139,6 +139,7 @@ export declare class DataField {
     calculation?: string;
     readonly?: boolean;
     editable?: boolean;
+    insertable?: boolean;
     mapping?: DataAssociationMapping;
     expandable?: boolean;
     nested?: boolean;

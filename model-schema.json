@@ -145,8 +145,13 @@
                         "type": "boolean",
                         "description": "A boolean which indicates whether this attribute is readonly or not. A readonly value must have a default value or a calculated value."
                     },
+                    "insertable": {
+                        "default": true,
+                        "type": "boolean",
+                        "description": "A boolean which indicates whether this attribute is insertable or not."
+                    },
                     "editable": {
-                        "default": false,
+                        "default": true,
                         "type": "boolean",
                         "description": "A boolean which indicates whether this attribute is editable or not."
                     },
