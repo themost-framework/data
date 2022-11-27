@@ -437,6 +437,9 @@ function DataModel(obj) {
                     clone.cloned = true;
                 }
             }
+            if (clone.insertable === false && clone.editable === false && clone.model === self.name) {
+                clone.readonly = true;
+            }
             //finally push field
             attributes.push(clone);
         });
@@ -1416,6 +1419,11 @@ function cast_(obj, state) {
             description:exclude non editable attributes on update operation
              */
             return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
+        }).filter(function(x) {
+            if (x.insertable === false && x.editable === false) {
+                return false;
+            }
+            return true;
         }).forEach(function(x) {
             name = hasOwnProperty(obj, x.property) ? x.property : x.name;
             if (hasOwnProperty(obj, name))

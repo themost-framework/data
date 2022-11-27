@@ -452,7 +452,8 @@ describe('CustomQueryExpression', () => {
             // insert a temporary object
             const newProduct: any = {
                 name: 'Samsung Galaxy S4 XL',
-                price: 560
+                price: 560,
+                priceCategory: 'Normal'
             };
             await context.model('ExtendedProduct').silent().save(newProduct);
             const item = await context.model('ExtendedProduct').where('id').equal(newProduct.id).silent().getItem();
