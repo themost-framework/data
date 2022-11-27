@@ -419,9 +419,10 @@ function DataModel(obj) {
             if (typeof x.model === 'undefined')
                 x.model = self.name;
             var clone = x;
-            //if base model exists and current field is not primary key field
-            if (baseModel && !x.primary) {
-                //get base field
+            // if base model exists and current field is not primary key field
+            var isPrimary = !!x.primary;
+            if (baseModel != null && isPrimary === false) {
+                // get base field
                 field = baseModel.field(x.name);
                 if (field) {
                     //clone field
@@ -2221,6 +2222,17 @@ DataModel.prototype.migrate = function(callback)
     var context = self.context;
     //do migration
     var fields = self.attributes.filter(function(x) {
+        if (x.insertable === false && x.editable === false && x.model === self.name) {
+            if (typeof x.query === 'undefined') {
+                throw new DataError('E_MODEL', 'A non-insertable and non-editable field should have a custom query defined.', null, self.name, x.name);
+            }
+            // validate source and view
+            if (self.sourceAdapter === self.viewAdapter) {
+                throw new DataError('E_MODEL', 'A data model with the same source and view data object cannot have virtual columns.', null, self.name, x.name);
+            }
+            // exclude virtual column
+            return false;
+        }
         return (self.name === x.model) && (!x.many);
     });
 

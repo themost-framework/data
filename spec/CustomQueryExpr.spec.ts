@@ -1,4 +1,5 @@
 import {TestUtils} from './adapter/TestUtils';
+import { TestAdapter } from './adapter/TestAdapter';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import { DataConfigurationStrategy } from '../data-configuration';
@@ -303,6 +304,8 @@ const ExtendedProductSchema = {
             "name": "priceCategory",
             "type": "Text",
             "readonly": true,
+            "insertable": false,
+            "editable": false,
             "nullable": true,
             "query": [
                 {
@@ -440,7 +443,12 @@ describe('CustomQueryExpression', () => {
         await TestUtils.executeInTransaction(context, async () => {
             const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
             configuration.setModelDefinition(ExtendedProductSchema);
-            await context.model('ExtendedProduct').migrateAsync();
+            const ExtendedProducts = context.model('ExtendedProduct');
+            await ExtendedProducts.migrateAsync();
+            // validate non-insertable columns
+            const db: TestAdapter = context.db as TestAdapter;
+            const columns = await db.table(ExtendedProducts.sourceAdapter).columnsAsync();
+            expect(columns.find((item) => item.name === 'priceCategory')).toBeFalsy();
             // insert a temporary object
             const newProduct: any = {
                 name: 'Samsung Galaxy S4 XL',
