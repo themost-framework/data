@@ -118,17 +118,12 @@ DataPermissionExclusion.prototype.shouldExclude = function (privilege, callback)
     }
     var context = this.model.context;
     var users = context.model('User');
-    Object.assign(context, {
-        user: {
-            name: 'luis.nash@example.com',
-            authenticationScope: 'profile'
-        }
-    })
     var parser = new DataModelFilterParser(users);
+    var username = (context.user && context.user.name) || 'anonymous';
     var addSelect = [
         {
             name: {
-                $value: (context.user && context.user.name) || 'anonymous'
+                $value: username
             }
         }
     ];
@@ -162,7 +157,8 @@ DataPermissionExclusion.prototype.shouldExclude = function (privilege, callback)
             $expand: q.$expand,
             $where: q.$where
         });
-        void context.db.execute(q1.query, function (err, result) {
+        q1.query.prepare().where('name').equal(username);
+        void context.db.execute(q1.query, [], function (err, result) {
             if (err) {
                 return callback(err);
             }
