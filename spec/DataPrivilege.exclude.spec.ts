@@ -4,6 +4,7 @@ import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import {DataModelFilterParser} from '../data-model-filter.parser';
 import { at } from 'lodash';
+import { DataPermissionExclusion } from '../data-permission';
 
 describe('DataPrivilege', () => {
 
@@ -52,15 +53,15 @@ describe('DataPrivilege', () => {
                         value: {
                             $value: property
                         }
-                    })
+                    });
                     addSelect.push(select);
                 }
                 event.result = {
-                    $select: "authenticationScope"
+                    $select: propertyName
                 }
             }
         });
-        const q1 = await parser.parseAsync('context/user/authenticationScope eq \'profile\' or context/user/authenticationScope eq \'email\'');
+        let q1 = await parser.parseAsync('context/user/authenticationScope eq \'profile\' or context/user/authenticationScope eq \'email\'');
         expect(q1).toBeTruthy();
         queryUsers.query.select([].concat(addSelect));
         Object.assign(queryUsers.query, {
@@ -71,5 +72,34 @@ describe('DataPrivilege', () => {
         let result: any[] = await (context.db as TestAdapter).executeAsync(queryUsers.query);
         expect(result).toBeInstanceOf(Array);
         expect(result.length).toBeTruthy();
+
+        q1 = await parser.parseAsync('indexof(context/user/authenticationScope, \'profile\') eq 0');
+        expect(q1).toBeTruthy();
+        queryUsers.query.select([].concat(addSelect));
+        Object.assign(queryUsers.query, {
+            $where: q1.$where,
+            $expand: q1.$expand,
+            // $fixed: true
+        });
+        result = await (context.db as TestAdapter).executeAsync(queryUsers.query);
+        expect(result).toBeInstanceOf(Array);
+        expect(result.length).toBeTruthy();
+
+    });
+    it('should use permission exclusion', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com',
+                authenticationScope: 'profile'
+            }
+        });
+        const exclusion = new DataPermissionExclusion(context.model('Orders'));
+        const result = await exclusion.shouldExcludeAsync({
+            mask: 15,
+            type: 'self',
+            account: 'Employees',
+            exclude: 'indexof(context/user/authenticationScope, \'sales\') lt 0'
+        });
+        expect(result).toBeTruthy();
     });
 });

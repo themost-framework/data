@@ -94,7 +94,7 @@ class DataModelFilterParser {
         }
 
         parser.resolveMethod = function(name, args, cb) {
-            const thisModel = this.model;
+            const thisModel = self.model;
             const event = {
                 target: self,
                 method: name,
