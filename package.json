@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/themost-framework/data#readme",
   "dependencies": {
+    "@themost/events": "^1.0.5",
     "@themost/promise-sequence": "^1.0.1",
     "async": "^2.6.4",
     "lodash": "^4.17.21",
