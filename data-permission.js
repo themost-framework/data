@@ -112,11 +112,12 @@ PermissionMask.Owner = 31;
 function splitScope(str) {
     // the default regular expression includes comma /([\x21\x23-\x5B\x5D-\x7E]+)/g
     // the modified regular expression excludes comma /x2C /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
-    const re = /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
-    let match;
-    const results = [];
-    while((match = re.exec(str)) !== null) {
+    var re = /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
+    var results = [];
+    var match = re.exec(str);
+    while(match !== null) {
         results.push(match[0]);
+        match = re.exec(str);
     }
     return results;
 }
@@ -763,8 +764,7 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
     }
     //ensure silent query operation
     if (event.emitter && event.emitter.$silent) {
-        callback();
-        return;
+        return callback();
     }
     var model = event.model;
     /**
@@ -787,8 +787,7 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
     }
     //do not check permissions if the target model has no privileges defined
     if (model.privileges.filter(function (x) { return !x.disabled; }, model.privileges).length === 0) {
-        callback(null);
-        return;
+        return callback(null);
     }
     //infer permission mask
     if (typeof event.mask !== 'undefined') {
@@ -1045,7 +1044,7 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
 
     }
     else {
-        callback();
+        return callback();
     }
 };
 
