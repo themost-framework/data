@@ -5,6 +5,7 @@ import { DataContext } from '../types';
 import {DataModelFilterParser} from '../data-model-filter.parser';
 import { at } from 'lodash';
 import { DataPermissionExclusion } from '../data-permission';
+import { DataConfigurationStrategy } from '../data-configuration';
 
 describe('DataPrivilege', () => {
 
@@ -101,5 +102,34 @@ describe('DataPrivilege', () => {
             exclude: 'indexof(context/user/authenticationScope, \'sales\') lt 0'
         });
         expect(result).toBeTruthy();
+    });
+
+    it('should use context scope', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com',
+                authenticationScope: 'profile,email'
+            }
+        });
+        let items = await context.model('Order').where('customer/email').equal('luis.nash@example.com').getItems();
+        expect(items.length).toBeTruthy();
+        const model = app.getConfiguration().getStrategy(DataConfigurationStrategy).getModelDefinition('Order');
+        const privilege = model.privileges.find((item: any) => item.type === 'self' && item.filter === 'customer/user eq me()');
+        expect(privilege).toBeTruthy();
+        privilege.scope = [
+            'orders'
+        ];
+        app.getConfiguration().getStrategy(DataConfigurationStrategy).setModelDefinition(model);
+        items = await context.model('Order').where('customer/email').equal('luis.nash@example.com').getItems();
+        expect(items.length).toBeFalsy();
+        // new scope
+        Object.assign(context, {
+            user: {
+                name: 'luis.nash@example.com',
+                authenticationScope: 'profile email orders'
+            }
+        });
+        items = await context.model('Order').where('customer/email').equal('luis.nash@example.com').getItems();
+        expect(items.length).toBeTruthy();
     });
 });

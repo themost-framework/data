@@ -98,6 +98,29 @@ PermissionMask.Execute = 16;
  * @type {number}
  */
 PermissionMask.Owner = 31;
+
+/**
+ * Splits a comma-separated or space-separated scope string e.g. "profile email" or "profile,email"
+ * 
+ * Important note: https://www.rfc-editor.org/rfc/rfc6749#section-3.3 defines the regular expression of access token scopes
+ * which is a space separated string. Several OAuth2 servers use a comma-separated list instead.
+ * 
+ * The operation will try to use both implementations by excluding comma ',' from access token regular expressions
+ * @param {string} str
+ * @returns {Array<string>}
+ */
+function splitScope(str) {
+    // the default regular expression includes comma /([\x21\x23-\x5B\x5D-\x7E]+)/g
+    // the modified regular expression excludes comma /x2C /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
+    const re = /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
+    let match;
+    const results = [];
+    while((match = re.exec(str)) !== null) {
+        results.push(match[0]);
+    }
+    return results;
+}
+
 /**
  * 
  * @param {import("./data-model").DataModel} model 
@@ -212,7 +235,8 @@ DataPermissionExclusion.prototype.tryExclude = function(privilege) {
     // get context scopes as array e.g. "profile", "email", "sales"
     var scopes = [];
     if (typeof authenticationScope === 'string') {
-        scopes = authenticationScope.split(',');
+        // check for space separated
+        scopes = splitScope(authenticationScope);
     } else if (Array.isArray(authenticationScope)) {
         scopes = authenticationScope.slice();
     }
@@ -354,7 +378,7 @@ DataPermissionEventListener.prototype.validate = function (event, callback) {
                     return cb();
                 }
                 try {
-                    var exclude = new DataPermissionExclusion(model).tryExclude(privilege);
+                    var exclude = new DataPermissionExclusion(model).tryExclude(item);
                     if (exclude) {
                         return cb();
                     }
@@ -875,7 +899,7 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
                     return cb();
                 }
                 try {
-                    var exclude = new DataPermissionExclusion(model).tryExclude(privilege);
+                    var exclude = new DataPermissionExclusion(model).tryExclude(item);
                     if (exclude) {
                         return cb();
                     }
