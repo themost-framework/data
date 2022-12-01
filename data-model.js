@@ -930,6 +930,10 @@ DataModel.prototype.filter = function(params, callback) {
     }
 };
 
+DataModel.prototype.filterAsync = function(params) {
+    return this.filter(params);
+};
+
 /**
  * Prepares a data query with the given object as parameters and returns the equivalent DataQueryable instance
  * @param {*} obj - An object which represents the query parameters
