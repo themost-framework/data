@@ -267,9 +267,12 @@
                                             "type": "string",
                                             "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
                                         },
-                                        "exclude": {
-                                            "type": "string",
-                                            "description": "A string which represents an expression for excluding this privilege based on current context. This attribute is used only for privileges of type \"self\" e.g. \"context/user/authenticationScope eq 'sales'\" etc"
+                                        "scope": {
+                                            "type": "array",
+                                            "items": {
+                                                "type":"string"
+                                            },
+                                            "description": "An array of OAuth2 client scopes as described here https://oauth.net/2/scope/. If current context does not have any of the provided scopes this privilege will be excluded. This option may be used in OAuth2 authorized environments or in any environment which implements such protocols."
                                         }
                                     },
                                     "required": [
@@ -560,9 +563,12 @@
                                     "type": "string",
                                     "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
                                 },
-                                "exclude": {
-                                    "type": "string",
-                                    "description": "A string which represents an expression for excluding this privilege based on current context. This attribute is used only for privileges of type \"self\" e.g. \"context/user/authenticationScope eq 'sales'\" etc"
+                                "scope": {
+                                    "type": "array",
+                                    "items": {
+                                        "type":"string"
+                                    },
+                                    "description": "An array of OAuth2 client scopes as described here https://oauth.net/2/scope/. If current context does not have any of the provided scopes this privilege will be excluded. This option may be used in OAuth2 authorized environments or in any environment which implements such protocols."
                                 }
                             },
                             "required": [
@@ -607,9 +613,12 @@
                         "type": "string",
                         "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
                     },
-                    "exclude": {
-                        "type": "string",
-                        "description": "A string which represents an expression for excluding this privilege based on current context. This attribute is used only for privileges of type \"self\" e.g. \"context/user/authenticationScope eq 'sales'\" etc"
+                    "scope": {
+                        "type": "array",
+                        "items": {
+                            "type":"string"
+                        },
+                        "description": "An array of OAuth2 client scopes as described here https://oauth.net/2/scope/. If current context does not have any of the provided scopes this privilege will be excluded. This option may be used in OAuth2 authorized environments or in any environment which implements such protocols."
                     }
                 },
                 "required": [
