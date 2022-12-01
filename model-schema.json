@@ -266,6 +266,10 @@
                                         "filter": {
                                             "type": "string",
                                             "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
+                                        },
+                                        "exclude": {
+                                            "type": "string",
+                                            "description": "A string which represents an expression for excluding this privilege based on current context. This attribute is used only for privileges of type \"self\" e.g. \"context/user/authenticationScope eq 'sales'\" etc"
                                         }
                                     },
                                     "required": [
@@ -555,6 +559,10 @@
                                 "filter": {
                                     "type": "string",
                                     "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
+                                },
+                                "exclude": {
+                                    "type": "string",
+                                    "description": "A string which represents an expression for excluding this privilege based on current context. This attribute is used only for privileges of type \"self\" e.g. \"context/user/authenticationScope eq 'sales'\" etc"
                                 }
                             },
                             "required": [
@@ -598,6 +606,10 @@
                     "filter": {
                         "type": "string",
                         "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
+                    },
+                    "exclude": {
+                        "type": "string",
+                        "description": "A string which represents an expression for excluding this privilege based on current context. This attribute is used only for privileges of type \"self\" e.g. \"context/user/authenticationScope eq 'sales'\" etc"
                     }
                 },
                 "required": [
