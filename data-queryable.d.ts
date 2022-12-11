@@ -42,6 +42,7 @@ export declare class DataQueryable implements DataContextEmitter {
     thenByDescending(attr: any): this;
     thenByDescending<T>(expr: (value: T) => any): this;
     groupBy(...attr: any[]): this;
+    groupBy<T>(expr: (value: T) => any): this;
     skip(n:number): this;
     take(n:number): this;
     getItem(): Promise<any>;

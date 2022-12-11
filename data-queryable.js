@@ -1061,6 +1061,28 @@ DataQueryable.prototype.orderBy = function(attr) {
 DataQueryable.prototype.groupBy = function(attr) {
     var arr = [],
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    var self = this;
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.groupBy.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (_.isArray(arg)) {
         for (var i = 0; i < arg.length; i++) {
             var x = arg[i];
