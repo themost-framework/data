@@ -12,19 +12,23 @@ var {QueryUtils} = require('@themost/query');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var { DataAttributeResolver } = require('./data-attribute-resolver');
+var {instanceOf} = require('./instance-of');
 
 
 
 /**
  * @classdesc Represents a dynamic query helper for filtering, paging, grouping and sorting data associated with an instance of DataModel class.
  * @class
- * @property {QueryExpression|*} query - Gets or sets the current query expression
  * @property {DataModel|*} model - Gets or sets the underlying data model
  * @constructor
  * @param model {DataModel|*}
  * @augments DataContextEmitter
  */
 function DataQueryable(model) {
+    /**
+     * @property DataQueryable#query
+     * @type {import('@themost/query').QueryExpression}
+     */
     /**
      * @type {QueryExpression}
      * @private
@@ -55,6 +59,8 @@ function DataQueryable(model) {
         }
         return q;
     }, configurable:false, enumerable:false});
+
+    this.query
 
     Object.defineProperty(this, 'model', { get: function() {
         return m;
@@ -120,19 +126,34 @@ DataQueryable.prototype.prepare = function(useOr) {
 
 /**
  * Initializes a where expression
- * @param attr {string} - A string which represents the field name that is going to be used as the left operand of this expression
- * @returns {DataQueryable}
- * @example
- context.model('Person')
- .where('user/name').equal('user1@exampl.com')
- .select('description')
- .first().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
+ * @param attr {string|*} - A string which represents the field name that is going to be used as the left operand of this expression
+ * @returns this
  */
 DataQueryable.prototype.where = function(attr) {
+
+    // get arguments as array
+    var args = Array.from(arguments);
+    var self = this;
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.where.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
@@ -687,58 +708,37 @@ function select_(arg) {
 
 /**
  * Selects a field or a collection of fields of the current model.
- * @param {...string} attr  An array of fields, a field or a view name
+ * @param {...*} attr  An array of fields, a field or a view name
  * @returns {DataQueryable}
- * @example
- //retrieve the last 5 orders
- context.model('Order').select('id','customer','orderDate','orderedItem')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- * @example
- //retrieve the last 5 orders by getting the associated customer name and product name
- context.model('Order').select('id','customer/description as customerName','orderDate','orderedItem/name as productName')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- id   customerName         orderDate                      orderedItemName
- ---  -------------------  -----------------------------  ----------------------------------------------------
- 46   Nicole Armstrong     2014-12-31 13:35:41.000+02:00  LaCie Blade Runner
- 288  Cheyenne Hudson      2015-01-01 13:24:21.000+02:00  Canon Pixma MG5420 Wireless Photo All-in-One Printer
- 139  Christian Whitehead  2015-01-01 23:21:24.000+02:00  Olympus OM-D E-M1
- 3    Katelyn Kelly        2015-01-02 04:42:58.000+02:00  Kobo Aura
- 59   Cheyenne Hudson      2015-01-02 10:47:53.000+02:00  Google Nexus 7 (2013)
-
- @example
- //retrieve the best customers by getting the associated customer name and a count of orders made by the customer
- context.model('Order').select('customer/description as customerName','count(id) as orderCount')
- .orderBy('count(id)')
- .groupBy('customer/description')
- .take(3).list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- customerName      orderCount
- ----------------  ----------
- Miranda Bird      19
- Alex Miles        16
- Isaiah Morton     16
  */
 DataQueryable.prototype.select = function(attr) {
 
-    var self = this, arr, expr,
-        arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    var self = this;
+    var arr;
+    var expr;
+    var arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    // get arguments as array
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.select.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
 
     if (typeof arg === 'string') {
         if (arg==='*') {
@@ -997,10 +997,34 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
 
 /**
  * Prepares an ascending sorting operation
- * @param {string} attr - The field name to use for sorting results
+ * @param {string|*} attr - The field name to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.orderBy = function(attr) {
+
+    var args = Array.from(arguments);
+    var self = this;
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.orderBy.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
+
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.orderBy(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -1066,10 +1090,32 @@ DataQueryable.prototype.groupBy = function(attr) {
 
 /**
  * Continues a ascending sorting operation
- * @param {string} attr - The field to use for sorting results
+ * @param {string|*} attr - The field to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.thenBy = function(attr) {
+    var args = Array.from(arguments);
+    var self = this;
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.thenBy.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.thenBy(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -1080,10 +1126,32 @@ DataQueryable.prototype.thenBy = function(attr) {
 
 /**
  * Prepares a descending sorting operation
- * @param {string} attr - The field name to use for sorting results
+ * @param {string|*} attr - The field name to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.orderByDescending = function(attr) {
+    var args = Array.from(arguments);
+    var self = this;
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.orderByDescending.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.orderByDescending(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -1094,10 +1162,32 @@ DataQueryable.prototype.orderByDescending = function(attr) {
 
 /**
  * Continues a descending sorting operation
- * @param {string} attr The field name to use for sorting results
+ * @param {string|*} attr The field name to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.thenByDescending = function(attr) {
+    var args = Array.from(arguments);
+    var self = this;
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = function(event) {
+            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
+            if (instanceOf(expr, QueryField)) {
+                event.member = expr.$name;
+            }
+        };
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.thenByDescending.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.thenByDescending(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
