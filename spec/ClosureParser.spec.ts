@@ -3,7 +3,7 @@ import { TestAdapter } from './adapter/TestAdapter';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import { DataConfigurationStrategy } from '../data-configuration';
-import { round } from '@themost/query';
+import { round, count } from '@themost/query';
 
 describe('ClosureParser', () => {
 
@@ -87,6 +87,27 @@ describe('ClosureParser', () => {
                     expect(x.price).toBeGreaterThanOrEqual(results[index-1].price);
                 }
             });
+        });
+    });
+
+    it('should use group by closure', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const category = 'Laptops';
+            const items = await context.model('Order')
+            .select((x: any) => {
+                return {
+                    total: count(x.id),
+                    product: x.orderedItem.name,
+                    model:  x.orderedItem.model
+                }
+            })
+            .groupBy<any>(x => x.orderedItem.name, (x: { orderedItem: { model: any; }; }) => x.orderedItem.model).where((x: any) => {
+                return  x.orderedItem.category === category;
+            }, {
+                category
+            }).silent().take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeTruthy();
         });
     });
 

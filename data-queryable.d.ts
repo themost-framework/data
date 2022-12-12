@@ -2,7 +2,6 @@
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
 import {QueryExpression} from '@themost/query';
-
 export declare class DataQueryable implements DataContextEmitter {
     constructor(model: DataModel);
     readonly model: DataModel;
@@ -11,7 +10,7 @@ export declare class DataQueryable implements DataContextEmitter {
     where(attr: string): this;
     where<T>(expr: (value: T, ...param: any) => any, params?: any): this;
     search(text: string): this;
-    join(model: string): this;
+    join(model: string | DataModel): this;
     and(attr: string): this;
     or(attr: string): this;
     prepare(orElse?: boolean): this;
@@ -42,7 +41,7 @@ export declare class DataQueryable implements DataContextEmitter {
     thenByDescending(attr: any): this;
     thenByDescending<T>(expr: (value: T) => any): this;
     groupBy(...attr: any[]): this;
-    groupBy<T>(expr: (value: T) => any): this;
+    groupBy<T>(...args: [...expr:[(value: T) => any], params?: any]): this;
     skip(n:number): this;
     take(n:number): this;
     getItem(): Promise<any>;

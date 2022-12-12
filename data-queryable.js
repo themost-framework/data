@@ -256,7 +256,6 @@ DataQueryable.prototype.join = function(model)
     return self;
 };
 
-
 /**
  * Prepares a logical AND expression
  * @param attr {string} - The name of field that is going to be used in this expression
@@ -1035,28 +1034,9 @@ DataQueryable.prototype.orderBy = function(attr) {
 
 /**
  * Prepares a group by expression
- * @param {...string} attr - A param array of string that represents the attributes which are going to be used in group by expression
+ * @param {...*} attr - A param array of string that represents the attributes which are going to be used in group by expression
  * @returns {DataQueryable}
- * @example
- //retrieve products with highest sales during last month
- context.model('Order')
- .select('orderedItem/model as productModel', 'orderedItem/name as productName','count(id) as orderCount')
- .where('orderDate').greaterOrEqual(moment().startOf('month').toDate())
- .groupBy('orderedItem')
- .orderByDescending('count(id)')
- .take(5).list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //Results
- productModel  productName                              orderCount
- ------------  ---------------------------------------  ----------
- SM5111        Brother MFC-J6920DW                      3
- FY8135        LaCie Blade Runner                       3
- HA6910        Apple iMac (27-Inch, 2013 Version)       2
- LD4238        Dell XPS 18                              2
- HR6205        Samsung Galaxy Note 10.1 (2014 Edition)  2
+
  */
 DataQueryable.prototype.groupBy = function(attr) {
     var arr = [],
