@@ -12,6 +12,7 @@ var {QueryUtils} = require('@themost/query');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var { DataAttributeResolver } = require('./data-attribute-resolver');
+var { DataExpandResolver } = require('./data-expand-resolver');
 var {instanceOf} = require('./instance-of');
 
 
@@ -2241,64 +2242,56 @@ DataQueryable.prototype.cache = function(value) {
  * @param {...string|*} attr - A param array of strings which represents the field or the array of fields that are going to be expanded.
  * If attr is missing then all the previously defined expandable fields will be removed.
  * @returns {DataQueryable}
- * @example
- //retrieve an order and expand customer field
- context.model('Order')
- //note: the field [orderedItem] is defined as expandable in model definition and it will produce a nested object for each order
- .select('id','orderedItem','customer')
- .expand('customer')
- .where('id').equal(46)
- .first().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //Result:
- {
-    "id": 46,
-    "orderedItem": {
-        "id": 413,
-        "additionalType": "Product",
-        "category": "Storage and Networking Gear",
-        "price": 647.13,
-        "model": "FY8135",
-        "releaseDate": "2015-01-15 18:07:42.000+02:00",
-        "name": "LaCie Blade Runner",
-        "dateCreated": "2015-11-23 14:53:04.927+02:00",
-        "dateModified": "2015-11-23 14:53:04.934+02:00"
-    },
-    "customer": {
-        "id": 317,
-        "additionalType": "Person",
-        "alternateName": null,
-        "description": "Nicole Armstrong",
-        "image": "https://s3.amazonaws.com/uifaces/faces/twitter/zidoway/128.jpg",
-        "dateCreated": "2015-11-23 14:52:57.886+02:00",
-        "dateModified": "2015-11-23 14:52:57.917+02:00"
-    }
-}
- @example //retrieve an order and do not expand customer field
- {
-    "id": 46,
-    "orderedItem": {
-        "id": 413,
-        "additionalType": "Product",
-        "category": "Storage and Networking Gear",
-        "price": 647.13,
-        "model": "FY8135",
-        "releaseDate": "2015-01-15 18:07:42.000+02:00",
-        "name": "LaCie Blade Runner",
-        "dateCreated": "2015-11-23 14:53:04.927+02:00",
-        "dateModified": "2015-11-23 14:53:04.934+02:00"
-    },
-    "customer": 317
-}
  */
 DataQueryable.prototype.expand = function(attr) {
 
     var self = this,
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): [attr];
     var expanded;
+    if (typeof attr === 'function') {
+        var args = Array.from(arguments);
+        try {
+            /**
+             * @type {import("@themost/query").QueryExpression}
+             */
+            var query = this.clone().query;
+            // clear select
+            var onResolvingMember = function(event) {
+                var member = event.member.split('.');
+                self.expand(member[1]);
+            };
+            var onResolvingJoinMember = function(event) {
+                // convert expression to expand e.g. customer.address to
+                // customer($expand=address) or
+                // customer.address.addressCountry to
+                // customer($expand=address($expand=addressCountry))
+                /**
+                 * @type {string}
+                 */
+                var member = event.member;
+                var index = member.lastIndexOf('.');
+                while(index >= 0) {
+                    member = member.substring(0, index) + '($expand=' +  member.substring(index + 1, member.length) + ')'
+                    index = member.lastIndexOf('.');
+                }
+                var result = new DataExpandResolver().test(member);
+                if (result && result.length) {
+                    self.expand(result[0]);
+                }
+            };
+            query.resolvingMember.subscribe(onResolvingMember);
+            query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+            args.forEach(function(argument) {
+                query.select.call(query, argument);
+            });
+        } catch (error) {
+            query.resolvingMember.unsubscribe(onResolvingMember);
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
+
     if (_.isNil(arg)) {
         delete self.$expand;
     }

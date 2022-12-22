@@ -50,6 +50,45 @@ describe('ClosureParser', () => {
         });
     });
 
+    it('should use expand', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const items = await context.model('Order').select((x: any) => {
+                return {
+                    id: x.id,
+                    orderedItem: x.orderedItem,
+                    orderDate: x.orderDate,
+                    productName: x.orderedItem.name,
+                    productPrice: x.orderedItem.price
+                }
+            }).expand((x: any) => x.orderedItem).silent().take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeTruthy();
+            for (const item of items) {
+                expect(item.orderedItem).toBeTruthy();
+            }
+        });
+    });
+
+    it('should use nested expand', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const items = await context.model('Order').select((x: any) => {
+                return {
+                    id: x.id,
+                    customer: x.customer,
+                    orderDate: x.orderDate,
+                    productName: x.orderedItem.name,
+                    productPrice: x.orderedItem.price
+                }
+            }).expand((x: any) => x.customer.address).silent().take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeTruthy();
+            for (const item of items) {
+                expect(item.customer).toBeTruthy();
+                expect(item.customer.address).toBeTruthy();
+            }
+        });
+    });
+
     it('should use where closure', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const Products = context.model('Product');

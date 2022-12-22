@@ -4,6 +4,7 @@ import {DataContextEmitter} from "./types";
 import {QueryExpression} from '@themost/query';
 export declare class DataQueryable implements DataContextEmitter {
     constructor(model: DataModel);
+    ensureContext: void;
     readonly model: DataModel;
     readonly query: QueryExpression;
     clone(): this;
@@ -67,6 +68,7 @@ export declare class DataQueryable implements DataContextEmitter {
     title(value: string): this;
     toMD5(): string;
     expand(...attr: any[]): this;
+    expand<T>(...args: [...expr:[(value: T) => any], params?: any]): this;
     hasExpand(attr: any): boolean;
     add(x: any): this;
     subtract(x: any): this;
@@ -95,6 +97,4 @@ export declare class DataQueryable implements DataContextEmitter {
     levels(n:number): this;
     getLevels(): number;
     toExpand(): string;
-
-    ensureContext: void;
 }
