@@ -15,7 +15,26 @@ var { DataAttributeResolver } = require('./data-attribute-resolver');
 var { DataExpandResolver } = require('./data-expand-resolver');
 var {instanceOf} = require('./instance-of');
 
-
+/**
+ * @param {DataQueryable} target 
+ */
+function resolveJoinMember(target) {
+    return function onResolvingJoinMember(event) {
+        /**
+         * @type {Array}
+         */
+        var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+        if (fullyQualifiedMember.length > 2) {
+            // move the first segment at the index 1
+            var first = fullyQualifiedMember.shift();
+            fullyQualifiedMember.splice(1, 0, first);
+        }
+        var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
+        if (instanceOf(expr, QueryField)) {
+            event.member = expr.$name;
+        }
+    }
+}
 
 /**
  * @classdesc Represents a dynamic query helper for filtering, paging, grouping and sorting data associated with an instance of DataModel class.
@@ -134,18 +153,12 @@ DataQueryable.prototype.where = function(attr) {
 
     // get arguments as array
     var args = Array.from(arguments);
-    var self = this;
     if (typeof args[0] === 'function') {
         /**
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.where.apply(query, args);
@@ -724,12 +737,7 @@ DataQueryable.prototype.select = function(attr) {
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.select.apply(query, args);
@@ -1009,12 +1017,7 @@ DataQueryable.prototype.orderBy = function(attr) {
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.orderBy.apply(query, args);
@@ -1042,19 +1045,13 @@ DataQueryable.prototype.orderBy = function(attr) {
 DataQueryable.prototype.groupBy = function(attr) {
     var arr = [],
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
-    var self = this;
     var args = Array.from(arguments);
     if (typeof args[0] === 'function') {
         /**
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.groupBy.apply(query, args);
@@ -1104,12 +1101,7 @@ DataQueryable.prototype.thenBy = function(attr) {
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.thenBy.apply(query, args);
@@ -1134,18 +1126,12 @@ DataQueryable.prototype.thenBy = function(attr) {
  */
 DataQueryable.prototype.orderByDescending = function(attr) {
     var args = Array.from(arguments);
-    var self = this;
     if (typeof args[0] === 'function') {
         /**
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.orderByDescending.apply(query, args);
@@ -1176,12 +1162,7 @@ DataQueryable.prototype.thenByDescending = function(attr) {
          * @type {import("@themost/query").QueryExpression}
          */
         var query = this.query;
-        var onResolvingJoinMember = function(event) {
-            var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(self, event.fullyQualifiedMember.replace('.', '/'));
-            if (instanceOf(expr, QueryField)) {
-                event.member = expr.$name;
-            }
-        };
+        var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.thenByDescending.apply(query, args);
@@ -2261,10 +2242,6 @@ DataQueryable.prototype.expand = function(attr) {
                 self.expand(member[1]);
             };
             var onResolvingJoinMember = function(event) {
-                // convert expression to expand e.g. customer.address to
-                // customer($expand=address) or
-                // customer.address.addressCountry to
-                // customer($expand=address($expand=addressCountry))
                 /**
                  * @type {string}
                  */

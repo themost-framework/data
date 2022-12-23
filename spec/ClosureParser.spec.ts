@@ -35,6 +35,53 @@ describe('ClosureParser', () => {
         });
     });
 
+    it('should use select closure with nested attributes', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const items = await context.model('Order').select((x: any) => {
+                return {
+                    id: x.id,
+                    customer: x.customer.givenName.concat(' ', x.customer.familyName),
+                    streetAddress: x.customer.address.streetAddress,
+                    orderedItem: x.orderedItem.name,
+                    orderStatus: x.orderStatus.name,
+                    orderDate: x.orderDate
+                }
+            }).silent().take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeTruthy();
+            for (const item of items) {
+                expect(Object.prototype.hasOwnProperty.call(item, 'streetAddress')).toBeTruthy();
+                expect(typeof item.streetAddress === 'string').toBeTruthy();
+                expect(Object.prototype.hasOwnProperty.call(item, 'customer')).toBeTruthy();
+                expect(typeof item.customer === 'string').toBeTruthy();
+            }
+        });
+    });
+
+    it('should use select closure with functions', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const items = await context.model('Order').select((x: any) => {
+                return {
+                    id: x.id,
+                    customer: x.customer.givenName.concat(' ', x.customer.familyName),
+                    streetAddress: x.customer.address.streetAddress,
+                    orderedItem: x.orderedItem.name,
+                    releaseYear: x.orderedItem.releaseDate.getFullYear(),
+                    orderStatus: x.orderStatus.name,
+                    orderYear: x.orderDate.getFullYear()
+                }
+            }).silent().take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeTruthy();
+            for (const item of items) {
+                expect(Object.prototype.hasOwnProperty.call(item, 'orderYear')).toBeTruthy();
+                expect(typeof item.orderYear === 'number').toBeTruthy();
+                expect(Object.prototype.hasOwnProperty.call(item, 'releaseYear')).toBeTruthy();
+                expect(typeof item.releaseYear === 'number').toBeTruthy();
+            }
+        });
+    });
+
     it('should use select closure with nested attribute', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const items = await context.model('Order').select((x: any) => {
@@ -75,6 +122,7 @@ describe('ClosureParser', () => {
                 return {
                     id: x.id,
                     customer: x.customer,
+                    country: x.customer.address.addressCountry,
                     orderDate: x.orderDate,
                     productName: x.orderedItem.name,
                     productPrice: x.orderedItem.price
