@@ -25,9 +25,9 @@ function resolveJoinMember(target) {
          */
         var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
         if (fullyQualifiedMember.length > 2) {
-            // move the first segment at the index 1
-            var first = fullyQualifiedMember.shift();
-            fullyQualifiedMember.splice(1, 0, first);
+            // remove last element
+            var last = fullyQualifiedMember.pop();
+            fullyQualifiedMember = fullyQualifiedMember.reverse().concat(last);
         }
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
         if (instanceOf(expr, QueryField)) {
@@ -2258,8 +2258,13 @@ DataQueryable.prototype.expand = function(attr) {
             };
             query.resolvingMember.subscribe(onResolvingMember);
             query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+            // check if last argument is closure parameters
+            let params = null;
+            if (typeof args[args.length - 1] !== 'function') {
+                params = args.pop();
+            }
             args.forEach(function(argument) {
-                query.select.call(query, argument);
+                query.select.call(query, argument, params);
             });
         } catch (error) {
             query.resolvingMember.unsubscribe(onResolvingMember);

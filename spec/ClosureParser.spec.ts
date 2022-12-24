@@ -198,4 +198,25 @@ describe('ClosureParser', () => {
         });
     });
 
+    it('should use group by closure with nested attributes', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const orderStatus = 'OrderDelivered';
+            const items = await context.model('Order')
+            .select((x: any) => {
+                return {
+                    total: count(x.id),
+                    country: x.customer.address.addressCountry.name
+                }
+            })
+            .where<any>(x => {
+                return x.orderStatus.alternateName === orderStatus;
+            }, {
+                orderStatus
+            })
+            .groupBy<any>(x => x.customer.address.addressCountry).silent().take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeTruthy();
+        });
+    });
+
 });
