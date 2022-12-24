@@ -1011,7 +1011,6 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
 DataQueryable.prototype.orderBy = function(attr) {
 
     var args = Array.from(arguments);
-    var self = this;
     if (typeof args[0] === 'function') {
         /**
          * @type {import("@themost/query").QueryExpression}
@@ -1095,7 +1094,6 @@ DataQueryable.prototype.groupBy = function(attr) {
  */
 DataQueryable.prototype.thenBy = function(attr) {
     var args = Array.from(arguments);
-    var self = this;
     if (typeof args[0] === 'function') {
         /**
          * @type {import("@themost/query").QueryExpression}
@@ -1156,7 +1154,6 @@ DataQueryable.prototype.orderByDescending = function(attr) {
  */
 DataQueryable.prototype.thenByDescending = function(attr) {
     var args = Array.from(arguments);
-    var self = this;
     if (typeof args[0] === 'function') {
         /**
          * @type {import("@themost/query").QueryExpression}
