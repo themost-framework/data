@@ -3,6 +3,7 @@ import { TestUtils } from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
 import { OpenDataQuery, OpenDataQueryFormatter, round, count, any } from '@themost/query';
 import { TraceUtils } from '@themost/common';
+import { QueryEntity } from '@themost/query';
 
 async function execute(context: DataContext, query: OpenDataQuery) {
     const queryParams = new OpenDataQueryFormatter().formatSelect(query);
@@ -229,15 +230,16 @@ describe('OpenDataQuery.select', () => {
 
     it('should use expand with expression', async () => {
         await TestUtils.executeInTransaction(context, async () => {
+            const category = 'Laptops';
             let query = new OpenDataQuery().from('Orders')
-                .expand(any((x:any) => x.orderedItem).select((y:any) => {
-                    return {
-                        id: y.id,
-                        name: y.name
-                    }
+                .expand(any((x:any) => x.orderedItem).select<any>(y => {
+                    y.id,
+                    y.name
                 })).where((x:any) => {
-                    return x.orderedItem.category === 'Laptops';
-                }).orderBy((x:any) => x.orderDate)
+                    return x.orderedItem.category === category;
+                }, {
+                    category
+                }).orderBy<{orderDate: Date}>(x => x.orderDate)
                 .take(20);
             const queryParams = new OpenDataQueryFormatter().formatSelect(query);
             const q = await context.model('Orders').filterAsync(queryParams);
@@ -246,6 +248,72 @@ describe('OpenDataQuery.select', () => {
             results.forEach((result, index) => {
                 expect(result.orderedItem).toBeTruthy();
                 expect(result.orderedItem.category).toBeFalsy();
+            });
+        });
+    });
+
+    it('should use case expression', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const category = 'Laptops';
+            const Products = new QueryEntity('Products')
+            let query = new OpenDataQuery().from(Products)
+                .select<any>(x => {
+                   return {
+                    id: x.id,
+                    name: x.name,
+                    price: x.price,
+                    priceCategory: x.price > 800 ? 'Expensive' : 'Normal'
+                   }
+                }).where((x:any) => {
+                    return x.category === category;
+                }, {
+                    category
+                }).orderBy<{price: number}>(x => x.price)
+                .take(20);
+            const queryParams = new OpenDataQueryFormatter().formatSelect(query);
+            const q = await context.model('Products').filterAsync(queryParams);
+            let results = await q.silent().getItems();
+            expect(results.length).toBeGreaterThan(0);
+            results.forEach((result, index) => {
+                expect(result.priceCategory).toBeTruthy();
+                expect([
+                    'Expensive',
+                    'Normal'
+                ]).toContain(result.priceCategory);
+            });
+        });
+    });
+
+    it('should use complex case expression', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const category = 'Laptops';
+            const Products = new QueryEntity('Products')
+            let query = new OpenDataQuery().from(Products)
+                .select<any>(x => {
+                   return {
+                    id: x.id,
+                    name: x.name,
+                    price: x.price,
+                    priceCategory: x.price > 800 ? 'Expensive' :  (x.price <= 500 ? 'Cheap' : 'Normal')
+                   }
+                }).where((x:any) => {
+                    return x.category === category;
+                }, {
+                    category
+                }).orderBy<{price: number}>(x => x.price)
+                .skip(10)
+                .take(10);
+            const queryParams = new OpenDataQueryFormatter().formatSelect(query);
+            const q = await context.model('Products').filterAsync(queryParams);
+            let results = await q.silent().getItems();
+            expect(results.length).toBeGreaterThan(0);
+            results.forEach((result, index) => {
+                expect(result.priceCategory).toBeTruthy();
+                expect([
+                    'Expensive',
+                    'Cheap',
+                    'Normal'
+                ]).toContain(result.priceCategory);
             });
         });
     });
