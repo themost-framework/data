@@ -62,7 +62,7 @@ export class TestFormatter extends SqlFormatter {
      * @param {boolean=} unquoted - An optional value that indicates whether the resulted string will be quoted or not.
      * returns {string} - The equivalent SQL string value
      */
-    escape(value: any, unquoted: boolean) {
+    escape(value: any, unquoted?: boolean) {
         if (typeof value === 'boolean') {
             return value ? '1' : '0';
         }
@@ -163,7 +163,12 @@ export class TestFormatter extends SqlFormatter {
      * @returns {string}
      */
     $concat(p0: any, p1: any) {
-        return `(IFNULL(${this.escape(p0, false)},\'\') || IFNULL(${this.escape(p1, false)},\'\'))`;
+        let result = '(';
+        result += Array.from(arguments).map((arg) => {
+            return `IFNULL(${this.escape(arg)},\'\')`
+        }).join(' || ');
+        result += ')';
+        return result;
     }
 
     /**

@@ -827,78 +827,83 @@ function filterInternal(params, callback) {
     }
 
     try {
-        parser.parse(filter, function(err, query) {
-            if (err) {
-                callback(err);
-            }
-            else {
-                //create a DataQueryable instance
-                var q = new DataQueryable(self);
-                q.query.$where = query;
-                if ($joinExpressions.length>0)
-                    q.query.$expand = $joinExpressions;
-                //prepare
-                q.query.prepare();
-                if (typeof params === 'object') {
-                    //apply query parameters
-                    var select = params.$select,
-                        skip = params.$skip || 0,
-                        orderBy = params.$orderby || params.$order,
-                        groupBy = params.$groupby || params.$group,
-                        expand = params.$expand,
-                        levels = parseInt(params.$levels, 10),
-                        top = params.$top || params.$take;
 
-                    var selectParts = new SelectParser().split(select);
-                    var orderByParts = new SelectParser().split(orderBy);
-                    var groupByParts = new SelectParser().split(groupBy);
+        var queryOptions = {
+            $filter: filter,
+            $select:  params.$select,
+            $orderBy: params.$orderby || params.$orderBy || params.$order,
+            $groupBy: params.$groupby || params.$groupby || params.$group,
+            $top: params.$top || params.$take,
+            $skip: params.$skip || 0,
+            $levels: parseInt(params.$levels, 10)
+        };
 
-                    if (selectParts.length) {
-                        q.select.apply(q, selectParts);
-                    }
-                    if (groupByParts.length) {
-                        q.groupBy.apply(q, groupByParts);
-                    }
-                    if ((typeof levels === 'number') && !isNaN(levels)) {
-                        //set expand levels
-                        q.levels(levels);
-                    }
-                    //set $skip
-                    q.skip(skip);
-                    if (top) {
-                        q.query.take(top);
-                    }
-                    //set caching
-                    if (params.$cache && self.caching === 'conditional') {
-                        q.cache(true);
-                    }
-                    if (orderByParts.length) {
-                        orderByParts.forEach(function(x) {
-                            if (/\s+desc$/i.test(x)) {
-                                q.orderByDescending(x.replace(/\s+desc$/i, ''));
-                            }
-                            else if (/\s+asc/i.test(x)) {
-                                q.orderBy(x.replace(/\s+asc/i, ''));
-                            }
-                            else {
-                                q.orderBy(x);
-                            }
+        void parser.parseQueryOptions(queryOptions,
+        /**
+         * @param {Error=} err 
+         * @param {{$where?:*,$order?:*,$select?:*,$group?:*}} query 
+         * @returns {void}
+         */ 
+        function(err, query) {
+            try {
+                if (err) {
+                    callback(err);
+                } else {
+                    // create an instance of data queryable
+                    var q = new DataQueryable(self);
+                    if (query.$select) {
+                        if (q.query.$select == null) {
+                            q.query.$select = {};
+                        }
+                        var collection = q.query.$collection;
+                        Object.defineProperty(q.query.$select, collection, {
+                            configurable: true,
+                            enumerable: true,
+                            writable: true,
+                            value: query.$select
                         });
                     }
-                    if (expand) {
+                    if (query.$where) {
+                        q.query.$where = query.$where;
+                    }
+                    if (query.$order) {
+                        q.query.$order = query.$order;
+                    }
+                    if (query.$group) {
+                        q.query.$group = query.$group;
+                    }
+                    // assign join expressions
+                    if ($joinExpressions.length>0) {
+                        q.query.$expand = $joinExpressions;
+                    }
+                    // prepare query
+                    q.query.prepare();
+                    // set levels
+                    if (typeof queryOptions.$levels === 'number' && isNaN(queryOptions.$levels) === false) {
+                        q.levels(queryOptions.$levels);
+                    }
+                    if (typeof queryOptions.$top === 'number') {
+                        q.take(queryOptions.$top);
+                    }
+                    if (typeof queryOptions.$skip === 'number') {
+                        q.skip(queryOptions.$skip);
+                    }
+                    // set caching
+                    if (typeof params === 'object' && params.$cache === true && self.caching === 'conditional') {
+                        q.cache(true);
+                    }
+                    // set expand
+                    if (typeof params === 'object' && params.$expand != null) {
                         var resolver = require('./data-expand-resolver');
-                        var matches = resolver.testExpandExpression(expand);
+                        var matches = resolver.testExpandExpression(params.$expand);
                         if (matches && matches.length>0) {
                             q.expand.apply(q, matches);
                         }
                     }
                     return callback(null, q);
                 }
-                else {
-                    //and finally return DataQueryable instance
-                    callback(null, q);
-                }
-
+            } catch (error) {
+                return callback(error);
             }
         });
     }

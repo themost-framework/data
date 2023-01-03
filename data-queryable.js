@@ -12,19 +12,43 @@ var {QueryUtils} = require('@themost/query');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var { DataAttributeResolver } = require('./data-attribute-resolver');
+var { DataExpandResolver } = require('./data-expand-resolver');
+var {instanceOf} = require('./instance-of');
 
-
+/**
+ * @param {DataQueryable} target 
+ */
+function resolveJoinMember(target) {
+    return function onResolvingJoinMember(event) {
+        /**
+         * @type {Array}
+         */
+        var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+        if (fullyQualifiedMember.length > 2) {
+            // remove last element
+            var last = fullyQualifiedMember.pop();
+            fullyQualifiedMember = fullyQualifiedMember.reverse().concat(last);
+        }
+        var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
+        if (instanceOf(expr, QueryField)) {
+            event.member = expr.$name;
+        }
+    }
+}
 
 /**
  * @classdesc Represents a dynamic query helper for filtering, paging, grouping and sorting data associated with an instance of DataModel class.
  * @class
- * @property {QueryExpression|*} query - Gets or sets the current query expression
  * @property {DataModel|*} model - Gets or sets the underlying data model
  * @constructor
  * @param model {DataModel|*}
  * @augments DataContextEmitter
  */
 function DataQueryable(model) {
+    /**
+     * @property DataQueryable#query
+     * @type {import('@themost/query').QueryExpression}
+     */
     /**
      * @type {QueryExpression}
      * @private
@@ -55,6 +79,8 @@ function DataQueryable(model) {
         }
         return q;
     }, configurable:false, enumerable:false});
+
+    this.query
 
     Object.defineProperty(this, 'model', { get: function() {
         return m;
@@ -120,19 +146,28 @@ DataQueryable.prototype.prepare = function(useOr) {
 
 /**
  * Initializes a where expression
- * @param attr {string} - A string which represents the field name that is going to be used as the left operand of this expression
- * @returns {DataQueryable}
- * @example
- context.model('Person')
- .where('user/name').equal('user1@exampl.com')
- .select('description')
- .first().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
+ * @param attr {string|*} - A string which represents the field name that is going to be used as the left operand of this expression
+ * @returns this
  */
 DataQueryable.prototype.where = function(attr) {
+
+    // get arguments as array
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.where.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
@@ -234,7 +269,6 @@ DataQueryable.prototype.join = function(model)
     self.select().query.join(entity).with(expr);
     return self;
 };
-
 
 /**
  * Prepares a logical AND expression
@@ -687,58 +721,32 @@ function select_(arg) {
 
 /**
  * Selects a field or a collection of fields of the current model.
- * @param {...string} attr  An array of fields, a field or a view name
+ * @param {...*} attr  An array of fields, a field or a view name
  * @returns {DataQueryable}
- * @example
- //retrieve the last 5 orders
- context.model('Order').select('id','customer','orderDate','orderedItem')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- * @example
- //retrieve the last 5 orders by getting the associated customer name and product name
- context.model('Order').select('id','customer/description as customerName','orderDate','orderedItem/name as productName')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- id   customerName         orderDate                      orderedItemName
- ---  -------------------  -----------------------------  ----------------------------------------------------
- 46   Nicole Armstrong     2014-12-31 13:35:41.000+02:00  LaCie Blade Runner
- 288  Cheyenne Hudson      2015-01-01 13:24:21.000+02:00  Canon Pixma MG5420 Wireless Photo All-in-One Printer
- 139  Christian Whitehead  2015-01-01 23:21:24.000+02:00  Olympus OM-D E-M1
- 3    Katelyn Kelly        2015-01-02 04:42:58.000+02:00  Kobo Aura
- 59   Cheyenne Hudson      2015-01-02 10:47:53.000+02:00  Google Nexus 7 (2013)
-
- @example
- //retrieve the best customers by getting the associated customer name and a count of orders made by the customer
- context.model('Order').select('customer/description as customerName','count(id) as orderCount')
- .orderBy('count(id)')
- .groupBy('customer/description')
- .take(3).list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- customerName      orderCount
- ----------------  ----------
- Miranda Bird      19
- Alex Miles        16
- Isaiah Morton     16
  */
 DataQueryable.prototype.select = function(attr) {
 
-    var self = this, arr, expr,
-        arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    var self = this;
+    var arr;
+    var expr;
+    var arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    // get arguments as array
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.select.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
 
     if (typeof arg === 'string') {
         if (arg==='*') {
@@ -997,10 +1005,28 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
 
 /**
  * Prepares an ascending sorting operation
- * @param {string} attr - The field name to use for sorting results
+ * @param {string|*} attr - The field name to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.orderBy = function(attr) {
+
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.orderBy.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
+
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.orderBy(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -1011,32 +1037,29 @@ DataQueryable.prototype.orderBy = function(attr) {
 
 /**
  * Prepares a group by expression
- * @param {...string} attr - A param array of string that represents the attributes which are going to be used in group by expression
+ * @param {...*} attr - A param array of string that represents the attributes which are going to be used in group by expression
  * @returns {DataQueryable}
- * @example
- //retrieve products with highest sales during last month
- context.model('Order')
- .select('orderedItem/model as productModel', 'orderedItem/name as productName','count(id) as orderCount')
- .where('orderDate').greaterOrEqual(moment().startOf('month').toDate())
- .groupBy('orderedItem')
- .orderByDescending('count(id)')
- .take(5).list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //Results
- productModel  productName                              orderCount
- ------------  ---------------------------------------  ----------
- SM5111        Brother MFC-J6920DW                      3
- FY8135        LaCie Blade Runner                       3
- HA6910        Apple iMac (27-Inch, 2013 Version)       2
- LD4238        Dell XPS 18                              2
- HR6205        Samsung Galaxy Note 10.1 (2014 Edition)  2
+
  */
 DataQueryable.prototype.groupBy = function(attr) {
     var arr = [],
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.groupBy.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (_.isArray(arg)) {
         for (var i = 0; i < arg.length; i++) {
             var x = arg[i];
@@ -1066,10 +1089,26 @@ DataQueryable.prototype.groupBy = function(attr) {
 
 /**
  * Continues a ascending sorting operation
- * @param {string} attr - The field to use for sorting results
+ * @param {string|*} attr - The field to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.thenBy = function(attr) {
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.thenBy.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.thenBy(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -1080,10 +1119,26 @@ DataQueryable.prototype.thenBy = function(attr) {
 
 /**
  * Prepares a descending sorting operation
- * @param {string} attr - The field name to use for sorting results
+ * @param {string|*} attr - The field name to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.orderByDescending = function(attr) {
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.orderByDescending.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.orderByDescending(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -1094,10 +1149,26 @@ DataQueryable.prototype.orderByDescending = function(attr) {
 
 /**
  * Continues a descending sorting operation
- * @param {string} attr The field name to use for sorting results
+ * @param {string|*} attr The field name to use for sorting results
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.thenByDescending = function(attr) {
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.thenByDescending.apply(query, args);
+        } catch (error) {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.thenByDescending(DataAttributeResolver.prototype.orderByNestedAttribute.call(this, attr));
         return this;
@@ -2149,64 +2220,57 @@ DataQueryable.prototype.cache = function(value) {
  * @param {...string|*} attr - A param array of strings which represents the field or the array of fields that are going to be expanded.
  * If attr is missing then all the previously defined expandable fields will be removed.
  * @returns {DataQueryable}
- * @example
- //retrieve an order and expand customer field
- context.model('Order')
- //note: the field [orderedItem] is defined as expandable in model definition and it will produce a nested object for each order
- .select('id','orderedItem','customer')
- .expand('customer')
- .where('id').equal(46)
- .first().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //Result:
- {
-    "id": 46,
-    "orderedItem": {
-        "id": 413,
-        "additionalType": "Product",
-        "category": "Storage and Networking Gear",
-        "price": 647.13,
-        "model": "FY8135",
-        "releaseDate": "2015-01-15 18:07:42.000+02:00",
-        "name": "LaCie Blade Runner",
-        "dateCreated": "2015-11-23 14:53:04.927+02:00",
-        "dateModified": "2015-11-23 14:53:04.934+02:00"
-    },
-    "customer": {
-        "id": 317,
-        "additionalType": "Person",
-        "alternateName": null,
-        "description": "Nicole Armstrong",
-        "image": "https://s3.amazonaws.com/uifaces/faces/twitter/zidoway/128.jpg",
-        "dateCreated": "2015-11-23 14:52:57.886+02:00",
-        "dateModified": "2015-11-23 14:52:57.917+02:00"
-    }
-}
- @example //retrieve an order and do not expand customer field
- {
-    "id": 46,
-    "orderedItem": {
-        "id": 413,
-        "additionalType": "Product",
-        "category": "Storage and Networking Gear",
-        "price": 647.13,
-        "model": "FY8135",
-        "releaseDate": "2015-01-15 18:07:42.000+02:00",
-        "name": "LaCie Blade Runner",
-        "dateCreated": "2015-11-23 14:53:04.927+02:00",
-        "dateModified": "2015-11-23 14:53:04.934+02:00"
-    },
-    "customer": 317
-}
  */
 DataQueryable.prototype.expand = function(attr) {
 
     var self = this,
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): [attr];
     var expanded;
+    if (typeof attr === 'function') {
+        var args = Array.from(arguments);
+        try {
+            /**
+             * @type {import("@themost/query").QueryExpression}
+             */
+            var query = this.clone().query;
+            // clear select
+            var onResolvingMember = function(event) {
+                var member = event.member.split('.');
+                self.expand(member[1]);
+            };
+            var onResolvingJoinMember = function(event) {
+                /**
+                 * @type {string}
+                 */
+                var member = event.member;
+                var index = member.lastIndexOf('.');
+                while(index >= 0) {
+                    member = member.substring(0, index) + '($expand=' +  member.substring(index + 1, member.length) + ')'
+                    index = member.lastIndexOf('.');
+                }
+                var result = new DataExpandResolver().test(member);
+                if (result && result.length) {
+                    self.expand(result[0]);
+                }
+            };
+            query.resolvingMember.subscribe(onResolvingMember);
+            query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+            // check if last argument is closure parameters
+            let params = null;
+            if (typeof args[args.length - 1] !== 'function') {
+                params = args.pop();
+            }
+            args.forEach(function(argument) {
+                query.select.call(query, argument, params);
+            });
+        } catch (error) {
+            query.resolvingMember.unsubscribe(onResolvingMember);
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            throw error;
+        }
+        return this;
+    }
+
     if (_.isNil(arg)) {
         delete self.$expand;
     }

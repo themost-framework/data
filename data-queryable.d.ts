@@ -2,15 +2,16 @@
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
 import {QueryExpression} from '@themost/query';
-
 export declare class DataQueryable implements DataContextEmitter {
     constructor(model: DataModel);
+    ensureContext: void;
     readonly model: DataModel;
     readonly query: QueryExpression;
     clone(): this;
     where(attr: string): this;
+    where<T>(expr: (value: T, ...param: any) => any, params?: any): this;
     search(text: string): this;
-    join(model: string): this;
+    join(model: string | DataModel): this;
     and(attr: string): this;
     or(attr: string): this;
     prepare(orElse?: boolean): this;
@@ -29,12 +30,19 @@ export declare class DataQueryable implements DataContextEmitter {
     contains(value: any): this;
     notContains(value: any): this;
     between(value1: any, value2: any): this;
+    select<T>(expr: (value: T, ...param: any) => any, params?: any): this;
+    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): this;
     select(...attr: any[]): this;
     orderBy(attr: any): this;
+    orderBy<T>(expr: (value: T) => any): this;
     orderByDescending(attr: any): this;
+    orderByDescending<T>(expr: (value: T) => any): this;
     thenBy(attr: any): this;
+    thenBy<T>(expr: (value: T) => any): this;
     thenByDescending(attr: any): this;
+    thenByDescending<T>(expr: (value: T) => any): this;
     groupBy(...attr: any[]): this;
+    groupBy<T>(...args: [...expr:[(value: T) => any], params?: any]): this;
     skip(n:number): this;
     take(n:number): this;
     getItem(): Promise<any>;
@@ -60,6 +68,7 @@ export declare class DataQueryable implements DataContextEmitter {
     title(value: string): this;
     toMD5(): string;
     expand(...attr: any[]): this;
+    expand<T>(...args: [...expr:[(value: T) => any], params?: any]): this;
     hasExpand(attr: any): boolean;
     add(x: any): this;
     subtract(x: any): this;
@@ -88,6 +97,4 @@ export declare class DataQueryable implements DataContextEmitter {
     levels(n:number): this;
     getLevels(): number;
     toExpand(): string;
-
-    ensureContext: void;
 }
