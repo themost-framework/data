@@ -97,4 +97,17 @@ describe('ODataModelBuilder', () => {
         element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityContainer/EntitySet[@EntityType=\'UserReview\']');
         expect(element).toBeFalsy();
     });
+
+    it('should include implemented properties', async () => {
+        const service: ODataConventionModelBuilder = new ODataConventionModelBuilder(app.getConfiguration());
+        const document: XDocument = await service.getEdmDocument();
+        expect(document).toBeTruthy();
+
+        let element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityType[@Name=\'ActionStatusType\']');
+        expect(element).toBeTruthy();
+
+        let child = element.selectSingleNode('Property[@Name=\'name\']');
+        expect(child).toBeTruthy();
+
+    });
 });

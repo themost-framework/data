@@ -5,6 +5,7 @@ var {sprintf} = require('sprintf-js');
 var Q = require('q');
 var pluralize = require('pluralize');
 var _ = require('lodash');
+var {cloneDeep} = require('lodash');
 var moment = require('moment');
 var {TypeParser} = require('./types');
 var parseBoolean = TypeParser.parseBoolean;
@@ -1932,123 +1933,46 @@ ODataConventionModelBuilder.prototype._cleanupEntityContainer = function() {
      * @type {Array<EntitySetConfiguration>}
      */
     var entityContainer = self[entityContainerProperty];
-    /**
-     * @type {Array<EntityTypeConfiguration>}
-     */
-    var entityTypes = self[entityTypesProperty];
     for (var i = 0; i < entityContainer.length; i++) {
         var x = entityContainer[i];
         // get model
-        var entityTypeName = x.entityType.name;
         var definition = dataConfiguration.model(x.entityType.name);
         if (definition && definition.hidden) {
             self.removeEntitySet(x.name);
-            // keep entity type if it's inherited by other types
-            var find = entityContainer.find(function(item) {
-                return item.entityType && (item.entityType.baseType === entityTypeName ||
-                    item.entityType.implements === entityTypeName);
-            });
-            if (find == null) {
-                find = Object.keys(entityTypes).find(function(item) {
-                    if (Object.prototype.hasOwnProperty.call(entityTypes, item)) {
-                        /**
-                         * @type {EntityTypeConfiguration}
-                         */
-                        var entityType = entityTypes[item];
-                        // keep entity type if it's being used by a property of an entity
-                        var hasProperty = entityType.property.find(function(property) {
-                            return entityType.ignoredProperty.indexOf(property) < 0 && property.type === entityTypeName;
-                        });
-                        if (hasProperty) {
-                            return item;
-                        }
-                        // keep entity type if it's being used by a navigation property of an entity
-                        var hasNavigationProperty = entityType.navigationProperty.find(function(property) {
-                            return entityType.ignoredProperty.indexOf(property) < 0 && (property.type === entityTypeName ||
-                                property.type === EdmType.CollectionOf(entityTypeName));
-                        });
-                        if (hasNavigationProperty) {
-                            return item;
-                        }
-                        // search entity type collection functions
-                        var hasFunction = entityType.collection.functions.find(function(func) {
-                            var exists =  func.returnType === entityTypeName || func.returnCollectionType === entityTypeName;
-                            if (exists) {
-                                return func;
-                            }
-                            exists = func.parameters.find(function(parameter) {
-                                return parameter.type === entityTypeName ||
-                                    parameter.type === EdmType.CollectionOf(entityTypeName);
-                            });
-                            if (exists) {
-                                return func;
-                            }
-                        });
-                        if (hasFunction) {
-                            return item;
-                        }
-                        // search entity type functions
-                        hasFunction = entityType.functions.find(function tryToFindFunction(func) {
-                            var exists =  func.returnType === entityTypeName || func.returnCollectionType === entityTypeName;
-                            if (exists) {
-                                return func;
-                            }
-                            exists = func.parameters.find(function(parameter) {
-                                return parameter.type === entityTypeName ||
-                                    parameter.type === EdmType.CollectionOf(entityTypeName);
-                            });
-                            if (exists) {
-                                return func;
-                            }
-                        });
-                        if (hasFunction) {
-                            return item;
-                        }
-
-                        // search entity type collection actions
-                        var hasAction = entityType.collection.actions.find(function tryToFindAction(action) {
-                            var exists = action.returnType === entityTypeName || action.returnCollectionType === entityTypeName;
-                            if (exists) {
-                                return action;
-                            }
-                            exists = action.parameters.find(function(parameter) {
-                                return parameter.type === entityTypeName ||
-                                    parameter.type === EdmType.CollectionOf(entityTypeName);
-                            });
-                            if (exists) {
-                                return action;
-                            }
-                        });
-                        if (hasAction) {
-                            return item;
-                        }
-                        // search entity type actions
-                        hasAction = entityType.actions.find(function tryToFindAction(action) {
-                            var exists = action.returnType === entityTypeName || action.returnCollectionType === entityTypeName;
-                            if (exists) {
-                                return action;
-                            }
-                            exists = action.parameters.find(function(parameter) {
-                                return parameter.type === entityTypeName ||
-                                    parameter.type === EdmType.CollectionOf(entityTypeName);
-                            });
-                            if (exists) {
-                                return action;
-                            }
-                        });
-                        if (hasAction) {
-                            return item;
-                        }
-                    }
-                    return false;
-                });
-                if (find == null) {
-                    self.ignore(entityTypeName);
-                }
-            }
             i -= 1;
         }
     }
+    var entityTypes = self[entityTypesProperty];
+    Object.keys(entityTypes).forEach(
+        /**
+         * @param {EntityTypeConfiguration} entityType
+         */
+        function(name) {
+            if (Object.prototype.hasOwnProperty.call(entityTypes, name)) {
+                var entityType = entityTypes[name];
+                if (entityType.implements) {
+                    // add properties and navigation properties of implemented entity
+                    /**
+                     * @type {EntityTypeConfiguration}
+                     */
+                    var implementedEntity = self.getEntity(entityType.implements);
+                    while(implementedEntity != null) {
+                        implementedEntity.property.forEach(function(property) {
+                            if (entityType.property.findIndex(function(x) { return x.name === property.name })  < 0) {
+                                entityType.property.push(cloneDeep(property));
+                            }
+                        });
+                        implementedEntity.navigationProperty.forEach(function(navigationProperty) {
+                            if (entityType.navigationProperty.findIndex(function(x) { return x.name === navigationProperty.name })  < 0) {
+                                entityType.navigationProperty.push(cloneDeep(navigationProperty));
+                            }
+                        });
+                        implementedEntity = self.getEntity(implementedEntity.implements);
+                    }
+                }
+            }
+            
+        });
 }
 
 /**
