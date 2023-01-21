@@ -101,6 +101,11 @@
                     }
                 ]
             }
+        },
+        {
+            "@id": "https://themost.io/schemas/userReviews",
+            "name": "userReviews",
+            "type": "UserReview"
         }
     ],
     "privileges": [
