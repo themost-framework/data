@@ -1883,10 +1883,6 @@ ODataConventionModelBuilder.prototype.initialize = function() {
     }
     return Q.promise(function(resolve, reject) {
         try {
-            /**
-             * @type {*|DataConfigurationStrategy}
-             */
-            var dataConfiguration = self.getConfiguration().getStrategy(DataConfigurationStrategy);
             var schemaLoader = self.getConfiguration().getStrategy(SchemaLoaderStrategy);
             if (instanceOf(schemaLoader, DefaultSchemaLoaderStrategy)) {
                 // read models
@@ -1915,20 +1911,8 @@ ODataConventionModelBuilder.prototype.initialize = function() {
                         self.addEntitySet(x, pluralize(x));
                     }
                 });
-                //remove hidden models from entity set container
-                for (var i = 0; i < self[entityContainerProperty].length; i++) {
-                    var x = self[entityContainerProperty][i];
-                    //get model
-                    var entityTypeName = x.entityType.name;
-                    var definition = dataConfiguration.model(x.entityType.name);
-                    if (definition && definition.hidden) {
-                        self.removeEntitySet(x.name);
-                        if (!definition.abstract) {
-                            self.ignore(entityTypeName);
-                        }
-                        i -= 1;
-                    }
-                }
+                self._cleanupEntityContainer();
+                
             }
             self[initializeProperty] = true;
             return resolve();
@@ -1937,6 +1921,63 @@ ODataConventionModelBuilder.prototype.initialize = function() {
         }
     });
 };
+
+ODataConventionModelBuilder.prototype._cleanupEntityContainer = function() {
+    var self = this;
+    // remove hidden models from entity set container
+    /**
+     * @type {*|DataConfigurationStrategy}
+     */
+    var dataConfiguration = self.getConfiguration().getStrategy(DataConfigurationStrategy);
+    /**
+     * @type {Array<EntitySetConfiguration>}
+     */
+    var entityContainer = self[entityContainerProperty];
+    /**
+     * @type {Array<EntityTypeConfiguration>}
+     */
+    var entityTypes = self[entityTypesProperty];
+    for (var i = 0; i < entityContainer.length; i++) {
+        var x = entityContainer[i];
+        // get model
+        var entityTypeName = x.entityType.name;
+        var definition = dataConfiguration.model(x.entityType.name);
+        if (definition && definition.hidden) {
+            self.removeEntitySet(x.name);
+            // keep entity type if it's inherited by other types
+            var find = entityContainer.find(function(item) {
+                return item.entityType && item.entityType.baseType === entityTypeName;
+            });
+            if (find == null) {
+                // keep entity type if it's being as property of an entity
+                find = Object.keys(entityTypes).find(function(item) {
+                    if (Object.prototype.hasOwnProperty.call(entityTypes, item)) {
+                        var entityType = entityTypes[item];
+                        var hasProperty = entityType.property.find(function(property) {
+                            return property.type === entityTypeName;
+                        });
+                        if (hasProperty) {
+                            return item;
+                        }
+                        var hasNavigationProperty = entityType.navigationProperty.find(function(property) {
+                            return property.type === entityTypeName ||
+                                property.type === EdmType.CollectionOf(entityTypeName);
+                        });
+                        if (hasNavigationProperty) {
+                            return item;
+                        }
+                    }
+                    return false;
+                });
+                if (find == null) {
+                    self.ignore(entityTypeName);
+                }
+            }
+            i -= 1;
+        }
+    }
+}
+
 /**
  * @returns *
  */
@@ -2087,12 +2128,9 @@ function EdmMapping() {
  * @returns {Function}
  */
 EdmMapping.entityType = function (name) {
-    if (typeof name !== 'string') {
-        throw new TypeError('Entity type must be a string');
-    }
     return function (target, key, descriptor) {
         if (typeof target === 'function') {
-            target.entityTypeDecorator = name;
+            target.entityTypeDecorator = typeof(name) === 'string' ? name : target.name;
         }
         else {
             throw new Error('Decorator is not valid on this declaration type.');
