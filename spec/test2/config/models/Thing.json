@@ -6,7 +6,7 @@
     "title": "Thing",
     "abstract": false,
     "sealed": false,
-    "hidden": false,
+    "hidden": true,
     "version": "2.0",
     "fields": [{
             "@id": "http://schema.org/sameAs",

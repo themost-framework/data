@@ -2,7 +2,7 @@
     "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
     "name": "UserComment",
     "title": "UserComments",
-    "hidden": false,
+    "hidden": true,
     "sealed": false,
     "abstract": false,
     "version": "2.0",
