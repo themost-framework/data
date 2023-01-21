@@ -27,7 +27,7 @@ class User extends Account {
     @EdmMapping.action('Chats', EdmType.CollectionOf('UserChat'))
     async getChats() {
         const username = this.context.user && this.context.user.name;
-        return this.context.model('UserComment').where((x: { commentBy: { name: string } }) => {
+        return this.context.model('UserChat').where((x: { commentBy: { name: string } }) => {
             return x.commentBy.name === username;
         }, {
             username
