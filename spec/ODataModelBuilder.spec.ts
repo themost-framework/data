@@ -1,11 +1,5 @@
-import {TestUtils} from './adapter/TestUtils';
-import { TestAdapter } from './adapter/TestAdapter';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
-import {DataModelFilterParser} from '../data-model-filter.parser';
-import { at } from 'lodash';
-import { DataPermissionExclusion } from '../data-permission';
-import { DataConfigurationStrategy } from '../data-configuration';
 import { ODataConventionModelBuilder } from '../odata';
 import { XDocument } from '@themost/xml';
 
@@ -30,7 +24,7 @@ describe('ODataModelBuilder', () => {
         expect(document).toBeTruthy();
     });
 
-    it('should exclude hidden entity types', async () => {
+    it('should exclude hidden entity sets', async () => {
         const service: ODataConventionModelBuilder = new ODataConventionModelBuilder(app.getConfiguration());
         const document = await service.getEdm();
         expect(document).toBeTruthy();

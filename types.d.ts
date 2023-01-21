@@ -64,8 +64,17 @@ export declare class DataAdapter {
     createView(name:string, query:any, callback:(err?:Error) => void): void;
 }
 
+export declare interface ContextUser {
+    name?: string;
+    authenticationType?: string;
+}
+
 export declare class DataContext extends SequentialEventEmitter {
     
+    user?: ContextUser;
+
+    interactiveUser?: ContextUser;
+
     model(name:any): DataModel
 
     db: DataAdapter;

@@ -1912,7 +1912,6 @@ ODataConventionModelBuilder.prototype.initialize = function() {
                     }
                 });
                 self._cleanupEntityContainer();
-                
             }
             self[initializeProperty] = true;
             return resolve();
@@ -1946,24 +1945,61 @@ ODataConventionModelBuilder.prototype._cleanupEntityContainer = function() {
             self.removeEntitySet(x.name);
             // keep entity type if it's inherited by other types
             var find = entityContainer.find(function(item) {
-                return item.entityType && item.entityType.baseType === entityTypeName;
+                return item.entityType && (item.entityType.baseType === entityTypeName ||
+                    item.entityType.implements === entityTypeName);
             });
             if (find == null) {
-                // keep entity type if it's being as property of an entity
                 find = Object.keys(entityTypes).find(function(item) {
                     if (Object.prototype.hasOwnProperty.call(entityTypes, item)) {
+                        /**
+                         * @type {EntityTypeConfiguration}
+                         */
                         var entityType = entityTypes[item];
+                        // keep entity type if it's being used by a property of an entity
                         var hasProperty = entityType.property.find(function(property) {
-                            return property.type === entityTypeName;
+                            return entityType.ignoredProperty.indexOf(property) < 0 && property.type === entityTypeName;
                         });
                         if (hasProperty) {
                             return item;
                         }
+                        // keep entity type if it's being used by a navigation property of an entity
                         var hasNavigationProperty = entityType.navigationProperty.find(function(property) {
-                            return property.type === entityTypeName ||
-                                property.type === EdmType.CollectionOf(entityTypeName);
+                            return entityType.ignoredProperty.indexOf(property) < 0 && (property.type === entityTypeName ||
+                                property.type === EdmType.CollectionOf(entityTypeName));
                         });
                         if (hasNavigationProperty) {
+                            return item;
+                        }
+                        // search entity type collection functions
+                        var hasFunction = entityType.collection.functions.find(function(func) {
+                            return func.returnType === entityTypeName ||
+                            func.returnType === EdmType.CollectionOf(entityTypeName);
+                        });
+                        if (hasFunction) {
+                            return item;
+                        }
+                        // search entity type functions
+                        hasFunction = entityType.functions.find(function(func) {
+                            return func.returnType === entityTypeName ||
+                            func.returnType === EdmType.CollectionOf(entityTypeName);
+                        });
+                        if (hasFunction) {
+                            return item;
+                        }
+                        // search entity type collection actions
+                        var hasAction = entityType.collection.actions.find(function(action) {
+                            return action.returnType === entityTypeName ||
+                            action.returnType === EdmType.CollectionOf(entityTypeName);
+                        });
+                        if (hasAction) {
+                            return item;
+                        }
+                        // search entity type actions
+                        hasAction = entityType.actions.find(function(action) {
+                            return action.returnType === entityTypeName ||
+                            action.returnType === EdmType.CollectionOf(entityTypeName);
+                        });
+                        if (hasAction) {
                             return item;
                         }
                     }
@@ -1986,10 +2022,6 @@ ODataConventionModelBuilder.prototype.initializeSync = function() {
     if (self[initializeProperty]) {
         return;
     }
-    /**
-     * @type {*|DataConfigurationStrategy}
-     */
-    var dataConfiguration = self.getConfiguration().getStrategy(DataConfigurationStrategy);
     var schemaLoader = self.getConfiguration().getStrategy(SchemaLoaderStrategy);
     if (instanceOf(schemaLoader, DefaultSchemaLoaderStrategy)) {
         // read models
@@ -2019,20 +2051,8 @@ ODataConventionModelBuilder.prototype.initializeSync = function() {
                 self.addEntitySet(x, pluralize(x));
             }
         });
-        //remove hidden models from entity set container
-        for (var i = 0; i < self[entityContainerProperty].length; i++) {
-            var x = self[entityContainerProperty][i];
-            //get model
-            var entityTypeName = x.entityType.name;
-            var definition = dataConfiguration.model(x.entityType.name);
-            if (definition && definition.hidden) {
-                self.removeEntitySet(x.name);
-                if (!definition.abstract) {
-                    self.ignore(entityTypeName);
-                }
-                i -= 1;
-            }
-        }
+        // cleanup entity container
+        self._cleanupEntityContainer();
     }
     self[initializeProperty] = true;
 };
