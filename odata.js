@@ -1972,32 +1972,69 @@ ODataConventionModelBuilder.prototype._cleanupEntityContainer = function() {
                         }
                         // search entity type collection functions
                         var hasFunction = entityType.collection.functions.find(function(func) {
-                            return func.returnType === entityTypeName ||
-                            func.returnType === EdmType.CollectionOf(entityTypeName);
+                            var exists =  func.returnType === entityTypeName || func.returnCollectionType === entityTypeName;
+                            if (exists) {
+                                return func;
+                            }
+                            exists = func.parameters.find(function(parameter) {
+                                return parameter.type === entityTypeName ||
+                                    parameter.type === EdmType.CollectionOf(entityTypeName);
+                            });
+                            if (exists) {
+                                return func;
+                            }
                         });
                         if (hasFunction) {
                             return item;
                         }
                         // search entity type functions
-                        hasFunction = entityType.functions.find(function(func) {
-                            return func.returnType === entityTypeName ||
-                            func.returnType === EdmType.CollectionOf(entityTypeName);
+                        hasFunction = entityType.functions.find(function tryToFindFunction(func) {
+                            var exists =  func.returnType === entityTypeName || func.returnCollectionType === entityTypeName;
+                            if (exists) {
+                                return func;
+                            }
+                            exists = func.parameters.find(function(parameter) {
+                                return parameter.type === entityTypeName ||
+                                    parameter.type === EdmType.CollectionOf(entityTypeName);
+                            });
+                            if (exists) {
+                                return func;
+                            }
                         });
                         if (hasFunction) {
                             return item;
                         }
+
                         // search entity type collection actions
-                        var hasAction = entityType.collection.actions.find(function(action) {
-                            return action.returnType === entityTypeName ||
-                            action.returnType === EdmType.CollectionOf(entityTypeName);
+                        var hasAction = entityType.collection.actions.find(function tryToFindAction(action) {
+                            var exists = action.returnType === entityTypeName || action.returnCollectionType === entityTypeName;
+                            if (exists) {
+                                return action;
+                            }
+                            exists = action.parameters.find(function(parameter) {
+                                return parameter.type === entityTypeName ||
+                                    parameter.type === EdmType.CollectionOf(entityTypeName);
+                            });
+                            if (exists) {
+                                return action;
+                            }
                         });
                         if (hasAction) {
                             return item;
                         }
                         // search entity type actions
-                        hasAction = entityType.actions.find(function(action) {
-                            return action.returnType === entityTypeName ||
-                            action.returnType === EdmType.CollectionOf(entityTypeName);
+                        hasAction = entityType.actions.find(function tryToFindAction(action) {
+                            var exists = action.returnType === entityTypeName || action.returnCollectionType === entityTypeName;
+                            if (exists) {
+                                return action;
+                            }
+                            exists = action.parameters.find(function(parameter) {
+                                return parameter.type === entityTypeName ||
+                                    parameter.type === EdmType.CollectionOf(entityTypeName);
+                            });
+                            if (exists) {
+                                return action;
+                            }
                         });
                         if (hasAction) {
                             return item;

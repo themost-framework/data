@@ -1,0 +1,17 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "UserReview",
+    "title": "UserReviews",
+    "hidden": true,
+    "sealed": false,
+    "abstract": false,
+    "version": "1.0",
+    "inherits": "Review",
+    "fields": [
+        {
+            "name": "user",
+            "type": "User",
+            "nullable": false
+        }
+    ]
+}

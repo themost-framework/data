@@ -48,16 +48,53 @@ describe('ODataModelBuilder', () => {
         expect(element.getAttribute('BaseType')).toEqual('Thing');
     });
 
-    it('should include hidden entity types', async () => {
+    it('should include hidden entity types when used in functions', async () => {
         const service: ODataConventionModelBuilder = new ODataConventionModelBuilder(app.getConfiguration());
         const document: XDocument = await service.getEdmDocument();
         expect(document).toBeTruthy();
 
-        let element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityType[@Name=\'User\']');
-        expect(element).toBeTruthy();
-        expect(element.getAttribute('BaseType')).toEqual('Account');
+        let functionElement = document.documentElement.selectSingleNode('edmx:DataServices/Schema/Function[@Name=\'Comments\']');
+        expect(functionElement).toBeTruthy();
+        expect(functionElement.selectSingleNode('ReturnType').getAttribute('Type')).toEqual('Collection(UserComment)');
 
-        element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityType[@Name=\'Thing\']');
+        let element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityType[@Name=\'UserComment\']');
         expect(element).toBeTruthy();
+
+        element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityContainer/EntitySet[@EntityType=\'UserComment\']');
+        expect(element).toBeFalsy();
+    });
+
+    it('should include hidden entity types when used in actions', async () => {
+        const service: ODataConventionModelBuilder = new ODataConventionModelBuilder(app.getConfiguration());
+        const document: XDocument = await service.getEdmDocument();
+        expect(document).toBeTruthy();
+
+        let actionElement = document.documentElement.selectSingleNode('edmx:DataServices/Schema/Action[@Name=\'Chats\']');
+        expect(actionElement).toBeTruthy();
+        expect(actionElement.selectSingleNode('ReturnType').getAttribute('Type')).toEqual('Collection(UserChat)');
+
+        let element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityType[@Name=\'UserChat\']');
+        expect(element).toBeTruthy();
+
+        element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityContainer/EntitySet[@EntityType=\'UserChat\']');
+        expect(element).toBeFalsy();
+    });
+
+    it('should include hidden entity types when used in action parameters', async () => {
+        const service: ODataConventionModelBuilder = new ODataConventionModelBuilder(app.getConfiguration());
+        const document: XDocument = await service.getEdmDocument();
+        expect(document).toBeTruthy();
+
+        let actionElement = document.documentElement.selectSingleNode('edmx:DataServices/Schema/Action[@Name=\'Review\']');
+        expect(actionElement).toBeTruthy();
+        const bindingElement = actionElement.selectSingleNode('Parameter[@Name=\'bindingParameter\']');
+        expect(bindingElement).toBeTruthy();
+        expect(bindingElement.getAttribute('Type')).toEqual('User');
+        
+        let element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityType[@Name=\'UserReview\']');
+        expect(element).toBeTruthy();
+
+        element = document.documentElement.selectSingleNode('edmx:DataServices/Schema/EntityContainer/EntitySet[@EntityType=\'UserReview\']');
+        expect(element).toBeFalsy();
     });
 });
