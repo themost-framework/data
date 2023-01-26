@@ -39,7 +39,63 @@ describe('DataValidator', () => {
             item.faxNumber = '+301234567890';
             await expect(People.save(item)).resolves.toBeTruthy();
             item.faxNumber = '301234567890';
-            await expect(People.save(item)).rejects.toThrowError('Validate');
+            await expect(People.save(item)).rejects.toThrowError('Fax number should with "+" e.g. +301234567890');
+            delete context.user;
+            
+        });
+    });
+
+    it('should use min validation', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            const modelDefinition = configuration.getModelDefinition('Offer');
+            const field = modelDefinition.fields.find((field: any) => field.name === 'price');
+            field.validation = {
+                minValue: 0,
+                message: 'Price should be greater or equal to zero.'
+            }
+            configuration.setModelDefinition(modelDefinition);
+            const Offers = context.model('Offer');
+            await expect(Offers.silent().save({
+                price: 999,
+                itemOffered: {
+                    name: 'Lenovo Yoga 2 Pro'
+                }
+            })).resolves.toBeTruthy();
+            await expect(Offers.silent().save({
+                price: -1,
+                itemOffered: {
+                    name: 'Lenovo Yoga 2 Pro'
+                }
+            })).rejects.toThrowError(field.validation.message);
+            delete context.user;
+            
+        });
+    });
+
+    it('should use max validation', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            const modelDefinition = configuration.getModelDefinition('Offer');
+            const field = modelDefinition.fields.find((field: any) => field.name === 'price');
+            field.validation = {
+                maxValue: 1000,
+                message: 'Price should be lower or equal to 1000.'
+            }
+            configuration.setModelDefinition(modelDefinition);
+            const Offers = context.model('Offer');
+            await expect(Offers.silent().save({
+                price: 999,
+                itemOffered: {
+                    name: 'Lenovo Yoga 2 Pro'
+                }
+            })).resolves.toBeTruthy();
+            await expect(Offers.silent().save({
+                price: 1001,
+                itemOffered: {
+                    name: 'Lenovo Yoga 2 Pro'
+                }
+            })).rejects.toThrowError(field.validation.message);
             delete context.user;
             
         });

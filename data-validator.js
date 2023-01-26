@@ -673,6 +673,7 @@ var {hasOwnProperty} = require('./has-own-property');
      * @returns {*}
      */
     DataTypeValidator.prototype.validateSync = function(val) {
+        var context = this.getContext();
         if (typeof this.dataType === 'undefined') {
             return null;
         }
@@ -685,15 +686,15 @@ var {hasOwnProperty} = require('./has-own-property');
             //validate pattern if any
             if (properties.pattern) {
                 validator = new PatternValidator(properties.pattern);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     if (properties.patternMessage) {
 
                         validationResult.message = properties.patternMessage;
-                        if (this.getContext() && (typeof this.getContext().translate === 'function')) {
+                        if (context && (typeof context.translate === 'function')) {
                             validationResult.innerMessage = validationResult.message;
-                            validationResult.message = this.getContext().translate(properties.patternMessage);
+                            validationResult.message = context.translate(properties.patternMessage);
                         }
                     }
                     return validationResult;
@@ -701,7 +702,7 @@ var {hasOwnProperty} = require('./has-own-property');
             }
             if (hasOwnProperty(properties, 'minValue') && hasOwnProperty(properties, 'maxValue')) {
                 validator = new RangeValidator(properties.minValue, properties.maxValue);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     return validationResult;
@@ -709,23 +710,36 @@ var {hasOwnProperty} = require('./has-own-property');
             }
             else if (hasOwnProperty(properties, 'minValue')) {
                 validator = new MinValueValidator(properties.minValue);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    // try to return a localized message
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
             else if (hasOwnProperty(properties, 'maxValue')) {
                 validator = new MaxValueValidator(properties.maxValue);
-                validator.setContext(this.getContext());
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
             if (hasOwnProperty(properties, 'minLength')) {
                 validator = new MinLengthValidator(properties.minLength);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     return validationResult;
@@ -733,7 +747,7 @@ var {hasOwnProperty} = require('./has-own-property');
             }
             if (hasOwnProperty(properties, 'maxLength')) {
                 validator = new MaxLengthValidator(properties.maxLength);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     return validationResult;
