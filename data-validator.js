@@ -369,7 +369,11 @@ var {hasOwnProperty} = require('./has-own-property');
         if (val == null) {
             return null;
         }
-        if (val<this.minValue) {
+        var minValue = this.minValue;
+        if (val instanceof Date) {
+            minValue = new Date(this.minValue);
+        }
+        if (val < minValue) {
 
             var innerMessage = null, message = sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
@@ -449,7 +453,11 @@ var {hasOwnProperty} = require('./has-own-property');
         if (val == null) {
             return null;
         }
-        if (val>this.maxValue) {
+        var maxValue = this.maxValue;
+        if (val instanceof Date) {
+            maxValue = new Date(this.maxValue);
+        }
+        if (val > maxValue) {
 
             var innerMessage = null, message = sprintf(this.message || MaxValueValidator.DefaultMessage , this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
@@ -739,17 +747,29 @@ var {hasOwnProperty} = require('./has-own-property');
             }
             if (hasOwnProperty(properties, 'minLength')) {
                 validator = new MinLengthValidator(properties.minLength);
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
                 validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
             if (hasOwnProperty(properties, 'maxLength')) {
                 validator = new MaxLengthValidator(properties.maxLength);
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
                 validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }

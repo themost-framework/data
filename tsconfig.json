@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
     "declaration": false,
     "target": "esnext",
     "module": "commonjs",

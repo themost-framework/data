@@ -2,6 +2,8 @@ import {TestUtils} from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import { DataConfigurationStrategy } from '../data-configuration';
+import moment  from 'moment';;
+
 describe('DataValidator', () => {
 
     let app: TestApplication2;
@@ -73,6 +75,36 @@ describe('DataValidator', () => {
         });
     });
 
+    it('should use max date validation', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            const modelDefinition = configuration.getModelDefinition('Offer');
+            const field = modelDefinition.fields.find((field: any) => field.name === 'validThrough');
+            field.validation = {
+                maxValue: moment(new Date()).add(1, 'year').format('YYYY-MM-DD'),
+                message: 'Valid through is invalid'
+            }
+            configuration.setModelDefinition(modelDefinition);
+            const Offers = context.model('Offer');
+            await expect(Offers.silent().save({
+                price: 999,
+                validThrough: moment(new Date()).add(1, 'month').toDate(),
+                itemOffered: {
+                    name: 'Lenovo Yoga 2 Pro'
+                }
+            })).resolves.toBeTruthy();
+            await expect(Offers.silent().save({
+                price: 999,
+                validThrough: moment(new Date()).add(2, 'year').toDate(),
+                itemOffered: {
+                    name: 'Lenovo Yoga 2 Pro'
+                }
+            })).rejects.toThrowError(field.validation.message);
+            delete context.user;
+            
+        });
+    });
+
     it('should use max validation', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
@@ -97,7 +129,49 @@ describe('DataValidator', () => {
                 }
             })).rejects.toThrowError(field.validation.message);
             delete context.user;
-            
+        });
+    });
+
+    it('should use min length validation', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            const modelDefinition = configuration.getModelDefinition('Product');
+            const field = modelDefinition.fields.find((field: any) => field.name === 'model');
+            field.validation = {
+                minLength: 5,
+                message: 'Product model length should be greater or equal to 5.'
+            }
+            configuration.setModelDefinition(modelDefinition);
+            const Products = context.model('Product');
+            const item = await Products.find({
+                name: 'Lenovo Yoga 2 Pro'
+            }).silent().getItem();
+            item.model = 'LNYO2PRO';
+            await expect(Products.silent().save(item)).resolves.toBeTruthy();
+            item.model = 'LNY';
+            await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
+        });
+    });
+
+    it('should use max length validation', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            const modelDefinition = configuration.getModelDefinition('Product');
+            const field = modelDefinition.fields.find((field: any) => field.name === 'model');
+            field.validation = {
+                minLength: 5,
+                maxLength: 7,
+                message: 'Product model length should be between 5 to 7.'
+            }
+            configuration.setModelDefinition(modelDefinition);
+            const Products = context.model('Product');
+            const item = await Products.find({
+                name: 'Lenovo Yoga 2 Pro'
+            }).silent().getItem();
+            item.model = 'LNYO2PR';
+            await expect(Products.silent().save(item)).resolves.toBeTruthy();
+            item.model = 'LNYO2PRO';
+            await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
         });
     });
     
