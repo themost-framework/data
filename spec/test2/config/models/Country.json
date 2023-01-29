@@ -21,7 +21,8 @@
             "name": "cca2",
             "title": "cca2",
             "description": "The ISO 3166-1 alpha-2 code of a country.",
-            "type": "Text"
+            "type": "Text",
+            "nullable": false
         },
         {
             "@id": "https://themost.io/schemas/cca3",
@@ -43,6 +44,14 @@
             "title": "currency",
             "description": "The currency of a country.",
             "type": "Text"
+        }
+    ],
+    "constraints": [
+        {
+            "type": "unique",
+            "fields": [
+                "cca2"
+            ]
         }
     ],
     "privileges": [

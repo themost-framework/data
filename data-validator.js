@@ -47,44 +47,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @constructor
      * @augments DataValidator
      * @classdesc Validates a variable against the regular expression provided
-     *
-     <p>PatternValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define a max length in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "model",
-        "title": "Model",
-        "description": "The model of the product. Use with the URL of a ProductModel or a textual representation of the model identifier. The URL of the ProductModel can be from an external source. It is recommended to additionally provide strong product identifiers via the gtin8/gtin13/gtin14 and mpn properties.",
-        "type": "Text",
-        "validation": {
-            "pattern":"^[A-Z]{2}\\.\\d{3}$",
-            "patternMessage":"Product model seems to be invalid. Valid values are VC.100, DX.010 etc."
-        }
-    }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "model": "FS240098701",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EPATTERN",
-        "model": "Product",
-        "field": "model",
-        "message": "Product model seems to be invalid. Valid values are VC.100, DX.010 etc."
-    }
-     </code></pre>
      */
     function PatternValidator(pattern) {
         this.pattern = pattern;
@@ -140,42 +102,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @augments {DataValidator}
      * @constructor
      * @classdesc Validates a variable which has a length property (e.g. a string) against the minimum length provided
-     <p>MinLengthValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define a min length in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "model",
-        "title": "Model",
-        "description": "The model of the product. Use with the URL of a ProductModel or a textual representation of the model identifier. The URL of the ProductModel can be from an external source. It is recommended to additionally provide strong product identifiers via the gtin8/gtin13/gtin14 and mpn properties.",
-        "type": "Text",
-        "validation": {
-            minLength:4
-        }
-    }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "model": "FS2",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>Result:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EMINLEN",
-        "model": "Product",
-        "field": "model",
-        "message": "The value is too short. It should have 4 characters or more."
-    }
-     </code></pre>
      */
     function MinLengthValidator(length) {
         this.minLength = length;
@@ -223,52 +149,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @property {string} message - Gets or sets a string which represents a custom validator message.
      * @constructor
      * @classdesc Validates a variable which has a length property (e.g. a string) against the maximum length provided
-     <p>MaxLengthValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define a max length in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "model",
-        "title": "Model",
-        "description": "The model of the product. Use with the URL of a ProductModel or a textual representation of the model identifier. The URL of the ProductModel can be from an external source. It is recommended to additionally provide strong product identifiers via the gtin8/gtin13/gtin14 and mpn properties.",
-        "type": "Text",
-        "validation": {
-            maxLength:8
-        }
-    }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "model": "FS240098701",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>Result:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EMAXLEN",
-        "model": "Product",
-        "field": "model",
-        "message": "The value is too long. It should have 8 characters or fewer."
-     }
-     </code></pre>
-     <p><strong>Note:</strong>If validation.maxLength is missing and data model's attribute has a defined size then the operation will try to validate data object against this size.
-     <pre class="prettyprint"><code>
-     {
-        "name": "model",
-        "title": "Model",
-        "description": "The model of the product. Use with the URL of a ProductModel or a textual representation of the model identifier. The URL of the ProductModel can be from an external source. It is recommended to additionally provide strong product identifiers via the gtin8/gtin13/gtin14 and mpn properties.",
-        "type": "Text",
-        "size":8
-    }
-     </code></pre>
      */
     function MaxLengthValidator(length) {
         this.maxLength = length;
@@ -314,43 +194,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @property {string} message - Gets or sets a string which represents a custom validator message.
      * @constructor
      * @classdesc Validates a value against the minimum value provided
-     <p>MinValueValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define a max value in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "price",
-        "title": "Price",
-        "description": "The price of the product.",
-        "type": "Number",
-        "validation": {
-            "minValue":5
-        }
-    }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "price":2.5
-                "model": "FS2USB42",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EMINVAL",
-        "model": "Product",
-        "field": "price",
-        "message": "The value should be greater than or equal to 5."
-    }
-     </code></pre>
      */
     function MinValueValidator(min) {
         this.minValue = min;
@@ -369,7 +212,11 @@ var {hasOwnProperty} = require('./has-own-property');
         if (val == null) {
             return null;
         }
-        if (val<this.minValue) {
+        var minValue = this.minValue;
+        if (val instanceof Date) {
+            minValue = new Date(this.minValue);
+        }
+        if (val < minValue) {
 
             var innerMessage = null, message = sprintf(this.message || MinValueValidator.DefaultMessage, this.minValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
@@ -393,43 +240,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @property {string} message - Gets or sets a string which represents a custom validator message.
      * @constructor
      * @classdesc Validates a value against the maximum value provided
-     <p>MaxValueValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define a min value in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "price",
-        "title": "Price",
-        "description": "The price of the product.",
-        "type": "Number",
-        "validation": {
-            "maxValue":1000
-        }
-    }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "price":1245.50
-                "model": "FS2USB42",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>Result:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EMAXVAL",
-        "model": "Product",
-        "field": "price",
-        "message": "The value should be lowered or equal to 1000."
-    }
-     </code></pre>
      */
     function MaxValueValidator(max) {
         this.maxValue = max;
@@ -449,7 +259,11 @@ var {hasOwnProperty} = require('./has-own-property');
         if (val == null) {
             return null;
         }
-        if (val>this.maxValue) {
+        var maxValue = this.maxValue;
+        if (val instanceof Date) {
+            maxValue = new Date(this.maxValue);
+        }
+        if (val > maxValue) {
 
             var innerMessage = null, message = sprintf(this.message || MaxValueValidator.DefaultMessage , this.maxValue);
             if (this.getContext() && (typeof this.getContext().translate === 'function')) {
@@ -475,44 +289,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @property {string} message - Gets or sets a string which represents a custom validator message.
      * @constructor
      * @classdesc Validates a value against a minimum and maximum value
-     <p>RangeValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define min and max values in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "price",
-        "title": "Price",
-        "description": "The price of the product.",
-        "type": "Number",
-        "validation": {
-            "minValue":5,
-            "maxValue":100
-        }
-    }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "price":102.5
-                "model": "FS2USB42",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "ERANGE",
-        "model": "Product",
-        "field": "price",
-        "message": "The value should be between 5 and 100."
-    }
-     </code></pre>
      */
     function RangeValidator(min,max) {
         this.minValue = min;
@@ -568,85 +344,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @constructor
      * @augments {DataValidator}
      * @classdesc Validates a value against a pre-defined data type
-     *
-     <p>DataTypeValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may define a data type in validation properties:
-     <pre class="prettyprint"><code>
-     {
-        "name": "price",
-        "title": "Price",
-        "description": "The price of the product.",
-        "type": "Number",
-        "validation": {
-            "type":"NonNegativeNumber"
-        }
-    }
-     </code></pre>
-     <p>There is a collection of pre-defined data types. This collection may also be extended by using dataTypes.json configuration.</p>
-     <table class="table-flat">
-     <thead><tr><th>Type</th><th>Description</th></tr></thead>
-     <tbody>
-     <tr><td>NegativeInteger</td><td>An integer containing only negative values (..,-2,-1)</td></tr>
-     <tr><td>NegativeNumber</td><td>A number containing only negative values (..,-2,-1)</td></tr>
-     <tr><td>NonNegativeInteger</td><td>An integer containing only non-negative values (0,1,2,..)</td></tr>
-     <tr><td>NonNegativeNumber</td><td>An number containing only non-negative values (0,1,2,..)</td></tr>
-     <tr><td>NonPositiveInteger</td><td>An integer containing only non-positive values (..,-2,-1,0)</td></tr>
-     <tr><td>NonPositiveNumber</td><td>A number containing only non-positive values (..,-2,-1,0)</td></tr>
-     <tr><td>PositiveInteger</td><td>An integer containing only positive values (1,2,..)</td></tr>
-     <tr><td>PositiveNumber</td><td>A number containing only positive values (0.1,+1,2,..)</td></tr>
-     <tr><td>Float</td><td>Float data type is a single-precision floating point.</td></tr>
-     <tr><td>Email</td><td>A string which represents an email address (e.g. user@example.com)</td></tr>
-     <tr><td>Guid</td><td>A string which represents a global unique identifier (e.g. 21EC2020-3AEA-4069-A2DD-08002B30309D).</td></tr>
-     <tr><td>AbsoluteURI</td><td>A string which represents an absolute URI address (e.g. https://www.example.com/help?article=1001)</td></tr>
-     <tr><td>RelativeURI</td><td>A string which represents a relative URI address (e.g. /help?article=1001)</td></tr>
-     <tr><td>Time</td><td>A string which represents an instant of time that recurs every day (e.g. 13:20:45)</td></tr>
-     <tr><td>Date</td><td>Represents a date value.</td></tr>
-     <tr><td>DateTime</td><td>Represents a date and time value.</td></tr>
-     <tr><td>Duration</td><td>A string which represents a duration of time (e.g. P1Y1M10D, P10D, -P0Y1M10D2H15M30S etc)</td></tr>
-     <tr><td>IP</td><td>A string which represents an IPv4 address (e.g. 127.0.0.1)</td></tr>
-     </tbody>
-     </table>
-     <p>A custom data type may be defined as follows:</p>
-     <pre class="prettyprint"><code>
-     "ProductModel": {
-    "comment": "A string which represents the model of a product",
-    "label": "Product Model",
-    "properties": {
-      "pattern":"^[A-Z]{2}\\.\\d{3}$",
-      "patternMessage":"Product model seems to be invalid. Valid values are VC.100, DX.010 etc."
-    },
-    "supertypes": [
-      "Text"
-    ],
-    "type": "string",
-    "sqltype":"Text",
-    "version":"1.0"
-  }
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "price":-10.75
-                "model": "FS2USB42",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EPATTERN",
-        "model": "Product",
-        "field": "price",
-        "message": "The value should be a number greater or equal to zero."
-    }
-     </code></pre>
      */
     function DataTypeValidator(type) {
         DataTypeValidator.super_.call(this);
@@ -673,6 +370,7 @@ var {hasOwnProperty} = require('./has-own-property');
      * @returns {*}
      */
     DataTypeValidator.prototype.validateSync = function(val) {
+        var context = this.getContext();
         if (typeof this.dataType === 'undefined') {
             return null;
         }
@@ -685,15 +383,15 @@ var {hasOwnProperty} = require('./has-own-property');
             //validate pattern if any
             if (properties.pattern) {
                 validator = new PatternValidator(properties.pattern);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     if (properties.patternMessage) {
 
                         validationResult.message = properties.patternMessage;
-                        if (this.getContext() && (typeof this.getContext().translate === 'function')) {
+                        if (context && (typeof context.translate === 'function')) {
                             validationResult.innerMessage = validationResult.message;
-                            validationResult.message = this.getContext().translate(properties.patternMessage);
+                            validationResult.message = context.translate(properties.patternMessage);
                         }
                     }
                     return validationResult;
@@ -701,7 +399,7 @@ var {hasOwnProperty} = require('./has-own-property');
             }
             if (hasOwnProperty(properties, 'minValue') && hasOwnProperty(properties, 'maxValue')) {
                 validator = new RangeValidator(properties.minValue, properties.maxValue);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
                     return validationResult;
@@ -709,33 +407,58 @@ var {hasOwnProperty} = require('./has-own-property');
             }
             else if (hasOwnProperty(properties, 'minValue')) {
                 validator = new MinValueValidator(properties.minValue);
-                validator.setContext(this.getContext());
+                validator.setContext(context);
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    // try to return a localized message
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
             else if (hasOwnProperty(properties, 'maxValue')) {
                 validator = new MaxValueValidator(properties.maxValue);
-                validator.setContext(this.getContext());
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
             if (hasOwnProperty(properties, 'minLength')) {
                 validator = new MinLengthValidator(properties.minLength);
-                validator.setContext(this.getContext());
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
             if (hasOwnProperty(properties, 'maxLength')) {
                 validator = new MaxLengthValidator(properties.maxLength);
-                validator.setContext(this.getContext());
+                if (properties.message) {
+                    validator.message = properties.message;
+                }
+                validator.setContext(context);
                 validationResult = validator.validateSync(val);
                 if (validationResult) {
+                    if (context && (typeof context.translate === 'function')) {
+                        validationResult.message = context.translate(properties.patternMessage);
+                    }
                     return validationResult;
                 }
             }
@@ -744,221 +467,6 @@ var {hasOwnProperty} = require('./has-own-property');
     /**
      * @class
      * @classdesc DataValidatorListener is one of the default listeners of MOST data models. Validates data objects against validation rules defined in model attributes.
-     * <h4>Validation Rules</h4>
-     * <p>Each attribute may have a set of validation rules. These rules may validate data against:
-     * <ul>
-     * <li><a href="module-most-data_data-validator-MaxValueValidator.html">a maximum value</a></li>
-     * <li><a href="module-most-data_data-validator-MinValueValidator.html">a minimum value</a></li>
-     * <li><a href="module-most-data_data-validator-MaxLengthValidator.html">a maximum length</a></li>
-     * <li><a href="module-most-data_data-validator-MinLengthValidator.html">a minimum length</a></li>
-     * <li><a href="module-most-data_data-validator-RangeValidator.html">a value range</a></li>
-     * <li><a href="module-most-data_data-validator-RequiredValidator.html">a required attribute</a></li>
-     * <li><a href="module-most-data_data-validator-PatternValidator.html">a regular expression</a></li>
-     * <li><a href="module-most-data_data-validator-DataTypeValidator.html">a pre-defined data type</a></li>
-     * <li><a href="#custom">a custom validator</a></li>
-     * </ul>
-     * </p>
-     <h6>Use default validation rules</h6>
-     <p>
-     In the following example price attribute has a validation which allows values between 0 to 1000:
-     <pre class="prettyprint"><code>
-     {
-         "name": "price",
-         "title": "Price",
-         "description": "The price of the product.",
-         "type": "Number",
-         "nullable":false,
-         "validation": {
-             "minValue":0,
-             "maxValue":1000
-         }
-     }
-     </code></pre>
-     </p>
-     <p>
-     The following code snippet tries to save an object with a negative value in price:
-     <pre class="prettyprint"><code>
-     var obj = {
-                "price": -23.45,
-                "model": "FS2400",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>
-     and the result is:
-     </p>
-     <pre class="prettyprint"><code>
-     {
-         "code": "ERANGE",
-         "model": "Product",
-         "field": "price",
-         "message": "The value should be between 0 to 1000."
-     }
-     </code></pre>
-     <h6>Use data type validation</h6>
-     <p>
-     A validation may be performed by using a pre-defined data type:
-     <pre class="prettyprint"><code>
-     {
-         "name": "price",
-         "title": "Price",
-         "description": "The price of the product.",
-         "type": "Number",
-         "nullable":false,
-         "validation": {
-            "type":"NonNegativeNumber"
-         }
-     }
-     </code></pre>
-     <p>An operation tries to save a product with a negative price:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "price": -23.45,
-                "model": "FS2400",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EPATTERN",
-        "model": "Product",
-        "field": "price",
-        "message": "The value should be a number greater or equal to zero."
-    }
-     </code></pre>
-     <p>The following list contains a set of pre-defined data types which may be used for data type validation:</p>
-     <table class="table-flat">
-     <thead><tr><th>Type</th><th>Description</th></tr></thead>
-     <tbody>
-     <tr><td>NegativeInteger</td><td>An integer containing only negative values (..,-2,-1)</td></tr>
-     <tr><td>NegativeNumber</td><td>A number containing only negative values (..,-2,-1)</td></tr>
-     <tr><td>NonNegativeInteger</td><td>An integer containing only non-negative values (0,1,2,..)</td></tr>
-     <tr><td>NonNegativeNumber</td><td>An number containing only non-negative values (0,1,2,..)</td></tr>
-     <tr><td>NonPositiveInteger</td><td>An integer containing only non-positive values (..,-2,-1,0)</td></tr>
-     <tr><td>NonPositiveNumber</td><td>A number containing only non-positive values (..,-2,-1,0)</td></tr>
-     <tr><td>PositiveInteger</td><td>An integer containing only positive values (1,2,..)</td></tr>
-     <tr><td>PositiveNumber</td><td>A number containing only positive values (0.1,+1,2,..)</td></tr>
-     <tr><td>Float</td><td>Float data type is a single-precision floating point.</td></tr>
-     <tr><td>Email</td><td>A string which represents an email address (e.g. user@example.com)</td></tr>
-     <tr><td>Guid</td><td>A string which represents a global unique identifier (e.g. 21EC2020-3AEA-4069-A2DD-08002B30309D).</td></tr>
-     <tr><td>AbsoluteURI</td><td>A string which represents an absolute URI address (e.g. https://www.example.com/help?article=1001)</td></tr>
-     <tr><td>RelativeURI</td><td>A string which represents a relative URI address (e.g. /help?article=1001)</td></tr>
-     <tr><td>Time</td><td>A string which represents an instant of time that recurs every day (e.g. 13:20:45)</td></tr>
-     <tr><td>Date</td><td>Represents a date value.</td></tr>
-     <tr><td>DateTime</td><td>Represents a date and time value.</td></tr>
-     <tr><td>Duration</td><td>A string which represents a duration of time (e.g. P1Y1M10D, P10D, -P0Y1M10D2H15M30S etc)</td></tr>
-     <tr><td>IP</td><td>A string which represents an IPv4 address (e.g. 127.0.0.1)</td></tr>
-     </tbody>
-     </table>
-     </p>
-     <h6><a name="custom">Use custom validator</a></h6>
-     Value validation may be performed by custom validator which is being registered as follows:
-     <pre class="prettyprint"><code>
-     {
-        "name": "price",
-        "title": "Price",
-        "description": "The price of the product.",
-        "type": "Number",
-        "nullable":false,
-        "validation": {
-          "validator":"./validators/price-validator"
-        }
-    }
-     </code></pre>
-     <p>where price-validator is a module which exports a createInstance() method
-     that returns an instance of a class which inherits DataValidator class.</p>
-     <pre class="prettyprint"><code>
-     //# ./validators/price-validator
-     var util = require("util"),
-     most = require("most-data");
-
-     function PriceValidator(attr) {
-    this.attr = attr;
-    PriceValidator.super_.call(this);
-}
-     LangUtils.inherits(PriceValidator, most.validators.DataValidator);
-     PriceValidator.prototype.validateSync = function(val) {
-    if (typeof val === 'number') {
-        if (val<=0) {
-            return {
-                code:"EPRICE",
-                "message":"A valid price must be always greater than zero."
-            };
-        }
-    }
-    else {
-        return {
-            code:"EPRICE",
-            "message":"A valid price must be always a number greater than zero."
-        };
-    }
-};
-     exports.createInstance = function() {
-    return new PriceValidator();
-};
-     </code></pre>
-     <p>An operation tries to save a data object:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-        "price":-10.75,
-        "model": "FS2USB3",
-        "name": "USB 3.0 Adapter"
-    };
-     context.model("Product").save(obj).then(function() {
-       return done();
-   }).catch(function(err) {
-       return done(err);
-   });
-     </code></pre>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EPRICE",
-        "model": "Product",
-        "field": "price",
-        "message": "A valid price must be always greater than zero."
-    }
-     </code></pre>
-     <p>A custom validator may use async validate(val,callback) method:</p>
-     <pre class="prettyprint"><code>
-     PriceValidator.prototype.validate = function(val, callback) {
-    this.getContext().model("Product")
-    .where("price").lowerThan(val).count()
-    .then(function(result) {
-        if (result<=5) {
-            return callback(null, {
-                code:"EPRICE",
-                "message":sprintf("You have already 5 products with price lower than %s.", val)
-            });
-        }
-        return callback();
-    }).catch(function(err) {
-        return callback(err);
-    });
-};
-     </code></pre>
-     <p>and the result may be:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EPRICE",
-        "model": "Product",
-        "field": "price",
-        "message": "You have already 5 products with price lower than 10."
-    }
-     </code></pre>
-     </p>
      * @constructor
      */
     function DataValidatorListener() {
@@ -996,40 +504,6 @@ var {hasOwnProperty} = require('./has-own-property');
      * @augments DataValidator
      * @constructor
      * @classdesc Validates a required attribute
-     <p>RequiredValidator is used by <a href="DataValidatorListener.html">DataValidatorListener</a> for validating data objects.</p>
-     <p>
-     An attribute of a data model may be defined as required:
-     <pre class="prettyprint"><code>
-     {
-        "name": "price",
-        "title": "Price",
-        "description": "The price of the product.",
-        "type": "Number",
-        "nullable": false
-    }
-     </code></pre>
-     <p>An operation tries to save a data object without price:</p>
-     <pre class="prettyprint"><code>
-     var obj = {
-                "model": "FS2USB42",
-                "name": "USB 3.0 Adapter"
-            };
-     context.model("Product").save(obj).then(function() {
-               return done();
-           }).catch(function(err) {
-               return done(err);
-           });
-     </code></pre>
-     </p>
-     <p>and the result is:</p>
-     <pre class="prettyprint"><code>
-     {
-        "code": "EREQUIRED",
-        "model": "Product",
-        "field": "price",
-        "message": "A value is required."
-    }
-     </code></pre>
      */
     function RequiredValidator() {
         RequiredValidator.super_.call(this);
@@ -1065,6 +539,54 @@ var {hasOwnProperty} = require('./has-own-property');
         }
     };
 
+    function AsyncExecuteValidator(model, validator) {
+        AsyncExecuteValidator.super_.call(this);
+        Object.defineProperty(this, 'model', {
+            enumerable: false,
+            configurable: true,
+            writable: true,
+            value: model
+        });
+        Object.defineProperty(this, 'validator', {
+            enumerable: false,
+            configurable: true,
+            writable: false,
+            value: validator
+        });
+    }
+    LangUtils.inherits(AsyncExecuteValidator, DataValidator);
+
+    AsyncExecuteValidator.prototype.validate = function(value, callback) {
+        var self = this;
+        try {
+            this.validator({
+                model: this.model,
+                target: this.target,
+                value: value
+            }).then(function (result) {
+                if (result) {
+                    return callback();
+                }
+                var innerMessage = null;
+                var message = self.message || 'Data validation failed.';
+                var context = self.getContext();
+                if (context && (typeof context.translate === 'function')) {
+                    innerMessage = message;
+                    message = context.translate('Data validation failed.');
+                }
+                return callback(null, {
+                    code: 'EVALIDATE',
+                    message: message,
+                    innerMessage: innerMessage
+                });
+            }).catch(function (error) {
+                return callback(error);
+            });
+        } catch (err) {
+            return callback(err); 
+        }
+    }
+
 
     module.exports = {
         PatternValidator,
@@ -1076,6 +598,7 @@ var {hasOwnProperty} = require('./has-own-property');
         RangeValidator,
         RequiredValidator,
         DataTypeValidator,
+        AsyncExecuteValidator,
         DataValidatorListener
     };
 

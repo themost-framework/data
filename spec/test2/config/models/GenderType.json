@@ -16,13 +16,13 @@
     "seed": [
         {
             "name": "Male",
-            "alternateName": "Male",
+            "alternateName": "M",
             "description": "The male gender.",
             "url": "http://schema.org/Male"
         },
         {
             "name": "Female",
-            "alternateName": "Female",
+            "alternateName": "F",
             "description": "The female gender.",
             "url": "http://schema.org/Female"
         }
