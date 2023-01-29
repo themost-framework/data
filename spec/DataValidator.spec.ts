@@ -2,7 +2,8 @@ import {TestUtils} from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import { DataConfigurationStrategy } from '../data-configuration';
-import moment  from 'moment';;
+import moment  from 'moment';import { DataModel } from '../data-model';
+;
 
 describe('DataValidator', () => {
 
@@ -171,6 +172,33 @@ describe('DataValidator', () => {
             item.model = 'LNYO2PR';
             await expect(Products.silent().save(item)).resolves.toBeTruthy();
             item.model = 'LNYO2PRO';
+            await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
+        });
+    });
+
+    it('should use async execute validator', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const configuration = app.getConfiguration().getStrategy(DataConfigurationStrategy);
+            const modelDefinition = configuration.getModelDefinition('Product');
+            const field = modelDefinition.fields.find((field: any) => field.name === 'model');
+            field.validation = {
+                validator: async function(event: {
+                    model: DataModel,
+                    target: any,
+                    value: any
+                }) {
+                    return /^[A-Z0-9]+$/.test(event.value);
+                },
+                message: 'Product model accepts only upper case letters and numbers.'
+            }
+            configuration.setModelDefinition(modelDefinition);
+            const Products = context.model('Product');
+            const item = await Products.find({
+                name: 'Lenovo Yoga 2 Pro'
+            }).silent().getItem();
+            item.model = 'LNYO2PR';
+            await expect(Products.silent().save(item)).resolves.toBeTruthy();
+            item.model = 'LNYO2PrO';
             await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
         });
     });

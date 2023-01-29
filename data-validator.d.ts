@@ -74,3 +74,8 @@ export declare class DataValidatorListener implements  BeforeSaveEventListener {
     beforeSave(event: DataEventArgs, callback: (err?: Error) => void): void;
 
 }
+
+export declare class AsyncExecuteValidator extends DataValidator {
+    constructor(model: any, validator: (event: { model: any, target: any, value: any }) => Promise<boolean>)
+    validate(val:any): Promise<DataValidationResult>;
+}

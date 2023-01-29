@@ -41,7 +41,8 @@ var {
     MinValueValidator,
     PatternValidator,
     RangeValidator,
-    RequiredValidator
+    RequiredValidator,
+    AsyncExecuteValidator
 } = require('./data-validator');
 var {
     EntitySetConfiguration,
@@ -127,6 +128,7 @@ module.exports = {
     PatternValidator,
     RangeValidator,
     RequiredValidator,
+    AsyncExecuteValidator,
     PermissionMask,
     DataPermissionEventArgs,
     DataPermissionEventListener,

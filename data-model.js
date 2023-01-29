@@ -36,7 +36,6 @@ var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
-var {SelectParser} = require('./select-parser');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -2789,29 +2788,31 @@ function validate_(obj, state, callback) {
         var value = objCopy[attr.name];
         //build validators array
         var arrValidators=[];
+        var hasProperty = hasOwnProperty(objCopy, attr.name);
         //-- RequiredValidator
         if (hasOwnProperty(attr, 'nullable') && !attr.nullable)
         {
             if (state===1 && !attr.primary) {
                 arrValidators.push(new validators.RequiredValidator());
             }
-            else if (state===2 && !attr.primary && hasOwnProperty(objCopy, attr.name)) {
+            else if (state===2 && !attr.primary && hasProperty) {
                 arrValidators.push(new validators.RequiredValidator());
             }
         }
         //-- MaxLengthValidator
-        if (hasOwnProperty(attr, 'size') && hasOwnProperty(objCopy, attr.name)) {
+        if (hasOwnProperty(attr, 'size') && hasProperty) {
             if (!(attr.validation && attr.validation.maxLength))
                 arrValidators.push(new validators.MaxLengthValidator(attr.size));
         }
         //-- CustomValidator
-        if (attr.validation && attr.validation['validator'] && hasOwnProperty(objCopy, attr.name)) {
+        var validator = attr.validation && attr.validation.validator;
+        if (typeof validator === 'string' && hasProperty === true) {
             var validatorModule;
             try {
-                validatorModule = moduleLoader.require(attr.validation['validator']);
+                validatorModule = moduleLoader.require(validator);
             }
             catch (err) {
-                TraceUtils.debug(sprintf('Data validator module (%s) cannot be loaded', attr.validation['validator']));
+                TraceUtils.debug(sprintf('Data validator module (%s) cannot be loaded', validator));
                 TraceUtils.debug(err);
                 return cb(err);
             }
@@ -2821,8 +2822,15 @@ function validate_(obj, state, callback) {
             }
             arrValidators.push(validatorModule.createInstance(attr));
         }
+
+        if (typeof validator === 'function') {
+            var executeValidator = new validators.AsyncExecuteValidator(self, validator);
+            executeValidator.message = attr.validation && attr.validation.message;
+            arrValidators.push(executeValidator);
+        }
+        
         //-- DataTypeValidator #1
-        if (attr.validation && hasOwnProperty(objCopy, attr.name)) {
+        if (attr.validation && hasProperty) {
             if (typeof attr.validation.type === 'string') {
                 arrValidators.push(new validators.DataTypeValidator(attr.validation.type));
             }
@@ -2835,7 +2843,7 @@ function validate_(obj, state, callback) {
             }
         }
         //-- DataTypeValidator #2
-        if (attr.type && hasOwnProperty(objCopy, attr.name)) {
+        if (attr.type && hasProperty) {
             arrValidators.push(new validators.DataTypeValidator(attr.type));
         }
 
