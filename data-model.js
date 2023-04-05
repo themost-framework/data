@@ -827,14 +827,17 @@ function filterInternal(params, callback) {
 
     try {
 
+        var top = parseInt(params.$top || params.$take, 10);
+        var skip = parseInt(params.$skip, 10);
+        var levels = parseInt(params.$levels, 10)
         var queryOptions = {
             $filter: filter,
             $select:  params.$select,
             $orderBy: params.$orderby || params.$orderBy || params.$order,
-            $groupBy: params.$groupby || params.$groupby || params.$group,
-            $top: params.$top || params.$take,
-            $skip: params.$skip || 0,
-            $levels: parseInt(params.$levels, 10)
+            $groupBy: params.$groupby || params.$groupBy || params.$group,
+            $top: isNaN(top) ? 0 : top,
+            $skip: isNaN(skip) ? 0 : skip,
+            $levels: isNaN(levels) ? -1 : levels
         };
 
         void parser.parseQueryOptions(queryOptions,
@@ -878,13 +881,13 @@ function filterInternal(params, callback) {
                     // prepare query
                     q.query.prepare();
                     // set levels
-                    if (typeof queryOptions.$levels === 'number' && isNaN(queryOptions.$levels) === false) {
+                    if (queryOptions.$levels >= 0) {
                         q.levels(queryOptions.$levels);
                     }
-                    if (typeof queryOptions.$top === 'number') {
+                    if (queryOptions.$top > 0) {
                         q.take(queryOptions.$top);
                     }
-                    if (typeof queryOptions.$skip === 'number') {
+                    if (queryOptions.$skip > 0) {
                         q.skip(queryOptions.$skip);
                     }
                     // set caching
