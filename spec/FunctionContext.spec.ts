@@ -3,6 +3,7 @@ import { FunctionContext } from '../functions';
 import { DataContext } from '../types';
 import { TestApplication } from './TestApplication';
 import { Guid } from '@themost/common';
+import { TestUtils } from './adapter/TestUtils';
 
 describe('FunctionContext', () => {
     let app: TestApplication;
@@ -81,6 +82,23 @@ describe('FunctionContext', () => {
         });
         const value = await functionContext.user();
         expect(value).toBeTruthy();
+    });
+
+    it('should use undefined user', async() => {
+        await TestUtils.executeInTransaction(context, async () => {
+            context.user = null;
+            await context.model('EventStatusType').silent().save({
+                "name": "Postponed",
+                "alternateName": "postponed",
+                "description": "The event has been postponed."
+            });
+            const item: any = await context.model('EventStatusType').where(
+                (x: any) => x.alternateName === 'postponed'
+                ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.createdBy).toEqual(null);
+
+        });
     });
 
 });
