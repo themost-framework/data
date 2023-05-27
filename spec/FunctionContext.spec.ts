@@ -97,7 +97,19 @@ describe('FunctionContext', () => {
                 ).getItem();
             expect(item).toBeTruthy();
             expect(item.createdBy).toEqual(null);
+        });
+    });
 
+    it('should validate filter permission', async() => {
+        await TestUtils.executeInTransaction(context, async () => {
+            context.user = null;
+            const newItem = {
+                "name": "A new subscription"
+            };
+            await context.model('SubscribeAction').silent().save(newItem);
+            const items: any[] = await context.model('SubscribeAction').asQueryable().getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(0);
         });
     });
 

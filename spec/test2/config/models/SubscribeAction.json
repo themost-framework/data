@@ -13,6 +13,16 @@
         {
             "mask": 15,
             "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "self",
+            "filter": "createdBy eq me()"
         }
     ]
 }
