@@ -3,6 +3,7 @@ import { FunctionContext } from '../functions';
 import { DataContext } from '../types';
 import { TestApplication } from './TestApplication';
 import { Guid } from '@themost/common';
+import { TestUtils } from './adapter/TestUtils';
 
 describe('FunctionContext', () => {
     let app: TestApplication;
@@ -81,6 +82,35 @@ describe('FunctionContext', () => {
         });
         const value = await functionContext.user();
         expect(value).toBeTruthy();
+    });
+
+    it('should use undefined user', async() => {
+        await TestUtils.executeInTransaction(context, async () => {
+            context.user = null;
+            await context.model('EventStatusType').silent().save({
+                "name": "Postponed",
+                "alternateName": "postponed",
+                "description": "The event has been postponed."
+            });
+            const item: any = await context.model('EventStatusType').where(
+                (x: any) => x.alternateName === 'postponed'
+                ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.createdBy).toEqual(null);
+        });
+    });
+
+    it('should validate filter permission', async() => {
+        await TestUtils.executeInTransaction(context, async () => {
+            context.user = null;
+            const newItem = {
+                "name": "A new subscription"
+            };
+            await context.model('SubscribeAction').silent().save(newItem);
+            const items: any[] = await context.model('SubscribeAction').asQueryable().getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(0);
+        });
     });
 
 });

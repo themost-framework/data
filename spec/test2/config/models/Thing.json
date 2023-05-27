@@ -105,7 +105,7 @@
             "name": "createdBy",
             "title": "createdBy",
             "description": "Created by user.",
-            "type": "Integer",
+            "type": "User",
             "readonly": true,
             "value": "javascript:return this.user();"
         },
@@ -114,7 +114,7 @@
             "name": "modifiedBy",
             "title": "modifiedBy",
             "description": "Last modified by user.",
-            "type": "Integer",
+            "type": "User",
             "readonly": true,
             "value": "javascript:return this.user();",
             "calculation": "javascript:return this.user();"

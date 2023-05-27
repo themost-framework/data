@@ -126,6 +126,34 @@ class DataObjectAssociationListener {
                                     return cb(new DataObjectAssociationError(mapping.childModel, mapping.childField));
                                 }
                                 else if (result.total === 0) {
+                                    /**
+                                     * this operation will try to validate if the given value represents an empty object
+                                     * e.g. an object with id=0 where `id` is an auto increment identifier
+                                     * the operation didn't find any object, we can set null value 
+                                     * otherwise, throw an exception for missing associated object
+                                     */
+                                    if (isObjectDeep(value) === false) {
+                                        /**
+                                         * @type {import('./types').DataField}
+                                         */
+                                        var parentField = associatedModel.getAttribute(mapping.parentField);
+                                        // try to find parse
+                                        /**
+                                         * @type {function(*)}
+                                         */
+                                        var parser = TypeParser.hasParser(parentField.type);
+                                        if (typeof parser === 'function') {
+                                            // try to parse value
+                                            var converted = parser(null);
+                                            // if the given value is equal that returned by parsing null
+                                            if (converted === value) {
+                                                // set null value
+                                                event.target[childField] = null;
+                                                // and exit
+                                                return cb()
+                                            }
+                                        }
+                                    }
                                     return cb(new DataObjectAssociationError(mapping.childModel, mapping.childField));
                                 }
                                 else if (result.total > 1) {
