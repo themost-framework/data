@@ -153,4 +153,25 @@ describe('DataObjectJunction', () => {
         });
     });
 
+    it('should try to remove disconnected item', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'alexis.rees@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            let newGroup = await context.model('Group').save({
+                name: 'Contributors',
+                alternateName: 'contributors'
+            });
+            /**
+             * @type {DataObject}
+             */
+            newGroup = await context.model('Group').where((x: any) => x.name === 'Contributors').getTypedItem();
+            await expect(newGroup.property('members').remove({
+                name: 'luis.nash@example.com'
+            })).rejects.toThrow('The association cannot be found or access is denied');
+        });
+    });
+
 });
