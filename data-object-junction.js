@@ -651,6 +651,9 @@ function removeSingleObject(obj, callback) {
         child[self.mapping.childField] = obj;
     }
     var parentValue = self.parent[self.mapping.parentField];
+    if (parentValue == null) {
+        return callback(new DataError('E_PAREN_NULL', 'Parent object identifier cannot be empty', null, self.mapping.parentModel, self.mapping.parentField));
+    }
     var childValue = child[self.mapping.childField];
     // get association adapter
     var baseModel = self.getBaseModel();
