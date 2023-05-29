@@ -136,6 +136,12 @@ describe('HasParentJunction', () => {
              * @type {DataObject}
              */
             newUser = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
+
+            // try to remove before set
+            await expect(newUser.property('groups').silent().remove({
+                name: 'Contributors'
+            })).rejects.toThrow('The association cannot be found or access is denied');
+
             await newUser.property('groups').silent().insert({
                 name: 'Contributors'
             });

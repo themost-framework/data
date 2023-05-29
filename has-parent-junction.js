@@ -349,21 +349,25 @@ function removeSingleObject(obj, callback) {
         parent[self.mapping.parentField] = obj;
     }
     var parentValue = parent[self.mapping.parentField];
+    if (parentValue == null) {
+        return callback(new DataError('E_PAREN_NULL', 'Parent object identifier cannot be empty', null, self.mapping.parentModel, self.mapping.parentField));
+    }
     var childValue = self.parent[self.mapping.childField];
+    if (childValue == null) {
+        return callback(new DataError('E_CHILD_NULL', 'Child object identifier cannot be empty', null, self.mapping.childModel, self.mapping.childField));
+    }
+    // get silent mode
+    var isSilent = !!self.$silent;
     //get relation model
-    self.baseModel.silent(self.$silent).where(this.getObjectField()).equal(parentValue).and(this.getValueField()).equal(childValue).first(function(err, result) {
-        if (err) {
-            callback(err);
-        }
-        else {
-            if (!result) {
-                callback(null);
+    self.baseModel.silent(isSilent).where(this.getObjectField()).equal(parentValue)
+        .and(this.getValueField()).equal(childValue).getItem().then(function(result) {
+            if (result == null) {
+                return callback(new DataError('E_NOT_ASSOC', 'The association cannot be found or access is denied', null, self.baseModel.name));
             }
-            else {
-                // otherwise, remove item
-                self.baseModel.silent(self.$silent).remove(result, callback);
-            }
-        }
+            // otherwise, remove item
+            return self.baseModel.silent(isSilent).remove(result, callback);
+    }).catch(function(err) {
+        return callback(err);
     });
 }
 
