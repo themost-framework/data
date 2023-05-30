@@ -318,4 +318,18 @@ describe('OpenDataQuery.select', () => {
         });
     });
 
+    it('should use inline params', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let items = await context.model('Product').where((x: any, category: string) => {
+                return x.category === category;
+            }, {
+                category: 'Desktops'
+            }).take(10).getItems();
+            expect(items).toBeInstanceOf(Array);
+            for (const item of items) {
+                expect(item.category).toEqual('Desktops')
+            }
+        });
+    });
+
 });

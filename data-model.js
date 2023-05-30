@@ -697,9 +697,10 @@ DataModel.prototype.join = function(model) {
  * @param {String|*} attr - A string that represents the name of a field
  * @returns DataQueryable
 */
+// eslint-disable-next-line no-unused-vars
 DataModel.prototype.where = function(attr) {
     var result = new DataQueryable(this);
-    return result.where(attr);
+    return result.where.apply(result, Array.from(arguments));
 };
 
 /**
@@ -1033,18 +1034,14 @@ DataModel.prototype.select = function(attr) {
 
 /**
  * Prepares an ascending order by expression and returns an instance of DataQueryable class.
- * @param {string|*} attr - A string that is going to be used in this expression.
+ * @param {*} attr - A string that is going to be used in this expression.
  * @returns DataQueryable
- * @example
- context.model('Person').orderBy('givenName').list().then(function(result) {
-    done(null, result);
- }).catch(function(err) {
-    done(err);
  });
 */
+// eslint-disable-next-line no-unused-vars
 DataModel.prototype.orderBy = function(attr) {
     var result = new DataQueryable(this);
-    return result.orderBy(attr);
+    return result.orderBy.apply(result, Array.from(arguments));
 };
 
 /**
@@ -1154,18 +1151,14 @@ DataModel.prototype.skip = function(n) {
 
 /**
  * Prepares an descending order by expression and returns an instance of DataQueryable class.
- * @param {string|*} attr - A string that is going to be used in this expression.
+ * @param {*} attr - A string that is going to be used in this expression.
  * @returns DataQueryable
- * @example
- context.model('Person').orderByDescending('givenName').list().then(function(result) {
-    done(null, result);
- }).catch(function(err) {
-    done(err);
  });
  */
+// eslint-disable-next-line no-unused-vars
 DataModel.prototype.orderByDescending = function(attr) {
     var result = new DataQueryable(this);
-    return result.orderBy(attr);
+    return result.orderByDescending.apply(result, Array.from(arguments));
 };
 
 /**
