@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
+import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase} from "@themost/common";
 import {DataAssociationMappingBase} from '@themost/common/data';
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
@@ -75,9 +75,9 @@ export declare class DataContext extends SequentialEventEmitter {
 
     interactiveUser?: ContextUser;
 
-    model(name:any): DataModel
+    model(name:any): DataModel;
 
-    db: DataAdapter;
+    db: DataAdapterBase;
 
     getConfiguration(): ConfigurationBase;
 
