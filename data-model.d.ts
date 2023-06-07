@@ -55,6 +55,7 @@ export declare class DataModel extends SequentialEventEmitter{
     cast(obj: any, state: number): any;
     save(obj: any): Promise<any>;
     inferState(obj: any, callback: (err?: Error, res?: any) => void): void;
+    inferStateAsync(obj: any): Promise<any>;
     getSuperTypes(): Array<string>;
     update(obj: any): Promise<any>;
     insert(obj: any): Promise<any>;

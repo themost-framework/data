@@ -1699,6 +1699,23 @@ DataModel.prototype.inferState = function(obj, callback) {
     });
 };
 /**
+ * 
+ * @param {*} obj 
+ * @returns {Promise<*>}
+ */
+DataModel.prototype.inferStateAsync = function(obj) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self.inferState(obj, function(err, result) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(result);
+        });
+    });
+};
+
+/**
  * @this DataModel
  * @param {*} obj
  * @param {Function} callback
