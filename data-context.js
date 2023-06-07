@@ -130,14 +130,16 @@ function DefaultDataContext()
             self.setDb(value);
         },
         configurable: true,
-        enumerable:false });
+        enumerable:false
+    });
+        
 }
 
 LangUtils.inherits(DefaultDataContext, DataContext);
 
 /**
  * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase|*}
+ * @returns {import('@themost/common').ConfigurationBase}
  */
 DefaultDataContext.prototype.getConfiguration = function() {
     return cfg.getCurrent();
