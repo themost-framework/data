@@ -730,20 +730,11 @@ DataModel.prototype.asQueryable = function() {
  */
 function filterInternal(params, callback) {
     var self = this;
-    var parser = OpenDataParser.create(), $joinExpressions = [], view;
-    if (typeof params !== 'undefined' && params !== null && typeof params.$select === 'string') {
-        //split select
-        var arr = params.$select.split(',');
-        if (arr.length===1) {
-            //try to get data view
-            view = self.dataviews(arr[0]);
-        }
-    }
+    var parser = OpenDataParser.create()
+    var $joinExpressions = [];
+    var view;
     parser.resolveMember = function(member, cb) {
-        if (view) {
-            var field = view.fields.find(function(x) { return x.property === member });
-            if (field) { member = field.name; }
-        }
+        // resolve view
         var attr = self.field(member);
         if (attr) {
             member = attr.name;
@@ -859,12 +850,35 @@ function filterInternal(params, callback) {
                             q.query.$select = {};
                         }
                         var collection = q.query.$collection;
-                        Object.defineProperty(q.query.$select, collection, {
-                            configurable: true,
-                            enumerable: true,
-                            writable: true,
-                            value: query.$select
-                        });
+                        // validate the usage of a data view
+                        if (Array.isArray(query.$select) && query.$select.length === 1) {
+                            var reTrimCollection = new RegExp('^' + collection + '.', 'ig');
+                            for (let index = 0; index < query.$select.length; index++) {
+                                var element = query.$select[index];
+                                if (Object.prototype.hasOwnProperty.call(element, '$name')) {
+                                    // get attribute name
+                                    if (typeof element.$name === 'string') {
+                                        view = self.dataviews(element.$name.replace(reTrimCollection, ''));
+                                        if (view != null) {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (view != null) {
+                            // select view
+                            q.select(view.name)
+                        } else {
+                            // otherwise, format $select attribute
+                            Object.defineProperty(q.query.$select, collection, {
+                                configurable: true,
+                                enumerable: true,
+                                writable: true,
+                                value: query.$select
+                            });
+                        }
+                       
                     }
                     if (query.$where) {
                         q.query.$where = query.$where;

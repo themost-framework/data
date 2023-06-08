@@ -782,7 +782,7 @@ DataQueryable.prototype.select = function(attr) {
                         if (field.many || (field.mapping && field.mapping.associationType === 'junction'))
                             self.expand(field.name);
                         else
-                            arr.push(self.fieldOf(field.name));
+                            arr.push(self.fieldOf(field.name, x.property));
                     }
                     else {
                         var b = DataAttributeResolver.prototype.testAggregatedNestedAttribute.call(self,name);

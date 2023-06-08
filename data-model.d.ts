@@ -4,7 +4,7 @@ import {SequentialEventEmitter} from "@themost/common";
 import {DataQueryable} from "./data-queryable";
 import {DataObject} from "./data-object";
 
-export declare class DataModel extends SequentialEventEmitter{
+export declare class DataModel extends SequentialEventEmitter {
     constructor(obj:any);
 
     name: string;
@@ -72,7 +72,7 @@ export declare class DataModel extends SequentialEventEmitter{
     getSubTypes(): Promise<string>;
     getReferenceMappings(deep?: boolean): Array<any>;
     getAttribute(name: string): DataField;
-    getTypedItems(): Promise<DataObject|any>;
+    getTypedItems(): Promise<any>;
     getItems(): Promise<any>;
     getTypedList():Promise<any>;
     upsert(obj: any | Array<any>): Promise<any>;

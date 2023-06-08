@@ -1,5 +1,5 @@
 import { TestApplication } from './TestApplication';
-import { DataContext } from '../index';
+import { DataContext, SchemaLoaderStrategy } from '../index';
 import { resolve } from 'path';
 const moment = require('moment');
 
@@ -108,5 +108,150 @@ describe('DataModel.filter', () => {
             }
         });
     });
+
+    it('should use data view', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const schema = context.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition('Person');
+            schema.views = schema.views || [];
+            schema.views.push({
+                name: 'PersonSummary',
+                fields: [
+                    {
+                        name: 'id'
+                    },
+                    {
+                        name: 'givenName'
+                    },
+                    {
+                        name: 'familyName'
+                    }
+                ]
+            });
+            context.getConfiguration().getStrategy(SchemaLoaderStrategy).setModelDefinition(schema);
+            const query = await context.model('Person').filterAsync({
+                $take: 10,
+                $select: 'PersonSummary'
+            });
+            const items = await query.silent().getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(10);
+            for (const item of items) {
+                expect(Object.keys(item)).toEqual([
+                    'id',
+                    'givenName',
+                    'familyName'
+                ]);
+            }
+        });
+    });
+
+    it('should use data view for readonly view', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const schema = context.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition('Person');
+            schema.views = schema.views || [];
+            schema.views.push({
+                name: 'PersonRead',
+                fields: [
+                    {
+                        name: 'id'
+                    },
+                    {
+                        name: 'givenName',
+                        property: 'firstName'
+                    },
+                    {
+                        name: 'familyName',
+                        property: 'lastName'
+                    }
+                ],
+                privileges: [
+                    {
+                        mask: 1,
+                        type: 'global',
+                        account: '*'
+                    }
+                ]
+            });
+            context.getConfiguration().getStrategy(SchemaLoaderStrategy).setModelDefinition(schema);
+            let query = await context.model('Person').filterAsync({
+                $take: 10,
+                $select: 'PersonRead'
+            });
+            let items = await query.getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(10);
+            for (const item of items) {
+                expect(Object.keys(item)).toEqual([
+                    'id',
+                    'firstName',
+                    'lastName'
+                ]);
+            }
+
+            query = await context.model('Person').filterAsync({
+                $take: 10,
+                $select: 'id,givenName,familyName'
+            });
+            items = await query.getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(0);
+        });
+    });
+
+    it('should use data view with nested columns', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const schema = context.getConfiguration().getStrategy(SchemaLoaderStrategy).getModelDefinition('Person');
+            schema.views = schema.views || [];
+            schema.views.push({
+                name: 'PersonAddressRead',
+                fields: [
+                    {
+                        name: 'id'
+                    },
+                    {
+                        name: 'givenName',
+                        property: 'firstName'
+                    },
+                    {
+                        name: 'familyName',
+                        property: 'lastName'
+                    },
+                    {
+                        name: 'address/streetAddress',
+                        property: 'streetAddress'
+                    },
+                    {
+                        name: 'address/addressLocality',
+                        property: 'addressLocality'
+                    }
+                ],
+                privileges: [
+                    {
+                        mask: 1,
+                        type: 'global',
+                        account: '*'
+                    }
+                ]
+            });
+            context.getConfiguration().getStrategy(SchemaLoaderStrategy).setModelDefinition(schema);
+            let query = await context.model('Person').filterAsync({
+                $take: 10,
+                $select: 'PersonAddressRead'
+            });
+            let items = await query.getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(10);
+            for (const item of items) {
+                expect(Object.keys(item)).toEqual([
+                    'id',
+                    'firstName',
+                    'lastName',
+                    'streetAddress',
+                    'addressLocality'
+                ]);
+            }
+        });
+    });
+
 
 });
