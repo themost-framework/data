@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.10.1",
+  "version": "2.10.2",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "install-peers": "add-peers"
   },
   "peerDependencies": {
-    "@themost/common": "^2",
+    "@themost/common": "^2.10.1",
     "@themost/query": ">=2.9.12",
     "@themost/xml": "^2"
   },

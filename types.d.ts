@@ -111,7 +111,7 @@ export declare class DataAssociationMapping implements DataAssociationMappingBas
     refersTo?: string;
     associationObjectField?: string;
     associationValueField?: string;
-    cascade?: any;
+    cascade?: 'delete' | 'none';
     associationType?: 'association' | 'junction';
     select?: Array<string>;
     privileges?: Array<DataModelPrivilege>;
@@ -157,7 +157,7 @@ export declare class DataField {
     help?: string;
     validation?: any;
     virtual?: boolean;
-    multiplicity?: string;
+    multiplicity?: 'ZeroOrOne' | 'Many' | 'One' | 'Unknown';
     indexed?: boolean;
     size?: number;
     query?: QueryPipelineStage[];
