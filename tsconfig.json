@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "declaration": false,
@@ -16,8 +17,11 @@
         "es2017",
         "dom"
         ],
-    "paths": {
-    }
+      "paths": {
+        "@themost/common": [
+          "../common/index"
+        ]
+      }
   },
   "exclude": [
       "node_modules"

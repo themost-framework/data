@@ -1,10 +1,9 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataAssociationMapping, DataContext, DataField} from "./types";
-import {SequentialEventEmitter} from "@themost/common";
+import {DataModelBase, SequentialEventEmitter} from "@themost/common";
 import {DataQueryable} from "./data-queryable";
-import {DataObject} from "./data-object";
 
-export declare class DataModel extends SequentialEventEmitter {
+export declare class DataModel extends SequentialEventEmitter implements DataModelBase {
     constructor(obj:any);
 
     name: string;
@@ -12,7 +11,7 @@ export declare class DataModel extends SequentialEventEmitter {
     sealed?: boolean;
     abstract?: boolean;
     version: string;
-    caching?: string;
+    caching?: 'none' | 'always' | 'conditional';
     fields: Array<DataField>;
     eventListeners?: Array<any>;
     constraints?: Array<any>;
@@ -21,7 +20,7 @@ export declare class DataModel extends SequentialEventEmitter {
     context: DataContext;
     readonly sourceAdapter?: string;
     readonly viewAdapter?: string;
-    silent(value?: boolean): DataModel;
+    silent(value?: boolean): this;
     readonly attributes?: Array<DataField>;
     readonly primaryKey: any;
     readonly attributeNames: Array<string>;
@@ -51,7 +50,7 @@ export declare class DataModel extends SequentialEventEmitter {
     getList():Promise<any>;
     skip(n: number): DataQueryable;
     base(): DataModel;
-    convert(obj: any): DataObject;
+    convert<T>(obj: any): T;
     cast(obj: any, state: number): any;
     save(obj: any): Promise<any>;
     inferState(obj: any, callback: (err?: Error, res?: any) => void): void;
@@ -69,7 +68,7 @@ export declare class DataModel extends SequentialEventEmitter {
     validateForUpdate(obj: any): Promise<any>;
     validateForInsert(obj: any): Promise<any>;
     levels(value: number): DataQueryable;
-    getSubTypes(): Promise<string>;
+    getSubTypes(): Array<string>;
     getReferenceMappings(deep?: boolean): Array<any>;
     getAttribute(name: string): DataField;
     getTypedItems(): Promise<any>;

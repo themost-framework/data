@@ -1,16 +1,23 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase} from "@themost/common";
-import {DataAssociationMappingBase} from '@themost/common/data';
+import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration} from "@themost/common";
+import {DataAssociationMappingBase, DataFieldBase} from '@themost/common';
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
-export declare class DataAdapter {
+export declare class DataAdapter implements DataAdapterBase {
     /**
      *
      * @param options
      */
     constructor(options:any);
+    openAsync(): Promise<void>;
+    closeAsync(): Promise<void>;
+    executeAsync(query: any, values: any): Promise<any>;
+    selectIdentityAsync(entity: string, attribute: string): Promise<any>;
+    executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
+    migrate(obj: DataAdapterMigration, callback: (err: Error, result?: any) => void): void;
+    migrateAsync(obj: DataAdapterMigration): Promise<any>;
     /**
      *
      */
@@ -136,7 +143,7 @@ export declare interface QueryPipelineStage {
     $project?: QueryPipelineProject;
 }
 
-export declare class DataField {
+export declare class DataField implements DataFieldBase {
     name: string;
     property?: string;
     title?: string;
@@ -161,6 +168,7 @@ export declare class DataField {
     indexed?: boolean;
     size?: number;
     query?: QueryPipelineStage[];
+    [k: string]: unknown;
 }
 
 export declare class DataEventArgs {
