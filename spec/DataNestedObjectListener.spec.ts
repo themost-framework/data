@@ -53,6 +53,36 @@ describe('DataNestedObjectListener', () => {
         });
     });
 
+    it('should filter zero-or-one multiplicity', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            const q = await context.model('Product')
+                .filterAsync({
+                    '$filter': `name eq 'Samsung Galaxy S4'`,
+                    '$select': 'id,productDimensions'
+                });
+            product = await q.getItem();
+            expect(product.productDimensions).toBeTruthy();
+            Object.assign(product, {
+                productDimensions: null
+            });
+            await context.model('Product').silent().save(product);
+            let productDimension = await context.model('ProductDimension')
+                .where('product/name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            expect(productDimension).toBeFalsy();
+        });
+    });
+
     it('should use collection of nested objects', async () => {
         await context.executeInTransactionAsync(async () => {
             
