@@ -83,6 +83,50 @@ describe('DataNestedObjectListener', () => {
         });
     });
 
+    it('should expand zero-or-one multiplicity', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            const q = await context.model('Product')
+                .filterAsync({
+                    '$filter': `name eq 'Samsung Galaxy S4'`,
+                    '$select': 'id,productDimensions',
+                    '$expand': 'productDimensions'
+                });
+            product = await q.getItem();
+            expect(product.productDimensions).toBeInstanceOf(Object);
+        });
+    });
+
+    it('should expand zero-or-one multiplicity with closure', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            product = await context.model('Product')
+                .where((x: { name: string }) => x.name === 'Samsung Galaxy S4')
+                .select(({ id, productDimensions }: any) => {
+                    return { id, productDimensions }
+                }).getItem();
+            expect(product.productDimensions).toBeInstanceOf(Object);
+        });
+    });
+
     it('should use collection of nested objects', async () => {
         await context.executeInTransactionAsync(async () => {
             

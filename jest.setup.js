@@ -1,4 +1,6 @@
+require('source-map-support/register');
 require('./data-model');
+
 /* global jest */
 require('dotenv').config();
 Object.assign(global.console , {
