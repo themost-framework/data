@@ -37,6 +37,51 @@ function resolveJoinMember(target) {
 }
 
 /**
+ * @param {DataQueryable} target 
+ */
+function resolveMember(target) {
+    /**
+     * @param {member:string} event
+     */
+    return function onResolvingMember(event) {
+        var collection = target.model.viewAdapter;
+        var member = event.member.replace(new RegExp('^' + collection + '.'), '');
+        /**
+         * @type {import('./types').DataAssociationMapping}
+         */
+        var mapping = target.model.inferMapping(member);
+        if (mapping == null) {
+            return;
+        }
+        /**
+         * @type {import('./types').DataField}
+         */
+        var attribute = target.model.getAttribute(member);
+        if (attribute.multiplicity === 'ZeroOrOne') {
+            var resolveMember = null;
+            if (mapping.associationType === 'junction' && mapping.parentModel === self.name) {
+                // expand child field
+                resolveMember = attribute.name.concat('/', mapping.childField);
+            } else if (mapping.associationType === 'junction' && mapping.childModel === self.name) {
+                // expand parent field
+                resolveMember = attribute.name.concat('/', mapping.parentField);
+            } else if (mapping.associationType === 'association' && mapping.parentModel === target.model.name) {
+                var associatedModel = target.model.context.model(mapping.childModel);
+                resolveMember = attribute.name.concat('/', associatedModel.primaryKey);
+            }
+            if (resolveMember) {
+                // resolve attribute
+                var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, resolveMember);
+                if (instanceOf(expr, QueryField)) {
+                    event.member = expr.$name;
+                }
+            }
+        }
+        
+    }
+}
+
+/**
  * @classdesc Represents a dynamic query helper for filtering, paging, grouping and sorting data associated with an instance of DataModel class.
  * @class
  * @property {DataModel|*} model - Gets or sets the underlying data model
@@ -162,9 +207,8 @@ DataQueryable.prototype.where = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.where.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -739,11 +783,13 @@ DataQueryable.prototype.select = function(attr) {
         var query = this.query;
         var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        var onResolvingMember = resolveMember(this);
+        query.resolvingMember.subscribe(onResolvingMember);
         try {
             query.select.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
+            query.resolvingMember.unsubscribe(onResolvingMember);
         }
         return this;
     }
@@ -1020,9 +1066,8 @@ DataQueryable.prototype.orderBy = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.orderBy.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1054,9 +1099,8 @@ DataQueryable.prototype.groupBy = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.groupBy.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1103,9 +1147,8 @@ DataQueryable.prototype.thenBy = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.thenBy.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1133,9 +1176,8 @@ DataQueryable.prototype.orderByDescending = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.orderByDescending.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1163,9 +1205,8 @@ DataQueryable.prototype.thenByDescending = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.thenByDescending.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -2263,10 +2304,9 @@ DataQueryable.prototype.expand = function(attr) {
             args.forEach(function(argument) {
                 query.select.call(query, argument, params);
             });
-        } catch (error) {
+        } finally {
             query.resolvingMember.unsubscribe(onResolvingMember);
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
