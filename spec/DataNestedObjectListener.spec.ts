@@ -118,12 +118,27 @@ describe('DataNestedObjectListener', () => {
                 }
             });
             await context.model('Product').silent().save(product);
+            const value = product.productDimensions.id;
             product = await context.model('Product')
                 .where((x: { name: string }) => x.name === 'Samsung Galaxy S4')
                 .select(({ id, productDimensions }: any) => {
-                    return { id, productDimensions }
+                    return {
+                        id,
+                        productDimensions
+                    }
                 }).getItem();
+            expect(product.productDimensions).toEqual(value);
+            product = await context.model('Product')
+                .where((x: { name: string }) => x.name === 'Samsung Galaxy S4')
+                .select(({ id, productDimensions }: any) => {
+                    return {
+                        id,
+                        productDimensions
+                    }
+                }).expand((x: any) => x.productDimensions)
+                .getItem();
             expect(product.productDimensions).toBeInstanceOf(Object);
+            expect(product.productDimensions.id).toEqual(value);
         });
     });
 
