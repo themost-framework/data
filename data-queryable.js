@@ -2092,7 +2092,7 @@ function afterExecute_(result, callback) {
                 }
             }
             else {
-                return cb(new DataError('EASSOC', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
+                return cb(new DataError('E_ASSOCIATION', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.name), null, self.model));
             }
         }, function(err) {
             if (err) {
@@ -2283,7 +2283,7 @@ DataQueryable.prototype.expand = function(attr) {
                 /**
                  * @type {string}
                  */
-                var member = event.member;
+                var member = event.fullyQualifiedMember;
                 var index = member.lastIndexOf('.');
                 while(index >= 0) {
                     member = member.substring(0, index) + '($expand=' +  member.substring(index + 1, member.length) + ')'
