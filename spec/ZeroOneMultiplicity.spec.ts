@@ -311,6 +311,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 $select: 'id, name, internalReview/reviewRating as reviewRating',
                 $filter: 'internalReview ne null',
             });
+            
             items = await query.getItems();
             expect(items).toBeInstanceOf(Array);
             expect(items.length).toBeGreaterThan(0);
