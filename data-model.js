@@ -891,23 +891,23 @@ function filterInternal(params, callback) {
                                 // validate aliases found by resolveMember
                                 if (selectAs.length > 0) {
                                     for (let index = 0; index < query.$select.length; index++) {
-                                        var element = query.$select[index];
-                                        if (Object.prototype.hasOwnProperty.call(element, '$name')) {
-                                            if (typeof element.$name === 'string') {
+                                        var element1 = query.$select[index];
+                                        if (Object.prototype.hasOwnProperty.call(element1, '$name')) {
+                                            if (typeof element1.$name === 'string') {
                                                 var item = selectAs.find(function(x) {
-                                                    return x.member === element.$name;
+                                                    return x.member === element1.$name;
                                                 });
                                                 if (item != null) {
                                                     // add original name as alias
-                                                    Object.defineProperty(element, item.alias, {
+                                                    Object.defineProperty(element1, item.alias, {
                                                         configurable: true,
                                                         enumerable: true,
                                                         value: {
-                                                            $name: element.$name
+                                                            $name: element1.$name
                                                         }
                                                     });
                                                     // and delete $name property
-                                                    delete element.$name;
+                                                    delete element1.$name;
                                                 }
                                             }
                                         }
