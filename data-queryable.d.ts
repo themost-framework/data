@@ -97,4 +97,5 @@ export declare class DataQueryable implements DataContextEmitter {
     levels(n:number): this;
     getLevels(): number;
     toExpand(): string;
+    distinct(): this;
 }

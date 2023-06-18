@@ -1,6 +1,7 @@
 import { TestApplication } from './TestApplication';
 import { DataContext } from '../index';
 import { resolve } from 'path';
+import { round } from '@themost/query';
 const moment = require('moment');
 
 describe('DataNestedObjectListener', () => {
@@ -142,6 +143,29 @@ describe('DataNestedObjectListener', () => {
         });
     });
 
+    it('should filter by using a nested object', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product').silent().save({
+                name: 'Samsung Galaxy S5',
+                productDimensions: {
+                    height: 0.146,
+                    width: 0.069
+                }
+            });
+            product = await context.model('Product')
+                .where((x: any) => round(x.productDimensions.height, 2) === 0.15)
+                .select(({ id, name, productDimensions }: any) => {
+                    return {
+                        id,
+                        name,
+                        productDimensions
+                    }
+                }).expand((x: any) => x.productDimensions).getItem();
+            expect(product).toBeTruthy();
+            expect(product.name).toEqual('Samsung Galaxy S5');
+        });
+    });
+
     it('should use collection of nested objects', async () => {
         await context.executeInTransactionAsync(async () => {
             
@@ -208,6 +232,40 @@ describe('DataNestedObjectListener', () => {
                 .where('itemOffered/name').equal('Samsung Galaxy S4')
                 .silent().getItems();
             expect(specialOffers.length).toBe(0);
+        });
+    });
+
+    it('should query collection of nested objects (closures)', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const product = await context.model('Product').silent().save({
+                name: 'Samsung Galaxy L1',
+                price: 677.50
+            });
+            Object.assign(product, {
+                specialOffers: [
+                    {
+                        price: product.price * 0.8,
+                        validFrom: new Date(),
+                        validThrough: moment().add(1, 'M').toDate()
+                    },
+                    {
+                        price: product.price * 0.6,
+                        validFrom: moment().add(2, 'M').toDate(),
+                        validThrough: moment().add(3, 'M').toDate()
+                    }
+                ]
+            });
+            await context.model('Product').silent().save(product);
+            const today = new Date();
+            let items = await context.model('Product')
+                .where((x: any) => x.specialOffers.validFrom >= today, {
+                    today
+                })
+                .distinct()
+                .getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
         });
     });
 });

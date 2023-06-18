@@ -31,8 +31,27 @@ function resolveJoinMember(target) {
         }
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
         if (instanceOf(expr, QueryField)) {
-            event.member = expr.$name;
+            var member = expr.$name.split('.');
+            Object.assign(event, {
+                object: member[0],
+                member: member[1]
+            })
         }
+    }
+}
+
+// eslint-disable-next-line no-unused-vars
+function resolveZeroOrOneJoinMember(target) {
+    /**
+     * This method tries to resolve a join member e.g. product.productDimensions
+     * when this member defines a zero-or-one association
+     */
+    return function onResolvingZeroOrOneJoinMember(event) {
+        /**
+         * @type {Array<string>}
+         */
+        // eslint-disable-next-line no-unused-vars
+        var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
     }
 }
 
@@ -2956,6 +2975,14 @@ DataQueryable.prototype.getAllItems = function() {
  */
 DataQueryable.prototype.getAllTypedItems = function() {
     return this.skip(0).take(-1).getTypedItems();
+};
+/**
+ * Prepares a query with dictinct values
+ * @returns {this}
+ */
+DataQueryable.prototype.distinct = function() {
+    this.query.distinct();
+    return this;
 };
 
 module.exports = {
