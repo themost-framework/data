@@ -547,13 +547,13 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             }
 
             //return the resolved attribute for futher processing e.g. members.id
-            if (member[1] === mapping.childField) {
-                return {
-                    $expand:[q.$expand],
-                    $select:QueryField.select(mapping.associationValueField).from(associationAlias)
-                }
-            }
-            else {
+            // if (member[1] === mapping.childField) {
+            //     return {
+            //         $expand:[q.$expand],
+            //         $select:QueryField.select(mapping.associationValueField).from(associationAlias)
+            //     }
+            // }
+            // else {
                 //get child model
                 var childModel = self.context.model(mapping.childModel);
                 if (_.isNil(childModel)) {
@@ -580,7 +580,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                     $expand:q.$expand,
                     $select:QueryField.select(member[1] || mapping.childField).from(alias)
                 }
-            }
+            //}
         }
         else {
             q =QueryUtils.query(self.viewAdapter).select(['*']);
@@ -624,6 +624,26 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
         throw new DataError('EJUNC','The target model does not have a many to many association defined by the given attribute.','', self.name, attr);
     }
 };
+/**
+ * @this 
+ * @param {*} attr 
+ */
+DataAttributeResolver.prototype.resolveZeroOrOneNestedAttribute = function(attr) {
+    /**
+     * @type {import('./data-queryable').DataQueryable}
+     */
+    var self = this;
+    var fullyQualifiedMember  = attr.split('/');
+    var index = 0;
+    var currentModel = self.model;
+    while (index < fullyQualifiedMember.length) {
+        var member = fullyQualifiedMember[index];
+        var attribute = currentModel.getAttribute(member);
+        if (attribute.multiplicity != 'ZeroOrOne') {
+            // do nothing
+        }
+    }
+}
 
 module.exports = {
     DataAttributeResolver

@@ -733,6 +733,7 @@ function filterInternal(params, callback) {
     var parser = OpenDataParser.create()
     var $joinExpressions = [];
     var view;
+    var selectAs = [];
     parser.resolveMember = function(member, cb) {
         // resolve view
         var attr = self.field(member);
@@ -742,8 +743,24 @@ function filterInternal(params, callback) {
                 var mapping1 = self.inferMapping(member);
                 if (mapping1 && mapping1.associationType === 'junction' && mapping1.parentModel === self.name) {
                     member = attr.name.concat('/', mapping1.childField);
+                    selectAs.push({
+                        member: attr.name.concat('.', mapping1.childField),
+                        alias: attr.name
+                    });
                 } else if (mapping1 && mapping1.associationType === 'junction' && mapping1.childModel === self.name) {
                     member = attr.name.concat('/', mapping1.parentField);
+                    selectAs.push({
+                        member: attr.name.concat('.', mapping1.parentField),
+                        alias: attr.name
+                    });
+                } else if (mapping1 && mapping1.associationType === 'association' && mapping1.parentModel === self.name) {
+                    var associatedModel = self.context.model(mapping1.childModel);
+                    const primaryKey = associatedModel.attributes.find((x) => x.primary === true);
+                    member = attr.name.concat('/', primaryKey.name);
+                    selectAs.push({
+                        member: attr.name.concat('.', primaryKey.name),
+                        alias: attr.name
+                    });
                 }
             }
         }
@@ -870,6 +887,33 @@ function filterInternal(params, callback) {
                             // select view
                             q.select(view.name)
                         } else {
+                            if (Array.isArray(query.$select)) {
+                                // validate aliases found by resolveMember
+                                if (selectAs.length > 0) {
+                                    for (let index = 0; index < query.$select.length; index++) {
+                                        var element1 = query.$select[index];
+                                        if (Object.prototype.hasOwnProperty.call(element1, '$name')) {
+                                            if (typeof element1.$name === 'string') {
+                                                var item = selectAs.find(function(x) {
+                                                    return x.member === element1.$name;
+                                                });
+                                                if (item != null) {
+                                                    // add original name as alias
+                                                    Object.defineProperty(element1, item.alias, {
+                                                        configurable: true,
+                                                        enumerable: true,
+                                                        value: {
+                                                            $name: element1.$name
+                                                        }
+                                                    });
+                                                    // and delete $name property
+                                                    delete element1.$name;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             // otherwise, format $select attribute
                             Object.defineProperty(q.query.$select, collection, {
                                 configurable: true,

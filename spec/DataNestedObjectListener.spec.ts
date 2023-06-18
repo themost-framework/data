@@ -1,6 +1,7 @@
 import { TestApplication } from './TestApplication';
 import { DataContext } from '../index';
 import { resolve } from 'path';
+import { round } from '@themost/query';
 const moment = require('moment');
 
 describe('DataNestedObjectListener', () => {
@@ -50,6 +51,118 @@ describe('DataNestedObjectListener', () => {
                 .where('product/name').equal('Samsung Galaxy S4')
                 .silent().getItem();
             expect(productDimension).toBeFalsy();
+        });
+    });
+
+    it('should filter zero-or-one multiplicity', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            const q = await context.model('Product')
+                .filterAsync({
+                    '$filter': `name eq 'Samsung Galaxy S4'`,
+                    '$select': 'id,productDimensions'
+                });
+            product = await q.getItem();
+            expect(product.productDimensions).toBeTruthy();
+            Object.assign(product, {
+                productDimensions: null
+            });
+            await context.model('Product').silent().save(product);
+            let productDimension = await context.model('ProductDimension')
+                .where('product/name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            expect(productDimension).toBeFalsy();
+        });
+    });
+
+    it('should expand zero-or-one multiplicity', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            const q = await context.model('Product')
+                .filterAsync({
+                    '$filter': `name eq 'Samsung Galaxy S4'`,
+                    '$select': 'id,productDimensions',
+                    '$expand': 'productDimensions'
+                });
+            product = await q.getItem();
+            expect(product.productDimensions).toBeInstanceOf(Object);
+        });
+    });
+
+    it('should expand zero-or-one multiplicity with closure', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            const value = product.productDimensions.id;
+            product = await context.model('Product')
+                .where((x: { name: string }) => x.name === 'Samsung Galaxy S4')
+                .select(({ id, productDimensions }: any) => {
+                    return {
+                        id,
+                        productDimensions
+                    }
+                }).getItem();
+            expect(product.productDimensions).toEqual(value);
+            product = await context.model('Product')
+                .where((x: { name: string }) => x.name === 'Samsung Galaxy S4')
+                .select(({ id, productDimensions }: any) => {
+                    return {
+                        id,
+                        productDimensions
+                    }
+                }).expand((x: any) => x.productDimensions)
+                .getItem();
+            expect(product.productDimensions).toBeInstanceOf(Object);
+            expect(product.productDimensions.id).toEqual(value);
+        });
+    });
+
+    it('should filter by using a nested object', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product').silent().save({
+                name: 'Samsung Galaxy S5',
+                productDimensions: {
+                    height: 0.146,
+                    width: 0.069
+                }
+            });
+            product = await context.model('Product')
+                .where((x: any) => round(x.productDimensions.height, 2) === 0.15)
+                .select(({ id, name, productDimensions }: any) => {
+                    return {
+                        id,
+                        name,
+                        productDimensions
+                    }
+                }).expand((x: any) => x.productDimensions).getItem();
+            expect(product).toBeTruthy();
+            expect(product.name).toEqual('Samsung Galaxy S5');
         });
     });
 
@@ -119,6 +232,40 @@ describe('DataNestedObjectListener', () => {
                 .where('itemOffered/name').equal('Samsung Galaxy S4')
                 .silent().getItems();
             expect(specialOffers.length).toBe(0);
+        });
+    });
+
+    it('should query collection of nested objects (closures)', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const product = await context.model('Product').silent().save({
+                name: 'Samsung Galaxy L1',
+                price: 677.50
+            });
+            Object.assign(product, {
+                specialOffers: [
+                    {
+                        price: product.price * 0.8,
+                        validFrom: new Date(),
+                        validThrough: moment().add(1, 'M').toDate()
+                    },
+                    {
+                        price: product.price * 0.6,
+                        validFrom: moment().add(2, 'M').toDate(),
+                        validThrough: moment().add(3, 'M').toDate()
+                    }
+                ]
+            });
+            await context.model('Product').silent().save(product);
+            const today = new Date();
+            let items = await context.model('Product')
+                .where((x: any) => x.specialOffers.validFrom >= today, {
+                    today
+                })
+                .distinct()
+                .getItems();
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+
         });
     });
 });

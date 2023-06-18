@@ -184,6 +184,90 @@ describe('ZeroOrOneMultiplicity', () => {
         });
     });
 
+    it('should filter zero or one associated items (closures)', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product: any = await context.model('Product')
+                .where(({name}: {name: string}) => name === 'Samsung Galaxy S4')
+                .getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country')
+                .where((x: any) => x.cioc === 'CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+            let items = await context.model('Order')
+                .where((x: any) => x.orderedItem.madeIn.id != null)
+                .expand((x: any) => x.orderedItem.madeIn)
+                .silent()
+                .getItems()
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(item.orderedItem.madeIn).toBeTruthy();
+            }
+            items = await context.model('Order')
+                .where((x: any) => x.orderedItem.madeIn != null)
+                .silent()
+                .getItems()
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            items = await context.model('Order')
+                .where((x: any) => x.orderedItem.madeIn.cioc != null)
+                .silent()
+                .getItems()
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+        });
+    });
+
+    it('should group by a zero or one associated item', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            let product: any = await context.model('Product')
+                .where(({name}: {name: string}) => name === 'Samsung Galaxy S4')
+                .getItem();
+            expect(product).toBeTruthy();
+            let country = await context.model('Country')
+                .where((x: any) => x.cioc === 'CHN').getItem();
+            expect(country).toBeTruthy();
+            product.madeIn = country;
+            await context.model('Product').silent().save(product);
+
+            let items = await context.model('Order')
+                .where('orderedItem/madeIn').notEqual(null)
+                .select('orderedItem/name as orderedItem', 'orderedItem/madeIn/cioc as madeIn')
+                .groupBy('orderedItem/name', 'orderedItem/madeIn/cioc')
+                .silent()
+                .getItems()
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(typeof item.orderedItem === 'string').toBeTruthy();
+                expect(item.madeIn).toBeTruthy();
+            }
+
+            items = await context.model('Order')
+                .where((x: any) => x.orderedItem.madeIn != null)
+                .select((x: any) => {
+                    return {
+                        orderedItem: x.orderedItem.name,
+                        madeIn: x.orderedItem.madeIn.cioc
+                    }
+                })
+                .groupBy(
+                    (x: any) => x.orderedItem.name,
+                    (x: any) => x.orderedItem.madeIn.cioc
+                    )
+                .silent()
+                .getItems()
+            expect(items).toBeInstanceOf(Array);
+            expect(items.length).toBeGreaterThan(0);
+            for (const item of items) {
+                expect(typeof item.orderedItem === 'string').toBeTruthy();
+                expect(item.madeIn).toBeTruthy();
+            }
+        });
+    });
+
     it('should use privileges', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             let product = await context.model('Product').where('name').equal('Samsung Galaxy S4').getItem();
@@ -227,6 +311,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 $select: 'id, name, internalReview/reviewRating as reviewRating',
                 $filter: 'internalReview ne null',
             });
+            
             items = await query.getItems();
             expect(items).toBeInstanceOf(Array);
             expect(items.length).toBeGreaterThan(0);

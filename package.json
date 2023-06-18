@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.10.3",
+  "version": "2.10.4",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@themost/common": "^2.10.3",
-    "@themost/query": ">=2.9.12",
+    "@themost/query": ">=2.10.0",
     "@themost/xml": "^2"
   },
   "engines": {
@@ -55,8 +55,9 @@
     "eslint-plugin-node": "^11.1.0",
     "jest": "^27.5.1",
     "module-alias": "^2.2.2",
+    "source-map-support": "^0.5.21",
     "sql.js": "^1.4.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.3"
+    "typescript": "^4.9.4"
   }
 }

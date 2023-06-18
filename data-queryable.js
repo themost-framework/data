@@ -31,8 +31,72 @@ function resolveJoinMember(target) {
         }
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
         if (instanceOf(expr, QueryField)) {
-            event.member = expr.$name;
+            var member = expr.$name.split('.');
+            Object.assign(event, {
+                object: member[0],
+                member: member[1]
+            })
         }
+    }
+}
+
+// eslint-disable-next-line no-unused-vars
+function resolveZeroOrOneJoinMember(target) {
+    /**
+     * This method tries to resolve a join member e.g. product.productDimensions
+     * when this member defines a zero-or-one association
+     */
+    return function onResolvingZeroOrOneJoinMember(event) {
+        /**
+         * @type {Array<string>}
+         */
+        // eslint-disable-next-line no-unused-vars
+        var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+    }
+}
+
+/**
+ * @param {DataQueryable} target 
+ */
+function resolveMember(target) {
+    /**
+     * @param {member:string} event
+     */
+    return function onResolvingMember(event) {
+        var collection = target.model.viewAdapter;
+        var member = event.member.replace(new RegExp('^' + collection + '.'), '');
+        /**
+         * @type {import('./types').DataAssociationMapping}
+         */
+        var mapping = target.model.inferMapping(member);
+        if (mapping == null) {
+            return;
+        }
+        /**
+         * @type {import('./types').DataField}
+         */
+        var attribute = target.model.getAttribute(member);
+        if (attribute.multiplicity === 'ZeroOrOne') {
+            var resolveMember = null;
+            if (mapping.associationType === 'junction' && mapping.parentModel === self.name) {
+                // expand child field
+                resolveMember = attribute.name.concat('/', mapping.childField);
+            } else if (mapping.associationType === 'junction' && mapping.childModel === self.name) {
+                // expand parent field
+                resolveMember = attribute.name.concat('/', mapping.parentField);
+            } else if (mapping.associationType === 'association' && mapping.parentModel === target.model.name) {
+                var associatedModel = target.model.context.model(mapping.childModel);
+                resolveMember = attribute.name.concat('/', associatedModel.primaryKey);
+            }
+            if (resolveMember) {
+                // resolve attribute
+                var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, resolveMember);
+                if (instanceOf(expr, QueryField)) {
+                    event.member = expr.$name;
+                }
+            }
+        }
+        
     }
 }
 
@@ -162,9 +226,8 @@ DataQueryable.prototype.where = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.where.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -739,11 +802,13 @@ DataQueryable.prototype.select = function(attr) {
         var query = this.query;
         var onResolvingJoinMember = resolveJoinMember(this);
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        var onResolvingMember = resolveMember(this);
+        query.resolvingMember.subscribe(onResolvingMember);
         try {
             query.select.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
+            query.resolvingMember.unsubscribe(onResolvingMember);
         }
         return this;
     }
@@ -1020,9 +1085,8 @@ DataQueryable.prototype.orderBy = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.orderBy.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1054,9 +1118,8 @@ DataQueryable.prototype.groupBy = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.groupBy.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1103,9 +1166,8 @@ DataQueryable.prototype.thenBy = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.thenBy.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1133,9 +1195,8 @@ DataQueryable.prototype.orderByDescending = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.orderByDescending.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -1163,9 +1224,8 @@ DataQueryable.prototype.thenByDescending = function(attr) {
         query.resolvingJoinMember.subscribe(onResolvingJoinMember);
         try {
             query.thenByDescending.apply(query, args);
-        } catch (error) {
+        } finally {
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -2051,7 +2111,7 @@ function afterExecute_(result, callback) {
                 }
             }
             else {
-                return cb(new DataError('EASSOC', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
+                return cb(new DataError('E_ASSOCIATION', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.name), null, self.model));
             }
         }, function(err) {
             if (err) {
@@ -2242,7 +2302,7 @@ DataQueryable.prototype.expand = function(attr) {
                 /**
                  * @type {string}
                  */
-                var member = event.member;
+                var member = event.fullyQualifiedMember;
                 var index = member.lastIndexOf('.');
                 while(index >= 0) {
                     member = member.substring(0, index) + '($expand=' +  member.substring(index + 1, member.length) + ')'
@@ -2263,10 +2323,9 @@ DataQueryable.prototype.expand = function(attr) {
             args.forEach(function(argument) {
                 query.select.call(query, argument, params);
             });
-        } catch (error) {
+        } finally {
             query.resolvingMember.unsubscribe(onResolvingMember);
             query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
-            throw error;
         }
         return this;
     }
@@ -2916,6 +2975,14 @@ DataQueryable.prototype.getAllItems = function() {
  */
 DataQueryable.prototype.getAllTypedItems = function() {
     return this.skip(0).take(-1).getTypedItems();
+};
+/**
+ * Prepares a query with dictinct values
+ * @returns {this}
+ */
+DataQueryable.prototype.distinct = function() {
+    this.query.distinct();
+    return this;
 };
 
 module.exports = {
