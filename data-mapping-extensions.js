@@ -8,6 +8,22 @@ var {QueryEntity} = require('@themost/query');
 var {QueryField} = require('@themost/query');
 var {hasOwnProperty} = require('./has-own-property');
 
+/**
+ * @param {Array<QueryField|*>} fields 
+ * @param {string} name
+ * @return {*}
+ */
+function containsField(fields, name) {
+    return fields.find(function(field) {
+        if (field instanceof QueryField) {
+            return field.as() === name || field.getName() === name;
+        } else {
+            var f = Object.assign(new QueryField(), field);
+            return f.as() === name || f.getName() === name;
+        }
+    });
+}
+
 class DataMappingExtender {
     constructor(mapping) {
         this.mapping = mapping;
@@ -115,12 +131,7 @@ class DataMappingExtender {
                              */
                             var select = Object.getOwnPropertyDescriptor(q.query.$select, selectEntity).value;
                             // find foreign key key
-                            var find =  select.find(function(field) {
-                                if (field instanceof QueryField) {
-                                    // by alias or name
-                                    return field.as() === keyField || field.getName() === keyField;
-                                }
-                            });
+                            var find =  containsField(select, keyField);
                             // if foreign key field does not exist
                             if (find == null) {
                                 // clone query
@@ -246,12 +257,7 @@ class DataMappingExtender {
                              */
                             var select = Object.getOwnPropertyDescriptor(q.query.$select, selectEntity).value;
                             // find foreign key key
-                            var find =  select.find(function(field) {
-                                if (field instanceof QueryField) {
-                                    // by alias or name
-                                    return field.as() === keyField || field.getName() === keyField;
-                                }
-                            });
+                            var find =  containsField(select, keyField);
                             // if foreign key field does not exist
                             if (find == null) {
                                 // clone query
@@ -469,12 +475,7 @@ class DataMappingExtender {
                              */
                             var select = Object.getOwnPropertyDescriptor(q.query.$select, selectEntity).value;
                             // find foreign key key
-                            var find =  select.find(function(field) {
-                                if (field instanceof QueryField) {
-                                    // by alias or name
-                                    return field.as() === foreignKeyField || field.getName() === foreignKeyField;
-                                }
-                            });
+                            var find = containsField(select, foreignKeyField);
                             // if foreign key field does not exist
                             if (find == null) {
                                 // clone query
@@ -486,12 +487,7 @@ class DataMappingExtender {
                                     select.push.apply(select, select1);
                                 }
                                 if (Array.isArray(q.query.$group)) {
-                                    find =  q.query.$group.find(function(field) {
-                                        if (field instanceof QueryField) {
-                                            // by alias or name
-                                            return field.as() === foreignKeyField || field.getName() === foreignKeyField;
-                                        }
-                                    });
+                                    find = containsField(q.query.$group, foreignKeyField);
                                     if (find == null) {
                                         q.query.$group.push.apply(q.query.$group, select1);
                                     }
@@ -793,12 +789,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                              */
                             var select = Object.getOwnPropertyDescriptor(thisQueryable.query.$select, selectEntity).value;
                             // find foreign key key
-                            var find =  select.find(function(field) {
-                                if (field instanceof QueryField) {
-                                    // by alias or name
-                                    return field.as() === keyField || field.getName() === keyField;
-                                }
-                            });
+                            var find = containsField(select, keyField);
                             // if foreign key field does not exist
                             if (find == null) {
                                 // clone query
@@ -914,12 +905,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                              */
                             var select = Object.getOwnPropertyDescriptor(q.query.$select, selectEntity).value;
                             // find foreign key key
-                            var find =  select.find(function(field) {
-                                if (field instanceof QueryField) {
-                                    // by alias or name
-                                    return field.as() === foreignKeyField || field.getName() === foreignKeyField;
-                                }
-                            });
+                            var find =  containsField(select, foreignKeyField);
                             // if foreign key field does not exist
                             if (find == null) {
                                 // clone query
@@ -931,12 +917,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                                     select.push.apply(select, select1);
                                 }
                                 if (Array.isArray(q.query.$group)) {
-                                    find =  q.query.$group.find(function(field) {
-                                        if (field instanceof QueryField) {
-                                            // by alias or name
-                                            return field.as() === foreignKeyField || field.getName() === foreignKeyField;
-                                        }
-                                    });
+                                    find = containsField(q.query.$group, foreignKeyField);
                                     if (find == null) {
                                         q.query.$group.push.apply(q.query.$group, select1);
                                     }
