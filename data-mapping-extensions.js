@@ -6,6 +6,7 @@ var _ = require('lodash');
 var {QueryUtils} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
 var {QueryField} = require('@themost/query');
+var {DataError} = require('@themost/common')
 var {hasOwnProperty} = require('./has-own-property');
 
 /**
@@ -351,8 +352,10 @@ class DataMappingExtender {
                     return reject('The specified field cannot be found on child model');
                 }
                 var values = _.intersection(_.map(_.filter(arr, function(x) {
-                    return hasOwnProperty(x, keyField);
-                    }), function (x) { return x[keyField];}));
+                        return hasOwnProperty(x, keyField) && x[keyField] != null;
+                    }), function (x) {
+                        return x[keyField];
+                    }));
                 if (values.length===0) {
                     return resolve();
                 }
@@ -375,20 +378,19 @@ class DataMappingExtender {
                         q.silent();
                     }
                     q.getAllItems().then(function(parents) {
-                        var key=null,
-                            selector = function(x) {
-                                return x[mapping.parentField]===key;
-                            },
-                            iterator = function(x) {
-                                key = x[keyField];
-                                if (childField.property && childField.property!==childField.name) {
-                                    x[childField.property] = parents.filter(selector)[0];
-                                    delete x[childField.name];
-                                }
-                                else
-                                    x[childField.name] = parents.filter(selector)[0];
-                            };
-                        if (_.isArray(arr)) {
+                        var iterator = function(x) {
+                            var key = x[keyField];
+                            var property = childField.property || childField.name;
+                            if (property == null) {
+                                throw new DataError( 'E_NULL', 'Child attribute cannot be empty', null, mapping.childModel, mapping.childField);
+                            }
+                            var find = parents.find(function(parent) {
+                                return parent[mapping.parentField] === key;
+                            });
+                            // clone parent or set null
+                            x[property] = find != null ? _.cloneDeep(find) : null;
+                        };
+                        if (Array.isArray(arr)) {
                             arr.forEach(iterator);
                         }
                         return resolve();
