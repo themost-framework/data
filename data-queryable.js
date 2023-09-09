@@ -2074,6 +2074,15 @@ function afterExecute_(result, callback) {
                 thisMapping.options = options;
                 if (mapping.associationType==='association' || mapping.associationType==='junction') {
                     if ((mapping.parentModel===self.model.name) && (mapping.associationType==='association')) {
+                        // handle parent-child association in same model
+                        if (mapping.childModel===self.model.name) {
+                            return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
+                                .then(function() {
+                                    return cb();
+                                }).catch(function(err) {
+                                    return cb(err);
+                                });
+                        }
                         return new DataMappingExtender(thisMapping).for(self).getAssociatedChildren(result)
                             .then(function() {
                                 return cb();
@@ -2097,14 +2106,14 @@ function afterExecute_(result, callback) {
                                 return cb(err);
                             });
                     }
-                    else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
-                        return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
-                            .then(function() {
-                                return cb();
-                            }).catch(function(err) {
-                                return cb(err);
-                            });
-                    }
+                        else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
+                            return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
+                                .then(function() {
+                                    return cb();
+                                }).catch(function(err) {
+                                    return cb(err);
+                                });
+                        }
                 }
                 else {
                     return cb(new Error('Not yet implemented'));
