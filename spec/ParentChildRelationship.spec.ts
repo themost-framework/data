@@ -67,4 +67,28 @@ describe('ParentChildRelationship', () => {
         });
     });
 
+    it('should expand parent', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const parentItem = {
+                name: 'Settings',
+                url: 'https://example.com/admin/settings'
+            }
+            await context.model('NavigationElement').silent().save(parentItem);
+            const newItem = {
+                name: 'Users',
+                url: 'https://example.com/admin/settings/users',
+                scope: 'admin',
+                parent: parentItem
+            }
+            await context.model('NavigationElement').silent().save(newItem);
+            const query = await context.model('NavigationElement').filterAsync({
+                $filter: 'url eq \'https://example.com/admin/settings/users\'',
+                $expand: 'parent($select=id,name,url)'
+            });
+            const item = await query.silent().getItem();
+            expect(item.parent).toBeTruthy();
+            expect(item.parent.url).toEqual('https://example.com/admin/settings');
+        });
+    });
+
 });
