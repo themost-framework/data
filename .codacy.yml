@@ -1,4 +1,9 @@
 ---
+engines:
+  duplication:
+    exclude_paths:
+      - "docs/**"
+      - "spec/**/*"
 exclude_paths:
   - "docs/**"
   - "spec/**/*"
