@@ -169,5 +169,42 @@ describe('DataAssociationMapping', () => {
         expect(item.groups.length).toBeGreaterThan(1);
     });
 
+    it('should select expandable attribute', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'alexis.rees@example.com'
+            }
+        });
+        let items = await context.model('User').asQueryable()
+            .select(
+                'id',
+                'name',
+                'groups'
+            ).take(25).getItems();
+        expect(items.length).toBeGreaterThan(0);
+        for (const item of items) {
+            expect(item.groups).toBeInstanceOf(Array);
+        }
+    });
+
+    it('should use $select with expandable attribute', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'alexis.rees@example.com'
+            }
+        });
+        const users = context.model('User');
+        const query = await users.filterAsync({
+            '$select': 'id,groups,name',
+            '$top': 25,
+            '$expand': 'groups'
+        })
+        let items = await query.getItems();
+        expect(items.length).toBeGreaterThan(0);
+        for (const item of items) {
+            expect(item.groups).toBeInstanceOf(Array);
+        }
+    });
+
     
 });

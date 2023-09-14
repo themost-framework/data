@@ -38,8 +38,11 @@ describe('ParentChildRelationship', () => {
                 branchCode: '001'
             }
             await context.model('Place').silent().save(newItem);
-            const item = await context.model('Place').where('name').equal(newItem.name)
-                .expand('containedIn').silent().getItem();
+            const item = await context.model('Place').where((x: any, name: string) => {
+                return x.name === name;
+            }, {
+                name: newItem.name
+            }).expand((x: any) => x.containedIn).silent().getItem();
             expect(Object.prototype.hasOwnProperty.call(item, 'containedIn')).toBeTruthy();
             expect(item.containedIn).toEqual(null);
         });

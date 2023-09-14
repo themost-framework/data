@@ -883,6 +883,28 @@ function filterInternal(params, callback) {
                                 }
                             }
                         }
+                        // resolve a backward compatibility issue
+                        // convert select attributes which define an association to expandable attributes
+                        if (Array.isArray(query.$select)) {
+                            var removeCollectionRegex = new RegExp('^' + collection + '.', 'ig');
+                            for (var index = 0; index < query.$select.length; index++) {
+                                var selectElement = query.$select[index];
+                                if (Object.prototype.hasOwnProperty.call(selectElement, '$name')) {
+                                    // get attribute name
+                                    if (typeof selectElement.$name === 'string') {
+                                        var selectAttributeName= selectElement.$name.replace(removeCollectionRegex, '');
+                                        var selectAttribute = self.getAttribute(selectAttributeName);
+                                        if (selectAttribute && selectAttribute.many) {
+                                            // expand attribute
+                                            q.expand(selectAttributeName);
+                                            // and 
+                                            query.$select.splice(index, 1);
+                                            index -= 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if (view != null) {
                             // select view
                             q.select(view.name)
