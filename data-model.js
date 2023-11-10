@@ -482,7 +482,7 @@ function DataModel(obj) {
         }
 
         return attributes;
-    }, enumerable: false, configurable: false});
+    }, enumerable: false, configurable: true});
     /**
      * Gets the primary key name
      * @type String
@@ -492,7 +492,7 @@ function DataModel(obj) {
     var primaryKey_;
     Object.defineProperty(this, 'primaryKey' , { get: function() {
         return self.getPrimaryKey();
-    }, enumerable: false, configurable: false});
+    }, enumerable: false, configurable: true});
 
     this.getPrimaryKey = function() {
         if (typeof primaryKey_ !== 'undefined') { return primaryKey_; }
@@ -512,7 +512,7 @@ function DataModel(obj) {
         return self.attributes.map(function(x) {
             return x.name;
         });
-    }, enumerable: false, configurable: false});
+    }, enumerable: false, configurable: true});
     Object.defineProperty(this, 'constraintCollection' , { get: function() {
         var arr = [];
         if (_.isArray(self.constraints)) {
@@ -534,7 +534,7 @@ function DataModel(obj) {
             }
         }
         return arr;
-    }, enumerable: false, configurable: false});
+    }, enumerable: false, configurable: true});
 
     //call initialize method
     if (typeof this.initialize === 'function')
