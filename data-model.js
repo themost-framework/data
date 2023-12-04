@@ -957,6 +957,29 @@ function filterInternal(params, callback) {
                     }
                     // assign join expressions
                     if ($joinExpressions.length>0) {
+                        // concat expand expressions if there are any
+                        var queryExpand = [];
+                        if (Array.isArray(q.query.$expand)) {
+                            queryExpand = q.query.$expand.slice();
+                        } else if (typeof q.query.$expand === 'object') {
+                            queryExpand = [].concat(q.query.$expand)
+                        }
+                        // enumerate already defined expand expressions
+                        // this operation is very important when selecting items from a view
+                        queryExpand.forEach(function(expandExpr) {
+                            // find join expression by entity alias
+                            var joinExpr = $joinExpressions.find(function(x) {
+                                if (x.$entity && x.$entity.$as) {
+                                    return (x.$entity.$as === expandExpr.$entity.$as);
+                                }
+                                return false;
+                            });
+                            // if join expression is not defined then add it
+                            if (joinExpr == null) {
+                                $joinExpressions.push(expandExpr)
+                            }
+                        });
+                        // finally assign join expressions
                         q.query.$expand = $joinExpressions;
                     }
                     // prepare query
