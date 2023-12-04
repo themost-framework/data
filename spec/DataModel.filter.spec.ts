@@ -253,5 +253,27 @@ describe('DataModel.filter', () => {
         });
     });
 
+    it('should use data view with nested columns and expand', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let query = await context.model('Order').filterAsync({
+                $take: 10,
+                $select: 'Delivered',
+                $orderby: 'customer/familyName,customer/givenName,orderedItem/name',
+            });
+            let items = await query.silent().getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toEqual(10);
+            for (const item of items) {
+                expect(Object.keys(item)).toEqual([
+                    'id',
+                    'orderDate',
+                    'orderedItem',
+                    'customerGivenName',
+                    'customerFamilyName'
+                ]);
+            }
+        });
+    });
+
 
 });
