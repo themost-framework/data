@@ -1,4 +1,4 @@
-import { TestApplication } from './TestApplication';
+import { TestApplication, TestApplication2 } from './TestApplication';
 import { DataContext } from '../index';
 import { resolve } from 'path';
 import { round } from '@themost/query';
@@ -8,18 +8,7 @@ describe('DataNestedObjectListener', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll((done) => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        // set default adapter
-        app.getConfiguration().setSourceAt('adapters', [
-            {
-                name: 'test-local',
-                invariantName: 'test',
-                default: true,
-                options: {
-                    database: resolve(__dirname, 'test2/db/local.db')
-                }
-            }
-        ])
+        app = new TestApplication2();
         context = app.createContext();
         return done();
     });
@@ -103,7 +92,7 @@ describe('DataNestedObjectListener', () => {
                     '$expand': 'productDimensions'
                 });
             product = await q.getItem();
-            expect(product.productDimensions).toBeInstanceOf(Object);
+            expect(product.productDimensions).toBeTruthy();
         });
     });
 
@@ -138,7 +127,6 @@ describe('DataNestedObjectListener', () => {
                     }
                 }).expand((x: any) => x.productDimensions)
                 .getItem();
-            expect(product.productDimensions).toBeInstanceOf(Object);
             expect(product.productDimensions.id).toEqual(value);
         });
     });
@@ -263,7 +251,7 @@ describe('DataNestedObjectListener', () => {
                 })
                 .distinct()
                 .getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
 
         });

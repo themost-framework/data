@@ -1,5 +1,4 @@
 import {TestUtils} from './adapter/TestUtils';
-import { TestAdapter } from './adapter/TestAdapter';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import { DataConfigurationStrategy } from '../data-configuration';
@@ -30,7 +29,7 @@ describe('ClosureParser', () => {
                     newPrice: round(x.price, 2)
                 }
             }).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
         });
     });
@@ -47,7 +46,7 @@ describe('ClosureParser', () => {
                     orderDate: x.orderDate
                 }
             }).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
             for (const item of items) {
                 expect(Object.prototype.hasOwnProperty.call(item, 'streetAddress')).toBeTruthy();
@@ -71,7 +70,7 @@ describe('ClosureParser', () => {
                     orderYear: x.orderDate.getFullYear()
                 }
             }).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
             for (const item of items) {
                 expect(Object.prototype.hasOwnProperty.call(item, 'orderYear')).toBeTruthy();
@@ -92,7 +91,7 @@ describe('ClosureParser', () => {
                     productPrice: x.orderedItem.price
                 }
             }).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
         });
     });
@@ -108,7 +107,7 @@ describe('ClosureParser', () => {
                     productPrice: x.orderedItem.price
                 }
             }).expand((x: any) => x.orderedItem).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
             for (const item of items) {
                 expect(item.orderedItem).toBeTruthy();
@@ -128,7 +127,7 @@ describe('ClosureParser', () => {
                     productPrice: x.orderedItem.price
                 }
             }).expand((x: any) => x.customer.address).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
             for (const item of items) {
                 expect(item.customer).toBeTruthy();
@@ -193,7 +192,7 @@ describe('ClosureParser', () => {
             }, {
                 category
             }).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
         });
     });
@@ -214,7 +213,7 @@ describe('ClosureParser', () => {
                 orderStatus
             })
             .groupBy<any>(x => x.customer.address.addressCountry).silent().take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
         });
     });

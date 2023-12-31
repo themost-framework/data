@@ -1,22 +1,14 @@
 import { resolve } from 'path';
 import { DataContext, DataModel } from '../index';
-import { TestApplication } from './TestApplication';
+import { TestApplication2 } from './TestApplication';
 import {TestUtils} from "./adapter/TestUtils";
 import {promisify} from 'util';
 
 describe('ZeroOrOneMultiplicity', () => {
-    let app: TestApplication;
+    let app: TestApplication2;
     let context: DataContext;
     beforeAll(async () => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().getSourceAt('adapters').unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
-            }
-        });
+        app = new TestApplication2();
         context = app.createContext();
     });
     afterAll(async () => {
@@ -54,9 +46,6 @@ describe('ZeroOrOneMultiplicity', () => {
             expect(country).toBeTruthy();
             product.madeIn = country;
             await context.model('Product').silent().save(product);
-            /**
-             * @type {import("../data-model").DataModel}
-             */
             const Orders = context.model('Order');
             const filterAsync = promisify(Orders.filter).bind(Orders);
             let query = await filterAsync({
@@ -65,7 +54,6 @@ describe('ZeroOrOneMultiplicity', () => {
             });
             expect(query).toBeTruthy();
             let items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect([
@@ -77,7 +65,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 $select: 'id,orderedItem/name as productName,orderedItem/madeIn/cioc as madeInCountry'
             });
             items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
         });
     });
@@ -101,7 +89,7 @@ describe('ZeroOrOneMultiplicity', () => {
             });
             expect(query).toBeTruthy();
             let items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(item.country).toBeTruthy();
@@ -124,14 +112,14 @@ describe('ZeroOrOneMultiplicity', () => {
                 $filter: 'orderedItem/madeIn ne null'
             });
             let items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             query = await filterAsync({
                 $select: 'id,orderedItem/name as productName,orderedItem/madeIn/id as madeIn,orderedItem/madeIn/name as madeInCountry',
                 $filter: 'orderedItem/madeIn/cioc eq \'CHN\''
             });
             items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
 
             query = await filterAsync({
@@ -139,7 +127,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 $filter: 'orderedItem/madeIn eq null'
             });
             items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
         });
     });
@@ -163,7 +151,7 @@ describe('ZeroOrOneMultiplicity', () => {
             });
             expect(query).toBeTruthy();
             let items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(item.orderedItem.madeIn).toBeTruthy();
@@ -175,7 +163,7 @@ describe('ZeroOrOneMultiplicity', () => {
             });
 
             items = await query.silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(item.orderedItem.madeIn).toBeTruthy();
@@ -200,7 +188,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 .expand((x: any) => x.orderedItem.madeIn)
                 .silent()
                 .getItems()
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(item.orderedItem.madeIn).toBeTruthy();
@@ -209,13 +197,13 @@ describe('ZeroOrOneMultiplicity', () => {
                 .where((x: any) => x.orderedItem.madeIn != null)
                 .silent()
                 .getItems()
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             items = await context.model('Order')
                 .where((x: any) => x.orderedItem.madeIn.cioc != null)
                 .silent()
                 .getItems()
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
         });
     });
@@ -238,7 +226,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 .groupBy('orderedItem/name', 'orderedItem/madeIn/cioc')
                 .silent()
                 .getItems()
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(typeof item.orderedItem === 'string').toBeTruthy();
@@ -259,7 +247,7 @@ describe('ZeroOrOneMultiplicity', () => {
                     )
                 .silent()
                 .getItems()
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(typeof item.orderedItem === 'string').toBeTruthy();
@@ -290,7 +278,7 @@ describe('ZeroOrOneMultiplicity', () => {
             });
             expect(query).toBeTruthy();
             let items = await query.getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBe(0);
             // use admin
             Object.assign(context, {
@@ -304,7 +292,7 @@ describe('ZeroOrOneMultiplicity', () => {
                 $expand: 'internalReview'
             });
             items = await query.getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
 
             query = await filterAsync({
@@ -313,7 +301,7 @@ describe('ZeroOrOneMultiplicity', () => {
             });
             
             items = await query.getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             expect(items[0].reviewRating).toBeTruthy();
         });

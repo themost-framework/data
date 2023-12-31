@@ -325,7 +325,7 @@ describe('OpenDataQuery.select', () => {
             }, {
                 category: 'Desktops'
             }).take(10).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.category).toEqual('Desktops')
             }
@@ -339,8 +339,7 @@ describe('OpenDataQuery.select', () => {
             }, {
                 productCategory: 'Desktops'
             }).take(10).getItems();
-
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.category).toEqual('Desktops')
             }

@@ -59,7 +59,6 @@ describe('DataModel', () => {
         // load by class
         let model = context.model(Employee);
         const items = await model.getItems();
-        expect(items).toBeInstanceOf(Array);
         expect(items.length).toBeGreaterThan(0);
     });
 
@@ -79,7 +78,6 @@ describe('DataModel', () => {
         exists = await db.table('OtherProducts').existsAsync();
         expect(exists).toBeTruthy();
         const configuration: any = app.getConfiguration();
-        expect(configuration.cache).toBeInstanceOf(Object);
         const version = context.model('OtherProduct').version;
         expect(configuration.cache.OtherProduct).toEqual({
             version

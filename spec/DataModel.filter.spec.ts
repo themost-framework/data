@@ -1,24 +1,13 @@
-import { TestApplication } from './TestApplication';
+import { TestApplication2 } from './TestApplication';
 import { DataContext, SchemaLoaderStrategy } from '../index';
 import { resolve } from 'path';
 const moment = require('moment');
 
 describe('DataModel.filter', () => {
-    let app: TestApplication;
+    let app: TestApplication2;
     let context: DataContext;
     beforeAll((done) => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        // set default adapter
-        app.getConfiguration().setSourceAt('adapters', [
-            {
-                name: 'test-local',
-                invariantName: 'test',
-                default: true,
-                options: {
-                    database: resolve(__dirname, 'test2/db/local.db')
-                }
-            }
-        ])
+        app = new TestApplication2();
         context = app.createContext();
         return done();
     });

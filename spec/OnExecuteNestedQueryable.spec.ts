@@ -4,34 +4,16 @@ import { TraceUtils } from '@themost/common';
 import { DataConfigurationStrategy } from '../data-configuration';
 import { OnExecuteNestedQueryable } from '../OnExecuteNestedQueryable';
 import { TestUtils } from './adapter/TestUtils';
+import { TestApplication2 } from './TestApplication';
 
 describe('OnExecuteNestedQueryable', () => {
-    let app: DataApplication;
+    let app: TestApplication2;
     beforeAll((done) => {
-        app = new DataApplication(resolve(__dirname, 'test2'));
-        const configuration = app.getConfiguration();
-        configuration.setSourceAt('adapterTypes', [
-            {
-                'name':'Test Data Adapter', 
-                'invariantName': 'test',
-                'type': resolve(__dirname, 'adapter/TestAdapter')
-            }
-        ]);
-        configuration.setSourceAt('adapters', [
-            { 
-                'name': 'test-storage',
-                'invariantName': 'test',
-                'default':true,
-                "options": {
-                }
-            }
-        ]);
-        // reset data configuration
-        configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
+        app = new TestApplication2();
         return done();
     });
     afterAll(async () => {
-        await TestUtils.finalize(app);
+        await app.finalize();
     })
     it('should find listener', () => {
         expect(app).toBeTruthy();

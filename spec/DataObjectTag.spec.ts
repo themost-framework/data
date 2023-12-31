@@ -1,21 +1,13 @@
 import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
-import {TestApplication} from './TestApplication';
+import {TestApplication, TestApplication2} from './TestApplication';
 import {DataContext} from '../types';
 
 describe('DataObjectTag', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().getSourceAt('adapters').unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
-            }
-        });
+        app = new TestApplication2();
         context = app.createContext();
     });
     afterAll(async () => {
@@ -41,7 +33,7 @@ describe('DataObjectTag', () => {
                 .where('name').equal('luis.nash@example.com')
                 .expand('tags')
                 .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();
             expect(user.tags.length).toEqual(2);
             expect(user.tags).toEqual([
                 'NewUser',
@@ -74,7 +66,7 @@ describe('DataObjectTag', () => {
                 .where('name').equal('luis.nash@example.com')
                 .expand('tags')
                 .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();
             expect(user.tags.length).toEqual(2);
             expect(user.tags).toEqual([
                 'NewUser',
@@ -102,7 +94,7 @@ describe('DataObjectTag', () => {
                 .where('name').equal('luis.nash@example.com')
                 .expand('tags')
                 .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();
             expect(user.tags).toEqual([
                 'NewUser',
                 'ValidUser'
@@ -114,7 +106,7 @@ describe('DataObjectTag', () => {
                 .where('name').equal('luis.nash@example.com')
                 .expand('tags')
                 .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();  
             expect(user.tags).toEqual([
                 'NewUser'
             ]);
@@ -124,7 +116,7 @@ describe('DataObjectTag', () => {
                 .where('name').equal('luis.nash@example.com')
                 .expand('tags')
                 .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();
             expect(user.tags.length).toBeFalsy();
 
         });
@@ -153,7 +145,7 @@ describe('DataObjectTag', () => {
             .where('name').equal('luis.nash@example.com')
             .expand('tags')
             .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();
             expect(user.tags.length).toEqual(2);
             expect(user.tags).toEqual([
                 'NewUser',
@@ -183,7 +175,7 @@ describe('DataObjectTag', () => {
                 .where('name').equal('luis.nash@example.com')
                 .expand('tags')
                 .getTypedItem();
-            expect(user.tags).toBeInstanceOf(Array);
+            expect(Array.isArray(user.tags)).toBeTruthy();
             expect(user.tags.length).toEqual(2);
             expect(user.tags).toEqual([
                 'NewUser',
