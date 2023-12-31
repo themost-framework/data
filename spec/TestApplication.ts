@@ -8,6 +8,7 @@ import {
     DataCacheStrategy,
     DataCacheFinalize
 } from '../index';
+import fs from 'fs';
 
 export class TestApplication extends IApplication {
 
@@ -33,20 +34,24 @@ export class TestApplication extends IApplication {
         super();
         // init application configuration
         this._configuration = new ConfigurationBase(resolve(executionPath, 'config'));
-
         this._configuration.setSourceAt('adapterTypes', [
             {
                 'name':'Test Data Adapter', 
                 'invariantName': 'test',
-                'type': resolve(__dirname, 'adapter/TestAdapter')
+                'type': '@themost/sqlite'
             }
         ]);
+        const db = resolve(__dirname, 'test1/db', 'test.db');
+        if (fs.existsSync(db)) {
+            fs.unlinkSync(db);
+        }
         this._configuration.setSourceAt('adapters', [
             { 
                 'name': 'test-storage',
                 'invariantName': 'test',
                 'default':true,
                 "options": {
+                    "database": db
                 }
             }
         ]);
@@ -78,12 +83,15 @@ export class TestApplication extends IApplication {
 export class TestApplication2 extends TestApplication {
     constructor() {
         super(resolve(__dirname, 'test2'));
+        const source = resolve(__dirname, 'test2/db', 'local.db');
+        const dest = resolve(__dirname, 'test2/db', 'test.db');
+        fs.copyFileSync(source, dest);
         this.getConfiguration().getSourceAt('adapters').unshift({
             name: 'test-local',
             invariantName: 'test',
             default: true,
             options: {
-                database: resolve(__dirname, 'test2/db/local.db')
+                database: resolve(__dirname, 'test2/db/test.db')
             }
         });
     }

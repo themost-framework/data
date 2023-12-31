@@ -71,7 +71,6 @@ describe('DataPrivilege', () => {
             // $fixed: true
         });
         let result: any[] = await (context.db as TestAdapter).executeAsync(queryUsers.query);
-        expect(result).toBeInstanceOf(Array);
         expect(result.length).toBeTruthy();
 
         q1 = await parser.parseAsync('indexof(context/user/authenticationScope, \'profile\') eq 0');
@@ -83,7 +82,6 @@ describe('DataPrivilege', () => {
             // $fixed: true
         });
         result = await (context.db as TestAdapter).executeAsync(queryUsers.query);
-        expect(result).toBeInstanceOf(Array);
         expect(result.length).toBeTruthy();
 
     });

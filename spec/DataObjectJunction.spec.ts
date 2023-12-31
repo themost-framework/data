@@ -1,21 +1,13 @@
 import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
-import {TestApplication} from './TestApplication';
+import {TestApplication, TestApplication2} from './TestApplication';
 import {DataContext} from '../types';
 
 describe('DataObjectJunction', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().getSourceAt('adapters').unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
-            }
-        });
+        app = new TestApplication2();
         context = app.createContext();
     });
     afterAll(async () => {
@@ -42,7 +34,7 @@ describe('DataObjectJunction', () => {
                 name: 'luis.nash@example.com'
             });
             newGroup = await context.model('Group').where('name').equal('Contributors').expand('members').getTypedItem();
-            expect(newGroup.members).toBeInstanceOf(Array);
+            expect(Array.isArray(newGroup.members)).toBeTruthy();
             expect(newGroup.members.length).toEqual(1);
             const member = newGroup.members[0];
             expect(member).toBeTruthy();
@@ -71,7 +63,7 @@ describe('DataObjectJunction', () => {
                 name: 'luis.nash@example.com'
             });
             newGroup = await context.model('Group').where('name').equal('Contributors').expand('members').silent().getTypedItem();
-            expect(newGroup.members).toBeInstanceOf(Array);
+            expect(Array.isArray(newGroup.members)).toBeTruthy();
             expect(newGroup.members.length).toEqual(1);
             const member = newGroup.members[0];
             expect(member).toBeTruthy();
@@ -105,7 +97,7 @@ describe('DataObjectJunction', () => {
                 name: 'luis.nash@example.com'
             });
             newGroup = await context.model('Group').where('name').equal('Contributors').expand('members').getTypedItem();
-            expect(newGroup.members).toBeInstanceOf(Array);
+            expect(Array.isArray(newGroup.members)).toBeTruthy();
             expect(newGroup.members.length).toEqual(1);
 
             await newGroup.property('members').remove({
@@ -113,7 +105,7 @@ describe('DataObjectJunction', () => {
             });
 
             newGroup = await context.model('Group').where('name').equal('Contributors').expand('members').getTypedItem();
-            expect(newGroup.members).toBeInstanceOf(Array);
+            expect(Array.isArray(newGroup.members)).toBeTruthy();
             expect(newGroup.members.length).toEqual(0);
 
             const invalidUser = {
@@ -142,13 +134,13 @@ describe('DataObjectJunction', () => {
                 name: 'luis.nash@example.com'
             });
             newGroup = await context.model('Group').where('name').equal('Contributors').expand('members').getTypedItem();
-            expect(newGroup.members).toBeInstanceOf(Array);
+            expect(Array.isArray(newGroup.members)).toBeTruthy();
             expect(newGroup.members.length).toEqual(1);
 
             await newGroup.property('members').removeAll();
 
             newGroup = await context.model('Group').where('name').equal('Contributors').expand('members').getTypedItem();
-            expect(newGroup.members).toBeInstanceOf(Array);
+            expect(Array.isArray(newGroup.members)).toBeTruthy();
             expect(newGroup.members.length).toEqual(0);
         });
     });

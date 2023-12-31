@@ -1,21 +1,13 @@
 import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
-import {TestApplication} from './TestApplication';
+import {TestApplication, TestApplication2} from './TestApplication';
 import {DataContext} from '../types';
 
 describe('HasParentJunction', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().getSourceAt('adapters').unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
-            }
-        });
+        app = new TestApplication2();
         context = app.createContext();
     });
     afterAll(async () => {
@@ -42,7 +34,7 @@ describe('HasParentJunction', () => {
                 name: 'Contributors'
             });
             newUser = await context.model('User').where('name').equal('luis.nash@example.com').expand('groups').getTypedItem();
-            expect(newUser.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(newUser.groups)).toBeTruthy();
             expect(newUser.groups.length).toBeTruthy();
             const group = newUser.groups.find((item: any) => item.name === 'Contributors');
             expect(group).toBeTruthy();
@@ -104,7 +96,7 @@ describe('HasParentJunction', () => {
             });
 
             newUser = await context.model('User').where('name').equal('luis.nash@example.com').expand('groups').getTypedItem();
-            expect(newUser.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(newUser.groups)).toBeTruthy();
             let group = newUser.groups.find((item: any) => item.name === 'Contributors');
             expect(group).toBeTruthy()
 
@@ -113,7 +105,7 @@ describe('HasParentJunction', () => {
             });
 
             newUser = await context.model('User').where('name').equal('luis.nash@example.com').expand('groups').getTypedItem();
-            expect(newUser.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(newUser.groups)).toBeTruthy();
             group = newUser.groups.find((item: any) => item.name === 'Contributors');
             expect(group).toBeFalsy();
 
@@ -150,7 +142,7 @@ describe('HasParentJunction', () => {
                 .equal('luis.nash@example.com')
                 .expand('groups')
                 .getTypedItem();
-            expect(newUser.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(newUser.groups)).toBeTruthy();
             let group = newUser.groups.find((item: any) => item.name === 'Contributors');
             expect(group).toBeTruthy()
 
@@ -184,11 +176,11 @@ describe('HasParentJunction', () => {
                 name: 'Contributors'
             });
             user = await getUser();
-            expect(user.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(user.groups)).toBeTruthy();
             expect(user.groups.length).toBeTruthy();
             await user.property('groups').removeAll();
             user = await getUser();
-            expect(user.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(user.groups)).toBeTruthy();
             expect(user.groups.length).toBeFalsy();
 
         });

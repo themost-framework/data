@@ -3,6 +3,7 @@ import { TestUtils } from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
 import { OpenDataQuery, OpenDataQueryFormatter, round } from '@themost/query';
 import { TraceUtils } from '@themost/common';
+import moment from 'moment';
 
 async function execute(context: DataContext, query: OpenDataQuery) {
     const queryParams = new OpenDataQueryFormatter().formatSelect(query);
@@ -116,8 +117,10 @@ describe('OpenDataQuery.date', () => {
             expect(results.length).toBeTruthy();
             for (const result of results) {
                 expect(result.releaseDate.getFullYear()).toEqual(result.releaseYear);
-                expect(result.releaseDate.getMonth()).toEqual(result.releaseMonth);
-                expect(result.releaseDate.getDate()).toEqual(result.releaseDay);
+                const releaseMonth = parseInt(moment.utc(result.releaseDate).format('MM'), 10) - 1;
+                expect(releaseMonth).toEqual(result.releaseMonth);
+                const releaseDay = parseInt(moment.utc(result.releaseDate).format('DD'), 10);
+                expect(releaseDay).toEqual(result.releaseDay);
             }
         });
     });

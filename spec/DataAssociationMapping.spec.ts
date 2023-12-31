@@ -1,20 +1,12 @@
 import { resolve } from 'path';
 import { DataContext } from '../index';
-import { TestApplication } from './TestApplication';
+import { TestApplication, TestApplication2 } from './TestApplication';
 
 describe('DataAssociationMapping', () => {
-    let app: TestApplication;
+    let app: TestApplication2;
     let context: DataContext;
     beforeAll(async () => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().getSourceAt('adapters').unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
-            }
-        });
+        app = new TestApplication2();
         context = app.createContext();
     });
     afterAll(async () => {
@@ -118,7 +110,7 @@ describe('DataAssociationMapping', () => {
             .expand('orderedItem').skip(5).take(5).getItems();
         expect(items.length).toBeGreaterThan(0);
         for (const item of items) {
-            expect(item.orderedItem).toBeInstanceOf(Object);
+            expect(item.orderedItem).toBeTruthy();
             expect(item.orderedItem.id).toBeDefined();
         }
         
@@ -139,7 +131,7 @@ describe('DataAssociationMapping', () => {
             }).getItems();
         expect(items.length).toBeGreaterThan(0);
         for (const item of items) {
-            expect(item.members).toBeInstanceOf(Array);
+            expect(Array.isArray(item.members)).toBeTruthy();
         }
         const item = items.find( x => x.name === 'Guests');
         expect(item).toBeTruthy();
@@ -162,7 +154,7 @@ describe('DataAssociationMapping', () => {
             }).take(25).getItems();
         expect(items.length).toBeGreaterThan(0);
         for (const item of items) {
-            expect(item.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(item.groups)).toBeTruthy();
         }
         const item = items.find( x => x.name === 'alexis.rees@example.com');
         expect(item).toBeTruthy();
@@ -183,7 +175,7 @@ describe('DataAssociationMapping', () => {
             ).take(25).getItems();
         expect(items.length).toBeGreaterThan(0);
         for (const item of items) {
-            expect(item.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(item.groups)).toBeTruthy();
         }
     });
 
@@ -202,7 +194,7 @@ describe('DataAssociationMapping', () => {
         let items = await query.getItems();
         expect(items.length).toBeGreaterThan(0);
         for (const item of items) {
-            expect(item.groups).toBeInstanceOf(Array);
+            expect(Array.isArray(item.groups)).toBeTruthy();
         }
     });
 

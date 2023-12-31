@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 import { FunctionContext } from '../functions';
 import { DataContext } from '../types';
-import { TestApplication } from './TestApplication';
+import { TestApplication, TestApplication2 } from './TestApplication';
 import { Guid } from '@themost/common';
 import { TestUtils } from './adapter/TestUtils';
 
@@ -9,15 +9,7 @@ describe('FunctionContext', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().getSourceAt('adapters').unshift({
-            name: 'test-local',
-            invariantName: 'test',
-            default: true,
-            options: {
-                database: resolve(__dirname, 'test2/db/local.db')
-            }
-        });
+        app = new TestApplication2();
         context = app.createContext();
     });
     afterAll(async () => {

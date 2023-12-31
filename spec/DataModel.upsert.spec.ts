@@ -1,4 +1,4 @@
-import {TestApplication} from './TestApplication';
+import {TestApplication, TestApplication2} from './TestApplication';
 import {DataContext} from '../index';
 import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
@@ -7,18 +7,7 @@ describe('DataModel.upsert', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll((done) => {
-        app = new TestApplication(resolve(__dirname, 'test2'));
-        // set default adapter
-        app.getConfiguration().setSourceAt('adapters', [
-            {
-                name: 'test-local',
-                invariantName: 'test',
-                default: true,
-                options: {
-                    database: resolve(__dirname, 'test2/db/local.db')
-                }
-            }
-        ])
+        app = new TestApplication2();
         context = app.createContext();
         return done();
     });
