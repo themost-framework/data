@@ -147,9 +147,11 @@ Let's see the json schema of `Thing` model
 
 The `fields` property is an array of fields. Each field has a name, a type, and other properties. The `name` property is the name of the field. The `type` property is the type of the field. The `value` property is the default value of the field. The `readonly` property indicates whether the field is read-only. The `primary` property indicates whether the field is a primary key. The `calculation` property is a function that is used to calculate the value of the field.
 
+Note: If you want to read more about the `Thing` data model, you can read the [schema.org](https://schema.org/Thing) documentation.
+
 ### Database schema
 
-Each one of these fields are going to be represented as a column in the database table  e.g. `ThingBase` wher the `id` field is the primary key of the table. The `dateCreated` field is the date on which the record was created. The `dateModified` field is the date on which the record was last modified. The `createdBy` field is the user who created the record. The `modifiedBy` field is the user who last modified the record.
+Each one of these fields are going to be represented as a column in the database table  e.g. `ThingBase` where the `id` field is the primary key of the table. The `dateCreated` field is the date on which the record was created. The `dateModified` field is the date on which the record was last modified. The `createdBy` field is the user who created the record. The `modifiedBy` field is the user who last modified the record.
 
 ![ThingBase](./images/ThingBaseSchema.png)
 
@@ -161,17 +163,6 @@ This database view will be used to query the data of the data model. It will be 
 
 ![ThingBase](./images/ProductDataView.png)
 
-```json
-{
-    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
-    "name": "Product",
-    "version": "2.1",
-    "inherits": "Thing",
-    "source": "ProductBase"
-}
-```
-
-Note: If you want to read more about the `Thing` data model, you can read the [schema.org](https://schema.org/Thing) documentation.
 
 ## Define attributes
 
