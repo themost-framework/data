@@ -239,4 +239,5 @@ The following json schema represents `Product` model and defines all extra field
 
 Checkout [this example at stackblitz.com](https://stackblitz.com/edit/stackblitz-starters-a36ttb) to see how to define a simple model like `Product` using `@themost/data` module.
 
+![Stackblitz](./images/StackblitzStarterProject.png)
 
