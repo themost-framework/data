@@ -17,6 +17,8 @@ To create a data model, you need to create a new file in the `config/models` dir
 
 The `name` property is the name of the data model. The `version` property is the version of the data model. The `inherits` property is the name of the base data model. In this example, the `Product` data model inherits from the `Thing` data model. The `Thing` data model is a built-in data model that is used to represent any object in the system.
 
+Important Note: Don't forget to use `$schema` property as `https://themost-framework.github.io/themost/models/2018/2/schema.json` in order to enable intellisense in your editor.
+
 Let's see the json schema of `Thing` model
 
 ```json
@@ -155,16 +157,86 @@ Each one of these fields are going to be represented as a column in the database
 
 ![ThingBase](./images/ThingBaseSchema.png)
 
-`@themost/data` ORM will automatically create the `ThingBase` table in the database. Each data model will have a corresponding table in the database which will be used to store the data of the data model. e.g. The `Product` data model will have a corresponding `ProductBase` table in the database. The `source` attribute of the data model is used to specify the name of the database table. If you don't specify the `source` attribute, the name of the database table will be the name of the data model with the suffix `Base`.
+ Each data model will have a corresponding table in the database which will be used to store the data of the data model. e.g. The `Product` data model will have a corresponding `ProductBase` table in the database. The `source` attribute of the data model is used to specify the name of the database table. If you don't specify the `source` attribute, the name of the database table will be the name of the data model with the suffix `Base`. 
+ 
+ ![ProductBase](./images/ProductBaseTable.png)
 
-`@themost/data`  will automatically create also a database view for each data model. The name of the database view will be the name of the data model. e.g. The `Product` data model will have a corresponding `Product` database view in the database. The `view` attribute of the data model is used to specify the name of the database view. If you don't specify the `view` attribute, the name of the database view will be the name of the data model with the suffix `Data`.
+ `ProductBase` table will have a foreign key to the `ThingBase` table. This foreign key will be used to represent the inheritance of the `Product` data model from the `Thing` data model.
+ 
+ This table will be created automatically by the `@themost/data` module each time that you are upgrading your data model by increasing the `version` attribute. `@themost/data` data migration engine will automatically add new fields, remove unused fields or update existing ones.
+
+`@themost/data`  will automatically create also a database view for each data model e.g. The `Product` data model will have a corresponding `ProductData` database view in the database. The `view` attribute of the data model is used to specify the name of the database view. If you don't specify the `view` attribute, the name of the database view will be the name of the data model with the suffix `Data`.
 
 This database view will be used to query the data of the data model. It will be a join of a data model and its inherited model e.g.  the `ProductBase` table which represents `Product` with the `ThingBase` table which represents `Thing`.
 
-![ThingBase](./images/ProductDataView.png)
+![ProductData](./images/ProductDataView.png)
 
 
-## Define attributes
+### Define fields
 
-Each data model has a set of attributes. Each attribute has a name and a type. The type can be a primitive type, such as `Text` or `Number`, or a reference to another data model.
+Each data model has a set of fields. The type of each field can be a primitive type, such as `Text`, `Date`, `Number`, or a reference to another data model.
+
+The following json schema represents `Product` model and defines all extra fields that represent this model which inherits `Thing`.
+
+```json
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "Product",
+    "version": "2.1",
+    "inherits": "Thing",
+    "fields": [
+        {
+            "name": "category",
+            "title": "Category",
+            "description": "A category related to this product.",
+            "type": "Text"
+        },
+        {
+            "name": "discontinued",
+            "title": "Discontinued",
+            "description": "Indicates whether this product is discontinued or not.",
+            "type": "Boolean"
+        },
+        {
+            "name": "price",
+            "title": "Price",
+            "description": "The price of the product.",
+            "type": "Number"
+        },
+        {
+            "name": "isRelatedTo",
+            "title": "Is Related to",
+            "description": "A pointer to another, somehow related product (or multiple products).",
+            "type": "Product"
+        },
+        {
+            "name": "isSimilarTo",
+            "title": "Is Similar to",
+            "description": "A pointer to another, functionally similar product (or multiple products).",
+            "type": "Product"
+        },
+        {
+            "name": "model",
+            "title": "Model",
+            "description": "The model of the product. Use with the URL of a ProductModel or a textual representation of the model identifier. The URL of the ProductModel can be from an external source. It is recommended to additionally provide strong product identifiers via the gtin8/gtin13/gtin14 and mpn properties.",
+            "type": "Text"
+        },
+        {
+            "name": "productID",
+            "title": "Product ID",
+            "description": "The product identifier, such as ISBN. For example: <code>&lt;meta itemprop='productID' content='isbn:123-456-789'/&gt;</code>.",
+            "type": "Text"
+        },
+        {
+            "name": "releaseDate",
+            "title": "Release Date",
+            "description": "The release date of a product or product model. This can be used to distinguish the exact variant of a product.",
+            "type": "Date"
+        }
+    ]
+}
+```
+
+Checkout [this example at stackblitz.com](https://stackblitz.com/edit/stackblitz-starters-a36ttb) to see how to define a simple model like `Product` using `@themost/data` module.
+
 
