@@ -31,7 +31,7 @@ Defines a VARCHAR column.
   "type": "Text",
   "nullable": false
 }
-``
+```
 
 ## Boolean
 
