@@ -159,6 +159,81 @@ The field names `parentId` and `valueId` are customizable and be configured:
 
 where `associationObjectField` holds the name of the field that is going to be used for the parent model and `associationValueField` is the name of the field that is going to be used for the child model.
 
+A many-to-many association can be defined in the parent model e.g. `Group` as well:
+
+```json
+{
+    "name": "members",
+    "type": "User",
+    "mapping": {
+        "associationAdapter":"GroupMembers",
+        "associationObjectField": "group",
+        "associationValueField": "user",
+        "associationType":"junction",
+        "cascade":"delete"
+    }
+}
+```
+
+## One to One
+
+Defines an one-to-one association between two models. For example, a `Product` has one `ProductDimension`.
+
+```json
+{
+    "name": "productDimensions",
+    "type": "ProductDimension",
+    "nested": true,
+    "expandable": true,
+    "multiplicity": "ZeroOrOne",
+    "mapping": {
+        "parentModel": "Product",
+        "parentField": "id",
+        "childModel": "ProductDimension",
+        "childField": "product",
+        "associationType": "association",
+        "cascade": "delete"
+    }
+}
+```
+
+The child model has a field that holds the id of the parent model. For example, the `ProductDimension` model has a field `product` that holds the id of the `Product` model.
+
+```json
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "ProductDimension",
+    "version": "2.0",
+    "inherits": "StructuredValue",
+    "fields": [
+        {
+            "name": "width",
+            "type": "Number",
+            "nullable": false
+        },
+        {
+            "name": "height",
+            "type": "Number",
+            "nullable": false
+        },
+        {
+            "name": "product",
+            "type": "Product"
+        }
+    ],
+    "constraints": [
+        {
+            "type": "unique",
+            "fields": [
+                "product"
+            ]
+        }
+    ]
+}
+```
+
+The attribute `constraints` is used to define a unique constraint for the field `product`. This constraint ensures that a `ProductDimension` can be associated with only one `Product`.
+
 
 
 
