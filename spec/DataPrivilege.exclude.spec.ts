@@ -1,5 +1,4 @@
 import {TestUtils} from './adapter/TestUtils';
-import { TestAdapter } from './adapter/TestAdapter';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import {DataModelFilterParser} from '../data-model-filter.parser';
