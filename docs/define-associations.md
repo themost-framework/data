@@ -137,9 +137,9 @@ where `mapping` attribute holds the information about the association:
 
 where `type` attribute is the name of the model that is associated with the current model e.g. a `User` has many `Group`s and the association is defined in the `User` model by using `id` field of the `User` model.
 
-The `associationAdapter` is used to define the name of the database object that is going to be used for the association. For example, if the `associationAdapter` is `GroupMembers`, then the database object that is going to be used for the association is `GroupMembers`. This table will have two fields: `parentId` and `valueId` that are going to be used for the association. The `parentId` is the id of the parent model and the `valueId` is the id of the child model. 
+The `associationAdapter` is used to define the name of the database object that is going to be used for the association. For example, if the `associationAdapter` is `GroupMembers`, then the database object for the association will be `GroupMembers`. This table will have two fields: `parentId` and `valueId`. The `parentId` is the id of the parent model and the `valueId` is the id of the child model. 
 
-The field names `parentId` and `valueId` are customizable and be configured:
+The field names `parentId` and `valueId` are customizable and can be configured:
 
 ```json
 
