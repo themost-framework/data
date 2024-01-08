@@ -852,7 +852,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                 else if (expr) {
                     return context.model('Permission').migrate(function(err) {
                         if (err) { return callback(err); }
-                        var q = QueryUtils.query(model.viewAdapter).select([model.primaryKey]).distinct();
+                        var q = QueryUtils.query(model.viewAdapter).select([model.primaryKey]);
                         if (expand) {
                             var arrExpand=[].concat(expand);
                             _.forEach(arrExpand, function(x){
