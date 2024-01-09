@@ -60,6 +60,34 @@
             "title": "userFlags",
             "description": "This field contains additional user flags.",
             "type": "Integer"
+        },
+        {
+            "name": "lastActivation",
+            "type": "UserActivationAction",
+            "multiplicity": "ZeroOrOne",
+            "many": true,
+            "mapping": {
+                "associationType": "association",
+                "cascade": "delete",
+                "parentModel": "User",
+                "parentField": "id",
+                "childModel": "UserActivationAction",
+                "childField": "object",
+                "options": {
+                    "$levels": "2"
+                },
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    }
+                ]
+            }
         }
     ],
     "privileges": [
