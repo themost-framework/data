@@ -56,16 +56,15 @@ class OnNestedQueryListener {
             return Promise.resolve();
         }
         if (Object.prototype.hasOwnProperty.call(query, '$expand')) {
-            /**
-             * @type {{ $entity:{ model:string }} | Array<{ $entity:{ model:string }}>}
-             */
-            const expand = query.$expand;
             // exit if expand is null or undefined
-            if (expand == null) {
+            if (query.$expand == null) {
                 return Promise.resolve();
             }
-            if (Array.isArray(expand)) {
-
+            /**
+             * @type {Array<{ $entity:{ model:string }}>}
+             */
+            const expand = Array.isArray(query.$expand) ? query.$expand : [query.$expand];
+            if (expand.length) {
                 const sources = expand.map(function (item) {
                     return function () {
                         // if entity is already a query expression
@@ -130,7 +129,7 @@ class OnNestedQueryListener {
                                     }
                                     let entityAlias;
                                     if (nestedQuery.$select) {
-                                        for (const key in nestedQuery.$select) {
+                                        for (var key in nestedQuery.$select) {
                                             if (Object.prototype.hasOwnProperty.call(nestedQuery.$select, key)) {
                                                 entityAlias = key;
                                             }
@@ -158,13 +157,6 @@ class OnNestedQueryListener {
                     }
                 });
                 return Promise.sequence(sources);
-            } else if (expand && expand.$entity && expand.$entity.model) {
-                // get nested model
-                const model = context.model(expand.$entity.model);
-                if (model != null) {
-                    //
-                    return Promise.resolve();
-                }
             }
         }
         return Promise.resolve();
