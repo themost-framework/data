@@ -54,9 +54,6 @@
         }
     ],
     "eventListeners": [
-        {
-            "type": "@themost/data/previous-state-listener"
-        }
     ],
     "privileges": [
         {
