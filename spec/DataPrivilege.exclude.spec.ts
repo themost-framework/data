@@ -145,4 +145,79 @@ describe('DataPrivilege', () => {
         // restore model
         app.getConfiguration().getStrategy(DataConfigurationStrategy).setModelDefinition(originalModel);
     });
+
+
+    it('should validate context scope on insert', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: {
+                    name: 'luis.nash@example.com',
+                    authenticationScope: 'profile email'
+                }
+            });
+            const customer = await context.model('Person').where('user/name').equal('luis.nash@example.com').getItem();
+            expect(customer).toBeTruthy();
+            // update privileges
+            const model = app.getConfiguration().getStrategy(DataConfigurationStrategy).getModelDefinition('Order');
+            const originalModel = cloneDeep(model);
+            model.privileges.push({
+                type: 'self',
+                mask: 14,
+                filter: 'customer/user eq me() and orderStatus/alternateName eq \'OrderProcessing\'',
+                scope: [
+                    'orders'
+                ]
+            });
+            app.getConfiguration().getStrategy(DataConfigurationStrategy).setModelDefinition(model);
+            // try to create order
+            const orderStatus = {
+                alternateName: 'OrderProcessing'
+            };
+            const orderedItem = await context.model('Product').where('category').equal('Laptops').orderBy('price').getItem();
+            expect(orderedItem).toBeTruthy();
+            let newOrder = {
+                orderStatus,
+                orderedItem,
+                customer
+            }
+            await expect(context.model('Order').save(newOrder)).rejects.toThrowError('Access Denied');
+            // add scope
+            Object.assign(context, {
+                user: {
+                    name: 'luis.nash@example.com',
+                    authenticationScope: 'profile email orders'
+                }
+            });
+            newOrder = {
+                orderStatus,
+                orderedItem,
+                customer
+            }
+            await expect(context.model('Order').save(newOrder)).resolves.toBeTruthy();
+            // restore model
+            app.getConfiguration().getStrategy(DataConfigurationStrategy).setModelDefinition(originalModel);
+        });
+    });
+
+
+    it('should validate empty privileges', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: {
+                    name: 'luis.nash@example.com',
+                    authenticationScope: 'profile email'
+                }
+            });
+            const newValue = {
+                name: 'test',
+                alternateName: 'test',
+                description: 'test'
+            };
+            const Values = context.model('AnotherStructuredValue');
+            expect(Values.privileges.length).toBeFalsy();
+            await expect(Values.save(newValue)).rejects.toThrowError('Access Denied');
+        });
+    });
+
+
 });

@@ -15,7 +15,7 @@ var dataAssociations = require('./data-associations');
 var {DataNestedObjectListener} = require('./data-nested-object-listener');
 var {DataReferencedObjectListener} = require('./data-ref-object-listener');
 var {DataQueryable} = require('./data-queryable');
-var {DataAttributeResolver} = require('./data-queryable');
+var {DataAttributeResolver} = require('./data-attribute-resolver');
 var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListener;
 var {DataModelView} = require('./data-model-view');
 var {DataFilterResolver} = require('./data-filter-resolver');
@@ -1238,6 +1238,7 @@ function dasherize(data) {
  * @constructor
  * @private
  */
+// eslint-disable-next-line no-unused-vars
 function getDataObjectClass_() {
     var self = this;
     var DataObjectClass = self['DataObjectClass'];

@@ -1,6 +1,6 @@
 const { AsyncSeriesEventEmitter } = require('@themost/events');
 const { OpenDataParser } = require('@themost/query');
-const { DataAttributeResolver } = require('./data-queryable');
+const { DataAttributeResolver } = require('./data-attribute-resolver');
 const { DataFilterResolver } = require('./data-filter-resolver');
 
 class DataModelFilterParser {
