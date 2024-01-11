@@ -8,6 +8,9 @@ var _ = require('lodash');
 var {DataCacheStrategy} = require('./data-cache');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
+var {DataModelFilterParser} = require('./data-model-filter.parser');
+var {at} = require('lodash');
+
 
 /**
  * @class
@@ -93,6 +96,156 @@ PermissionMask.Execute = 16;
  * @type {number}
  */
 PermissionMask.Owner = 31;
+
+/**
+ * Splits a comma-separated or space-separated scope string e.g. "profile email" or "profile,email"
+ * 
+ * Important note: https://www.rfc-editor.org/rfc/rfc6749#section-3.3 defines the regular expression of access token scopes
+ * which is a space separated string. Several OAuth2 servers use a comma-separated list instead.
+ * 
+ * The operation will try to use both implementations by excluding comma ',' from access token regular expressions
+ * @param {string} str
+ * @returns {Array<string>}
+ */
+function splitScope(str) {
+    // the default regular expression includes comma /([\x21\x23-\x5B\x5D-\x7E]+)/g
+    // the modified regular expression excludes comma /x2C /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
+    var re = /([\x21\x23-\x2B\x2D-\x5B\x5D-\x7E]+)/g
+    var results = [];
+    var match = re.exec(str);
+    while(match !== null) {
+        results.push(match[0]);
+        match = re.exec(str);
+    }
+    return results;
+}
+
+/**
+ * 
+ * @param {import("./data-model").DataModel} model 
+ */
+function DataPermissionExclusion(model) {
+    this.model = model;
+}
+/**
+ * @param {import("./types").DataModelPrivilege} privilege 
+ * @param {function(Error=,boolean=)} callback
+ */
+DataPermissionExclusion.prototype.shouldExclude = function (privilege, callback) {
+    if (privilege == null) {
+        return callback(new Error('Data model privilege may not be null'));
+    }
+    if (privilege.exclude == null) {
+        return callback();
+    }
+    if (typeof privilege.exclude !== 'string') {
+        return callback(new TypeError('Exclude expression must be a string'));
+    }
+    if (privilege.exclude.trim().length === 0) {
+        return callback();
+    }
+    var context = this.model.context;
+    var users = context.model('User');
+    var parser = new DataModelFilterParser(users);
+    var username = (context.user && context.user.name) || 'anonymous';
+    var addSelect = [
+        {
+            name: {
+                $value: username
+            }
+        }
+    ];
+    parser.resolvingMember.subscribe(function (event) {
+        var propertyPath = event.member.split('/');
+        if (propertyPath[0] === 'context') {
+            propertyPath.splice(0, 1);
+            var property = at(context, propertyPath.join('.'))[0];
+            var propertyName = propertyPath[propertyPath.length - 1];
+            var exists = addSelect.findIndex((item) => Object.prototype.hasOwnProperty.call(item, propertyPath));
+            if (exists < 0) {
+                var select = {};
+                Object.defineProperty(select, propertyName, {
+                    enumerable: true,
+                    configurable: true,
+                    value: {
+                        $value: property
+                    }
+                });
+                addSelect.push(select);
+            }
+            event.result = {
+                $select: propertyName
+            }
+        }
+    });
+    void parser.parseAsync(privilege.exclude).then(function (q) {
+        var q1 = users.asQueryable();
+        q1.query.select([].concat(addSelect));
+        Object.assign(q1.query, {
+            $expand: q.$expand,
+            $where: q.$where
+        });
+        q1.query.prepare().where('name').equal(username);
+        void context.db.execute(q1.query, [], function (err, result) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, result.length > 0);
+        });
+    }).catch(function (err) {
+        return callback(err);
+    });
+};
+/**
+ * @param {import("./types").DataModelPrivilege} privilege 
+ * @param {function(Error=,boolean=)} callback
+ */
+DataPermissionExclusion.prototype.shouldExcludeAsync = function (privilege) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        void self.shouldExclude(privilege, function(err, result) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(result);
+        });
+    });
+};
+/**
+ * 
+ * @param {import("./types").DataModelPrivilege} privilege 
+ */
+DataPermissionExclusion.prototype.tryExclude = function(privilege) {
+    var context = this.model.context;
+    if (privilege == null) {
+        throw new Error('Privilege may not be null');
+    }
+    if (privilege.scope == null) {
+        return false;
+    }
+    if (Array.isArray(privilege.scope) === false) {
+        throw new TypeError('Privilege scope must be an array');
+    }
+    // get context scopes
+    const authenticationScope = context.user && context.user.authenticationScope;
+    if (authenticationScope == null) {
+        return false;
+    }
+    // get context scopes as array e.g. "profile", "email", "sales"
+    var scopes = [];
+    if (typeof authenticationScope === 'string') {
+        // check for space separated
+        scopes = splitScope(authenticationScope);
+    } else if (Array.isArray(authenticationScope)) {
+        scopes = authenticationScope.slice();
+    }
+    // search privilege scopes e.g. "sales", "orders"
+    var find = privilege.scope.find(function(scope) {
+        return scopes.includes(scope);
+    });
+    // if there is no scope defined, privilege should be excluded
+    return find == null;
+}
 
 /**
  * @class
@@ -197,7 +350,14 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
         }
         var permEnabled = model.privileges.filter(function(x) { return !x.disabled; }, model.privileges).length>0;
         //get all enabled privileges
-        var privileges = model.privileges.filter(function(x) { return !x.disabled && ((x.mask & requestMask) === requestMask) });
+        var privileges = model.privileges
+            .filter(function(x) { 
+                return !x.disabled && ((x.mask & requestMask) === requestMask) 
+            })
+            .filter(function(x) { 
+                var exclude = new DataPermissionExclusion(model).tryExclude(x);
+                return !exclude
+            });
         if (privileges.length===0) {
             if (event.throwError) {
                 //if the target model has privileges but it has no privileges with the requested mask
@@ -615,10 +775,27 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         //and model is the parent privilege
         parentPrivilege = model.name;
     }
-    //do not check permissions if the target model has no privileges defined
-    if (model.privileges.filter(function(x) { return !x.disabled; }, model.privileges).length===0) {
-        callback(null);
-        return;
+    // clone privileges
+    var clonedPrivileges = _.cloneDeep(model.privileges || []);
+    var modelPrivileges = clonedPrivileges
+        // exclude disabled privileges
+        .filter(function(x) { 
+            return !x.disabled && ((x.mask & requestMask) === requestMask) 
+        })
+        // exclude privileges with exclude expression
+        .filter(function(x) { 
+            var exclude = new DataPermissionExclusion(model).tryExclude(x);
+            return !exclude
+        });
+    // validate privileges
+    if (modelPrivileges.length === 0) {
+        // model should have at least one privilege
+        // so add default privilege for any mask
+        // this operation is very important for security reasons
+        modelPrivileges.push({
+            type: 'global',
+            mask: 31 // read, insert, update, delete and execute
+        });
     }
     //infer permission mask
     if (typeof event.mask !== 'undefined') {
@@ -668,18 +845,6 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
             //do nothing
             return callback();
         }
-        //get model privileges (and clone them)
-        var modelPrivileges = _.cloneDeep(model.privileges || []);
-        // if there are no privileges
-        if (modelPrivileges.length == 0) {
-            // add defaults
-            modelPrivileges.push.apply(modelPrivileges, [
-                {
-                    type: 'global',
-                    mask: 31 // read, insert, update, delete and execute 
-                }
-            ]);
-        }
         // validate current emitter view
         if (event.emitter && event.emitter.$view) {
             // get array
@@ -700,17 +865,11 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                 modelPrivileges.push.apply(modelPrivileges, viewPrivileges);
             }
         }
-        //if model has no privileges defined
-        if (modelPrivileges.length===0) {
-            //do nothing and exit
-            return callback();
-        }
-        //tuning up operation
-        //validate request mask permissions against all users privilege { mask:<requestMask>,disabled:false,account:"*" }
+        // validate request mask permissions against all users privilege { mask:<requestMask>,disabled:false,account:"*" }
         var allUsersPrivilege = modelPrivileges.find(function(x) {
             return (((x.mask & requestMask)===requestMask) && !x.disabled && (x.account==='*'));
         });
-        if (typeof allUsersPrivilege !== 'undefined') {
+        if (allUsersPrivilege != null) {
             //do nothing
             return callback();
         }
@@ -881,7 +1040,8 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
 module.exports = {
     DataPermissionEventArgs,
     DataPermissionEventListener,
-    PermissionMask
+    PermissionMask,
+    DataPermissionExclusion
 };
 
 
