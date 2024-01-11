@@ -95,7 +95,6 @@ describe('DataPrivilege', () => {
         });
         result = await (context.db as TestAdapter).executeAsync(queryUsers.query);
         expect(result.length).toBeTruthy();
-
     });
     it('should use permission exclusion', async () => {
         Object.assign(context, {
@@ -216,6 +215,49 @@ describe('DataPrivilege', () => {
             const Values = context.model('AnotherStructuredValue');
             expect(Values.privileges.length).toBeFalsy();
             await expect(Values.save(newValue)).rejects.toThrowError('Access Denied');
+        });
+    });
+
+    it('should validate empty privileges after exclusion', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            Object.assign(context, {
+                user: {
+                    name: 'luis.nash@example.com',
+                    authenticationScope: 'profile email'
+                }
+            });
+            let newValue = {
+                name: 'test',
+                alternateName: 'test',
+                description: 'test'
+            };
+            const model = app.getConfiguration().getStrategy(DataConfigurationStrategy).getModelDefinition('AnotherStructuredValue');
+            const originalModel = cloneDeep(model);
+            model.privileges.push({
+                type: 'self',
+                mask: 15,
+                filter: 'alternateName eq \'test\'',
+                scope: [
+                    'test'
+                ]
+            });
+            app.getConfiguration().getStrategy(DataConfigurationStrategy).setModelDefinition(model);
+            const Values = context.model('AnotherStructuredValue');
+            expect(Values.privileges.length).toBeTruthy();
+            await expect(Values.save(newValue)).rejects.toThrowError('Access Denied');
+            Object.assign(context, {
+                user: {
+                    name: 'luis.nash@example.com',
+                    authenticationScope: 'profile email test'
+                }
+            });
+            newValue = {
+                name: 'test',
+                alternateName: 'test',
+                description: 'test'
+            };
+            await expect(Values.save(newValue)).resolves.toBeTruthy();
+            app.getConfiguration().getStrategy(DataConfigurationStrategy).setModelDefinition(originalModel);
         });
     });
 

@@ -871,7 +871,7 @@ export class TestAdapter {
                     //prepare statement - the traditional way
                     const prepared = self.prepare(sql, values);
                     //log statement (optional)
-                    if (process.env.NODE_ENV==='development') {
+                    if (process.env.NODE_ENV==='development' || process.env.NODE_ENV==='test') {
                         TraceUtils.log(`SQL:${prepared}, Parameters:${JSON.stringify(values)}`);
                     }
                     let results: any;
