@@ -34,7 +34,7 @@ function DataPermissionEventArgs() {
     this.model = null;
     /**
      * The underlying query expression
-     * @type {QueryExpression}
+     * @type {import('@themost/query').QueryExpression}
      */
     this.query = null;
     /**
@@ -198,7 +198,6 @@ DataPermissionExclusion.prototype.shouldExclude = function (privilege, callback)
 };
 /**
  * @param {import("./types").DataModelPrivilege} privilege 
- * @param {function(Error=,boolean=)} callback
  */
 DataPermissionExclusion.prototype.shouldExcludeAsync = function (privilege) {
     var self = this;
@@ -227,7 +226,7 @@ DataPermissionExclusion.prototype.tryExclude = function(privilege) {
         throw new TypeError('Privilege scope must be an array');
     }
     // get context scopes
-    const authenticationScope = context.user && context.user.authenticationScope;
+    var authenticationScope = context.user && context.user.authenticationScope;
     if (authenticationScope == null) {
         return false;
     }
@@ -671,6 +670,7 @@ function effectiveAccounts(context, callback) {
      * @type {DataCacheStrategy}
      */
     var cache = context.getConfiguration().getStrategy(DataCacheStrategy);
+    // noinspection JSUndefinedPropertyAssignment
     /**
      * Gets or sets an object that represents the user of the current data context.
      * @property {*|{name: string, authenticationType: string}}
@@ -731,7 +731,7 @@ function effectiveAccounts(context, callback) {
 
 /**
  * Occurs before executing a data operation.
- * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
+ * @param {DataEventArgs | DataPermissionEventArgs} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
  */
 DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
@@ -836,7 +836,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         // validate current emitter view
         if (event.emitter && event.emitter.$view) {
             // get array
-            const viewPrivileges = event.emitter.$view.privileges || [];
+            var viewPrivileges = event.emitter.$view.privileges || [];
             if (viewPrivileges.length) {
                 // initialize privileges
                 modelPrivileges = [
@@ -951,7 +951,12 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             }
                         }
                         if (typeof item.filter === 'string' ) {
-                            model.filter(item.filter, function(err, q) {
+                            model.filter(item.filter,
+                                /**
+                                 * @param {Error|undefined} err
+                                 * @param {{ query: import('@themost/query').QueryExpression }} q
+                                 */
+                                function(err, q) {
                                 if (err) {
                                     cb(err);
                                 }
