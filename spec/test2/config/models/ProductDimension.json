@@ -1,8 +1,10 @@
 {
     "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "title": "ProductDimension",
     "name": "ProductDimension",
     "version": "2.0",
     "inherits": "StructuredValue",
+    "hidden": true,
     "fields": [
         {
             "name": "width",
@@ -17,6 +19,22 @@
         {
             "name": "product",
             "type": "Product"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
         }
     ],
     "constraints": [
