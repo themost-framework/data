@@ -94,9 +94,12 @@ describe('DataPermissionEventListener', () => {
         });
     });
 
-    it('should validate user read access in associated objects', async () => {
+    // this test is trying to read an object where the user has no access
+    // but the associated object is embebbed and it is allowed to read
+    // e.g. user has no access to read a postal address but it is allowed to read
+    // a person's address
+    it('should read an embedded object', async () => {
         await TestUtils.executeInTransaction(context, async () => {
-
             const user = {
                 name: 'luis.nash@example.com',
                 authenticationScope: 'profile email'
@@ -108,6 +111,41 @@ describe('DataPermissionEventListener', () => {
             const itemCount = await context.model('Person')
                 .where('user/name').equal(user.name).silent().count();
             expect(itemCount).toEqual(1);
+            let item = await People.where('user/name').equal(user.name).getItem();
+            expect(item).toBeTruthy();
+            expect(item.address).toBeTruthy();
+            const PostalAddresses = context.model('PostalAddress');
+            const address = await PostalAddresses.where('id').equal(item.address.id).getItem();
+            expect(address).toBeFalsy();
+            item = await People.select(
+                'id',
+                'givenName',
+                'familyName',
+                'address/streetAddress as streetAddress',
+                'address/addressLocality as addressLocality',
+            ).where('user/name').equal(user.name).getItem();
+            expect(item).toBeTruthy();
+        });
+    });
+
+    it('should read attributes of an embedded object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const user = {
+                name: 'luis.nash@example.com',
+                authenticationScope: 'profile email'
+            };
+            Object.assign(context, {
+                user
+            });
+            const People = context.model('Person');
+            const item = await People.select(
+                'id',
+                'givenName',
+                'familyName',
+                'address/streetAddress as streetAddress',
+                'address/addressLocality as addressLocality',
+            ).where('user/name').equal(user.name).getItem();
+            expect(item).toBeTruthy();
         });
     });
 
