@@ -366,7 +366,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         //cast target
                         var name, obj = event.target;
                         model.attributes.forEach(function(x) {
-                            name = hasOwnProperty(obj, x.property) ? x.property : x.name;
+                            name = typeof x.property === 'string' ? x.property : x.name;
                             if (hasOwnProperty(obj, name))
                             {
                                 var mapping = model.inferMapping(name);

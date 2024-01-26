@@ -1474,7 +1474,7 @@ function cast_(obj, state) {
              */
             return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
         }).forEach(function(x) {
-            name = hasOwnProperty(obj, x.property) ? x.property : x.name;
+            name = typeof x.property === 'string' ? x.property : x.name;
             if (hasOwnProperty(obj, name))
             {
                 var mapping = self.inferMapping(name);
@@ -1542,7 +1542,7 @@ function castForValidation_(obj, state) {
              */
             return (state===2) ? (hasOwnProperty(y, 'editable') ? y.editable : true) : true;
         }).forEach(function(x) {
-            name = hasOwnProperty(obj, x.property) ? x.property : x.name;
+            name = typeof x.property === 'string' ? x.property : x.name;
             if (hasOwnProperty(obj, name))
             {
                 var mapping = self.inferMapping(name);
