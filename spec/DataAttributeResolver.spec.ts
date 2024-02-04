@@ -8,16 +8,6 @@ describe('DataAttributeResolver', () => {
     let context: DataContext;
     beforeAll(async () => {
         app = new TestApplication(resolve(__dirname, 'test2'));
-        app.getConfiguration().setSourceAt('adapters', [
-            {
-                name: 'test-local',
-                invariantName: 'test',
-                default: true,
-                options: {
-                    database: resolve(__dirname, 'test2/db/local.db')
-                }
-            }
-        ]);
         context = app.createContext();
     });
     afterAll(async () => {
@@ -63,7 +53,7 @@ describe('DataAttributeResolver', () => {
             'customer/name as customerName'
         ).getList();
         expect(items).toBeTruthy();
-        expect(items.value).toBeInstanceOf(Array);
+        expect(Array.isArray(items.value)).toBeTruthy();
         expect(items.value.length).toBe(0);
     });
 
@@ -88,7 +78,7 @@ describe('DataAttributeResolver', () => {
             });
             let items = await context.model('Order').select('Delivered').getList();
             expect(items).toBeTruthy();
-            expect(items.value).toBeInstanceOf(Array);
+            expect(Array.isArray(items.value)).toBeTruthy();
             expect(items.value.length).toBeGreaterThan(0);
             const newUser =  {
                 "enabled": 1,

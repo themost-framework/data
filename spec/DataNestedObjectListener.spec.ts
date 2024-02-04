@@ -8,22 +8,11 @@ describe('DataNestedObjectListener', () => {
     let context: DataContext;
     beforeAll((done) => {
         app = new TestApplication(resolve(__dirname, 'test2'));
-        // set default adapter
-        app.getConfiguration().setSourceAt('adapters', [
-            {
-                name: 'test-local',
-                invariantName: 'test',
-                default: true,
-                options: {
-                    database: resolve(__dirname, 'test2/db/local.db')
-                }
-            }
-        ])
         context = app.createContext();
         return done();
     });
     afterAll(async () => {
-        await context.finalize();
+        await context.finalizeAsync();
         await app.finalize();
     });
     it('should use zero-or-one multiplicity', async () => {

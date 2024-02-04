@@ -8,17 +8,6 @@ describe('DataModel.upsert', () => {
     let context: DataContext;
     beforeAll((done) => {
         app = new TestApplication(resolve(__dirname, 'test2'));
-        // set default adapter
-        app.getConfiguration().setSourceAt('adapters', [
-            {
-                name: 'test-local',
-                invariantName: 'test',
-                default: true,
-                options: {
-                    database: resolve(__dirname, 'test2/db/local.db')
-                }
-            }
-        ])
         context = app.createContext();
         return done();
     });
