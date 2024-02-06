@@ -32,4 +32,70 @@ describe('Permissions', () => {
         await expect(Products.save(item)).rejects.toThrow('Access Denied');
     });
 
+    it('should validate create access', async () => {
+        const Products = context.model('Product');
+        // set context user
+        Object.assign(context, {
+            user: {
+                name: 'christina.ali@example.com'
+        }});
+        const orderedItem = await Products.where('name').equal(
+            'Apple MacBook Air (13.3-inch, 2013 Version)'
+        ).getItem();
+        expect(orderedItem).toBeTruthy();
+        const customer = await context.model('People').where('user/name')
+            .equal('christina.ali@example.com')
+            .getItem();
+        expect(customer).toBeTruthy();
+        const Orders = context.model('Order');
+        let newOrder = {
+            orderedItem,
+            customer
+        };
+        await expect(Orders.save(newOrder)).resolves.toBeTruthy();
+        // try to place an order with different status (should fail)
+        const orderStatus = {
+            name: 'Pickup'
+        }
+        await expect(Orders.save({
+            orderedItem,
+            customer,
+            orderStatus
+        })).rejects.toThrow('Access Denied');
+    });
+
+    it('should validate update access', async () => {
+        const Products = context.model('Product');
+        // set context user
+        const user = {
+            name: 'christina.ali@example.com'
+        }
+        Object.assign(context, {
+            user
+        });
+        const orderedItem = await Products.where('name').equal(
+            'Lenovo Yoga 2 Pro'
+        ).getItem();
+        expect(orderedItem).toBeTruthy();
+        const customer = await context.model('People').where('user/name')
+            .equal(user.name)
+            .getItem();
+        expect(customer).toBeTruthy();
+        const Orders = context.model('Order');
+        let newOrder = {
+            orderedItem,
+            customer
+        };
+        await expect(Orders.save(newOrder)).resolves.toBeTruthy();
+        // try to place an order with different status (should fail)
+        const orderStatus = {
+            name: 'Pickup'
+        }
+        await expect(Orders.save({
+            orderedItem,
+            customer,
+            orderStatus
+        })).rejects.toThrow('Access Denied');
+    });
+
 });

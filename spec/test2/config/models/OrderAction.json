@@ -1,0 +1,35 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "An agent orders an object/product/service to be delivered/sent.",
+    "title": "An agent orders an object/product/service to be delivered/sent.",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "1.0",
+    "inherits": "TradeAction",
+    "fields": [
+        {
+            "@id": "http://schema.org/object",
+            "name": "object",
+            "title": "object",
+            "description":"Product"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "self",
+            "account": "Contributors",
+            "filter": "owner eq me() and actionStatus/alternateName eq 'PotentialActionStatus'"
+        }
+    ]
+}

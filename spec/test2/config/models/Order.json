@@ -219,6 +219,11 @@
             "mask": 1,
             "type": "self",
             "filter": "customer/user eq me()"
+        },
+        {
+            "mask": 2,
+            "type": "self",
+            "filter": "customer/user eq me() and orderStatus/alternateName eq 'OrderProcessing'"
         }
     ]
 }
