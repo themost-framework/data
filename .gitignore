@@ -109,3 +109,8 @@ dist
 .vscode
 .DS_Store
 *.code-workspace
+
+# db
+spec/test2/db/test.db
+spec/test1/db/test.db
+spec/test/db/test.db

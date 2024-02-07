@@ -1,7 +1,7 @@
 import {DataModel, EdmMapping, DataContext} from '../index';
 import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
-import { TestAdapter } from './adapter/TestAdapter';
+import { SqliteAdapter} from '@themost/sqlite';
 
 class Employee {
     public EmployeeID?: number;
@@ -59,7 +59,7 @@ describe('DataModel', () => {
         // load by class
         let model = context.model(Employee);
         const items = await model.getItems();
-        expect(items).toBeInstanceOf(Array);
+        expect(Array.isArray(items)).toBeTruthy();
         expect(items.length).toBeGreaterThan(0);
     });
 
@@ -71,7 +71,7 @@ describe('DataModel', () => {
     });
 
     it('should use migrateAsync', async () => {
-        const db: TestAdapter = context.db as TestAdapter;
+        const db: SqliteAdapter = context.db as SqliteAdapter;
         let exists = await db.table('OtherProducts').existsAsync();
         expect(exists).toBeFalsy();
         const upgraded = await context.model('OtherProduct').migrateAsync();

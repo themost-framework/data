@@ -420,7 +420,8 @@ function insert_(obj, callback) {
                      */
                     var relatedModel = self.parent.context.model(self.mapping.childModel);
                     //find object by querying child object
-                    relatedModel.find(child).select(self.mapping.childField).first(function (err, result) {
+                    var silentMode = !!self.$silent
+                    relatedModel.silent(silentMode).find(child).select(self.mapping.childField).first(function (err, result) {
                         if (err) {
                             cb(err);
                         }
@@ -429,19 +430,8 @@ function insert_(obj, callback) {
                              * Validates related object, inserts this object if does not exists
                              * and finally defines the relation between child and parent objects
                              */
-                            if (!result) {
-                                //ensure silent mode
-                                if (self.getBaseModel().$silent) { relatedModel.silent(); }
-                                //insert related item if does not exists
-                                relatedModel.save(child, function(err) {
-                                    if (err) {
-                                        cb(err);
-                                    }
-                                    else {
-                                        //insert relation between child and parent
-                                        insertSingleObject_.call(self, child, function(err) { cb(err); });
-                                    }
-                                });
+                            if (result == null) {
+                                return cb(new Error('The associated object cannot be found or is inaccessible.'));
                             }
                             else {
                                 //set primary key

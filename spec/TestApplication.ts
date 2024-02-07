@@ -1,5 +1,6 @@
 import { IApplication, ConfigurationBase } from "@themost/common";
 import {resolve} from 'path';
+import * as fs from 'fs';
 import {
     DataConfigurationStrategy,
     NamedDataContext,
@@ -33,20 +34,32 @@ export class TestApplication extends IApplication {
         super();
         // init application configuration
         this._configuration = new ConfigurationBase(resolve(executionPath, 'config'));
-
         this._configuration.setSourceAt('adapterTypes', [
             {
-                'name':'Test Data Adapter', 
+                'name':'Test Data Adapter',
                 'invariantName': 'test',
-                'type': resolve(__dirname, 'adapter/TestAdapter')
+                'type': '@themost/sqlite'
             }
         ]);
+        // check if test.db exists
+        const db = resolve(executionPath, 'db', 'test.db');
+        if (fs.existsSync(db)) {
+            // and remove it
+            fs.unlinkSync(db);
+        }
+        // check if local.db exists
+        const local = resolve(executionPath, 'db', 'local.db');
+        if (fs.existsSync(local)) {
+            // copy local.db to test.db
+            fs.copyFileSync(local, db)
+        }
         this._configuration.setSourceAt('adapters', [
             { 
                 'name': 'test-storage',
                 'invariantName': 'test',
                 'default':true,
                 "options": {
+                    "database": db
                 }
             }
         ]);

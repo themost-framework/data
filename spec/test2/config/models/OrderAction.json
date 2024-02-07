@@ -1,0 +1,61 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "OrderAction",
+    "title": "An agent orders an object/product/service to be delivered/sent.",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "version": "1.0",
+    "inherits": "TradeAction",
+    "fields": [
+        {
+            "@id": "http://schema.org/actionStatus",
+            "name": "actionStatus",
+            "title": "actionStatus",
+            "description": "Indicates the current disposition of the Action.",
+            "type": "ActionStatusType",
+            "value": "javascript:return { alternateName: 'PotentialActionStatus' };"
+        },
+        {
+            "@id": "https://schema.org/agent",
+            "name": "agent",
+            "title": "agent",
+            "description": "The direct performer or driver of the action (animate or inanimate). e.g. <em>John</em> wrote a book.",
+            "type": "Person",
+            "editable": false,
+            "nullable": false
+        },
+        {
+            "name": "customer",
+            "title": "Customer",
+            "description": "Party placing the order.",
+            "type": "Person",
+            "editable": false,
+            "nullable": false
+        },
+        {
+            "@id": "https://schema.org/orderedItem",
+            "name": "orderedItem",
+            "title": "orderedItem",
+            "type": "Product",
+            "nullable": false
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "self",
+            "account": "Contributors",
+            "filter": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'"
+        }
+    ]
+}

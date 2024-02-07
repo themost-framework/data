@@ -1,0 +1,46 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "EntryPoint",
+    "title": "EntryPoints",
+    "hidden": false,
+    "sealed": false,
+    "abstract": false,
+    "inherits": "Thing",
+    "version": "1.0",
+    "fields": [
+        {
+            "@id": "https://themost.io/schemas/id",
+            "name": "id",
+            "description": "The identifier of the item.",
+            "type": "Integer",
+            "primary": true
+        },
+        {
+            "@id": "https://schema.org/contentType",
+            "name": "contentType",
+            "type": "Text"
+        },
+        {
+            "@id": "https://schema.org/encodingType",
+            "name": "encodingType",
+            "type": "Text"
+        },
+        {
+            "@id": "https://schema.org/httpMethod",
+            "name": "httpMethod",
+            "type": "Text",
+            "size": 24
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        }
+    ]
+}
