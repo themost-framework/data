@@ -102,4 +102,5 @@ class JestLogger {
 TraceUtils.useLogger(new JestLogger());
 
 /* global jest */
+process.env.NODE_ENV = 'development';
 jest.setTimeout(30000);
