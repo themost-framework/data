@@ -41,10 +41,10 @@ describe('OnExecuteNestedQueryable', () => {
         let Actions = context.model('Action');
         const beforeExecute = OnExecuteNestedQueryable.prototype.beforeExecute;
         Actions.removeListener('before.execute', beforeExecute);
-        await expect(Actions.where('actionStatus/alternateName')
-            .equal('CompletedActionStatus').silent().getItems()).rejects.toBeTruthy();
+        await expect(Actions.where('target/alternateName')
+            .equal('TestService').silent().getItems()).rejects.toBeTruthy();
         Actions = context.model('Action');
-        await expect(Actions.where('actionStatus/alternateName').equal('CompletedActionStatus').silent().getItems())
+        await expect(Actions.where('target/alternateName').equal('TestService').silent().getItems())
             .resolves.toBeTruthy();
     });
 
