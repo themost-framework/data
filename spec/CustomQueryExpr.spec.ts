@@ -2,6 +2,7 @@ import {TestUtils} from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
 import { DataContext } from '../types';
 import { DataConfigurationStrategy } from '../data-configuration';
+import {SqliteAdapter} from '@themost/sqlite';
 
 const TempOrderSchema = {
     "name": "TempOrder",
@@ -445,7 +446,7 @@ describe('CustomQueryExpression', () => {
             const ExtendedProducts = context.model('ExtendedProduct');
             await ExtendedProducts.migrateAsync();
             // validate non-insertable columns
-            const db: TestAdapter = context.db as TestAdapter;
+            const db: SqliteAdapter = context.db as SqliteAdapter;
             const columns = await db.table(ExtendedProducts.sourceAdapter).columnsAsync();
             expect(columns.find((item) => item.name === 'priceCategory')).toBeFalsy();
             // insert a temporary object
