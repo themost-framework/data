@@ -197,6 +197,11 @@
         },
         {
             "mask": 1,
+            "type": "global",
+            "account": "Contributors"
+        },
+        {
+            "mask": 1,
             "type": "self",
             "filter": "user eq me()"
         }

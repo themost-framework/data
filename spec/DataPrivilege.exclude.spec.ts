@@ -1,6 +1,6 @@
 import {TestUtils} from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
-import { DataContext } from '../types';
+import {DataAdapter, DataContext} from '../types';
 import {DataModelFilterParser} from '../data-model-filter.parser';
 import { at } from 'lodash';
 import { DataPermissionExclusion } from '../data-permission';
@@ -69,7 +69,7 @@ describe('DataPrivilege', () => {
             $expand: q1.$expand,
             // $fixed: true
         });
-        let result: any[] = await (context.db as TestAdapter).executeAsync(queryUsers.query);
+        let result: any[] = await (context.db as DataAdapter).executeAsync(queryUsers.query, []);
         expect(result.length).toBeTruthy();
 
         q1 = await parser.parseAsync('indexof(context/user/authenticationScope, \'profile\') eq 0');
@@ -80,7 +80,7 @@ describe('DataPrivilege', () => {
             $expand: q1.$expand,
             // $fixed: true
         });
-        result = await (context.db as TestAdapter).executeAsync(queryUsers.query);
+        result = await (context.db as DataAdapter).executeAsync(queryUsers.query, []);
         expect(result.length).toBeTruthy();
 
     });

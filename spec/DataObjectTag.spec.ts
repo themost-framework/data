@@ -1,7 +1,8 @@
-import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
 import {TestApplication, TestApplication2} from './TestApplication';
 import {DataContext} from '../types';
+import {DataObject} from '../data-object';
+import {DataObjectTag} from '../data-object-tag';
 
 describe('DataObjectTag', () => {
     let app: TestApplication;
@@ -21,9 +22,6 @@ describe('DataObjectTag', () => {
             }
         });
         await TestUtils.executeInTransaction(context, async () => {
-            /**
-             * @type {DataObject}
-             */
             let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
             await user.property('tags').insert([
                 'NewUser',
@@ -49,9 +47,6 @@ describe('DataObjectTag', () => {
             }
         });
         await TestUtils.executeInTransaction(context, async () => {
-            /**
-             * @type {DataObject}
-             */
             let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
             await expect(user.property('tags').insert([
                 'NewUser',
@@ -82,9 +77,6 @@ describe('DataObjectTag', () => {
             }
         });
         await TestUtils.executeInTransaction(context, async () => {
-            /**
-             * @type {DataObject}
-             */
             let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
             await user.property('tags').insert([
                 'NewUser',
@@ -129,18 +121,15 @@ describe('DataObjectTag', () => {
             }
         });
         await TestUtils.executeInTransaction(context, async () => {
-            /**
-             * @type {DataObject}
-             */
             let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
-            await user.property('tags').silent().insert([
+            const tags: DataObjectTag = user.property('tags').silent();
+            await tags.insert([
                 'NewUser',
                 'ValidUser'
             ]);
             await expect(user.property('tags').remove([
                 'ValidUser'
             ])).rejects.toThrowError('Access Denied');
-
             user = await context.model('User')
             .where('name').equal('luis.nash@example.com')
             .expand('tags')
@@ -161,9 +150,6 @@ describe('DataObjectTag', () => {
             }
         });
         await TestUtils.executeInTransaction(context, async () => {
-            /**
-             * @type {DataObject}
-             */
             let user = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
             await user.property('tags').silent().insert([
                 'NewUser',

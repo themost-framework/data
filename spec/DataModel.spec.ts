@@ -1,7 +1,6 @@
 import {DataModel, EdmMapping, DataContext} from '../index';
 import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
-import { TestAdapter } from './adapter/TestAdapter';
 
 class Employee {
     public EmployeeID?: number;
