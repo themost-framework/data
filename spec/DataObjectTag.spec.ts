@@ -170,4 +170,20 @@ describe('DataObjectTag', () => {
         });
     });
 
+    it('should try to delete parent', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+
+            const Users = context.model('User').silent()
+            await Users.save({
+                name: 'test.user@example.com'
+            })
+            let user = await Users.where('name').equal('test.user@example.com').getTypedItem();
+            await user.property('tags').silent().insert([
+                'NewUser',
+                'ValidUser'
+            ]);
+            await expect(Users.remove(user)).resolves.toBeUndefined();
+        });
+    });
+
 });

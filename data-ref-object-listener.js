@@ -2,7 +2,9 @@
 var async = require('async');
 var {HasParentJunction} = require('./has-parent-junction');
 var {DataObjectJunction} = require('./data-object-junction');
+var {DataObjectTag} = require('./data-object-tag');
 var {DataError} = require('@themost/common');
+var {DataConfigurationStrategy} = require('./data-configuration');
 var _ = require('lodash');
 var {hasOwnProperty} = require('./has-own-property');
 
@@ -171,7 +173,27 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
         target = event.model.convert(event.target),
         parentModel =  event.model,
         parentField = parentModel.getAttribute(mapping.parentField);
-    var junction = new HasParentJunction(target, mapping);
+    /**
+     * @type {import('./types').DataContext}
+     */
+    var context = event.model.context;
+    var isDataType = false;
+    // if child model is null, then check if child attribute is a primitive data type   
+    if (mapping.childModel == null) {
+        /**
+         * try to find attribute by using refersTo property
+         * @type {import('./types').DataField}
+         */
+        var childAttribute = event.model.getAttribute(mapping.refersTo);
+        if (childAttribute == null) {
+            return callback(new DataError('E_ATTR', 'Cannot find child attribute', event.model.name, mapping.refersTo));
+        }
+        isDataType = context.getConfiguration().getStrategy(DataConfigurationStrategy).hasDataType(childAttribute.type);
+        if (!isDataType) {
+            return callback(new DataError('E_ATTR', 'Invalid attribute type', event.model.name, mapping.refersTo));
+        }
+    }
+    var junction = isDataType ? new DataObjectTag(target, mapping) : new HasParentJunction(target, mapping);
     return parentModel.where(parentModel.primaryKey).equal(target.getId())
         .select(parentField.name)
         .cache(false)
