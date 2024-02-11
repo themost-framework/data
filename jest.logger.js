@@ -1,4 +1,3 @@
-const { TraceUtils } = require('@themost/common');
 const moment = require('moment');
 const {inspect} = require('util');
 
