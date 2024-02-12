@@ -95,12 +95,20 @@ describe('Permissions', () => {
             .getItem();
         expect(agent).toBeTruthy();
         const OrderActions = context.model('OrderAction');
-        let newAction = {
+        let newAction: { id?: number, agent: any; orderedItem: any; customer: any } = {
             orderedItem,
             customer,
             agent
         };
         await expect(OrderActions.save(newAction)).resolves.toBeTruthy();
+        // try to update the action (should fail)
+        const { id } = newAction;
+        const updateAction = await OrderActions.where('id').equal(id).getItem();
+        expect(updateAction).toBeTruthy();
+        updateAction.actionStatus = {
+            alternateName: 'ActiveActionStatus'
+        };
+        await expect(OrderActions.save(updateAction)).rejects.toThrow('Access Denied');
 
     });
 

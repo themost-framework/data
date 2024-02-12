@@ -2,12 +2,14 @@
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
-var {AccessDeniedError} = require('@themost/common');
+var {AccessDeniedError, DataError} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var _ = require('lodash');
 var {DataCacheStrategy} = require('./data-cache');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
+var { isObjectDeep } = require('./is-object');
+require('@themost/promise-sequence');
 
 /**
  * @class
@@ -17,6 +19,80 @@ var {hasOwnProperty} = require('./has-own-property');
  */
 function EachSeriesCancelled() {
     //
+}
+
+/**
+ * @param {import('./data-model').DataModel} model
+ */
+function SelectObjectQuery(model) {
+    this.model = model;
+}
+
+/**
+ * @param {*} source
+ * @returns {import('@themost/query').QueryExpression}
+ */
+SelectObjectQuery.prototype.select = function(source) {
+    var self = this
+    var query = QueryUtils.query(self.model.viewAdapter);
+    var keys = Object.keys(source);
+    // noinspection JSValidateTypes
+    const select = keys.map(function (key) {
+        if (hasOwnProperty(source, key)) {
+            return self.model.attributes.find(function (x) {
+                // try to find attribute by name or alias
+                return x.property === key || x.name === key;
+            });
+        }
+    }).filter(function(attribute) {
+        return attribute != null;
+    }).filter(function(attribute) {
+        return attribute.many !== true;
+    }).filter(function(attribute) {
+        var mapping = self.model.inferMapping(attribute.name);
+        if (mapping == null) {
+            return true;
+        }
+        return mapping.associationType === 'association' && mapping.childModel === self.model.name;
+    }).map(
+        /**
+         * @param {import('./types').DataField} attribute
+         * @returns {*}
+         */
+        function (attribute) {
+            var mapping = self.model.inferMapping(attribute.name);
+            var name = attribute.property || attribute.name;
+            // get property value
+            var value = source[name];
+            // if this property is a primitive typed property
+            if (mapping == null) {
+                // return value
+                return {
+                    [name]: {
+                        $value: value
+                    }
+                };
+            }
+            // otherwise, if this property is an association
+            if (isObjectDeep(value)) {
+                // get associated key value (event.g. primary key value)
+                return {
+                    [name]: {
+                        $value: value[mapping.parentField]
+                    }
+                };
+            }
+            return {
+                [name]: {
+                    $value: value
+                }
+            };
+        });
+    // select values
+    query.select(select);
+    // set query expression as fixed
+    query.$fixed = true;
+    return query;
 }
 
 /**
@@ -31,7 +107,7 @@ function DataPermissionEventArgs() {
     this.model = null;
     /**
      * The underlying query expression
-     * @type {QueryExpression}
+     * @type {import('@themost/query').QueryExpression}
      */
     this.query = null;
     /**
@@ -200,7 +276,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
         var privileges = model.privileges.filter(function(x) { return !x.disabled && ((x.mask & requestMask) === requestMask) });
         if (privileges.length===0) {
             if (event.throwError) {
-                //if the target model has privileges but it has no privileges with the requested mask
+                //if the target model has privileges, but it has no privileges with the requested mask
                 if (permEnabled) {
                     //throw error
                     var error = new Error('Access denied.');
@@ -400,16 +476,25 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                 cb(err);
                             }
                             else {
-                                //set where from DataQueryable.query
-                                query.$where = q.query.$prepared;
-                                query.$expand = q.query.$expand;
+                                // get filter params (where and join statements)
+                                var {$where, $prepared, $expand} = q.query;
+                                // and assign them to the fixed query produced by the previous step
+                                Object.assign(query, {
+                                    $where,
+                                    $prepared,
+                                    $expand
+                                });
+                                // execute query
                                 model.context.db.execute(query,null, function(err, result) {
                                     if (err) {
                                         return cb(err);
                                     }
                                     else {
-                                        if (result.length===1) {
+                                        // if user has access
+                                        if (result.length === 1) {
+                                            // set cancel flag for exiting the loop
                                             cancel=true;
+                                            // set result to true
                                             event.result = true;
                                         }
                                         return cb();
@@ -424,17 +509,47 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                             if (err) {
                                 return cb(err);
                             }
-                            else {
-                                //prepare query and append primary key expression
-                                q.where(model.primaryKey).equal(event.target[model.primaryKey]).silent().count(function(err, count) {
-                                    if (err) { cb(err); return; }
-                                    if (count>=1) {
-                                        cancel=true;
-                                        event.result = true;
+                            // get primary key
+                            var { [model.primaryKey]: key } = event.target;
+                            // query for object and get original data
+                            return q.where(model.primaryKey).equal(key).silent().flatten().getItems().then(
+                                function(results) {
+                                    if (results.length > 1) {
+                                        return cb(new DataError('E_PRIMARY_KEY', 'Primary key violation', null, model.name, model.primaryKey));
+                                    }
+                                    if (results.length === 1) {
+                                        const [result] = results;
+                                        const query = new SelectObjectQuery(model).select(Object.assign(result, event.target));
+                                        // get filter params (where and join statements)
+                                        var {$where, $prepared, $expand} = q.query;
+                                        // and assign them to the fixed query produced by the previous step
+                                        // note: a fixed query is a query that contains constant values
+                                        // and is being prepared for validating filter conditions defined by the current privilege
+                                        Object.assign(query, {
+                                            $where,
+                                            $prepared,
+                                            $expand
+                                        });
+                                        // execute native query
+                                        return model.context.db.execute(query,null, function(err, result) {
+                                            if (err) {
+                                                return cb(err);
+                                            }
+                                            if (result.length === 1) {
+                                                // user has access
+                                                // set cancel flag for exiting the loop
+                                                cancel=true;
+                                                // set result to true
+                                                event.result = true;
+                                            }
+                                            return cb();
+                                        });
                                     }
                                     return cb();
-                                })
-                            }
+                                }
+                            ).catch(function(err) {
+                                return cb(err);
+                            });
                         });
                     }
                 }
@@ -671,7 +786,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         //get model privileges (and clone them)
         var modelPrivileges = _.cloneDeep(model.privileges || []);
         // if there are no privileges
-        if (modelPrivileges.length == 0) {
+        if (modelPrivileges.length === 0) {
             // add defaults
             modelPrivileges.push.apply(modelPrivileges, [
                 {
@@ -852,7 +967,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                 else if (expr) {
                     return context.model('Permission').migrate(function(err) {
                         if (err) { return callback(err); }
-                        var q = QueryUtils.query(model.viewAdapter).select([model.primaryKey]).distinct();
+                        var q = QueryUtils.query(model.viewAdapter).select([model.primaryKey]).distinct(true);
                         if (expand) {
                             var arrExpand=[].concat(expand);
                             _.forEach(arrExpand, function(x){
