@@ -504,7 +504,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         });
                     }
                     else {
-                        //get privilege filter
+                        // get privilege filter
                         model.filter(item.filter, function(err, q) {
                             if (err) {
                                 return cb(err);
@@ -518,8 +518,9 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                         return cb(new DataError('E_PRIMARY_KEY', 'Primary key violation', null, model.name, model.primaryKey));
                                     }
                                     if (results.length === 1) {
-                                        const [result] = results;
-                                        const query = new SelectObjectQuery(model).select(Object.assign(result, event.target));
+                                        var [result] = results;
+                                        var target = requestMask === PermissionMask.Update ? Object.assign(result, event.target) : result;
+                                        var query = new SelectObjectQuery(model).select(target);
                                         // get filter params (where and join statements)
                                         var {$where, $prepared, $expand} = q.query;
                                         // and assign them to the fixed query produced by the previous step

@@ -10,7 +10,8 @@
   "peerDependencies": {
     "@themost/common": "^2.5.11",
     "@themost/query": "^2.5.9",
-    "@themost/xml": "^2.5.2"
+    "@themost/xml": "^2.5.2",
+    "@themost/events": "^1.3.0"
   },
   "engines": {
     "node": ">=8.17.0"
@@ -40,9 +41,10 @@
     "@babel/preset-env": "^7.23.8",
     "@babel/preset-typescript": "^7.16.7",
     "@themost/common": "^2.5.11",
+    "@themost/events": "^1.3.0",
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.5.9",
-    "@themost/sqlite": "^2.6.16",
+    "@themost/sqlite": "^2.6.17",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",
     "@types/jest": "^27.4.1",

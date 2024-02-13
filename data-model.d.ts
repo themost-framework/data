@@ -71,4 +71,6 @@ export declare class DataModel extends SequentialEventEmitter{
     upsert(obj: any | Array<any>): Promise<any>;
     upsert(obj: any | Array<any>, callback: (err?: Error, result?: any) => void): void;
     upsertAsync(obj: any | Array<any>): Promise<any>;
+    resolveMethod(method: string, callback: (err?: Error, res?: any) => void): void;
+    resolveMember(member: string, callback: (err?: Error, res?: any) => void): void;
 }
