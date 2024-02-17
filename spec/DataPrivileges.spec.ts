@@ -106,9 +106,15 @@ describe('Permissions', () => {
         const updateAction = await OrderActions.where('id').equal(id).getItem();
         expect(updateAction).toBeTruthy();
         updateAction.actionStatus = {
-            alternateName: 'ActiveActionStatus'
+            alternateName: 'CompletedActionStatus'
         };
         await expect(OrderActions.save(updateAction)).rejects.toThrow('Access Denied');
+
+        expect(updateAction).toBeTruthy();
+        updateAction.actionStatus = {
+            alternateName: 'ActiveActionStatus'
+        };
+        await expect(OrderActions.save(updateAction)).resolves.toBeTruthy();
 
     });
 

@@ -6,4 +6,5 @@ export declare class DataModelFilterParser {
     resolvingMember: AsyncSeriesEventEmitter<{ target: DataModelFilterParser, member: string, result: { $select: any, $expand?: any } }>;
     resolvingMethod: AsyncSeriesEventEmitter<{ target: DataModelFilterParser, method: string, args: any, result: any }>;
     parseAsync(str: string): Promise<{ $where: any, $expand?: any }>;
+    parse(str: string, callback: (err: Error, result: { $where: any, $expand?: any }) => void): void;
 }

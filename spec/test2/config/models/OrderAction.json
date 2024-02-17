@@ -58,9 +58,32 @@
             "account": "Contributors"
         },
         {
-            "mask": 14,
+            "mask": 2,
             "type": "self",
-            "description": "An agent can create, update or delete their own order actions with potential status",
+            "description": "Allow create order actions with potential status",
+            "account": "Contributors",
+            "filter": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'"
+        },
+        {
+            "mask": 4,
+            "type": "self",
+            "description": "Allow update order actions when action status is potential",
+            "account": "Contributors",
+            "when": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'",
+            "filter": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'"
+        },
+        {
+            "mask": 4,
+            "type": "self",
+            "description": "Allow update order actions when action status is becoming active",
+            "account": "Contributors",
+            "when": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'",
+            "filter": "agent/user eq me() and actionStatus/alternateName eq 'ActiveActionStatus'"
+        },
+        {
+            "mask": 8,
+            "type": "self",
+            "description": "Allow delete order actions when action status is potential",
             "account": "Contributors",
             "filter": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'"
         }

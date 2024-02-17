@@ -10,6 +10,8 @@ var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var { isObjectDeep } = require('./is-object');
 require('@themost/promise-sequence');
+var { DataModelFilterParser } = require('./data-model-filter.parser');
+const {DataQueryable} = require('./data-queryable');
 
 /**
  * @class
@@ -272,7 +274,10 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
             return callback(err);
         }
         var permEnabled = model.privileges.filter(function(x) { return !x.disabled; }, model.privileges).length>0;
-        //get all enabled privileges
+        /**
+         * get all enabled privileges
+         * @type {import('./types').DataModelPrivilege[]}
+         */
         var privileges = model.privileges.filter(function(x) { return !x.disabled && ((x.mask & requestMask) === requestMask) });
         if (privileges.length===0) {
             if (event.throwError) {
@@ -299,7 +304,13 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
             var cancel = false;
             event.result = false;
             //enumerate privileges
-            async.eachSeries(privileges, function(item, cb) {
+            async.eachSeries(privileges,
+                /**
+                 * @param {import('./types').DataModelPrivilege} item
+                 * @param cb
+                 * @returns {*}
+                 */
+                function(item, cb) {
                 if (cancel) {
                     return cb();
                 }
@@ -504,46 +515,65 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         });
                     }
                     else {
+                        // get primary key
+                        var { [model.primaryKey]: key } = event.target;
                         // get privilege filter
-                        model.filter(item.filter, function(err, q) {
+                        var parser = new DataModelFilterParser(model);
+                        // stage 1: parse filter condition
+                        // the "when" statement is a filter condition that should be evaluated before validating the current state of the object
+                        var when = item.when || item.filter;
+                        parser.parse(when, function(err, params) {
                             if (err) {
                                 return cb(err);
                             }
-                            // get primary key
-                            var { [model.primaryKey]: key } = event.target;
-                            // query for object and get original data
+                            var { $where, $expand } = params;
+                            var q = new DataQueryable(model);
+                            Object.assign(q.query, {
+                                $where,
+                                $expand
+                            });
+                            // stage 2: query for object and get original data
                             return q.where(model.primaryKey).equal(key).silent().flatten().getItems().then(
                                 function(results) {
+                                    // throw error if more than one result is returned
                                     if (results.length > 1) {
                                         return cb(new DataError('E_PRIMARY_KEY', 'Primary key violation', null, model.name, model.primaryKey));
                                     }
                                     if (results.length === 1) {
+                                        // get result
                                         var [result] = results;
+                                        // get target object ready for validation
                                         var target = requestMask === PermissionMask.Update ? Object.assign(result, event.target) : result;
-                                        var query = new SelectObjectQuery(model).select(target);
-                                        // get filter params (where and join statements)
-                                        var {$where, $prepared, $expand} = q.query;
-                                        // and assign them to the fixed query produced by the previous step
-                                        // note: a fixed query is a query that contains constant values
-                                        // and is being prepared for validating filter conditions defined by the current privilege
-                                        Object.assign(query, {
-                                            $where,
-                                            $prepared,
-                                            $expand
-                                        });
-                                        // execute native query
-                                        return model.context.db.execute(query,null, function(err, result) {
+                                        // get filter condition which is going to be evaluated against the target object
+                                        var filter = item.filter || item.when;
+                                        return parser.parse(filter, function(err, params) {
                                             if (err) {
                                                 return cb(err);
                                             }
-                                            if (result.length === 1) {
-                                                // user has access
-                                                // set cancel flag for exiting the loop
-                                                cancel=true;
-                                                // set result to true
-                                                event.result = true;
-                                            }
-                                            return cb();
+                                            var query = new SelectObjectQuery(model).select(target);
+                                            // get filter params (where and join statements)
+                                            var {$where, $expand} = params;
+                                            // and assign them to the fixed query produced by the previous step
+                                            // note: a fixed query is a query that contains constant values
+                                            // and is being prepared for validating filter conditions defined by the current privilege
+                                            Object.assign(query, {
+                                                $where,
+                                                $expand
+                                            });
+                                            // execute native query
+                                            return model.context.db.execute(query,null, function(err, result) {
+                                                if (err) {
+                                                    return cb(err);
+                                                }
+                                                if (result.length === 1) {
+                                                    // user has access
+                                                    // set cancel flag for exiting the loop
+                                                    cancel=true;
+                                                    // set result to true
+                                                    event.result = true;
+                                                }
+                                                return cb();
+                                            });
                                         });
                                     }
                                     return cb();

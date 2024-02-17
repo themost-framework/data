@@ -754,6 +754,7 @@ var PrivilegeType = {
  * @constructor
  * @property {PermissionMask} mask - Gets or sets the set of permissions which may be given with this privilege.
  * @property {PrivilegeType|string} type - Gets or sets the type of this privilege (global|parent|item|self).
+ * @property {string} when - Gets or sets a filter expression which is going to be used for self privileges.
  * @property {string} filter - Gets or sets a filter expression which is going to be used for self privileges.
  * The defined set of permissions are automatically assigned if the requested objects fulfill filter criteria.
  * (e.g. read-write permissions for a user's associated person through the following expression:"user eq me()")
