@@ -379,47 +379,18 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         }
                     }
                     if (requestMask===PermissionMask.Create) {
-                        var query = QueryUtils.query(model.viewAdapter);
-                        var fields=[], field;
-                        //cast target
-                        var name, obj = event.target;
-                        model.attributes.forEach(function(x) {
-                            name = typeof x.property === 'string' ? x.property : x.name;
-                            if (hasOwnProperty(obj, name))
-                            {
-                                var mapping = model.inferMapping(name);
-                                if (_.isNil(mapping)) {
-                                    field = {};
-                                    field[x.name] = { $value: obj[name] };
-                                    fields.push(field);
-                                }
-                                else if ((mapping.associationType==='association') && (mapping.childModel===model.name)) {
-                                    if (typeof obj[name] === 'object' && obj[name] !== null) {
-                                        //set associated key value (event.g. primary key value)
-                                        field = {};
-                                        field[x.name] = { $value: obj[name][mapping.parentField] };
-                                        fields.push(field);
-                                    }
-                                    else {
-                                        //set raw value
-                                        field = {};
-                                        field[x.name] = { $value: obj[name] };
-                                        fields.push(field);
-                                    }
-                                }
-                            }
-                        });
-                        //add fields
-                        query.select(fields);
-                        //set fixed query
-                        query.$fixed = true;
-                        model.filter(item.filter, function(err, q) {
+                        var query = new SelectObjectQuery(model).select(event.target);
+                        const filter = item.when || item.filter;
+                        model.filter(filter, function(err, q) {
                             if (err) {
                                 cb(err);
                             }
                             else {
                                 // get filter params (where and join statements)
                                 var {$where, $prepared, $expand} = q.query;
+                                if ($where === null && $prepared === null) {
+                                    return cb(new Error('Where condition cannot be empty while validating object privileges.'));
+                                }
                                 // and assign them to the fixed query produced by the previous step
                                 Object.assign(query, {
                                     $where,
@@ -458,6 +429,9 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                 return cb(err);
                             }
                             var { $where, $expand } = params;
+                            if ($where === null) {
+                                return cb(new Error('Where condition cannot be empty while validating object privileges.'));
+                            }
                             var q = new DataQueryable(model);
                             Object.assign(q.query, {
                                 $where,
