@@ -11,7 +11,8 @@ var {hasOwnProperty} = require('./has-own-property');
 var { isObjectDeep } = require('./is-object');
 require('@themost/promise-sequence');
 var { DataModelFilterParser } = require('./data-model-filter.parser');
-const {DataQueryable} = require('./data-queryable');
+var {DataQueryable} = require('./data-queryable');
+var { SelectObjectQuery } = require('./select-object-query');
 
 /**
  * @class
@@ -26,76 +27,7 @@ function EachSeriesCancelled() {
 /**
  * @param {import('./data-model').DataModel} model
  */
-function SelectObjectQuery(model) {
-    this.model = model;
-}
 
-/**
- * @param {*} source
- * @returns {import('@themost/query').QueryExpression}
- */
-SelectObjectQuery.prototype.select = function(source) {
-    var self = this
-    var query = QueryUtils.query(self.model.viewAdapter);
-    var keys = Object.keys(source);
-    // noinspection JSValidateTypes
-    const select = keys.map(function (key) {
-        if (hasOwnProperty(source, key)) {
-            return self.model.attributes.find(function (x) {
-                // try to find attribute by name or alias
-                return x.property === key || x.name === key;
-            });
-        }
-    }).filter(function(attribute) {
-        return attribute != null;
-    }).filter(function(attribute) {
-        return attribute.many !== true;
-    }).filter(function(attribute) {
-        var mapping = self.model.inferMapping(attribute.name);
-        if (mapping == null) {
-            return true;
-        }
-        return mapping.associationType === 'association' && mapping.childModel === self.model.name;
-    }).map(
-        /**
-         * @param {import('./types').DataField} attribute
-         * @returns {*}
-         */
-        function (attribute) {
-            var mapping = self.model.inferMapping(attribute.name);
-            var name = attribute.property || attribute.name;
-            // get property value
-            var value = source[name];
-            // if this property is a primitive typed property
-            if (mapping == null) {
-                // return value
-                return {
-                    [name]: {
-                        $value: value
-                    }
-                };
-            }
-            // otherwise, if this property is an association
-            if (isObjectDeep(value)) {
-                // get associated key value (event.g. primary key value)
-                return {
-                    [name]: {
-                        $value: value[mapping.parentField]
-                    }
-                };
-            }
-            return {
-                [name]: {
-                    $value: value
-                }
-            };
-        });
-    // select values
-    query.select(select);
-    // set query expression as fixed
-    query.$fixed = true;
-    return query;
-}
 
 /**
  * @class
@@ -543,7 +475,8 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                         // get result
                                         var [result] = results;
                                         // get target object ready for validation
-                                        var target = requestMask === PermissionMask.Update ? Object.assign(result, event.target) : result;
+                                        var selectTarget = new SelectObjectQuery(model).map(event.target);
+                                        var target = requestMask === PermissionMask.Update ? Object.assign(result, selectTarget) : result;
                                         // get filter condition which is going to be evaluated against the target object
                                         var filter = item.filter || item.when;
                                         return parser.parse(filter, function(err, params) {

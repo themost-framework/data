@@ -70,15 +70,7 @@
             "description": "Allow update order actions when action status is potential",
             "account": "Contributors",
             "when": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'",
-            "filter": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'"
-        },
-        {
-            "mask": 4,
-            "type": "self",
-            "description": "Allow update order actions when action status is becoming active",
-            "account": "Contributors",
-            "when": "agent/user eq me() and actionStatus/alternateName eq 'PotentialActionStatus'",
-            "filter": "agent/user eq me() and actionStatus/alternateName eq 'ActiveActionStatus'"
+            "filter": "agent/user eq me() and (actionStatus/alternateName eq 'PotentialActionStatus' or actionStatus/alternateName eq 'ActiveActionStatus')"
         },
         {
             "mask": 8,
