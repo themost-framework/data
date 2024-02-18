@@ -8,7 +8,6 @@ var _ = require('lodash');
 var {DataCacheStrategy} = require('./data-cache');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
-var { isObjectDeep } = require('./is-object');
 require('@themost/promise-sequence');
 var { DataModelFilterParser } = require('./data-model-filter.parser');
 var {DataQueryable} = require('./data-queryable');
