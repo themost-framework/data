@@ -21,6 +21,13 @@ describe('Permissions', () => {
         expect(items.length).toBeTruthy();
     });
 
+    it('should have no read access', async () => {
+        const Orders = context.model('Order');
+        const items = await Orders.getItems();
+        expect(Array.isArray(items)).toBeTruthy();
+        expect(items.length).toBeFalsy();
+    });
+
     it('should validate write access', async () => {
         const Products = context.model('Product');
         const item = await Products.where('name').equal(
