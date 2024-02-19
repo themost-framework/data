@@ -26,5 +26,21 @@
                 "product"
             ]
         }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        }
     ]
 }

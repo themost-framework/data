@@ -39,6 +39,91 @@ describe('Global permissions', () => {
         });
     });
 
+    it('should validate anonymous read access to nested objects', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                productDimensions: {
+                    height: 0.136,
+                    width: 0.069
+                }
+            });
+            await context.model('Product').silent().save(product);
+            const Products = context.model('Product');
+            const item: { productDimensions?: { height: number, width: number } } =
+                await Products.where('name').equal('Samsung Galaxy S4').expand(
+                'productDimensions'
+            ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.productDimensions).toBeTruthy();
+            expect(item.productDimensions.height).toEqual(0.136);
+        });
+    });
+
+    it('should validate anonymous read access to values', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                keywords: [
+                    'Samsung', 'Galaxy', 'Smartphone'
+                ]
+            });
+            await context.model('Product').silent().save(product);
+            const Products = context.model('Product');
+            const item: { name: string, keywords?: string[] } =
+                await Products.where('name').equal('Samsung Galaxy S4').expand(
+                    'keywords'
+                ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.keywords).toBeTruthy();
+            expect(item.keywords.length).toBeTruthy();
+        });
+    });
+
+    it('should validate that user does not have access to values', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                tags: [
+                    'Obsolete', 'Discontinued'
+                ]
+            });
+            await context.model('Product').silent().save(product);
+            const Products = context.model('Product');
+            let item: { name: string, tags?: string[] } =
+                await Products.where('name').equal('Samsung Galaxy S4').expand(
+                    'tags'
+                ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.tags).toBeTruthy();
+            expect(item.tags.length).toBeFalsy();
+
+            const user = {
+                name: 'margaret.davis@example.com'
+            }
+            // add user to contributors
+            const group = await context.model('Group').where('name').equal('Contributors').getTypedItem();
+            expect(group).toBeTruthy();
+            const members = group.property('members').silent();
+            await members.insert(user);
+            Object.assign(context, {
+                user
+            });
+            item = await Products.where('name').equal('Samsung Galaxy S4').expand(
+                    'tags'
+                ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.tags).toBeTruthy();
+            expect(item.tags.length).toBeTruthy();
+        });
+    });
+
     it('should validate anonymous write access to products', async () => {
         const Products = context.model('Product');
         const item = await Products.where('name').equal(
