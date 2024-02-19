@@ -25,6 +25,20 @@ describe('Global permissions', () => {
         expect(items.length).toBeTruthy();
     });
 
+    it('should validate anonymous read access to a model which does not have privileges', async () => {
+        await context.executeInTransactionAsync(async () => {
+            await context.model('NavigationElement').silent().save({
+               name: 'Home',
+               url: '/'
+            });
+            let items = await context.model('NavigationElement').silent().getItems();
+            expect(items.length).toBeTruthy();
+            const NavigationElements = context.model('NavigationElement');
+            items = await NavigationElements.getItems();
+            expect(items.length).toBeFalsy();
+        });
+    });
+
     it('should validate anonymous write access to products', async () => {
         const Products = context.model('Product');
         const item = await Products.where('name').equal(

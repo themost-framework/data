@@ -36,11 +36,5 @@
             "description": "A navigation element which is the parent element of this item.",
             "type": "NavigationElement"
         }
-    ],
-    "privileges": [
-        {
-            "mask": 15,
-            "type": "global"
-        }
     ]
 }

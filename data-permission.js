@@ -667,11 +667,6 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         //and model is the parent privilege
         parentPrivilege = model.name;
     }
-    //do not check permissions if the target model has no privileges defined
-    if (model.privileges.filter(function(x) { return !x.disabled; }, model.privileges).length===0) {
-        callback(null);
-        return;
-    }
     //infer permission mask
     if (typeof event.mask !== 'undefined') {
         requestMask = event.mask;
