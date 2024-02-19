@@ -811,19 +811,35 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             });
                     }
                     else if (item.type==='parent') {
-                        //get field mapping
-                        var mapping = model.inferMapping(item.property);
-                        if (!mapping) {
-                            return cb();
+                        // is this privilege assignable to the current user -and its groups-?
+                        if (typeof item.account !== 'undefined' && item.account !== null && item.account !== '*') {
+                            if (accounts.findIndex(function(x) { return x.name === item.account; }) < 0) {
+                                return cb();
+                            }
                         }
-                        if (_.isNil(expr))
+                        // try to get mapping from "property" which should be an attribute of the current model
+                        var mapping = model.inferMapping(item.property);
+                        if (mapping == null) {
+                            // if mapping is not found, throw error
+                            return cb(new DataError('Invalid configuration. A parent privilege should refer to an attribute which defines an association.', null, model.name, item.property));
+                        }
+                        if (expr == null) {
                             expr = QueryUtils.query();
-                        expr.where(entity.select(mapping.childField)).equal(perms1.select('target')).
-                            and(perms1.select('privilege')).equal(mapping.childModel).
-                            and(perms1.select('parentPrivilege')).equal(mapping.parentModel).
-                            and(perms1.select('workspace')).equal(workspace).
-                            and(perms1.select('mask')).bit(requestMask,requestMask).
-                            and(perms1.select('account')).in(accounts.map(function(x) { return x.id; })).prepare(true);
+                        }
+                        //
+                        if (mapping.childModel !== model.name) {
+                            return cb(new DataError('Invalid configuration. A parent privilege mapping should refer to a foreign key association on the current model.', null, model.name, item.property));
+                        }
+                        /**
+                         * @type {number[]}
+                         */
+                        var values = accounts.map(function(x) { return x.id; });
+                        expr.where(entity.select(mapping.childField)).equal(perms1.select('target'))
+                            .and(perms1.select('privilege')).equal(mapping.childModel)
+                            .and(perms1.select('parentPrivilege')).equal(item.property)
+                            .and(perms1.select('workspace')).equal(workspace)
+                            .and(perms1.select('mask')).bit(requestMask,requestMask)
+                            .and(perms1.select('account')).in(values).prepare(true);
                         assigned=true;
                         cb();
                     }
