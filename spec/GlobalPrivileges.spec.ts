@@ -15,7 +15,7 @@ describe('Global permissions', () => {
         await app.finalize();
     });
     afterEach(() => {
-        delete (context as any).user;
+        delete context.user;
     });
 
     it('should validate anonymous read access to products', async () => {
@@ -121,6 +121,54 @@ describe('Global permissions', () => {
             expect(item).toBeTruthy();
             expect(item.tags).toBeTruthy();
             expect(item.tags.length).toBeTruthy();
+        });
+    });
+
+    it('should validate that user does not have access to many-to-many association', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let itemOffered = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            const price = itemOffered.price * 0.75
+            await context.model('SpecialOffer').silent().save({
+                itemOffered,
+                price,
+                validFrom: new Date(2024, 1, 1),
+                validThrough: new Date(2024, 1, 15),
+            });
+            itemOffered = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .expand('specialOffers')
+                .silent().getItem();
+            expect(itemOffered.specialOffers).toBeTruthy();
+            expect(itemOffered.specialOffers.length).toBeTruthy();
+            const Products = context.model('Product');
+            let item: { name: string, price: number, specialOffers?: string[] } =
+                await Products.where('name').equal('Samsung Galaxy S4').expand(
+                    'specialOffers'
+                ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.specialOffers).toBeTruthy();
+            expect(item.specialOffers.length).toBeFalsy();
+
+            const user = {
+                name: 'margaret.davis@example.com'
+            }
+            // add user to contributors
+            const group = await context.model('Group').where('name').equal('Contributors').getTypedItem();
+            expect(group).toBeTruthy();
+            const members = group.property('members').silent();
+            await members.insert(user);
+            Object.assign(context, {
+                user
+            });
+            item = await Products.where('name').equal('Samsung Galaxy S4').expand(
+                'tags'
+            ).getItem();
+            expect(item).toBeTruthy();
+            expect(item.specialOffers).toBeTruthy();
+            expect(item.specialOffers.length).toBeTruthy();
+
         });
     });
 
