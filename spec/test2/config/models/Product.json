@@ -58,6 +58,35 @@
             "type": "Date"
         },
         {
+            "name": "tags",
+            "title": "Tag",
+            "many": true,
+            "type": "Text",
+            "mapping": {
+                "associationAdapter": "ProductTags",
+                "associationType": "junction",
+                "cascade": "delete",
+                "associationObjectField": "product",
+                "associationValueField": "value",
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Contributors"
+                    }
+                ]
+            }
+        },
+        {
             "name": "keywords",
             "title": "Keyword",
             "description": "The release date of a product or product model. This can be used to distinguish the exact variant of a product.",

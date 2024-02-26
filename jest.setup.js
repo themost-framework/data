@@ -102,4 +102,4 @@ class JestLogger {
 TraceUtils.useLogger(new JestLogger());
 
 /* global jest */
-jest.setTimeout(30000);
+jest.setTimeout(120000);

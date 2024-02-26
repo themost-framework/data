@@ -36,7 +36,7 @@ export declare class DataModel extends SequentialEventEmitter{
     where(attr: string): DataQueryable;
     search(text: string): DataQueryable;
     asQueryable(): DataQueryable;
-    filter(params: any, callback?: (err?: Error, res?: any) => void): void;
+    filter(params: any, callback?: (err?: Error, res?: DataQueryable) => void): void;
     find(obj: any):DataQueryable;
     select(...attr: any[]): DataQueryable;
     orderBy(attr: any): DataQueryable;
@@ -71,4 +71,6 @@ export declare class DataModel extends SequentialEventEmitter{
     upsert(obj: any | Array<any>): Promise<any>;
     upsert(obj: any | Array<any>, callback: (err?: Error, result?: any) => void): void;
     upsertAsync(obj: any | Array<any>): Promise<any>;
+    resolveMethod(method: string, callback: (err?: Error, res?: any) => void): void;
+    resolveMember(member: string, callback: (err?: Error, res?: any) => void): void;
 }

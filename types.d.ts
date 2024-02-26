@@ -63,8 +63,35 @@ export declare class DataAdapter {
     createView(name:string, query:any, callback:(err?:Error) => void): void;
 }
 
+export interface InteractiveUser {
+
+    name: string;
+    /**
+     * Gets or sets a string which represents the current authentication type e.g. Basic, Bearer, None etc
+     */
+    authenticationType?: string;
+    /**
+     * Gets or sets a string which represents the user identifier of the current user
+     */
+    authenticationProviderKey?: string;
+    /**
+     * Gets or sets a string which represents the current authentication scope
+     * e.g. Access token scopes at OAuth2 Authorization Framework https://datatracker.ietf.org/doc/html/rfc6749#section-3.3
+     */
+    authenticationScope?: string;
+    /**
+     * Gets or sets a string which represents the current authentication token in any format e.g. JWT, SAML, etc
+     */
+    authenticationToken?: string;
+}
+
+
 export declare class DataContext extends SequentialEventEmitter {
-    
+
+    interactiveUser?: InteractiveUser;
+
+    user?: InteractiveUser;
+
     model(name:any): DataModel
 
     db: DataAdapter;
@@ -87,6 +114,7 @@ export declare interface DataModelPrivilege {
     mask: number;
     account?: string;
     filter?: string;
+    when?: string;
 }
 
 export declare class DataAssociationMapping {

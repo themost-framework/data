@@ -258,6 +258,10 @@
                                             "type": "string",
                                             "description": "A string which represents the name of the security group where this privilege will be applied e.g. Administrators, Sales etc."
                                         },
+                                        "when": {
+                                            "type": "string",
+                                            "description": "A filter expression which should be satisfied before updating or deleting an object in order to apply this privilege."
+                                        },
                                         "filter": {
                                             "type": "string",
                                             "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
@@ -498,9 +502,13 @@
                                     "type": "string",
                                     "description": "A string which represents the name of the security group where this privilege will be applied e.g. Administrators, Sales etc."
                                 },
+                                "when": {
+                                    "type": "string",
+                                    "description": "A filter expression which should be satisfied before updating or deleting an object in order to apply this privilege."
+                                },
                                 "filter": {
                                     "type": "string",
-                                    "description": "A string which represents a filter expression for this privilege. This attribute is used for self privileges which are commonly derived from user's attributes e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
+                                    "description": "An filter express which should be satisfied in order to read, create, update or delete an object e.g. 'owner eq me()' or 'orderStatus eq 1 and customer eq me()' etc."
                                 }
                             },
                             "required": [
@@ -540,6 +548,10 @@
                     "account": {
                         "type": "string",
                         "description": "A string which represents the name of the security group where this privilege will be applied e.g. Administrators, Sales etc."
+                    },
+                    "when": {
+                        "type": "string",
+                        "description": "A filter expression which should be satisfied before updating or deleting an object in order to apply this privilege."
                     },
                     "filter": {
                         "type": "string",

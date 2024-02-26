@@ -5,6 +5,7 @@ var {DataObjectJunction} = require('./data-object-junction');
 var {DataError} = require('@themost/common');
 var _ = require('lodash');
 var {hasOwnProperty} = require('./has-own-property');
+var {DataObjectTag} = require('./data-object-tag');
 
 /**
  * @class
@@ -173,7 +174,7 @@ function beforeRemoveChildConnectedObjects(event, mapping, callback) {
         target = event.model.convert(event.target),
         parentModel =  event.model,
         parentField = parentModel.getAttribute(mapping.parentField);
-    var junction = new HasParentJunction(target, mapping);
+    var junction= childModel == null ? new DataObjectTag(target, mapping) : new HasParentJunction(target, mapping);
     return parentModel.where(parentModel.primaryKey).equal(target.getId())
         .select(parentField.name)
         .cache(false)
