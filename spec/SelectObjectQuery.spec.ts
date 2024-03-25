@@ -34,6 +34,7 @@ describe('SelectParser', () => {
         });
         const { $prepared, $where, $expand } = q.query as any;
         expect($expand).toBeTruthy();
+        // append query params
         Object.assign(query, {
             $where,
             $prepared,
@@ -42,5 +43,8 @@ describe('SelectParser', () => {
         const executeAsync: (query:any, values:Array<any>) => Promise<any[]> = promisify(context.db.execute).bind(context.db)
         const results = await executeAsync(query, []);
         expect(results).toBeTruthy();
+        expect(results.length).toEqual(1);
+        const [result] = results;
+        expect(result.id).toEqual(item.id);
     });
 });
