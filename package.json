@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@themost/common": "^2.5.11",
-    "@themost/query": "^2.5.9",
+    "@themost/query": "^2.5.22",
     "@themost/xml": "^2.5.2"
   },
   "engines": {
@@ -41,8 +41,9 @@
     "@babel/preset-env": "^7.23.8",
     "@babel/preset-typescript": "^7.16.7",
     "@themost/common": "^2.5.11",
+    "@themost/json-logger": "^1.1.0",
     "@themost/peers": "^1.0.2",
-    "@themost/query": "^2.5.9",
+    "@themost/query": "^2.5.22",
     "@themost/sqlite": "^2.6.16",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",
