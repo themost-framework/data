@@ -20,10 +20,17 @@ jsdoc.conf.json
 .idea
 .theia
 *.workspace
+
+# eslint
 .eslintrc
+.eslintignore
+
 # docs
 docs/
 
 # gitpod
 .gitpod.yml
+
+# cadacy
+.codacy.yml
 
