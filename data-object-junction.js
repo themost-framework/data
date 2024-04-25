@@ -344,7 +344,7 @@ function insertAnyObject(obj, callback) {
                 if (isObjectDeep(item) === false) {
                     child = {};
                     // and set object key e.g. { "id": 1102 }
-                    Object.assign(child, self.mapping.childField, {
+                    Object.defineProperty(child, self.mapping.childField, {
                         configurable: true,
                         enumerable: true,
                         value: item
@@ -573,7 +573,7 @@ function removeAnyObject(obj, callback) {
                 if (isObjectDeep(item) === false) {
                     child = {};
                     // and set object key e.g. { "id": 1102 }
-                    Object.assign(child, self.mapping.childField, {
+                    Object.defineProperty(child, self.mapping.childField, {
                         configurable: true,
                         enumerable: true,
                         value: item
