@@ -3,8 +3,12 @@ import {DataAssociationMapping, DataContext, DataField} from "./types";
 import {SequentialEventEmitter} from "@themost/common";
 import {DataQueryable} from "./data-queryable";
 import {DataObject} from "./data-object";
+import {SyncSeriesEventEmitter} from '@themost/events';
 
 export declare class DataModel extends SequentialEventEmitter{
+
+    static load: SyncSeriesEventEmitter<{ target: DataModel }>;
+
     constructor(obj:any);
 
     name: string;
