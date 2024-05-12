@@ -34,6 +34,7 @@ var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 var {OnNestedQueryListener} = require('./OnNestedQueryListener');
 var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
+var { SyncSeriesEventEmitter } = require('@themost/events');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
 /**
@@ -564,7 +565,9 @@ DataModel.prototype.getDataObjectType = function() {
  * Initializes the current data model. This method is used for extending the behaviour of an install of DataModel class.
  */
 DataModel.prototype.initialize = function() {
-    //
+    DataModel.load.emit({
+        target: this
+    });
 };
 
 /**
@@ -3314,6 +3317,8 @@ DataModel.prototype.upsertAsync = function(obj) {
         });
     });
 }
+
+DataModel.load = new SyncSeriesEventEmitter();
 
 module.exports = {
     DataModel
