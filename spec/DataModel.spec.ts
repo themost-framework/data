@@ -86,4 +86,14 @@ describe('DataModel', () => {
         });
     });
 
+    it('should use load event', async () => {
+        DataModel.load.subscribeOnce((event) => {
+            event.target.caching = 'always';
+        });
+        let model = context.model('Employee');
+        expect(model.caching).toBe('always');
+        model = context.model('Employee');
+        expect(model.caching).toBe('none');
+    });
+
 });
