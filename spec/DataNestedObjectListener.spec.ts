@@ -246,7 +246,7 @@ describe('DataNestedObjectListener', () => {
             await context.model('Product').silent().save(product);
             const today = new Date();
             let items = await context.model('Product')
-                .where((x: any) => x.specialOffers.validFrom >= today, {
+                .where((x: any, today: any) => x.specialOffers.validFrom >= today, {
                     today
                 })
                 .distinct()

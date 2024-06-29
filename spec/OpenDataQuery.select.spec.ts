@@ -235,7 +235,7 @@ describe('OpenDataQuery.select', () => {
                 .expand(any((x:any) => x.orderedItem).select<any>(y => {
                     y.id,
                     y.name
-                })).where((x:any) => {
+                })).where((x:any, category: string) => {
                     return x.orderedItem.category === category;
                 }, {
                     category
@@ -264,7 +264,7 @@ describe('OpenDataQuery.select', () => {
                     price: x.price,
                     priceCategory: x.price > 800 ? 'Expensive' : 'Normal'
                    }
-                }).where((x:any) => {
+                }).where((x:any, category: string) => {
                     return x.category === category;
                 }, {
                     category
@@ -296,7 +296,7 @@ describe('OpenDataQuery.select', () => {
                     price: x.price,
                     priceCategory: x.price > 800 ? 'Expensive' :  (x.price <= 500 ? 'Cheap' : 'Normal')
                    }
-                }).where((x:any) => {
+                }).where((x:any, category: string) => {
                     return x.category === category;
                 }, {
                     category
