@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.11.6",
+  "version": "2.12.0",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
@@ -9,11 +9,11 @@
   },
   "peerDependencies": {
     "@themost/common": "^2.10.4",
-    "@themost/query": ">=2.11.2",
+    "@themost/query": ">=2.12.0",
     "@themost/xml": "^2"
   },
   "engines": {
-    "node": ">=8.17.0"
+    "node": ">=14.21.3"
   },
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
     "@babel/preset-typescript": "^7.16.7",
     "@themost/common": "^2.10.4",
     "@themost/peers": "^1.0.2",
-    "@themost/query": "^2.11.2",
+    "@themost/query": "^2.12.0",
     "@themost/sqlite": "^2.6.16",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",

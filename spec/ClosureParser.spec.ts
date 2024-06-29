@@ -187,7 +187,8 @@ describe('ClosureParser', () => {
                     model:  x.orderedItem.model
                 }
             })
-            .groupBy<any>(x => x.orderedItem.name, (x: { orderedItem: { model: any; }; }) => x.orderedItem.model).where((x: any) => {
+            .groupBy<any>(x => x.orderedItem.name, (x: { orderedItem: { model: any; }; }) => x.orderedItem.model)
+            .where((x: any, category: string) => {
                 return  x.orderedItem.category === category;
             }, {
                 category
@@ -207,7 +208,7 @@ describe('ClosureParser', () => {
                     country: x.customer.address.addressCountry.name
                 }
             })
-            .where<any>(x => {
+            .where<any>((x: any, orderStatus: string) => {
                 return x.orderStatus.alternateName === orderStatus;
             }, {
                 orderStatus
