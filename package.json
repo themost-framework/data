@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@themost/common": "^2.10.4",
-    "@themost/query": ">=2.12.0",
+    "@themost/query": ">=2.13.1",
     "@themost/xml": "^2"
   },
   "engines": {
@@ -43,7 +43,7 @@
     "@babel/preset-typescript": "^7.16.7",
     "@themost/common": "^2.10.4",
     "@themost/peers": "^1.0.2",
-    "@themost/query": "^2.12.0",
+    "@themost/query": "^2.13.1",
     "@themost/sqlite": "^2.6.16",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",
