@@ -24,11 +24,6 @@ function resolveJoinMember(target) {
          * @type {Array}
          */
         var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
-        if (fullyQualifiedMember.length > 2) {
-            // remove last element
-            var last = fullyQualifiedMember.pop();
-            fullyQualifiedMember = fullyQualifiedMember.reverse().concat(last);
-        }
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
         if (instanceOf(expr, QueryField)) {
             var member = expr.$name.split('.');
