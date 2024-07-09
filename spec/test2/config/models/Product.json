@@ -193,6 +193,36 @@
                         }
                     ]
                 }
+            },
+            {
+                "name": "productDescription",
+                "type": "ProductDescription",
+                "readonly": true,
+                "many": true,
+                "multiplicity": "ZeroOrOne",
+                "mapping": {
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "ProductDescription",
+                    "childField": "product",
+                    "associationType": "association",
+                    "options": {
+                        "$filter" : "inLanguage eq lang()"
+                    }
+                }
+            },
+            {
+                "name": "productDescriptions",
+                "type": "ProductDescription",
+                "nested": true,
+                "mapping": {
+                    "parentModel": "Product",
+                    "parentField": "id",
+                    "childModel": "ProductDescription",
+                    "childField": "product",
+                    "associationType": "association",
+                    "cascade": "delete"
+                }
             }
     ],
     "constraints": [

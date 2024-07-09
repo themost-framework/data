@@ -1,8 +1,22 @@
 import { resolve } from 'path';
-import { DataContext, DataModel } from '../index';
+import { DataContext, DataModel, FunctionContext } from '../index';
 import { TestApplication2 } from './TestApplication';
 import {TestUtils} from "./adapter/TestUtils";
 import {promisify} from 'util';
+
+declare interface DataContextWithCulture extends DataContext {
+    culture(value?: string): string;
+}
+
+Object.assign(DataContext.prototype, {
+    culture(value: string) {
+        if (typeof value === 'undefined') {
+            return this._culture || 'en';
+        }
+        this._culture = value;
+        return this._culture;
+    }
+})
 
 describe('ZeroOrOneMultiplicity', () => {
     let app: TestApplication2;
@@ -304,6 +318,104 @@ describe('ZeroOrOneMultiplicity', () => {
             expect(Array.isArray(items)).toBeTruthy()
             expect(items.length).toBeGreaterThan(0);
             expect(items[0].reviewRating).toBeTruthy();
+        });
+    });
+
+    it('should use $filter expression', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product')
+            let product = await Products.where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            const productDescriptions =  [{
+                description: 'This is a new product description',
+                inLanguage: 'en'
+            }, {
+                description: 'Ceci est une nouvelle description de produit',
+                inLanguage: 'fr'
+            }];
+            await Products.silent().save(Object.assign(product, {
+                productDescriptions
+            }));
+            product = await Products.where('name').equal('Samsung Galaxy S4').expand('productDescription').getItem();
+            expect(product).toBeTruthy();
+            expect(product.productDescription).toBeTruthy();
+            expect(product.productDescription.description).toEqual('This is a new product description');
+        });
+    });
+
+    it('should use $filter expression with select', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product')
+            let product = await Products.where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            const productDescriptions =  [{
+                description: 'This is a new product description',
+                inLanguage: 'en'
+            }, {
+                description: 'Ceci est une nouvelle description de produit',
+                inLanguage: 'fr'
+            }];
+            await Products.silent().save(Object.assign(product, {
+                productDescriptions
+            }));
+            let items = await Products.select(
+                (x: any) => {
+                    return {
+                        id: x.id,
+                        name: x.name,
+                        productDescription: x.productDescription.description
+                    }
+                }
+            ).where('name').equal('Samsung Galaxy S4').getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toBe(1);
+            (context as DataContextWithCulture).culture('fr');
+            items = await Products.select(
+                (x: any) => {
+                    return {
+                        id: x.id,
+                        name: x.name,
+                        productDescription: x.productDescription.description
+                    }
+                }
+            ).where('name').equal('Samsung Galaxy S4').getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toBe(1);
+            expect(items[0].productDescription).toEqual('Ceci est une nouvelle description de produit');
+        });
+    });
+
+    it('should use $filter expression with nested select', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product')
+            let product = await Products.where('name').equal('Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            const productDescriptions =  [{
+                description: 'This is a new product description',
+                inLanguage: 'en'
+            }, {
+                description: 'Ceci est une nouvelle description de produit',
+                inLanguage: 'fr'
+            }];
+            await Products.silent().save(Object.assign(product, {
+                productDescriptions
+            }));
+            const Orders = context.model('Order');
+            (context as DataContextWithCulture).culture('en');
+            let items = await Orders.select(
+                (x: any) => {
+                    return {
+                        id: x.id,
+                        product: x.orderedItem.name,
+                        productDescription: x.orderedItem.productDescription.description
+                    }
+                }
+            ).where((x: any) => {
+                return x.orderedItem.name === 'Samsung Galaxy S4'
+            }).silent().getItems();
+            expect(items).toBeTruthy();
+            expect(items.length).toBeGreaterThan(0);
+            expect(items[0].productDescription).toEqual('This is a new product description');
         });
     });
 

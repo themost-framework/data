@@ -33,6 +33,7 @@ var {DataField} = require('./types');
 var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 var {OnNestedQueryListener} = require('./OnNestedQueryListener');
 var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
+var {OnNestedQueryOptionsListener} = require('./OnNestedQueryOptionsListener');
 var {hasOwnProperty} = require('./has-own-property');
 var { SyncSeriesEventEmitter } = require('@themost/events');
 require('@themost/promise-sequence');
@@ -627,6 +628,7 @@ function unregisterContextListeners() {
         this.on('before.execute', DataCachingListener.prototype.beforeExecute);
     }
     this.on('before.execute', OnExecuteNestedQueryable.prototype.beforeExecute);
+    this.on('before.execute', OnNestedQueryOptionsListener.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryListener.prototype.beforeExecute);
     //register after execute caching
     if (this.caching==='always' || this.caching==='conditional') {
