@@ -33,6 +33,7 @@ var {DataPermissionEventListener} = require('./data-permission');
 var {DataField} = require('./types');
 var {ZeroOrOneMultiplicityListener} = require('./zero-or-one-multiplicity');
 var {OnNestedQueryListener} = require('./OnNestedQueryListener');
+var {OnNestedQueryOptionsListener} = require('./OnNestedQueryOptionsListener');
 var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
 var {SyncSeriesEventEmitter} = require('@themost/events');
@@ -624,6 +625,7 @@ function unregisterContextListeners() {
         this.on('before.execute', DataCachingListener.prototype.beforeExecute);
     }
     this.on('before.execute', OnExecuteNestedQueryable.prototype.beforeExecute);
+    this.on('before.execute', OnNestedQueryOptionsListener.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryListener.prototype.beforeExecute);
     //register after execute caching
     if (this.caching==='always' || this.caching==='conditional') {
@@ -918,6 +920,10 @@ DataModel.prototype.filter = function(params, callback) {
     else {
         return Q.nbind(filterInternal, this)(params);
     }
+};
+
+DataModel.prototype.filterAsync = function(params) {
+    return this.filter(params);
 };
 
 /**
