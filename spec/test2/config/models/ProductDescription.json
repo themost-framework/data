@@ -1,0 +1,33 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "name": "ProductDescription",
+    "title": "ProductDescription",
+    "version": "2.0",
+    "inherits": "StructuredValue",
+    "fields": [
+        {
+            "name": "description",
+            "type": "Note"
+        },
+        {
+            "name": "inLanguage",
+            "type": "Text",
+            "size": 5,
+            "nullable": false
+        },
+        {
+            "name": "product",
+            "type": "Product",
+            "nullable": false
+        }
+    ],
+    "constraints": [
+        {
+            "type": "unique",
+            "fields": [
+                "product",
+                "inLanguage"
+            ]
+        }
+    ]
+}
