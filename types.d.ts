@@ -87,6 +87,8 @@ export declare interface DataModelPrivilege {
     mask: number;
     account?: string;
     filter?: string;
+    scope?: string[];
+    exclude?: string;
 }
 
 export declare class DataAssociationMapping {

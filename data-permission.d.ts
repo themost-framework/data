@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
 import {DataQueryable} from "./data-queryable";
-import {BeforeExecuteEventListener, BeforeRemoveEventListener, BeforeSaveEventListener, DataEventArgs} from "./types";
+import {BeforeExecuteEventListener, BeforeRemoveEventListener, BeforeSaveEventListener, DataEventArgs, DataModelPrivilege} from "./types";
 
 export declare class DataPermissionEventArgs {
     model: DataModel;
@@ -33,4 +33,10 @@ export declare class DataPermissionEventListener implements BeforeSaveEventListe
     beforeExecute(event: DataEventArgs, callback: (err?: Error) => void): void;
 
     validate(event: DataEventArgs, callback: (err?: Error) => void): void;
+}
+
+export declare class DataPermissionExclusion {
+    constructor(model: DataModel);
+    shouldExclude(privilege: DataModelPrivilege, callback: (err?: Error, result?: boolean) => void): void;
+    shouldExcludeAsync(privilege: DataModelPrivilege): Promise<boolean>;
 }
