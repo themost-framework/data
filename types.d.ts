@@ -86,6 +86,7 @@ export declare interface DataModelPrivilege {
     type: string;
     mask: number;
     account?: string;
+    when?: string;
     filter?: string;
     scope?: string[];
     exclude?: string;

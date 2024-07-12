@@ -216,6 +216,13 @@
             "account": "Administrators"
         },
         {
+            "mask": 15,
+            "description": "Read, create, update or delete orders based on privileges given for a specific merchant.",
+            "type": "parent",
+            "account": "Merchants",
+            "property": "merchant"
+        },
+        {
             "mask": 1,
             "type": "self",
             "filter": "customer/user eq me()"
