@@ -21,6 +21,13 @@ describe('Permissions', () => {
         expect(items.length).toBeTruthy();
     });
 
+    it('should have no read access', async () => {
+        const Orders = context.model('Order');
+        const items = await Orders.getItems();
+        expect(Array.isArray(items)).toBeTruthy();
+        expect(items.length).toBeFalsy();
+    });
+
     it('should validate write access', async () => {
         const Products = context.model('Product');
         const item = await Products.where('name').equal(
@@ -95,12 +102,26 @@ describe('Permissions', () => {
             .getItem();
         expect(agent).toBeTruthy();
         const OrderActions = context.model('OrderAction');
-        let newAction = {
+        let newAction: { id?: number, agent: any; orderedItem: any; customer: any } = {
             orderedItem,
             customer,
             agent
         };
         await expect(OrderActions.save(newAction)).resolves.toBeTruthy();
+        // try to update the action (should fail)
+        const { id } = newAction;
+        const updateAction = await OrderActions.where('id').equal(id).getItem();
+        expect(updateAction).toBeTruthy();
+        updateAction.actionStatus = {
+            alternateName: 'CompletedActionStatus'
+        };
+        await expect(OrderActions.save(updateAction)).rejects.toThrow('Access Denied');
+
+        expect(updateAction).toBeTruthy();
+        updateAction.actionStatus = {
+            alternateName: 'ActiveActionStatus'
+        };
+        await expect(OrderActions.save(updateAction)).resolves.toBeTruthy();
 
     });
 
