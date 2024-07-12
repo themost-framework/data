@@ -9,9 +9,26 @@
             "title": "itemOffered",
             "description": "The item being offered.",
             "type": "Product",
+            "editable": false,
             "nullable": false
         }
     ],
     "constraints": [
+    ],
+    "privileges": [
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Contributors"
+        }
     ]
 }

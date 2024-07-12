@@ -2,7 +2,7 @@
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
-var {AccessDeniedError} = require('@themost/common');
+var {AccessDeniedError, DataError} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var _ = require('lodash');
 var { at } = require('lodash')
@@ -10,6 +10,8 @@ var {DataCacheStrategy} = require('./data-cache');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var {DataModelFilterParser} = require('./data-model-filter.parser');
+var {DataQueryable} = require('./data-queryable');
+var {SelectObjectQuery} = require('./select-object-query');
 
 /**
  * @class
@@ -520,6 +522,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         });
                 }
                 else if (item.type==='self') {
+                    // #implementWhenExpression
                     // check if the specified privilege has account attribute
                     if (typeof item.account !== 'undefined' && item.account !== null && item.account !== '*') {
                         // if user does not have this account return
@@ -528,55 +531,35 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         }
                     }
                     if (requestMask===PermissionMask.Create) {
-                        var query = QueryUtils.query(model.viewAdapter);
-                        var fields=[], field;
-                        //cast target
-                        var name, obj = event.target;
-                        model.attributes.forEach(function(x) {
-                            name = typeof x.property === 'string' ? x.property : x.name;
-                            if (hasOwnProperty(obj, name))
-                            {
-                                var mapping = model.inferMapping(name);
-                                if (_.isNil(mapping)) {
-                                    field = {};
-                                    field[x.name] = { $value: obj[name] };
-                                    fields.push(field);
-                                }
-                                else if ((mapping.associationType==='association') && (mapping.childModel===model.name)) {
-                                    if (typeof obj[name] === 'object' && obj[name] !== null) {
-                                        //set associated key value (event.g. primary key value)
-                                        field = {};
-                                        field[x.name] = { $value: obj[name][mapping.parentField] };
-                                        fields.push(field);
-                                    }
-                                    else {
-                                        //set raw value
-                                        field = {};
-                                        field[x.name] = { $value: obj[name] };
-                                        fields.push(field);
-                                    }
-                                }
-                            }
-                        });
-                        //add fields
-                        query.select(fields);
-                        //set fixed query
-                        query.$fixed = true;
-                        model.filter(item.filter, function(err, q) {
+                        var query = new SelectObjectQuery(model).select(event.target);
+                        const filter = item.when || item.filter;
+                        model.filter(filter, function(err, q) {
                             if (err) {
                                 cb(err);
                             }
                             else {
-                                //set where from DataQueryable.query
-                                query.$where = q.query.$prepared;
-                                query.$expand = q.query.$expand;
+                                // get filter params (where and join statements)
+                                var {$where, $prepared, $expand} = q.query;
+                                if ($where === null && $prepared === null) {
+                                    return cb(new Error('Where condition cannot be empty while validating object privileges.'));
+                                }
+                                // and assign them to the fixed query produced by the previous step
+                                Object.assign(query, {
+                                    $where,
+                                    $prepared,
+                                    $expand
+                                });
+                                // execute query
                                 model.context.db.execute(query,null, function(err, result) {
                                     if (err) {
                                         return cb(err);
                                     }
                                     else {
-                                        if (result.length===1) {
+                                        // if user has access
+                                        if (result.length === 1) {
+                                            // set cancel flag for exiting the loop
                                             cancel=true;
+                                            // set result to true
                                             event.result = true;
                                         }
                                         return cb();
@@ -586,24 +569,79 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                         });
                     }
                     else {
-                        //get privilege filter
-                        model.filter(item.filter, function(err, q) {
+                        // get primary key
+                        var { [model.primaryKey]: key } = event.target;
+                        // get privilege filter
+                        var parser = new DataModelFilterParser(model);
+                        // stage 1: parse filter condition
+                        // the "when" statement is a filter condition that should be evaluated before validating the current state of the object
+                        var when = item.when || item.filter;
+                        parser.parse(when, function(err, params) {
                             if (err) {
                                 return cb(err);
                             }
-                            else {
-                                //prepare query and append primary key expression
-                                q.where(model.primaryKey).equal(event.target[model.primaryKey]).silent().count(function(err, count) {
-                                    if (err) { cb(err); return; }
-                                    if (count>=1) {
-                                        cancel=true;
-                                        event.result = true;
+                            var { $where, $expand } = params;
+                            if ($where === null) {
+                                return cb(new Error('Where condition cannot be empty while validating object privileges.'));
+                            }
+                            var q = new DataQueryable(model);
+                            Object.assign(q.query, {
+                                $where,
+                                $expand
+                            });
+                            // stage 2: query for object and get original data
+                            return q.where(model.primaryKey).equal(key).silent().flatten().getItems().then(
+                                function(results) {
+                                    // throw error if more than one result is returned
+                                    if (results.length > 1) {
+                                        return cb(new DataError('E_PRIMARY_KEY', 'Primary key violation', null, model.name, model.primaryKey));
+                                    }
+                                    if (results.length === 1) {
+                                        // get result
+                                        var [result] = results;
+                                        // get target object ready for validation
+                                        var selectTarget = new SelectObjectQuery(model).map(event.target);
+                                        var target = requestMask === PermissionMask.Update ? Object.assign(result, selectTarget) : result;
+                                        // get filter condition which is going to be evaluated against the target object
+                                        var filter = item.filter || item.when;
+                                        return parser.parse(filter, function(err, params) {
+                                            if (err) {
+                                                return cb(err);
+                                            }
+                                            var query = new SelectObjectQuery(model).select(target);
+                                            // get filter params (where and join statements)
+                                            var {$where, $expand} = params;
+                                            // and assign them to the fixed query produced by the previous step
+                                            // note: a fixed query is a query that contains constant values
+                                            // and is being prepared for validating filter conditions defined by the current privilege
+                                            Object.assign(query, {
+                                                $where,
+                                                $expand
+                                            });
+                                            // execute native query
+                                            return model.context.db.execute(query,null, function(err, result) {
+                                                if (err) {
+                                                    return cb(err);
+                                                }
+                                                if (result.length === 1) {
+                                                    // user has access
+                                                    // set cancel flag for exiting the loop
+                                                    cancel=true;
+                                                    // set result to true
+                                                    event.result = true;
+                                                }
+                                                return cb();
+                                            });
+                                        });
                                     }
                                     return cb();
-                                })
-                            }
+                                }
+                            ).catch(function(err) {
+                                return cb(err);
+                            });
                         });
                     }
+                    // #implementWhenExpression
                 }
                 else {
                     //do nothing (unknown permission)
@@ -938,21 +976,39 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
                             });
                     }
                     else if (item.type==='parent') {
-                        //get field mapping
-                        var mapping = model.inferMapping(item.property);
-                        if (!mapping) {
-                            return cb();
+                        // #implementWhenExpression
+                        // is this privilege assignable to the current user -and its groups-?
+                        if (typeof item.account !== 'undefined' && item.account !== null && item.account !== '*') {
+                            if (accounts.findIndex(function(x) { return x.name === item.account; }) < 0) {
+                                return cb();
+                            }
                         }
-                        if (_.isNil(expr))
+                        // try to get mapping from "property" which should be an attribute of the current model
+                        var mapping = model.inferMapping(item.property);
+                        if (mapping == null) {
+                            // if mapping is not found, throw error
+                            return cb(new DataError('Invalid configuration. A parent privilege should refer to an attribute which defines an association.', null, model.name, item.property));
+                        }
+                        if (expr == null) {
                             expr = QueryUtils.query();
-                        expr.where(entity.select(mapping.childField)).equal(perms1.select('target')).
-                            and(perms1.select('privilege')).equal(mapping.childModel).
-                            and(perms1.select('parentPrivilege')).equal(mapping.parentModel).
-                            and(perms1.select('workspace')).equal(workspace).
-                            and(perms1.select('mask')).bit(requestMask,requestMask).
-                            and(perms1.select('account')).in(accounts.map(function(x) { return x.id; })).prepare(true);
+                        }
+                        //
+                        if (mapping.childModel !== model.name) {
+                            return cb(new DataError('Invalid configuration. A parent privilege mapping should refer to a foreign key association on the current model.', null, model.name, item.property));
+                        }
+                        /**
+                         * @type {number[]}
+                         */
+                        var values = accounts.map(function(x) { return x.id; });
+                        expr.where(entity.select(mapping.childField)).equal(perms1.select('target'))
+                            .and(perms1.select('privilege')).equal(mapping.childModel)
+                            .and(perms1.select('parentPrivilege')).equal(item.property)
+                            .and(perms1.select('workspace')).equal(workspace)
+                            .and(perms1.select('mask')).bit(requestMask,requestMask)
+                            .and(perms1.select('account')).in(values).prepare(true);
                         assigned=true;
-                        cb();
+                        return cb();
+                        // #implementWhenExpression
                     }
                     else if (item.type==='item') {
                         if (_.isNil(expr))

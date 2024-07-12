@@ -758,6 +758,9 @@ var PrivilegeType = {
  * The defined set of permissions are automatically assigned if the requested objects fulfill filter criteria.
  * (e.g. read-write permissions for a user's associated person through the following expression:"user eq me()")
  * @property {string} account - Gets or sets a wildcard (*) expression for global privileges only.
+ * @property {string} when - Gets or sets a filter expression which is going to be used for self privileges.
+ * @property {string} exclude - Gets or sets a condition for excluding the given privilege based on that condition.
+ * @property {Array<string>} scope - Gets or sets a collection of client scopes which are required for validating this privilege.
  * The defined set of permissions are automatically assigned to all users (e.g. read permissions for all users)
  */
 function DataModelPrivilege() {

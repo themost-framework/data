@@ -5,6 +5,7 @@ import {DataAssociationMapping, DataField} from "./types";
 import {DataModel} from "./data-model";
 
 export declare class HasParentJunction extends DataQueryable {
+    constructor(target: any, association: DataAssociationMapping | string);
     parent: DataObject;
     mapping: DataAssociationMapping;
     getBaseModel(): DataModel;
