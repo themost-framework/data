@@ -37,7 +37,6 @@ var {OnNestedQueryOptionsListener} = require('./OnNestedQueryOptionsListener');
 var {hasOwnProperty} = require('./has-own-property');
 var { SyncSeriesEventEmitter } = require('@themost/events');
 require('@themost/promise-sequence');
-const {instanceOf} = require('./instance-of');
 var DataObjectState = types.DataObjectState;
 /**
  * @this DataModel
