@@ -4,7 +4,7 @@ var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var pluralize = require('pluralize');
 var async = require('async');
-var {QueryUtils} = require('@themost/query');
+var {QueryUtils, Expression} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
@@ -37,6 +37,7 @@ var {OnNestedQueryOptionsListener} = require('./OnNestedQueryOptionsListener');
 var {hasOwnProperty} = require('./has-own-property');
 var { SyncSeriesEventEmitter } = require('@themost/events');
 require('@themost/promise-sequence');
+const {instanceOf} = require('./instance-of');
 var DataObjectState = types.DataObjectState;
 /**
  * @this DataModel
@@ -785,7 +786,11 @@ function filterInternal(params, callback) {
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
                     if (expr.$select) {
-                        member = expr.$select.$name.replace(/\./g,'/');
+                        if (expr.$select instanceof Expression) {
+                            member = expr.$select;
+                        } else {
+                            member = expr.$select.$name.replace(/\./g, '/');
+                        }
                     }
                 }
                 if (expr && expr.$expand) {
@@ -812,16 +817,18 @@ function filterInternal(params, callback) {
                 return;
             }
         }
-        if (typeof self.resolveMember === 'function')
+        if (typeof self.resolveMember === 'function') {
             self.resolveMember.call(self, member, cb);
-        else
+        } else {
             DataFilterResolver.prototype.resolveMember.call(self, member, cb);
+        }
     };
     parser.resolveMethod = function(name, args, cb) {
-        if (typeof self.resolveMethod === 'function')
+        if (typeof self.resolveMethod === 'function') {
             self.resolveMethod.call(self, name, args, cb);
-        else
+        } else {
             DataFilterResolver.prototype.resolveMethod.call(self, name, args, cb);
+        }
     };
     var filter;
 

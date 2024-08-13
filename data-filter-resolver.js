@@ -21,6 +21,9 @@ function DataFilterResolver() {
 }
 
 DataFilterResolver.prototype.resolveMember = function(member, callback) {
+    if (typeof member !== 'string') {
+        return callback(null, member);
+    }
     if (/\//.test(member)) {
         var arr = member.split('/');
         callback(null, arr.slice(arr.length-2).join('.'));
