@@ -6,7 +6,7 @@ var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
 var {DataError} = require('@themost/common');
-var {QueryField} = require('@themost/query');
+var {QueryField, Expression} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var Q = require('q');
@@ -30,6 +30,11 @@ function resolveJoinMember(target) {
             Object.assign(event, {
                 object: member[0],
                 member: member[1]
+            })
+        }
+        if (expr instanceof Expression) {
+            Object.assign(event, {
+                member: expr
             })
         }
     }
