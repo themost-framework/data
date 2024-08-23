@@ -1,4 +1,4 @@
-const { QueryExpression } = require('@themost/query');
+const { QueryExpression, QueryField } = require('@themost/query');
 // eslint-disable-next-line no-unused-vars
 const { DataEventArgs } = require('./types');
 const { instanceOf } = require('./instance-of');
@@ -106,11 +106,6 @@ class OnNestedQueryOptionsListener {
                             const nestedModel = context.model(item.$entity.model);
                             // if model exists
                             if (nestedModel != null) {
-                                if (item.$entity.$as != null) {
-                                    // change view to follow entity alias defined by the current query
-                                    // this operation will be used while parsing filter and creating a new query expression
-                                    nestedModel.view = item.$entity.$as;
-                                }
                                 return nestedModel.filterAsync(options).then((q) => {
                                     /**
                                      * @typedef {object} QueryExpressionWithPrepared
@@ -118,14 +113,21 @@ class OnNestedQueryOptionsListener {
                                      */
                                     /** @type {QueryExpressionWithPrepared} */
                                     const { query } = q;
-                                    if (query && query.$prepared) {
-                                        item.$with = {
-                                            $and: [
-                                                item.$with,
-                                                query.$prepared
-                                            ]
-                                        }
-                                    }
+                                    const collection = item.$entity.name;
+                                    Object.assign(item, {
+                                        $entity: Object.assign(query, {
+                                            $select: {
+                                                [collection]: [
+                                                    new QueryField({
+                                                        $name: collection.concat('.*')
+                                                    })
+                                                ]
+                                            },
+                                            $alias: item.$entity.$as,
+                                            $join: item.$entity.$join,
+                                        }),
+                                        model: item.$entity.model
+                                    })
                                     return Promise.resolve();
                                 });
                             }
