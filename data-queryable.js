@@ -38,7 +38,7 @@ DataAttributeResolver.prototype.orderByNestedAttribute = function(attr) {
     return DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
 };
 
-DataAttributeResolver.prototype.selecteNestedAttribute = function(attr, alias) {
+DataAttributeResolver.prototype.selectNestedAttribute = function(attr, alias) {
     var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr);
     if (expr) {
         if (_.isNil(alias))
@@ -57,7 +57,7 @@ DataAttributeResolver.prototype.selecteNestedAttribute = function(attr, alias) {
 DataAttributeResolver.prototype.selectAggregatedAttribute = function(aggregation, attribute, alias) {
     var self=this, result;
     if (DataAttributeResolver.prototype.testNestedAttribute(attribute)) {
-        result = DataAttributeResolver.prototype.selecteNestedAttribute.call(self,attribute, alias);
+        result = DataAttributeResolver.prototype.selectNestedAttribute.call(self,attribute, alias);
     }
     else {
         result = self.fieldOf(attribute);
@@ -489,6 +489,12 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             q =QueryUtils.query(self.viewAdapter).select(['*']);
             //init an entity based on association adapter (e.g. GroupMembers as members)
             entity = new QueryEntity(mapping.associationAdapter).as(field.name);
+            Object.defineProperty(entity, 'model', {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: mapping.associationAdapter
+            });
             //init join expression between association adapter and current data model
             //e.g. Group.id = GroupMembers.parent
             expr = QueryUtils.query().where(QueryField.select(mapping.parentField).from(self.viewAdapter))
@@ -519,6 +525,12 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //create new join
                 var alias = field.name + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: mapping.associationAdapter
+                });
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
                     .equal(QueryField.select(mapping.childField).from(alias));
                 //append join
@@ -1228,7 +1240,7 @@ function select_(arg) {
     else {
         a = DataAttributeResolver.prototype.testNestedAttribute.call(self,arg);
         if (a) {
-            return DataAttributeResolver.prototype.selecteNestedAttribute.call(self, a.name, a.property);
+            return DataAttributeResolver.prototype.selectNestedAttribute.call(self, a.name, a.property);
         }
         else {
             a = DataAttributeResolver.prototype.testAttribute.call(self,arg);
@@ -1342,7 +1354,7 @@ DataQueryable.prototype.select = function(attr) {
                         else {
                             b = DataAttributeResolver.prototype.testNestedAttribute.call(self,name);
                             if (b) {
-                                expr = DataAttributeResolver.prototype.selecteNestedAttribute.call(self, b.name, x.property);
+                                expr = DataAttributeResolver.prototype.selectNestedAttribute.call(self, b.name, x.property);
                                 if (expr) { arr.push(expr); }
                             }
                             else {

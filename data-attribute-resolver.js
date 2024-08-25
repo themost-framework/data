@@ -47,7 +47,7 @@ DataAttributeResolver.prototype.selectNestedAttribute = function(attr, alias) {
 DataAttributeResolver.prototype.selectAggregatedAttribute = function(aggregation, attribute, alias) {
     var self=this, result;
     if (new DataAttributeResolver().testNestedAttribute(attribute)) {
-        result = new DataAttributeResolver().selecteNestedAttribute.call(self,attribute, alias);
+        result = new DataAttributeResolver().selectNestedAttribute.call(self,attribute, alias);
     }
     else {
         result = self.fieldOf(attribute);

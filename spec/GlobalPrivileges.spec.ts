@@ -16,6 +16,9 @@ describe('Global permissions', () => {
     });
     afterEach(() => {
         delete context.user;
+        const configuration = context.getConfiguration();
+        // @ts-ignore
+        delete configuration.cache;
     });
 
     it('should validate anonymous read access to products', async () => {
@@ -84,6 +87,29 @@ describe('Global permissions', () => {
         });
     });
 
+    it('should validate that user does not have access to select values', async () => {
+        await context.executeInTransactionAsync(async () => {
+            let product = await context.model('Product')
+                .where('name').equal('Samsung Galaxy S4')
+                .silent().getItem();
+            Object.assign(product, {
+                tags: [
+                    'Obsolete', 'Discontinued'
+                ]
+            });
+            await context.model('Product').silent().save(product);
+            const Products = context.model('Product');
+            const itemWithTag: { id?: number, name: string, tag?: string } = await Products
+                .where('name').equal('Samsung Galaxy S4')
+                .select(
+                    'id',
+                    'name',
+                    'tags/value as tag'
+                ).getItem();
+            expect(itemWithTag).toBeFalsy();
+        });
+    });
+
     it('should validate that user does not have access to values', async () => {
         await context.executeInTransactionAsync(async () => {
             let product = await context.model('Product')
@@ -103,7 +129,6 @@ describe('Global permissions', () => {
             expect(item).toBeTruthy();
             expect(item.tags).toBeTruthy();
             expect(item.tags.length).toBeFalsy();
-
             const user = {
                 name: 'margaret.davis@example.com'
             }
