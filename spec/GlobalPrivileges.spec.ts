@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { DataContext } from '../index';
+import {DataCacheFinalize, DataCacheStrategy, DataContext} from '../index';
 import { TestApplication } from './TestApplication';
 import { TestUtils } from './adapter/TestUtils';
 const executeInTransaction = TestUtils.executeInTransaction;
@@ -14,11 +14,13 @@ describe('Global permissions', () => {
         await context.finalizeAsync();
         await app.finalize();
     });
-    afterEach(() => {
+    afterEach(async () => {
         delete context.user;
         const configuration = context.getConfiguration();
         // @ts-ignore
         delete configuration.cache;
+        const service = configuration.getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
+        await service.clear();
     });
 
     it('should validate anonymous read access to products', async () => {
@@ -107,6 +109,33 @@ describe('Global permissions', () => {
                     'tags/value as tag'
                 ).getItem();
             expect(itemWithTag).toBeFalsy();
+        });
+    });
+
+    it('should validate that user does not have access to select an associated object', async () => {
+        await context.executeInTransactionAsync(async () => {
+            const Products = context.model('Product');
+            Object.assign(context, {
+                user: {
+                    name: 'margaret.davis@example.com'
+                }
+            });
+
+            const orderCount = await context.model('Order').where('orderedItem/name').equal('Samsung Galaxy S4').silent().count();
+            expect(orderCount).toBeTruthy();
+            const items: { id?: number, customer?: number, name: string, orderDate?: Date }[] = await Products
+                .where('name').equal('Samsung Galaxy S4')
+                .select(
+                    'id',
+                    'name',
+                    'orders/customer as customer',
+                    'orders/customer/user as user',
+                    'orders/orderDate as orderDate'
+                ).getItems();
+            expect(items.length).toEqual(1);
+            const [item] = items;
+            expect(item.orderDate).toBeFalsy();
+            expect(item.customer).toBeFalsy();
         });
     });
 
