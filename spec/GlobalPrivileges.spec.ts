@@ -112,6 +112,26 @@ describe('Global permissions', () => {
         });
     });
 
+    it('should validate that user does not have access to select values from nested objects', async () => {
+        await context.executeInTransactionAsync(async () => {
+            Object.assign(context, {
+                user: {
+                    name: 'margaret.davis@example.com'
+                }
+            });
+            let users = await context.model('User')
+                .where('groups/name').equal('Administrators').getItems();
+            expect(users.length).toBeFalsy();
+            users = await context.model('User')
+                .where('groups/name').equal('Users').getItems();
+            expect(users.length).toBeTruthy();
+            expect(users.length).toEqual(1);
+            const [user] = users;
+            expect(user.name).toEqual('margaret.davis@example.com');
+
+        });
+    });
+
     it('should validate that user does not have access to select an associated object', async () => {
         await context.executeInTransactionAsync(async () => {
             const Products = context.model('Product');
