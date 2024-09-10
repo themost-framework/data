@@ -1,6 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataContext} from "./types";
 import {ConfigurationBase} from "@themost/common";
+import {AsyncSeriesEventEmitter} from '@themost/events';
 
 export declare interface SystemQueryOptions {
     $filter?: string;
@@ -73,15 +74,22 @@ export declare interface ProcedureParameter {
     fromBody?: boolean;
 }
 
+export declare interface Annotation {
+    term: string;
+    value: any;
+}
+
 export declare interface EntityTypeProperty {
     name: string;
     type: string;
     nullable?: boolean;
+    annotations?: Annotation[];
 }
 
 export declare interface EntityTypeNavigationProperty {
     name: string;
     type: string;
+    annotations?: Annotation[];
 }
 
 export declare interface EntityContainerConfiguration {
@@ -131,6 +139,7 @@ export declare class EntityTypeConfiguration {
     navigationProperty: Array<EntityTypeNavigationProperty>;
     actions: Array<ActionConfiguration>;
     functions: Array<FunctionConfiguration>;
+    annotations?: Annotation[];
     collection: any;
     ignore(name: string): EntityTypeConfiguration;
     derivesFrom(name: string): EntityTypeConfiguration;
@@ -182,6 +191,7 @@ export declare interface ModelBuilderJsonFormatterOptions {
 }
 
 export declare class ODataModelBuilder {
+    loaded: AsyncSeriesEventEmitter<{target: ODataModelBuilder}>;
     constructor(configuration: ConfigurationBase);
     serviceRoot: string;
     defaultNamespace: string;
@@ -214,3 +224,26 @@ export declare class ODataConventionModelBuilder extends ODataModelBuilder{
 }
 
 export declare function defineDecorator(proto: Object|Function, key: string, decorator:Function): void;
+
+export declare interface ComplexTypeProperty extends EntityTypeProperty {
+}
+
+export declare interface ComplexTypeNavigationProperty extends EntityTypeNavigationProperty {
+}
+
+export declare class ComplexTypeConfiguration {
+    constructor(builder: any, name: string);
+    getBuilder(): any;
+    name: string;
+    openType: boolean;
+    abstract: boolean;
+    baseType: string;
+    property: Array<ComplexTypeProperty>;
+    navigationProperty: Array<ComplexTypeNavigationProperty>;
+    annotations?: Annotation[];
+    addProperty (name: string, type: string, nullable?: boolean): ComplexTypeConfiguration;
+    removeProperty(name: string): ComplexTypeConfiguration;
+    addNavigationProperty(name: string, type: string, multiplicity?: 'Many' | 'ZeroOrOne' | 'Unknown' | 'One'): ComplexTypeConfiguration;
+    removeNavigationProperty(name: string): ComplexTypeConfiguration;
+
+}

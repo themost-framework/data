@@ -2,8 +2,10 @@
 import { IApplication, ConfigurationBase, 
     ApplicationService, ApplicationBase, ApplicationServiceConstructor, SequentialEventEmitter } from "@themost/common";
 import {DataContext} from "./types";
+import {SyncSeriesEventEmitter} from '@themost/events';
 
 export declare class DataApplication extends SequentialEventEmitter implements ApplicationBase {
+    serviceLoaded: SyncSeriesEventEmitter<{ target: DataApplication, serviceType:  ApplicationServiceConstructor<any>, service: any }>;
     constructor(cwd?: string);
     configuration: ConfigurationBase;    
     useStrategy(serviceCtor: ApplicationServiceConstructor<any>, strategyCtor: ApplicationServiceConstructor<any>): this;
