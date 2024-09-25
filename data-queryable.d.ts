@@ -102,3 +102,8 @@ export declare class DataAttributeResolver {
     testNestedAttribute(s: string): any;
     resolveJunctionAttributeJoin(attr: string): any;
 }
+
+export declare class DataValueResolver {
+    constructor(target: DataQueryable);
+    resolve(value: any): string
+}

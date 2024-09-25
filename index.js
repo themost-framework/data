@@ -26,7 +26,7 @@ var {
     DataModelPrivilege
 } = require('./types');
 var { DataModel } = require('./data-model');
-var { DataQueryable } = require('./data-queryable');
+var { DataQueryable, DataAttributeResolver, DataValueResolver } = require('./data-queryable');
 var { DataObject } = require('./data-object');
 var { NamedDataContext, DefaultDataContext } = require('./data-context');
 var { FunctionContext } = require('./functions');
@@ -110,6 +110,8 @@ module.exports = {
     FileSchemaLoaderStrategy,
     DataModel,
     DataQueryable,
+    DataAttributeResolver,
+    DataValueResolver,
     DataObject,
     FunctionContext,
     DataCache,

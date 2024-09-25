@@ -13,6 +13,129 @@ var {QueryUtils} = require('@themost/query');
 var Q = require('q');
 var aliasProperty = Symbol('alias');
 var {hasOwnProperty} = require('./has-own-property');
+var {isObjectDeep} = require('./is-object');
+
+/**
+ * @param {DataQueryable} target
+ * @constructor
+ */
+function DataValueResolver(target) {
+    Object.defineProperty(this, 'target', { get: function() {
+        return target;
+    }, configurable:false, enumerable:false});
+}
+
+DataValueResolver.prototype.resolve = function(value) {
+    /**
+     * @type {DataQueryable}
+     */
+    var target = this.target;
+    if (typeof value === 'string' && /^\$it\//.test(value)) {
+        var attr = value.replace(/^\$it\//,'');
+        if (DataAttributeResolver.prototype.testNestedAttribute(attr)) {
+            return DataAttributeResolver.prototype.resolveNestedAttribute.call(target, attr);
+        }
+        else {
+            attr = DataAttributeResolver.prototype.testAttribute(attr);
+            if (attr) {
+                return target.fieldOf(attr.name);
+            }
+        }
+    }
+    if (isObjectDeep(value)) {
+        // try to get in-process left operand
+        // noinspection JSUnresolvedReference
+        var left = target.query.privates && target.query.privates.property;
+        if (typeof left === 'string' && /\./.test(left)) {
+            var members = left.split('.');
+            if (Array.isArray(members)) {
+                // try to find member mapping
+                /**
+                 * @type {import('./data-model').DataModel}
+                 */
+                var model = target.model;
+                var mapping;
+                var attribute;
+                var index = 0;
+                var context = target.model.context;
+                // if the first segment contains the view adapter name
+                if (members[0] === target.model.viewAdapter) {
+                    // move next
+                    index++;
+                } else if (target.query.$expand != null) {
+                    // try to find if the first segment is contained in the collection of joined entities
+                    var joins = Array.isArray(target.query.$expand) ? target.query.$expand : [ target.query.$expand ];
+                    if (joins.length) {
+                        var found = joins.find(function(x) {
+                            return x.$entity && x.$entity.$as === members[0];
+                        });
+                        if (found) {
+                            // move next
+                            model = context.model(found.$entity.model);
+                            index++;
+                        }
+                    }
+                }
+
+                var mapValue = function(x) {
+                    if (Object.hasOwnProperty.call(x, name)) {
+                        return x[name];
+                    }
+                    throw new Error(sprintf('Invalid value for property "%s"', members[members.length - 1]));
+                }
+
+                while (index < members.length) {
+                    mapping = model.inferMapping(members[index]);
+                    if (mapping) {
+                        if (mapping.associationType === 'association' && mapping.childModel === model.name) {
+                            model = context.model(mapping.parentModel);
+                            if (model) {
+                                attribute = model.getAttribute(mapping.parentField);
+                            }
+                        } else if (mapping.associationType === 'association' && mapping.parentModel === model.name) {
+                            model = context.model(mapping.childModel);
+                            if (model) {
+                                attribute = model.getAttribute(mapping.childField);
+                            }
+                        } else if (mapping.associationType === 'junction' && mapping.childModel === model.name) {
+                            model = context.model(mapping.parentModel);
+                            if (model) {
+                                attribute = model.getAttribute(mapping.parentField);
+                            }
+                        } else if (mapping.associationType === 'junction' && mapping.parentModel === model.name) {
+                            model = context.model(mapping.childModel);
+                            if (model) {
+                                attribute = model.getAttribute(mapping.childField);
+                            }
+                        }
+                    } else {
+                        // if mapping is not found, and we are in the last segment
+                        // try to find if this last segment is a field of the current model
+                        if (index === members.length - 1) {
+                            attribute = model.getAttribute(members[index]);
+                            break;
+                        }
+                        attribute = null;
+                        model = null;
+                        break;
+                    }
+                    index++;
+                }
+                if (attribute) {
+                    var name = attribute.property || attribute.name;
+                    if (Array.isArray(value)) {
+                        return value.map(function(x) {
+                            return mapValue(x);
+                        });
+                    } else {
+                        return mapValue(value);
+                    }
+                }
+            }
+        }
+    }
+    return value;
+}
 
 /**
  * @class
@@ -194,7 +317,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             var childFieldName = childField.property || childField.name;
             /**
              * store temp query expression
-             * @type QueryExpression
+             * @type {import('@themost/query').QueryExpression}
              */
             res =QueryUtils.query(self.viewAdapter).select(['*']);
             expr = QueryUtils.query().where(QueryField.select(childField.name)
@@ -587,7 +710,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
 /**
  * @classdesc Represents a dynamic query helper for filtering, paging, grouping and sorting data associated with an instance of DataModel class.
  * @class
- * @property {QueryExpression|*} query - Gets or sets the current query expression
+ * @property {import('@themost/query').QueryExpression} query - Gets or sets the current query expression
  * @property {DataModel|*} model - Gets or sets the underlying data model
  * @constructor
  * @param model {DataModel|*}
@@ -595,7 +718,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
  */
 function DataQueryable(model) {
     /**
-     * @type {QueryExpression}
+     * @type {import('@themost/query').QueryExpression}
      * @private
      */
     var q = null;
@@ -890,7 +1013,7 @@ function resolveValue(obj) {
  */
 DataQueryable.prototype.equal = function(obj) {
 
-    this.query.equal(resolveValue.bind(this)(obj));
+    this.query.equal(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -928,7 +1051,7 @@ DataQueryable.prototype.is = function(obj) {
     });
  */
 DataQueryable.prototype.notEqual = function(obj) {
-    this.query.notEqual(resolveValue.bind(this)(obj));
+    this.query.notEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
 // noinspection JSUnusedGlobalSymbols
@@ -958,7 +1081,7 @@ DataQueryable.prototype.notEqual = function(obj) {
  89   Nvidia GeForce GTX 650 Ti Boost               1625.49       2015-11-21 17:29:21.000+02:00
  */
 DataQueryable.prototype.greaterThan = function(obj) {
-    this.query.greaterThan(resolveValue.bind(this)(obj));
+    this.query.greaterThan(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -979,7 +1102,7 @@ DataQueryable.prototype.greaterThan = function(obj) {
     });
  */
 DataQueryable.prototype.greaterOrEqual = function(obj) {
-    this.query.greaterOrEqual(resolveValue.bind(this)(obj));
+    this.query.greaterOrEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -1016,7 +1139,7 @@ DataQueryable.prototype.bit = function(value, result) {
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.lowerThan = function(obj) {
-    this.query.lowerThan(resolveValue.bind(this)(obj));
+    this.query.lowerThan(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -1037,7 +1160,7 @@ DataQueryable.prototype.lowerThan = function(obj) {
     });
  */
 DataQueryable.prototype.lowerOrEqual = function(obj) {
-    this.query.lowerOrEqual(resolveValue.bind(this)(obj));
+    this.query.lowerOrEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
 // noinspection JSUnusedGlobalSymbols
@@ -1217,7 +1340,8 @@ DataQueryable.prototype.notContains = function(value) {
  440  Bose SoundLink Bluetooth Mobile Speaker II  HS5288  155.27
  */
 DataQueryable.prototype.between = function(value1, value2) {
-    this.query.between(resolveValue.bind(this)(value1), resolveValue.bind(this)(value2));
+    const resolver = new DataValueResolver(this);
+    this.query.between(resolver.resolve(value1), resolver.resolve(value2));
     return this;
 };
 
@@ -3418,5 +3542,6 @@ DataQueryable.prototype.getAllTypedItems = function() {
 
 module.exports = {
     DataQueryable,
-    DataAttributeResolver
+    DataAttributeResolver,
+    DataValueResolver
 }
