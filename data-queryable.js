@@ -70,35 +70,29 @@ DataValueResolver.prototype.resolve = function(value) {
                             return x.$entity && x.$entity.$as === members[0];
                         });
                         if (found) {
-                            // move next
-                            if (found.$entity.model == null) {
-                                // it's probably a junction, so get mapping and try to find the model
-                                var mapping1 = model.inferMapping(found.$entity.$as);
-                                if (mapping1) {
-                                    if (mapping1.associationType === 'junction') {
-                                        // get next segment of members
-                                        var nextMember = members[index + 1];
-                                        if (nextMember === mapping1.associationObjectField) {
-                                            // the next segment is the association object field
-                                            // e.g. groups/group
-                                            model = context.model(mapping1.parentModel);
-                                            members[index + 1] = mapping1.parentField;
-                                        } else if (nextMember === mapping1.associationValueField) {
-                                            // the next segment is the association value field
-                                            // e.g. groups/user
-                                            model = context.model(mapping1.childModel);
-                                            members[index + 1] = mapping1.childField;
-                                        } else if (model.name === mapping1.parentModel) {
-                                            model = context.model(mapping1.childModel);
-                                        } else {
-                                            model = context.model(mapping1.parentModel);
-                                        }
-                                    }
+                            var mapping1 = model.inferMapping(found.$entity.$as);
+                            if (mapping1 && mapping1.associationType === 'junction') {
+                                // get next segment of members
+                                var nextMember = members[index + 1];
+                                if (nextMember === mapping1.associationObjectField) {
+                                    // the next segment is the association object field
+                                    // e.g. groups/group
+                                    model = context.model(mapping1.parentModel);
+                                    members[index + 1] = mapping1.parentField;
+                                } else if (nextMember === mapping1.associationValueField) {
+                                    // the next segment is the association value field
+                                    // e.g. groups/user
+                                    model = context.model(mapping1.childModel);
+                                    members[index + 1] = mapping1.childField;
+                                } else if (model.name === mapping1.parentModel) {
+                                    model = context.model(mapping1.childModel);
                                 } else {
-                                    throw new Error(sprintf('Expected a valid mapping for entity "%s"', found.$entity.$as));
+                                    model = context.model(mapping1.parentModel);
                                 }
-                            } else {
+                            } else if (found.$entity.model != null) {
                                 model = context.model(found.$entity.model);
+                            } else {
+                                throw new Error(sprintf('Expected a valid mapping for property "%s"', found.$entity.$as));
                             }
                             index++;
                         }
