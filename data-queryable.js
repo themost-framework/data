@@ -71,7 +71,35 @@ DataValueResolver.prototype.resolve = function(value) {
                         });
                         if (found) {
                             // move next
-                            model = context.model(found.$entity.model);
+                            if (found.$entity.model == null) {
+                                // it's probably a junction, so get mapping and try to find the model
+                                var mapping1 = model.inferMapping(found.$entity.$as);
+                                if (mapping1) {
+                                    if (mapping1.associationType === 'junction') {
+                                        // get next segment of members
+                                        var nextMember = members[index + 1];
+                                        if (nextMember === mapping1.associationObjectField) {
+                                            // the next segment is the association object field
+                                            // e.g. groups/group
+                                            model = context.model(mapping1.parentModel);
+                                            members[index + 1] = mapping1.parentField;
+                                        } else if (nextMember === mapping1.associationValueField) {
+                                            // the next segment is the association value field
+                                            // e.g. groups/user
+                                            model = context.model(mapping1.childModel);
+                                            members[index + 1] = mapping1.childField;
+                                        } else if (model.name === mapping1.parentModel) {
+                                            model = context.model(mapping1.childModel);
+                                        } else {
+                                            model = context.model(mapping1.parentModel);
+                                        }
+                                    }
+                                } else {
+                                    throw new Error(sprintf('Expected a valid mapping for entity "%s"', found.$entity.$as));
+                                }
+                            } else {
+                                model = context.model(found.$entity.model);
+                            }
                             index++;
                         }
                     }
@@ -691,6 +719,12 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //create new join
                 var parentAlias = field.name + '_' + parentModel.name;
                 entity = new QueryEntity(parentModel.viewAdapter).as(parentAlias);
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: parentModel.name
+                });
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationObjectField).from(field.name))
                     .equal(QueryField.select(mapping.parentField).from(parentAlias));
                 //append join
@@ -827,6 +861,17 @@ DataQueryable.prototype.prepare = function(useOr) {
 DataQueryable.prototype.where = function(attr) {
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
+        return this;
+    }
+    // check if attribute defines a many-to-many association
+    var mapping = this.model.inferMapping(attr);
+    if (mapping && mapping.associationType === 'junction') {
+        // append mapping id e.g. groups -> groups/id or members -> members/id etc
+        let attrId = attr + '/' + mapping.parentField;
+        if (mapping.parentModel === this.model.name) {
+            attrId = attr + '/' + mapping.childField;
+        }
+        this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attrId));
         return this;
     }
     this.query.where(this.fieldOf(attr));
