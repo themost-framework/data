@@ -674,7 +674,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                     configurable: true,
                     enumerable: false,
                     writable: true,
-                    value: mapping.associationAdapter
+                    value: childModel.name
                 });
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationValueField).from(field.name))
                     .equal(QueryField.select(mapping.childField).from(alias));
