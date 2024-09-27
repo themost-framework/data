@@ -590,7 +590,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
                                 $expand
                             });
                             // stage 2: query for object and get original data
-                            return q.where(model.primaryKey).equal(key).silent().flatten().getItems().then(
+                            return q.prepare().where(model.primaryKey).equal(key).silent().flatten().getItems().then(
                                 function(results) {
                                     // throw error if more than one result is returned
                                     if (results.length > 1) {
