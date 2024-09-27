@@ -6,7 +6,7 @@ var _ = require('lodash');
 var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
-var {DataError} = require('@themost/common');
+var {DataError, Args} = require('@themost/common');
 var {QueryField} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
@@ -853,6 +853,7 @@ DataQueryable.prototype.prepare = function(useOr) {
     });
  */
 DataQueryable.prototype.where = function(attr) {
+    Args.check(this.query.$where == null, new Error('The where expression has already been initialized.'));
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
