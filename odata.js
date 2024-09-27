@@ -27,6 +27,7 @@ var {DefaultSchemaLoaderStrategy} = require('./data-configuration');
 var {instanceOf} = require('./instance-of');
 var {Args} = require('@themost/common');
 var {hasOwnProperty} = require('./has-own-property');
+var { AsyncSeriesEventEmitter } = require('@themost/events');
 /**
  * @enum
  */
@@ -342,7 +343,7 @@ EntityTypeConfiguration.prototype.getBuilder = function() {
      * @returns EntityTypeConfiguration
      */
     EntityTypeConfiguration.prototype.derivesFrom = function(name) {
-        Args.notString(name,'Enity type name');
+        Args.notString(name,'Entity type name');
         this.baseType = name;
         return this;
     };
@@ -1211,7 +1212,7 @@ function schemaToEdmDocument(schema) {
 /**
  * @classdesc Represents the OData model builder of an HTTP application
  * @property {string} serviceRoot - Gets or sets the service root URI
- * @param {ConfigurationBase} configuration
+ * @param {import('@themost/common').ConfigurationBase} configuration
  * @class
  */
 function ODataModelBuilder(configuration) {
@@ -1221,8 +1222,9 @@ function ODataModelBuilder(configuration) {
     this[entityContainerProperty] = [];
     this.defaultNamespace = null;
     this.defaultAlias = null;
+    this.loaded = new AsyncSeriesEventEmitter();
     /**
-     * @returns {ConfigurationBase}
+     * @returns {import('@themost/common').ConfigurationBase}
      */
     this.getConfiguration = function() {
         return configuration;
@@ -1495,7 +1497,7 @@ ODataModelBuilder.prototype.getEdmSync = function() {
      */
     ODataModelBuilder.prototype.getEdmDocument = function() {
         var self = this;
-        return Q.promise(function(resolve, reject) {
+        return new Q.promise(function(resolve, reject) {
             try{
                 return self.getEdm().then(function(schema) {
                     var doc = schemaToEdmDocument.bind(self)(schema);
@@ -2386,6 +2388,118 @@ EdmMapping.getOwnActions = function(obj) {
     });
 };
 
+/**
+ * @param {ODataModelBuilder} builder
+ * @param {string} name
+ * @constructor
+ */
+function ComplexTypeConfiguration(builder, name) {
+    this.name = name;
+    this.abstract = false;
+    this.openType = false;
+    this.property = [];
+    this.navigationProperty = [];
+    // set builder
+    this[builderProperty] = builder;
+}
+
+/**
+ * @param {string} name
+ * @param {string} type
+ * @param {boolean=} nullable
+ * @returns {ComplexTypeConfiguration}
+ */
+ComplexTypeConfiguration.prototype.addProperty = function (name, type, nullable) {
+    const property = this.property.find(function(property) { return property.name === name; });
+    if (property) {
+        Object.assign(property, { type, nullable });
+        return this;
+    }
+    this.property.push({
+        'name': name,
+        'type': type,
+        'nullable': nullable
+    });
+    return this;
+}
+/**
+ * @param {string} name
+ * @param {string} type
+ * @param {('Many' | 'One' | 'Unknown' | 'ZeroOrOne')=} multiplicity
+ * @return {ComplexTypeConfiguration}
+ */
+ComplexTypeConfiguration.prototype.addNavigationProperty = function (name, type, multiplicity) {
+    const navigationProperty = this.navigationProperty.find(function(property) { return property.name === name; });
+    if (navigationProperty) {
+        Object.assign(navigationProperty, {
+            'type': multiplicity === 'Many' ? sprintf('Collection(%s)', type) : type
+        });
+        return this;
+    }
+    this.navigationProperty.push({
+        'name': name,
+        'type': multiplicity === 'Many' ? sprintf('Collection(%s)', type) : type,
+    });
+    return this;
+}
+/**
+ * @param {string} name
+ * @return {ComplexTypeConfiguration}
+ */
+ComplexTypeConfiguration.prototype.removeProperty = function(name) {
+    Args.notString(name,'Property name');
+    var hasProperty =this.property.findIndex( function(x) {
+        return x.name === name;
+    });
+    if (hasProperty>-1) {
+        this.property.splice(hasProperty, 1);
+    }
+    return this;
+};
+/**
+ * @param {string} name
+ * @return {ComplexTypeConfiguration}
+ */
+ComplexTypeConfiguration.prototype.removeNavigationProperty = function(name) {
+    Args.notString(name,'Property name');
+    var hasProperty =this.navigationProperty.findIndex( function(x) {
+        return x.name === name;
+    });
+    if (hasProperty>-1) {
+        this.navigationProperty.splice(hasProperty, 1);
+    }
+    return this;
+};
+/**
+ * 
+ * @param {import('@themost/xml').XNode} element 
+ */
+ComplexTypeConfiguration.prototype.writeXml = function (element) {
+    /**
+     * @type {import('@themost/xml').XDocument}
+     */
+    const document = element.ownerDocument;
+    const complextType = document.createElement('ComplexType');
+    complextType.setAttribute('Name', this.name);
+    complextType.setAttribute('Abstract', this.abstract);
+    complextType.setAttribute('OpenType', this.openType);!Paro
+    // add properties
+    this.property.forEach(function(property) {
+        const propertyElement = document.createElement('Property');
+        propertyElement.setAttribute('Name', property.name);
+        propertyElement.setAttribute('Type', property.type);
+        propertyElement.setAttribute('Nullable', property.nullable);
+        complextType.appendChild(propertyElement);
+    });
+    // add navigation properties
+    this.navigationProperty.forEach(function(property) {
+        const propertyElement = document.createElement('NavigationProperty');
+        propertyElement.setAttribute('Name', property.name);
+        propertyElement.setAttribute('Type', property.type);
+        complextType.appendChild(propertyElement);
+    });
+}
+
 
 //exports
 module.exports = {
@@ -2401,6 +2515,7 @@ module.exports = {
     ODataModelBuilder,
     ODataConventionModelBuilder,
     EdmMapping,
-    defineDecorator
+    defineDecorator,
+    ComplexTypeConfiguration
 }
 

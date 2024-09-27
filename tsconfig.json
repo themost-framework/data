@@ -9,6 +9,7 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "outDir": "./dist",
+    "baseUrl": ".",
     "lib": [
         "es2015",
         "es2016",
@@ -16,6 +17,7 @@
         "dom"
         ],
     "paths": {
+      "@themost/data": ["./index"]
     }
   },
   "exclude": [

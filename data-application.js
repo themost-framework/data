@@ -2,6 +2,7 @@
 var {Args, PathUtils, SequentialEventEmitter} = require('@themost/common');
 var {DataConfiguration} = require('./data-configuration');
 var {DefaultDataContext} = require('./data-context');
+var { SyncSeriesEventEmitter } = require('@themost/events')
 /**
  * @class
  * @param {string} cwd - A string which defines application root directory
@@ -9,6 +10,7 @@ var {DefaultDataContext} = require('./data-context');
 class DataApplication extends SequentialEventEmitter {
     constructor(cwd) {
         super();
+        this.serviceLoaded = new SyncSeriesEventEmitter();
         Object.defineProperty(this, '_services', {
             configurable: true,
             enumerable: false,
@@ -50,6 +52,11 @@ class DataApplication extends SequentialEventEmitter {
             enumerable: true,
             writable: true,
             value: new strategyCtor(this)
+        });
+        this.serviceLoaded.emit({
+            target: this,
+            serviceType: serviceCtor,
+            service: this._services[serviceCtor.name]
         });
         return this;
     }
