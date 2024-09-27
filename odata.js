@@ -2470,6 +2470,35 @@ ComplexTypeConfiguration.prototype.removeNavigationProperty = function(name) {
     }
     return this;
 };
+/**
+ * 
+ * @param {import('@themost/xml').XNode} element 
+ */
+ComplexTypeConfiguration.prototype.writeXml = function (element) {
+    /**
+     * @type {import('@themost/xml').XDocument}
+     */
+    const document = element.ownerDocument;
+    const complextType = document.createElement('ComplexType');
+    complextType.setAttribute('Name', this.name);
+    complextType.setAttribute('Abstract', this.abstract);
+    complextType.setAttribute('OpenType', this.openType);!Paro
+    // add properties
+    this.property.forEach(function(property) {
+        const propertyElement = document.createElement('Property');
+        propertyElement.setAttribute('Name', property.name);
+        propertyElement.setAttribute('Type', property.type);
+        propertyElement.setAttribute('Nullable', property.nullable);
+        complextType.appendChild(propertyElement);
+    });
+    // add navigation properties
+    this.navigationProperty.forEach(function(property) {
+        const propertyElement = document.createElement('NavigationProperty');
+        propertyElement.setAttribute('Name', property.name);
+        propertyElement.setAttribute('Type', property.type);
+        complextType.appendChild(propertyElement);
+    });
+}
 
 
 //exports
