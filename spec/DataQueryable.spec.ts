@@ -17,6 +17,9 @@ describe('DataQueryable', () => {
         await app.finalize();
     });
 
+    /**
+     * @see https://github.com/themost-framework/data/issues/161
+     */
     it('should validate where statement', async () => {
         const Orders = context.model('Order').silent();
         const items = await Orders.where('orderStatus/alternateName').equal('OrderDelivered')
@@ -25,6 +28,9 @@ describe('DataQueryable', () => {
         expect(items.length).toBeGreaterThan(0);
     });
 
+    /**
+     * @see https://github.com/themost-framework/data/issues/161
+     */
     it('should validate where statement with error', async () => {
         const Orders = context.model('Order').silent();
         const q = Orders.where('orderStatus/alternateName').equal('OrderDelivered')
@@ -32,6 +38,9 @@ describe('DataQueryable', () => {
         expect(() => q.where('orderedItem/category').equal('Laptops')).toThrow('The where expression has already been initialized.');
     });
 
+    /**
+     * @see https://github.com/themost-framework/data/issues/161
+     */
     it('should validate where statement after prepare', async () => {
         const Orders = context.model('Order').silent();
         const q = Orders.where('orderStatus/alternateName').equal('OrderDelivered')
