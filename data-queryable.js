@@ -14,6 +14,7 @@ var Q = require('q');
 var aliasProperty = Symbol('alias');
 var {hasOwnProperty} = require('./has-own-property');
 var {isObjectDeep} = require('./is-object');
+var { UnknownAttributeError } = require('./data-errors');
 
 /**
  * @param {DataQueryable} target
@@ -313,8 +314,8 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
         //if the specified member contains '/' e.g. user/name then prepare join
         var arrMember = memberExprString.split('/');
         var attrMember = self.field(arrMember[0]);
-        if (_.isNil(attrMember)) {
-            throw new Error(sprintf('The target model does not have an attribute named as %s',arrMember[0]));
+        if (attrMember == null) {
+            throw new UnknownAttributeError(self.name, arrMember[0]);
         }
         //search for field mapping
         var mapping = self.inferMapping(arrMember[0]);
@@ -322,7 +323,9 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             throw new Error(sprintf('The target model does not have an association defined for attribute named %s',arrMember[0]));
         }
         if (mapping.childModel===self.name && mapping.associationType==='association') {
-            //get parent model
+            /**
+             * @type {import('./data-model').DataModel}
+             */
             var parentModel = self.context.model(mapping.parentModel);
             if (_.isNil(parentModel)) {
                 throw new Error(sprintf('Association parent model (%s) cannot be found.', mapping.parentModel));
@@ -357,6 +360,10 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 parentModel[aliasProperty] = mapping.childField;
                 expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
                 return [].concat(res.$expand).concat(expr);
+            } else {
+                // validate attribute name
+                var attribute = parentModel.getAttribute(arrMember[1]);
+                Args.check(attribute != null, new UnknownAttributeError(parentModel.name, arrMember[1]));
             }
             //--set active field
             return res.$expand;
@@ -407,6 +414,8 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                             memberExpr.name = arrMember.join('/');
                         }
                     }
+                } else {
+                    throw new UnknownAttributeError(childModel.name, arrMember[1]);
                 }
             }
             return res.$expand;
@@ -667,6 +676,8 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 if (_.isNil(childModel)) {
                     throw new DataError('EJUNC','The associated model cannot be found.');
                 }
+                // validate attribute name
+                Args.check(childModel.getAttribute(member[1]) != null, new UnknownAttributeError(childModel.name, member[1]));
                 //create new join
                 var alias = field.name + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
@@ -983,6 +994,7 @@ DataQueryable.prototype.join = function(model)
     });
  */
 DataQueryable.prototype.and = function(attr) {
+    Args.check(this.query.$where != null, new Error('The where expression has not been initialized.'));
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.and(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
@@ -1005,6 +1017,7 @@ DataQueryable.prototype.and = function(attr) {
     });
  */
 DataQueryable.prototype.or = function(attr) {
+    Args.check(this.query.$where != null, new Error('The where expression has not been initialized.'));
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.or(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
@@ -1659,7 +1672,7 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
             }
         }
         if (typeof  field === 'undefined' || field === null)
-            throw new Error(sprintf('The specified field %s cannot be found in target model.', matches[2]));
+            throw new UnknownAttributeError(this.model.name, matches[2]);
         if (_.isNil(alias)) {
             matches = /as\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
             if (matches) {
@@ -1687,7 +1700,7 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
             field = this.model.field(matches[2]);
             aggr = matches[1];
             if (typeof  field === 'undefined' || field === null)
-                throw new Error(sprintf('The specified field %s cannot be found in target model.', matches[2]));
+                throw new UnknownAttributeError(this.model.name, matches[2]);
             if (_.isNil(alias)) {
                 matches = /as\s([\u0021-\u007F\u0080-\uFFFF]+)$/i.exec(attr);
                 if (matches) {
@@ -1704,7 +1717,7 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
             if (matches) {
                 field = this.model.field(matches[1]);
                 if (typeof  field === 'undefined' || field === null)
-                    throw new Error(sprintf('The specified field %s cannot be found in target model.', attr));
+                    throw new UnknownAttributeError(this.model.name, matches[1]);
                 alias = matches[2];
                 prop = alias || field.property || field.name;
                 return QueryField.select(field.name).from(this.model.viewAdapter).as(prop);
@@ -1713,7 +1726,7 @@ DataQueryable.prototype.fieldOf = function(attr, alias) {
                 //try to match field with expression [field] as [alias] or [nested]/[field] as [alias]
                 field = this.model.field(attr);
                 if (typeof  field === 'undefined' || field === null)
-                    throw new Error(sprintf('The specified field %s cannot be found in target model.', attr));
+                    throw new UnknownAttributeError(this.model.name, attr);
                 var f = QueryField.select(field.name).from(this.model.viewAdapter);
                 if (alias) {
                     return f.as(alias);

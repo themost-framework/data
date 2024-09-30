@@ -1,10 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var {FunctionContext} = require('./functions');
-
-/**
- * @module @themost/data/data-filter-resolver
- * @ignore
- */
+var { UnknownAttributeError } = require('./data-errors');
 
 /**
  * @ignore
@@ -20,11 +16,13 @@ function DataFilterResolver() {
 DataFilterResolver.prototype.resolveMember = function(member, callback) {
     if (/\//.test(member)) {
         var arr = member.split('/');
-        callback(null, arr.slice(arr.length-2).join('.'));
+        return callback(null, arr.slice(arr.length-2).join('.'));
     }
-    else {
-        callback(null, this.viewAdapter.concat('.', member))
+    var attribute = this.getAttribute(member);
+    if (attribute == null) {
+        return callback(new UnknownAttributeError(this.name, member));
     }
+    return callback(null, this.viewAdapter.concat('.', member))
 };
 
 DataFilterResolver.prototype.resolveMethod = function(name, args, callback) {
