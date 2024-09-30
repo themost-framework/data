@@ -73,5 +73,6 @@
   "Data model cannot be found.":"Data model cannot be found.",
   "Object type cannot be empty during remove operation.":"Object type cannot be empty during remove operation.",
   "The associated model cannot be found.":"The associated model cannot be found.",
-  "The target model does not have a many to many association defined by the given attribute.":"The target model does not have a many to many association defined by the given attribute."
+  "The target model does not have a many to many association defined by the given attribute.":"The target model does not have a many to many association defined by the given attribute.",
+  "Attribute \"%s\" does not exist on entity type \"%s\"": "Attribute \"%s\" does not exist on entity type \"%s\""
 }

@@ -5,6 +5,7 @@ var {DataError} = require('@themost/common');
 var Symbol = require('symbol');
 var {hasOwnProperty} = require('./has-own-property');
 var aliasProperty = Symbol('alias');
+var {UnknownAttributeError} = require('./data-errors');
 /**
  * @class
  * @constructor
@@ -172,8 +173,8 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
         //if the specified member contains '/' e.g. user/name then prepare join
         var arrMember = memberExprString.split('/');
         var attrMember = self.field(arrMember[0]);
-        if (_.isNil(attrMember)) {
-            throw new Error(sprintf('The target model does not have an attribute named as %s',arrMember[0]));
+        if (attrMember == null) {
+            throw new UnknownAttributeError(self.name, arrMember[0]);
         }
         //search for field mapping
         var mapping = self.inferMapping(arrMember[0]);

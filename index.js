@@ -85,6 +85,8 @@ var { DataObjectAssociationListener,
     DataObjectMultiAssociationError } = require('./data-associations');
 var { DataApplication } = require('./data-application');
 
+var { UknonwnAttributeError } = require('./data-errors');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -165,6 +167,7 @@ module.exports = {
     EntitySetKind,
     ODataModelBuilder,
     ODataConventionModelBuilder,
-    EntitySetSchemaLoaderStrategy
+    EntitySetSchemaLoaderStrategy,
+    UknonwnAttributeError
 };
 
