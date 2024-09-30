@@ -55,7 +55,7 @@ describe('DataQueryable', () => {
         expect(() => {
             return Orders.where('orderStatus1').equal('OrderDelivered')
             .orderByDescending('orderDate').take(10);
-        }).toThrow('The specified field orderStatus1 cannot be found in target model.');
+        }).toThrow(new UnknownAttributeError('Order', 'orderStatus1'));
     });
 
     it('should validate attribute name on filter', async () => {
