@@ -23,7 +23,7 @@ class DataFieldQueryResolver {
 
     nameReplacer(key, value) {
         if (typeof value === 'string') {
-            if (/^\$(\w+)$/.test(value)) {
+            if (/^\$\w+$/.test(value)) {
                 const baseModel = this.target.base();
                 const name = value.replace(/^\$/, '');
                 let field = null;
@@ -43,7 +43,7 @@ class DataFieldQueryResolver {
                     }
                 }
                 throw new DataError('An expression contains an attribute that cannot be found', null, this.target.name, name);
-            } else if (/^\$((\w+)(\.(\w+))+)$/.test(value)) {
+            } else if (/^\$(\w+\.\w+)+$/.test(value)) {
                 return {
                     $name: value.replace(/^\$/, '')
                 }
@@ -81,7 +81,7 @@ class DataFieldQueryResolver {
                             // get expression as string
                             const exprString = JSON.stringify(pipelineStage.$match.$expr, function(key, value) {
                                 if (typeof value === 'string') {
-                                    if (/\$\$(\w+)/.test(value)) {
+                                    if (/\$\$\w+/.test(value)) {
                                         let localField = /\$\$(\w+)/.exec(value)[1];
                                         let localFieldAttribute = self.target.getAttribute(localField);
                                         if (localFieldAttribute && localFieldAttribute.model === self.target.name) {
