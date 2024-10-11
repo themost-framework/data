@@ -825,70 +825,61 @@ function filterInternal(params, callback) {
                     q.query.$expand = $joinExpressions;
                 //prepare
                 q.query.prepare();
-
                 if (typeof params === 'object') {
                     //apply query parameters
                     var select = params.$select,
                         skip = params.$skip || 0,
-                        orderBy = params.$orderby || params.$order,
-                        groupBy = params.$groupby || params.$group,
+                        orderBy = params.$orderby || params.$orderBy || params.$order,
+                        groupBy = params.$groupby || params.$groupBy || params.$group,
                         expand = params.$expand,
                         levels = parseInt(params.$levels),
                         top = params.$top || params.$take;
                     //select fields
-                    if (typeof select === 'string') {
-                        q.select.apply(q, select.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
-                    }
-                    //apply group by fields
-                    if (typeof groupBy === 'string') {
-                        q.groupBy.apply(q, groupBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
-                    }
-                    if ((typeof levels === 'number') && !isNaN(levels)) {
-                        //set expand levels
-                        q.levels(levels);
-                    }
-                    //set $skip
-                    q.skip(skip);
-                    if (top)
-                        q.query.take(top);
-                    //set caching
-                    if (params.$cache && self.caching === 'conditional') {
-                        q.cache(true);
-                    }
-                    //set $orderby
-                    if (orderBy) {
-                        orderBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }).forEach(function(x) {
-                            if (/\s+desc$/i.test(x)) {
-                                q.orderByDescending(x.replace(/\s+desc$/i, ''));
-                            }
-                            else if (/\s+asc/i.test(x)) {
-                                q.orderBy(x.replace(/\s+asc/i, ''));
-                            }
-                            else {
-                                q.orderBy(x);
-                            }
-                        });
-                    }
-                    if (expand) {
 
-                        var resolver = require('./data-expand-resolver');
-                        var matches = resolver.testExpandExpression(expand);
-                        if (matches && matches.length>0) {
-                            q.expand.apply(q, matches);
+                    void async.series(
+                        [
+                            function(cb) { return parser.parseSelectSequence(select, cb) },
+                            function(cb) { return parser.parseOrderBySequence(orderBy, cb) },
+                            function(cb) { return parser.parseSelectSequence(groupBy, cb) },
+                            function(cb) {
+                                return cb(null, parser.parseExpandSequence(expand));
+                            }
+                        ], function (err, results) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            // get select, orderby and groupby system query options
+                            var [$select, $orderBy, $groupBy, $expand] = results;
+                            Object.assign(q.query, {
+                                $select,
+                                $orderBy,
+                                $groupBy
+                            });
+                            // set levels
+                            if ((typeof levels === 'number') && !isNaN(levels)) {
+                                q.levels(levels);
+                            }
+                            // set top
+                            if (top) {
+                                q.take(top);
+                            }
+                            // set skip
+                            q.skip(skip);
+                            //set caching
+                            var { $cache } = params;
+                            if ($cache && self.caching === 'conditional') {
+                                q.cache(true);
+                            }
+                            // set expand
+                            if ($expand) {
+                                q.expand.apply(q, $expand);
+                            }
+                            return callback(null, q);
                         }
-                    }
-                    //return
-                    callback(null, q);
+                    )
                 }
                 else {
-                    //and finally return DataQueryable instance
-                    callback(null, q);
+                    return callback(null, q);
                 }
 
             }
