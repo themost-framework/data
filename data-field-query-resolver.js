@@ -44,7 +44,7 @@ class DataFieldQueryResolver {
                 }
                 throw new DataError('An expression contains an attribute that cannot be found', null, this.target.name, name);
             } else { // noinspection RegExpUnnecessaryNonCapturingGroup
-                if (/^\$\w+\.(?:\w+)$/.test(value)) {
+                if (/^\$\w+\.\w+$/.test(value)) {
                                 return {
                                     $name: value.replace(/^\$/, '')
                                 }
