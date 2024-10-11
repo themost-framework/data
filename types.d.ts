@@ -146,6 +146,26 @@ export declare class DataAssociationMapping {
   
 }
 
+export declare interface QueryPipelineLookup {
+    from: string;
+    localField?: string;
+    foreignField?: string;
+    let?: string;
+    pipeline?: {
+        $match: any;
+    }
+    as?: string
+}
+
+export declare interface QueryPipelineProject {
+    [name: string]: string | (1 | 0) | any;
+}
+
+export declare interface QueryPipelineStage {
+    $lookup?: QueryPipelineLookup;
+    $project?: QueryPipelineProject;
+}
+
 export declare class DataField {
     name: string;
     property?: string;
@@ -169,6 +189,7 @@ export declare class DataField {
     multiplicity?: string;
     indexed?: boolean;
     size?: number;
+    query?: QueryPipelineStage[];
 }
 
 export declare class DataEventArgs {
