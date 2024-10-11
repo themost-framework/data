@@ -43,7 +43,7 @@ class DataFieldQueryResolver {
                     }
                 }
                 throw new DataError('An expression contains an attribute that cannot be found', null, this.target.name, name);
-            } else if (/^\$(\w+\.\w+)+$/.test(value)) {
+            } else if (/^\$(\w+)\.(\w+)$/.test(value)) {
                 return {
                     $name: value.replace(/^\$/, '')
                 }
