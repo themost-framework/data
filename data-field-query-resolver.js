@@ -43,7 +43,7 @@ class DataFieldQueryResolver {
                     }
                 }
                 throw new DataError('An expression contains an attribute that cannot be found', null, this.target.name, name);
-            } else if (/^\$((\w+)(\.(\w+)){1,})$/.test(value)) {
+            } else if (/^\$((\w+)(\.(\w+))+)$/.test(value)) {
                 return {
                     $name: value.replace(/^\$/, '')
                 }
@@ -81,7 +81,7 @@ class DataFieldQueryResolver {
                             // get expression as string
                             const exprString = JSON.stringify(pipelineStage.$match.$expr, function(key, value) {
                                 if (typeof value === 'string') {
-                                    if (/\$\$(\w+)/g.test(value)) {
+                                    if (/\$\$(\w+)/.test(value)) {
                                         let localField = /\$\$(\w+)/.exec(value)[1];
                                         let localFieldAttribute = self.target.getAttribute(localField);
                                         if (localFieldAttribute && localFieldAttribute.model === self.target.name) {
@@ -119,7 +119,7 @@ class DataFieldQueryResolver {
                     });
                 } else {
                     let localField = this.formatName(stage.$lookup.localField);
-                    if (/\./g.test(localField) === false) {
+                    if (/\./.test(localField) === false) {
                         // get local field expression
                         let localFieldAttribute = this.target.getAttribute(localField);
                         if (localFieldAttribute && localFieldAttribute.model === this.target.name) {
