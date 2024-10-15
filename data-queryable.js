@@ -864,7 +864,7 @@ DataQueryable.prototype.prepare = function(useOr) {
     });
  */
 DataQueryable.prototype.where = function(attr) {
-    Args.check(this.query.$where == null && this.query.$prepared ==null, new Error('The where expression has already been initialized.'));
+    Args.check(this.query.$where == null, new Error('The where expression has already been initialized.'));
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
