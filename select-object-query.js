@@ -83,9 +83,12 @@ class SelectObjectQuery {
                 // otherwise, if this property is an association
                 if (isObjectDeep(value)) {
                     // assign associated key value (event.g. primary key value)
-                    Object.assign(prev, {
-                        [name]: value[mapping.parentField]
-                    });
+                    // ignore property if model doesn't have an association with it
+                    if (mapping) {
+                        Object.assign(prev, {
+                            [name]: value[mapping.parentField]
+                        });
+                    }
                 } else {
                     Object.assign(prev, {
                         [name]: value
