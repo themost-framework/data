@@ -21,7 +21,6 @@ var modelsProperty = Symbol('models');
 var modelPathProperty = Symbol('modelPath');
 var filesProperty = Symbol('files');
 var dataTypesProperty = Symbol('dataTypes');
-var adapterTypesProperty =  Symbol('adapterTypes');
 var currentConfiguration = Symbol('current');
 var namedConfigurations = Symbol('namedConfigurations');
 
@@ -366,7 +365,7 @@ function DataConfigurationStrategy(config) {
     }
 
     if (!config.hasStrategy(DataCacheStrategy)) {
-        //process is running under node js
+        //process is running under node.js
         if (typeof process !== 'undefined' && process.nextTick) {
             //add default cache strategy (using node-cache)
             config.useStrategy(DataCacheStrategy, DefaultDataCacheStrategy);
@@ -385,84 +384,66 @@ function DataConfigurationStrategy(config) {
         this.getConfiguration().setSourceAt('settings/auth', new AuthSettingsConfiguration());
     }
 
+    var adapterTypes = new Map();
+    Object.defineProperty(this,'adapterTypes', {
+        get:function() {
+            return adapterTypes;
+        },
+        enumerable: false,
+        configurable: true
+    });
+
     var configAdapterTypes = this.getConfiguration().getSourceAt('adapterTypes');
-    this[adapterTypesProperty] = {};
     var self = this;
     //configure adapter types
     _.forEach(configAdapterTypes, function(x) {
         //first of all validate module
         x.invariantName = x.invariantName || 'unknown';
         x.name = x.name || 'Unknown Data Adapter';
-        var valid = false, adapterModule;
+        var valid = false;
+        var adapterModule;
+        var AdapterCtor;
         if (x.type) {
             try {
-                if (/^@themost\//.test(x.type)) {
-                    //get require paths
-                    if (require.resolve && require.resolve.paths) {
-                        /**
-                         * get require paths collection
-                         * @type string[]
-                         */
-                        var paths = require.resolve.paths(x.type);
-                        //get execution
-                        var path1 = self.getConfiguration().getExecutionPath();
-                        //loop directories to parent (like classic require)
-                        while (path1) {
-                            //if path does not exist in paths collection
-                            if (paths.indexOf(path.resolve(path1,'node_modules'))<0) {
-                                //add it
-                                paths.push(path.resolve(path1,'node_modules'));
-                                //and check the next path which is going to be resolved
-                                if (path1 === path.resolve(path1,'..')) {
-                                    //if it is the same with the current path break loop
-                                    break;
-                                }
-                                //otherwise get parent path
-                                path1 = path.resolve(path1,'..');
-                            }
-                            else {
-                                //path already exists in paths collection, so break loop
-                                break;
-                            }
-                        }
-                        var adapterModulePath = require.resolve(x.type, {
-                            paths:paths
-                        });
-                        adapterModule = require(adapterModulePath);
-                    }
-                    else {
-                        adapterModule = require(x.type);
-                    }
-                }
-                else {
+                if (/#/.test(x.type)) {
+                    var modulePath = x.type.substr(0, x.type.indexOf('#'));
+                    var moduleMember = x.type.substr(x.type.indexOf('#')+1);
+                    adapterModule = require(modulePath);
+                    AdapterCtor = adapterModule[moduleMember];
+                } else {
                     adapterModule = require(x.type);
                 }
-
-                if (typeof adapterModule.createInstance === 'function') {
+                if (typeof AdapterCtor === 'function' || typeof adapterModule.createInstance === 'function') {
                     valid = true;
+                } else {
+                    TraceUtils.warn(`The specified data adapter type (${x.invariantName}) does not have the appropriate constructor. Adapter type cannot be loaded.`);
                 }
-                else {
-                    //adapter type does not export a createInstance(options) function
-                    TraceUtils.log('The specified data adapter type (%s) does not have the appropriate constructor. Adapter type cannot be loaded.', x.invariantName);
-                }
-            }
-            catch(err) {
-                //catch error
+            } catch(err) {
+                // catch error
                 TraceUtils.error(err);
-                //and log a specific error for this adapter type
-                TraceUtils.log('The specified data adapter type (%s) cannot be instantiated. Adapter type cannot be loaded.', x.invariantName);
+                // and log a specific error for this adapter type
+                TraceUtils.error(`The specified data adapter type (${x.invariantName}) cannot be instantiated. Adapter type cannot be loaded.`);
             }
             if (valid) {
-                //register adapter
-                self[adapterTypesProperty][x.invariantName] = {
-                    invariantName:x.invariantName,
-                    name: x.name,
-                    createInstance:adapterModule.createInstance
-                };
+                // register adapter
+                if (typeof AdapterCtor === 'function') {
+                    self.adapterTypes.set(x.invariantName, {
+                        invariantName: x.invariantName,
+                        name: x.name,
+                        type: AdapterCtor
+                    });
+                } else {
+                    // backward compatibility using a factory method
+                    self.adapterTypes.set(x.invariantName, {
+                        invariantName: x.invariantName,
+                        name: x.name,
+                        createInstance: adapterModule.createInstance
+                    });
+                }
             }
         }
         else {
-            TraceUtils.log('The specified data adapter type (%s) does not have a type defined. Adapter type cannot be loaded.', x.invariantName);
+            TraceUtils.warn(`The specified data adapter type (${x.invariantName}) does not have a type defined. Adapter type cannot be loaded.`);
         }
     });
 
@@ -534,16 +515,6 @@ function DataConfigurationStrategy(config) {
         }
     });
 
-    /**
-     * @name DataConfigurationStrategy#adapterTypes
-     * @type {*}
-     */
-
-    Object.defineProperty(this,'adapterTypes', {
-        get:function() {
-            return this[adapterTypesProperty];
-        }
-    });
 
 
 }
@@ -562,7 +533,7 @@ DataConfigurationStrategy.prototype.getAuthSettings = function() {
  * @returns {*}
  */
 DataConfigurationStrategy.prototype.getAdapterType = function(invariantName) {
-    return this[adapterTypesProperty][invariantName];
+    return this.adapterTypes.get(invariantName);
 };
 
 /**

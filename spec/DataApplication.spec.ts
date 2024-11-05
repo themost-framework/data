@@ -65,7 +65,8 @@ describe('DataApplication', () => {
         expect(context).toBeTruthy();
         const Products = context.model('Product');
         expect(Products).toBeTruthy();
-        await context.finalize();
+        await context.finalizeAsync();
         await TestUtils.finalize(app);
     });
+
 });
