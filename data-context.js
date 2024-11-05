@@ -83,21 +83,27 @@ function DefaultDataContext()
         /**
          * @type {*}
          */
-        var adapterType = strategy.adapterTypes[adapter.invariantName];
+        var adapterType = strategy.adapterTypes.get(adapter.invariantName);
         //validate data adapter type
-        if (_.isNil(adapterType)) {
-            er = new Error('Invalid adapter type.'); er.code = 'EADAPTER';
+        if (adapterType == null) {
+            er = new Error('Invalid adapter type.'); er.code = 'ERR_ADAPTER_TYPE';
             throw er;
         }
-        if (typeof adapterType.createInstance !== 'function') {
-            er= new Error('Invalid adapter type. Adapter initialization method is missing.'); er.code = 'EADAPTER';
-            throw er;
+        // get data adapter instance
+        var createInstance = adapterType.createInstance;
+        // get adapter type constructor if any
+        var AdapterTypeCtor = adapterType.type;
+        // create adapter instance
+        if (typeof  AdapterTypeCtor === 'function') {
+            db_ = new AdapterTypeCtor(adapter.options);
+        } else if (typeof createInstance === 'function') {
+            db_ = createInstance(adapter.options);
+        } else {
+            // throw error
+            var err = new Error('The given adapter type is invalid. Adapter type constructor is undefined.');
+            err.code = 'ERR_ADAPTER_TYPE';
+            throw err;
         }
-        //otherwise load adapter
-        /**
-         * @type {DataAdapter|*}
-         */
-        db_ = adapterType.createInstance(adapter.options);
         if (typeof db_.hasConfiguration === 'function') {
             db_.hasConfiguration(function() {
                return self.getConfiguration();
@@ -238,18 +244,22 @@ function NamedDataContext(name)
             throw er;
         }
         //get data adapter type
-        var adapterType = strategy.adapterTypes[adapter.invariantName];
-        //validate data adapter type
-        if (_.isNil(adapterType)) {
-            er = new Error('Invalid adapter type.'); er.code = 'EADAPTER';
-            throw er;
+        var adapterType = strategy.adapterTypes.get(adapter.invariantName);
+        // get data adapter instance
+        var createInstance = adapterType.createInstance;
+        // get adapter type constructor if any
+        var AdapterTypeCtor = adapterType.type;
+        // create adapter instance
+        if (typeof  AdapterTypeCtor === 'function') {
+            db_ = new AdapterTypeCtor(adapter.options);
+        } else if (typeof createInstance === 'function') {
+            db_ = createInstance(adapter.options);
+        } else {
+            // throw error
+            var err = new Error('The given adapter type is invalid. Adapter type constructor is undefined.');
+            err.code = 'ERR_ADAPTER_TYPE';
+            throw err;
         }
-        if (typeof adapterType.createInstance !== 'function') {
-            er= new Error('Invalid adapter type. Adapter initialization method is missing.'); er.code = 'EADAPTER';
-            throw er;
-        }
-        //otherwise load adapter
-        db_ = adapterType.createInstance(adapter.options);
         if (typeof db_.hasConfiguration === 'function') {
             db_.hasConfiguration(function() {
                 return self.getConfiguration();

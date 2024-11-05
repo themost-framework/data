@@ -7,6 +7,7 @@ import ComputerMonitor from './test1/models/computer-monitor.model';
 import {Printer} from './test1/models/Printer';
 import {LaserPrinter} from './test1/models/laser-printer.model';
 import {TestUtils} from './adapter/TestUtils';
+import { SqliteAdapter } from '@themost/sqlite';
 
 describe('DataConfiguration', () => {
     let cwd = resolve(__dirname, 'test1');
@@ -42,7 +43,7 @@ describe('DataConfiguration', () => {
         delete modelDefinition.DataObjectClass;
         configuration.setModelDefinition(modelDefinition);
         expect(() => {
-            const AccountClass = context.model('Account').getDataObjectType();
+            context.model('Account').getDataObjectType();
         }).toThrowError('Module exported member not found');
         await TestUtils.finalize(app);
 
@@ -132,6 +133,31 @@ describe('DataConfiguration', () => {
         const InkjetPrinterClass = context.model('InkjetPrinter').getDataObjectType();
         expect(InkjetPrinterClass).toBe(Printer);
 
+        await context.finalizeAsync();
+        await TestUtils.finalize(app);
+    });
+
+    it('should add adapter type', async () => {
+        const app = new DataApplication(process.cwd());
+        const configuration = app.configuration.getStrategy(DataConfigurationStrategy);
+        // add sqlite adapter type
+        configuration.adapterTypes.set('sqlite', {
+            name: 'sqlite',
+            type: SqliteAdapter
+        });
+        // add test adapter type
+        configuration.adapters.push({
+            default: true,
+            invariantName: 'sqlite',
+            name: 'development',
+            options: {
+                database: ':memory:'
+            }
+        });
+        const context = app.createContext();
+        const db = context.db as SqliteAdapter;
+        let exists = await db.table('Product').existsAsync();
+        expect(exists).toBeFalsy();
         await context.finalizeAsync();
         await TestUtils.finalize(app);
     });

@@ -38,7 +38,7 @@ export class TestApplication extends IApplication {
             {
                 'name':'Test Data Adapter', 
                 'invariantName': 'test',
-                'type': '@themost/sqlite'
+                'type': '@themost/sqlite#SqliteAdapter'
             }
         ]);
         const db = resolve(__dirname, 'test1/db', 'test.db');
