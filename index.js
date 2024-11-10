@@ -85,7 +85,9 @@ var { DataObjectAssociationListener,
     DataObjectMultiAssociationError } = require('./data-associations');
 var { DataApplication } = require('./data-application');
 
-var { UknonwnAttributeError } = require('./data-errors');
+var { UnknownAttributeError } = require('./data-errors');
+
+var { executeInUnattendedModeAsync, executeInUnattendedMode, enableUnattendedExecution, disableUnattendedExecution  } = require('./UnattendedMode');
 
 module.exports = {
     TypeParser,
@@ -168,6 +170,10 @@ module.exports = {
     ODataModelBuilder,
     ODataConventionModelBuilder,
     EntitySetSchemaLoaderStrategy,
-    UknonwnAttributeError
+    UnknownAttributeError,
+    enableUnattendedExecution,
+    disableUnattendedExecution,
+    executeInUnattendedMode,
+    executeInUnattendedModeAsync
 };
 
