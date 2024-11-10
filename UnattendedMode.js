@@ -94,7 +94,10 @@ function executeInUnattendedModeAsync(context, callable) {
 function enableUnattendedExecution(app, executionAccount) {
     app.getConfiguration().setSourceAt('settings/auth/unattendedExecutionAccount', executionAccount || RandomUtils.randomChars(14));
 }
-
+/**
+ * Disables unattended mode
+ * @param {{getConfiguration(): import('@themost/common').ConfigurationBase}} app
+ */
 function disableUnattendedExecution(app) {
     app.getConfiguration().setSourceAt('settings/auth/unattendedExecutionAccount', null);
 }
