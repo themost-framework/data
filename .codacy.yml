@@ -9,3 +9,6 @@ exclude_paths:
   - "spec/**/*"
   - ".github/**/*"
   - "babel.config.js"
+  - "jest.config.js"
+  - "jest.setup.js"
+  - "jest.logger.js"
