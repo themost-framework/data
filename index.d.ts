@@ -20,3 +20,4 @@ export * from './data-listeners';
 export * from './data-associations';
 export * from './data-application';
 export * from './data-errors';
+export * from './UnattendedMode';
