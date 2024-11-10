@@ -86,6 +86,8 @@ var { DataObjectAssociationListener,
     DataObjectMultiAssociationError } = require('./data-associations');
 var { DataApplication } = require('./data-application');
 
+var { executeInUnattendedMode, executeInUnattendedModeAsync, enableUnattendedExecution, disableUnattendedExecution } = require('./UnattendedMode');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -165,6 +167,10 @@ module.exports = {
     EntitySetKind,
     ODataModelBuilder,
     ODataConventionModelBuilder,
-    EntitySetSchemaLoaderStrategy
+    EntitySetSchemaLoaderStrategy,
+    executeInUnattendedMode,
+    executeInUnattendedModeAsync,
+    enableUnattendedExecution,
+    disableUnattendedExecution
 };
 

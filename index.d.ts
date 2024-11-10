@@ -19,3 +19,4 @@ export * from './has-parent-junction';
 export * from './data-listeners';
 export * from './data-associations';
 export * from './data-application';
+export * from './UnattendedMode';
