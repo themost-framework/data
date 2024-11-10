@@ -77,6 +77,9 @@ export class TestApplication extends IApplication {
             await service.finalize();
         }
     }
+    async finalizeAsync(): Promise<void> {
+        await this.finalize();
+    }
 
 }
 

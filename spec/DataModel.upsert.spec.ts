@@ -12,7 +12,7 @@ describe('DataModel.upsert', () => {
         return done();
     });
     afterAll(async () => {
-        await context.finalize();
+        await context.finalizeAsync();
         await app.finalize();
     });
     it('should use upsert() to insert or update a single item', async () => {

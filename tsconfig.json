@@ -18,6 +18,9 @@
       "dom"
     ],
     "paths": {
+      "@themost/data": [
+        "./index"
+      ]
     }
   },
   "exclude": [

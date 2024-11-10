@@ -1,78 +1,83 @@
 var unattendedMode = Symbol('unattendedMode');
-var { RandomUtils } = require('@themost/common');
+var {RandomUtils} = require('@themost/common');
+
 /**
- * Execute a callable function with eleveted privileges in unattended mode.
+ * Execute a callable function with elevated privileges in unattended mode.
  * @param {import('./types').DataContext} context
- * @param {function(function(Error?): void)} callable 
- * @param {function(Error?): void} callback 
+ * @param {function(function(Error?): void)} callable
+ * @param {function(Error?): void} callback
  * @returns {void}
  */
 function executeInUnattendedMode(context, callable, callback) {
     if (typeof callable !== 'function') {
         return callback(new Error('Unattended mode requires a callable function'));
     }
-    // if the context is in unattended mode
+    // if the context is already in unattended mode
     if (context[unattendedMode]) {
-        // execute callable function
-        return callable(function(err) {
+        try {
+            // execute callable function
+            void callable(function (err) {
+                return callback(err);
+            });
+        } catch (err) {
             return callback(err);
-        });
-    }
-    // enter unattended mode
-    context[unattendedMode] = true;
-    // execute callable function
-    var interactiveUser;
-    try {
-        const account = context.getConfiguration().getSourceAt('settings/auth/unattendedExecutionAccount');
-        if (account == null) {
-            return callback(new Error('The unattended execution account is not defined. The operation cannot be completed.'));
         }
-        // get interactive user
-        if (context.user) {
-            interactiveUser = Object.assign({}, context.user);
-            // set interactive user
-            context.interactiveUser = interactiveUser;
-        }
-        if (account) {
-            context.user = { name:account, authenticationType:'Basic' };
-        }
-        return callable(function(err) {
+    } else {
+        var interactiveUser;
+        try {
+            const account = context.getConfiguration().getSourceAt('settings/auth/unattendedExecutionAccount');
+            if (account == null) {
+                return callback(new Error('The unattended execution account is not defined. The operation cannot be completed.'));
+            }
+            // enter unattended mode
+            context[unattendedMode] = true;
+            // get interactive user
+            if (context.user) {
+                interactiveUser = Object.assign({}, context.user);
+                // set interactive user
+                context.interactiveUser = interactiveUser;
+            }
+            if (account) {
+                context.user = {name: account, authenticationType: 'Basic'};
+            }
+            void callable(function (err) {
+                // restore user
+                if (interactiveUser) {
+                    context.user = Object.assign({}, interactiveUser);
+                }
+                delete context.interactiveUser;
+                // exit unattended mode
+                delete context[unattendedMode];
+                return callback(err);
+            });
+        } catch (err) {
             // restore user
             if (interactiveUser) {
                 context.user = Object.assign({}, interactiveUser);
             }
             delete context.interactiveUser;
             // exit unattended mode
-            delete context[unattendedProperty];
+            delete context[unattendedMode];
             return callback(err);
-        });
-    } catch (err) {
-        // restore user
-        if (interactiveUser) {
-            context.user = Object.assign({}, interactiveUser);
         }
-        delete context.interactiveUser;
-        // exit unattended mode
-        delete context[unattendedProperty];
-        return callback(err);
     }
 }
 
 /**
- * Execute a callable function with eleveted privileges in unattended mode.
+ * Execute a callable function with elevated privileges in unattended mode.
  * @param {import('./types').DataContext} context
- * @param {function(): Promise<void>} callable 
+ * @param {function(): Promise<void>} callable
  * @returns {Promise<void>}
  */
 function executeInUnattendedModeAsync(context, callable) {
     return new Promise((resolve, reject) => {
-        return executeInUnattendedMode(function(cb) {
-            return callable().then(function() {
+        void executeInUnattendedMode(context, function (cb) {
+            return callable().then(function () {
                 return cb();
-            }).catch(function(err) {
+            }).catch(function (err) {
                 return cb(err);
             });
-        }, function(err) {
+        }, function (err) {
             if (err) {
                 return reject(err);
             }
@@ -80,9 +85,10 @@ function executeInUnattendedModeAsync(context, callable) {
         });
     });
 }
+
 /**
  * Enables unattended mode
- * @param {{getConfiguration(): import('@themost/common').ConfigurationBase}} app 
+ * @param {{getConfiguration(): import('@themost/common').ConfigurationBase}} app
  * @param {string=} executionAccount
  */
 function enableUnattendedExecution(app, executionAccount) {
