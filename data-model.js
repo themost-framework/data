@@ -1,4 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+// noinspection ES6ConvertVarToLetConst
+
 var _ = require('lodash');
 var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
@@ -39,6 +41,11 @@ var {hasOwnProperty} = require('./has-own-property');
 var {SyncSeriesEventEmitter} = require('@themost/events');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
+
+var UniqueConstraintListener = dataListeners.UniqueConstraintListener;
+var NotNullConstraintListener = dataListeners.NotNullConstraintListener;
+var DataValidatorListener = validators.DataValidatorListener;
+
 /**
  * @this DataModel
  * @param {DataField} field
@@ -1787,10 +1794,7 @@ function saveBaseObject_(obj, callback) {
  * @private
  */
  function saveSingleObject_(obj, callback) {
-    var self = this,
-        NotNullConstraintListener = dataListeners.NotNullConstraintListener,
-        DataValidatorListener = validators.DataValidatorListener,
-        UniqueConstraintListener = dataListeners.UniqueConstraintListener;
+    var self = this;
     callback = callback || function() {};
     if (obj==null) {
         callback.call(self);
@@ -1816,33 +1820,48 @@ function saveBaseObject_(obj, callback) {
         target: obj,
         state:state
     };
-    //register nested objects listener (before save)
-    self.once('before.save', DataNestedObjectListener.prototype.beforeSave);
-    //register data association listener (after save)
-    self.once('after.save', DataNestedObjectListener.prototype.afterSave);
-    //register data association listener (before save)
-    self.once('before.save', DataObjectAssociationListener.prototype.beforeSave);
-    //register data association listener
-    self.once('after.save', DataObjectAssociationListener.prototype.afterSave);
-    //register zero or one  multiplicity listener
-    self.once('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
-    //register unique constraint listener at the end of listeners collection (before emit)
-    self.once('before.save', UniqueConstraintListener.prototype.beforeSave);
-    //register data validators at the end of listeners collection (before emit)
-    self.once('before.save', DataValidatorListener.prototype.beforeSave);
-    //register not null listener at the end of listeners collection (before emit)
-    self.once('before.save', NotNullConstraintListener.prototype.beforeSave);
-    //before save (validate permissions)
-    self.once('before.save', DataPermissionEventListener.prototype.beforeSave);
-    //execute before update events
+    var BeforeSaveListeners = [
+        DataNestedObjectListener.prototype.beforeSave,
+        DataObjectAssociationListener.prototype.beforeSave,
+        UniqueConstraintListener.prototype.beforeSave,
+        DataValidatorListener.prototype.beforeSave,
+        NotNullConstraintListener.prototype.beforeSave,
+        DataPermissionEventListener.prototype.beforeSave
+    ];
+
+    var AfterSaveListeners = [
+        DataNestedObjectListener.prototype.afterSave,
+        DataObjectAssociationListener.prototype.afterSave,
+        ZeroOrOneMultiplicityListener.prototype.afterSave,
+    ];
+    // add before save listeners
+    var beforeListeners = self.listeners('before.save');
+    BeforeSaveListeners.forEach(function(listener) {
+        if (typeof listener === 'function') {
+            // if listener is not already registered
+            if (beforeListeners.indexOf(listener) < 0) {
+                self.once('before.save', listener);
+            }
+        }
+    });
+    // add after save listeners
+    var afterListeners = self.listeners('after.save');
+    AfterSaveListeners.forEach(function(listener) {
+        if (typeof listener === 'function') {
+            // if listener is not already registered
+            if (afterListeners.indexOf(listener) < 0) {
+                self.once('after.save', listener);
+            }
+        }
+    });
+    // emit before save
     self.emit('before.save', e, function(err) {
-        //if an error occurred
-        self.removeListener('before.save', DataPermissionEventListener.prototype.beforeSave);
-        self.removeListener('before.save', NotNullConstraintListener.prototype.beforeSave);
-        self.removeListener('before.save', DataValidatorListener.prototype.beforeSave);
-        self.removeListener('before.save', UniqueConstraintListener.prototype.beforeSave);
-        self.removeListener('before.save', DataObjectAssociationListener.prototype.beforeSave);
-        self.removeListener('before.save', DataNestedObjectListener.prototype.beforeSave);
+        // if an error occurred
+        BeforeSaveListeners.forEach(function(listener) {
+            if (typeof listener === 'function') {
+                self.removeListener('before.save', listener);
+            }
+        });
         if (err) {
             //invoke callback with error
             callback.call(self, err);
@@ -2173,18 +2192,26 @@ DataModel.prototype.remove = function(obj, callback)
         target: obj,
         state: 4
     };
-    //register nested objects listener
-    self.once('before.remove', DataNestedObjectListener.prototype.beforeRemove);
-    //register data referenced object listener
-    self.once('before.remove', DataReferencedObjectListener.prototype.beforeRemove);
-    //before remove (validate permissions)
-    self.once('before.remove', DataPermissionEventListener.prototype.beforeRemove);
+    var BeforeRemoveListeners = [
+        DataNestedObjectListener.prototype.beforeRemove,
+        DataReferencedObjectListener.prototype.beforeRemove,
+        DataPermissionEventListener.prototype.beforeRemove
+    ];
+    var beforeListeners = self.listeners('before.remove');
+    BeforeRemoveListeners.forEach(function (listener) {
+        if (typeof listener === 'function') {
+            if (beforeListeners.indexOf(listener) < 0) {
+                self.once('before.remove', listener);
+            }
+        }
+    });
     //execute before update events
     self.emit('before.remove', e, function(err) {
-        //if an error occurred
-        self.removeListener('before.remove', DataPermissionEventListener.prototype.beforeRemove);
-        self.removeListener('before.remove', DataReferencedObjectListener.prototype.beforeRemove);
-        self.removeListener('before.remove', DataNestedObjectListener.prototype.beforeRemove);
+        BeforeRemoveListeners.forEach(function (listener) {
+           if (typeof listener === 'function') {
+               self.removeListener('before.remove', listener);
+           }
+        });
         if (err) {
             //invoke callback with error
             return callback(err);
