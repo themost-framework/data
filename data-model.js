@@ -11,7 +11,6 @@ var {QueryUtils} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
-var dataListeners = require('./data-listeners');
 var validators = require('./data-validator');
 var dataAssociations = require('./data-associations');
 var {DataNestedObjectListener} = require('./data-nested-object-listener');
@@ -39,12 +38,14 @@ var {OnNestedQueryOptionsListener} = require('./OnNestedQueryOptionsListener');
 var {OnExecuteNestedQueryable} = require('./OnExecuteNestedQueryable');
 var {hasOwnProperty} = require('./has-own-property');
 var {SyncSeriesEventEmitter} = require('@themost/events');
+var {DataStateValidatorListener} = require('./data-state-validator');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
-
-var UniqueConstraintListener = dataListeners.UniqueConstraintListener;
-var NotNullConstraintListener = dataListeners.NotNullConstraintListener;
-var DataValidatorListener = validators.DataValidatorListener;
+var { DataValidatorListener } = require('./data-validator');
+var {UniqueConstraintListener, NotNullConstraintListener,
+    CalculatedValueListener, DefaultValueListener, DataCachingListener, DataModelCreateViewListener,
+    DataModelSeedListener
+} = require('./data-listeners');
 
 /**
  * @this DataModel
@@ -110,7 +111,7 @@ function getImplementedModel() {
  * @ignore
  * @class
  * @constructor
- * @augments QueryExpression
+ * @augments {import('@themost/query').QueryExpression}
  */
 function EmptyQueryExpression() {
     //
@@ -118,128 +119,6 @@ function EmptyQueryExpression() {
 
 /**
  * @classdesc DataModel class extends a JSON data model and performs all data operations (select, insert, update and delete) in MOST Data Applications.
- <p>
-     These JSON schemas are in config/models folder:
- </p>
- <pre class="prettyprint"><code>
- /
- + config
-   + models
-     - User.json
-     - Group.json
-     - Account.json
-     ...
- </code></pre>
- <p class="pln">
- The following JSON schema presents a typical User model with fields, views, privileges, constraints, listeners, and seeding:
- </p>
- <pre class="prettyprint"><code>
- {
-     "name": "User", "id": 90, "title": "Application Users", "inherits": "Account", "hidden": false, "sealed": false, "abstract": false, "version": "1.4",
-     "fields": [
-         {
-             "name": "id", "title": "Id", "description": "The identifier of the item.",
-             "type": "Integer",
-             "nullable": false,
-             "primary": true
-         },
-         {
-             "name": "accountType",  "title": "Account Type", "description": "Contains a set of flags that define the type and scope of an account object.",
-             "type": "Integer",
-             "readonly":true,
-             "value":"javascript:return 0;"
-         },
-         {
-             "name": "lockoutTime", "title": "Lockout Time", "description": "The date and time that this account was locked out.",
-             "type": "DateTime",
-             "readonly": true
-         },
-         {
-             "name": "logonCount", "title": "Logon Count", "description": "The number of times the account has successfully logged on.",
-             "type": "Integer",
-             "value": "javascript:return 0;",
-             "readonly": true
-         },
-         {
-             "name": "enabled", "title": "Enabled", "description": "Indicates whether a user is enabled or not.",
-             "type": "Boolean",
-             "nullable": false,
-             "value": "javascript:return true;"
-         },
-         {
-             "name": "lastLogon", "title": "Last Logon", "description": "The last time and date the user logged on.",
-             "type": "DateTime",
-             "readonly": true
-         },
-         {
-             "name": "groups", "title": "User Groups", "description": "A collection of groups where user belongs.",
-             "type": "Group",
-             "expandable": true,
-             "mapping": {
-                 "associationAdapter": "GroupMembers", "parentModel": "Group",
-                 "parentField": "id", "childModel": "User", "childField": "id",
-                 "associationType": "junction", "cascade": "delete",
-                 "select": [
-                     "id",
-                     "name",
-                     "alternateName"
-                 ]
-             }
-         },
-         {
-             "name": "additionalType",
-             "value":"javascript:return this.model.name;",
-             "readonly":true
-         },
-         {
-             "name": "accountType",
-             "value": "javascript:return 0;"
-         }
-     ], "privileges":[
-         { "mask":1, "type":"self", "filter":"id eq me()" },
-         { "mask":15, "type":"global", "account":"*" }
-     ],
-     "constraints":[
-         {
-             "description": "User name must be unique across different records.",
-             "type":"unique",
-             "fields": [ "name" ]
-         }
-     ],
-     "views": [
-         {
-             "name":"list", "title":"Users", "fields":[
-                 { "name":"id", "hidden":true },
-                 { "name":"description" },
-                 { "name":"name" },
-                 { "name":"enabled" , "format":"yesno" },
-                 { "name":"dateCreated", "format":"moment : 'LLL'" },
-                 { "name":"dateModified", "format":"moment : 'LLL'" }
-             ], "order":"dateModified desc"
-         }
-     ],
-     "eventListeners": [
-         { "name":"New User Credentials Provider", "type":"/app/controllers/user-credentials-listener" }
-     ],
-     "seed":[
-         {
-             "name":"anonymous",
-             "description":"Anonymous User",
-             "groups":[
-                 { "name":"Guests" }
-             ]
-         },
-         {
-             "name":"admin@example.com",
-             "description":"Site Administrator",
-             "groups":[
-                 { "name":"Administrators" }
-             ]
-         }
-     ]
- }
- </code></pre>
- *
  * @class
  * @property {string} classPath - Gets or sets a string which represents the path of the DataObject subclass associated with this model.
  * @property {string} name - Gets or sets a string that represents the name of the model.
@@ -290,7 +169,7 @@ function DataModel(obj) {
      * @type {DataContext}
      * @private
      */
-    var context_ = null;
+    var context = null;
     var self = this;
 
     /**
@@ -298,17 +177,20 @@ function DataModel(obj) {
      * @type {DataContext|*}
      */
 
-    Object.defineProperty(this, 'context', { get: function() {
-        return context_;
-    }, set: function(value) {
-        context_ = value;
-        if (_.isNil(context_)) {
-            unregisterContextListeners.bind(this)();
-        }
-        else {
-            registerContextListeners.bind(this)();
-        }
-    }, enumerable: false, configurable: false});
+    Object.defineProperty(this, 'context', {
+        get: function () {
+            return context;
+        }, set: function (value) {
+            context = value;
+            // remove context listeners
+            unregisterContextListeners.call(self);
+            if (context != null) {
+               registerContextListeners.call(self);
+            }
+        },
+        enumerable: false,
+        configurable: false
+    });
 
     /**
      * @description Gets the database object associated with this data model
@@ -612,12 +494,6 @@ function unregisterContextListeners() {
     if (typeof this.setMaxListeners === 'function') {
         this.setMaxListeners(64);
     }
-    var CalculatedValueListener = dataListeners.CalculatedValueListener;
-    var DefaultValueListener = dataListeners.DefaultValueListener;
-    var DataCachingListener = dataListeners.DataCachingListener;
-    var DataModelCreateViewListener = dataListeners.DataModelCreateViewListener;
-    var DataModelSeedListener = dataListeners.DataModelSeedListener;
-    var DataStateValidatorListener = require('./data-state-validator').DataStateValidatorListener;
 
     //1. State validator listener
     this.on('before.save', DataStateValidatorListener.prototype.beforeSave);
