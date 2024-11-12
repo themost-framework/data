@@ -1859,6 +1859,7 @@ function saveBaseObject_(obj, callback) {
         });
     }
 }
+
 /**
  * @this DataModel
  * @param {*} obj
@@ -1895,44 +1896,51 @@ function saveBaseObject_(obj, callback) {
         target: obj,
         state:state
     };
-    //register nested objects listener (before save)
-    self.once('before.save', DataNestedObjectListener.prototype.beforeSave);
-    //register data association listener (after save)
-    self.once('after.save', DataNestedObjectListener.prototype.afterSave);
-    //register data association listener (before save)
-    self.once('before.save', DataObjectAssociationListener.prototype.beforeSave);
-    //register data association listener
-    self.once('after.save', DataObjectAssociationListener.prototype.afterSave);
-    //register zero or one  multiplicity listener
-    self.once('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
-    //register unique constraint listener at the end of listeners collection (before emit)
-    self.once('before.save', UniqueConstraintListener.prototype.beforeSave);
-    //register data validators at the end of listeners collection (before emit)
-    self.once('before.save', DataValidatorListener.prototype.beforeSave);
-    //register not null listener at the end of listeners collection (before emit)
-    self.once('before.save', NotNullConstraintListener.prototype.beforeSave);
-    //before save (validate permissions)
-    self.once('before.save', DataPermissionEventListener.prototype.beforeSave);
+
+    var beforeSaveListeners = [
+        DataNestedObjectListener.prototype.beforeSave,
+        DataObjectAssociationListener.prototype.beforeSave,
+        UniqueConstraintListener.prototype.beforeSave,
+        DataValidatorListener.prototype.beforeSave,
+        NotNullConstraintListener.prototype.beforeSave,
+        DataPermissionEventListener.prototype.beforeSave
+    ]
+    var afterSaveListeners = [
+        DataNestedObjectListener.prototype.afterSave,
+        DataObjectAssociationListener.prototype.afterSave,
+        ZeroOrOneMultiplicityListener.prototype.afterSave
+    ];
+
+    beforeSaveListeners.forEach(function(listener) {
+        self.once('before.save', listener);
+    });
+
+    afterSaveListeners.forEach(function(listener) {
+       self.once('after.save', listener);
+    });
+
     //execute before update events
     self.emit('before.save', e, function(err) {
         //if an error occurred
-        self.removeListener('before.save', DataPermissionEventListener.prototype.beforeSave);
-        self.removeListener('before.save', NotNullConstraintListener.prototype.beforeSave);
-        self.removeListener('before.save', DataValidatorListener.prototype.beforeSave);
-        self.removeListener('before.save', UniqueConstraintListener.prototype.beforeSave);
-        self.removeListener('before.save', DataObjectAssociationListener.prototype.beforeSave);
-        self.removeListener('before.save', DataNestedObjectListener.prototype.beforeSave);
+        beforeSaveListeners.forEach(function(listener) {
+            self.removeListener('before.save', listener);
+        });
         if (err) {
+            afterSaveListeners.forEach(function(listener) {
+                self.removeListener('after.save', listener);
+            });
             //invoke callback with error
-            callback.call(self, err);
+            return callback(err);
         }
         //otherwise execute save operation
         else {
             //save base object if any
             saveBaseObject_.call(self, e.target, function(err, result) {
                 if (err) {
-                    callback.call(self, err);
-                    return;
+                    afterSaveListeners.forEach(function(listener) {
+                        self.removeListener('after.save', listener);
+                    });
+                    return callback(err);
                 }
                 //if result is defined
                 if (result!==undefined)
@@ -1963,14 +1971,20 @@ function saveBaseObject_(obj, callback) {
                     //get updated object
                     self.recast(e.target, target, function(err) {
                         if (err) {
+                            afterSaveListeners.forEach(function(listener) {
+                                self.removeListener('after.save', listener);
+                            });
                             //and return error
-                            callback.call(self, err);
+                            return callback(err);
                         }
                         else {
                             //execute after update events
                             self.emit('after.save',e, function(err) {
+                                afterSaveListeners.forEach(function(listener) {
+                                    self.removeListener('after.save', listener);
+                                });
                                 //and return
-                                return callback.call(self, err, e.target);
+                                return callback(err, e.target);
                             });
                         }
                     });
@@ -1989,7 +2003,12 @@ function saveBaseObject_(obj, callback) {
                         nextIdentity = function(a, b, callback) { return callback(); }
                     }
                     nextIdentity.call(db, adapter, pm.name, function(err, insertedId) {
-                        if (err) { return callback.call(self, err); }
+                        if (err) {
+                            afterSaveListeners.forEach(function(listener) {
+                                self.removeListener('after.save', listener);
+                            });
+                            return callback(err);
+                        }
                         if (insertedId) {
                             //get object to insert
                             if (q.$insert) {
@@ -2002,7 +2021,10 @@ function saveBaseObject_(obj, callback) {
                         }
                         db.execute(q, null, function(err, result) {
                             if (err) {
-                                callback.call(self, err);
+                                afterSaveListeners.forEach(function(listener) {
+                                    self.removeListener('after.save', listener);
+                                });
+                                return callback(err);
                             }
                             else {
                                 if (key)
@@ -2010,7 +2032,10 @@ function saveBaseObject_(obj, callback) {
                                 //get updated object
                                 self.recast(e.target, target, function(err) {
                                     if (err) {
-                                        callback.call(self, err);
+                                        afterSaveListeners.forEach(function(listener) {
+                                            self.removeListener('after.save', listener);
+                                        });
+                                        return callback(err);
                                     }
                                     else {
                                         if (pm.type==='Counter' && typeof db.nextIdentity !== 'function' && e.state===1) {
@@ -2024,21 +2049,24 @@ function saveBaseObject_(obj, callback) {
                                                 if (lastResult)
                                                     if (lastResult.insertId)
                                                         e.target[self.primaryKey] = lastResult.insertId;
-                                                //raise after save listeners
+                                                // raise after save listeners
                                                 self.emit('after.save',e, function(err) {
+                                                    afterSaveListeners.forEach(function(listener) {
+                                                        self.removeListener('after.save', listener);
+                                                    });
                                                     //invoke callback
-                                                    callback.call(self, err, e.target);
+                                                    return callback(err, e.target);
                                                 });
                                             });
                                         }
                                         else {
                                             //raise after save listeners
                                             self.emit('after.save',e, function(err) {
-                                                self.removeListener('after.save', DataObjectAssociationListener.prototype.afterSave);
-                                                self.removeListener('after.save', ZeroOrOneMultiplicityListener.prototype.afterSave);
-                                                self.removeListener('after.save', DataNestedObjectListener.prototype.afterSave);
+                                                afterSaveListeners.forEach(function(listener) {
+                                                    self.removeListener('after.save', listener);
+                                                });
                                                 //invoke callback
-                                                callback.call(self, err, e.target);
+                                                return callback(err, e.target);
                                             });
                                         }
                                     }
