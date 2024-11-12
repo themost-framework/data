@@ -282,7 +282,7 @@ function DataModel(obj) {
      * @type {DataContext}
      * @private
      */
-    var context_ = null;
+    var context = null;
     var self = this;
 
     /**
@@ -290,17 +290,18 @@ function DataModel(obj) {
      * @type {DataContext|*}
      */
 
-    Object.defineProperty(this, 'context', { get: function() {
-        return context_;
-    }, set: function(value) {
-        context_ = value;
-        if (_.isNil(context_)) {
-            unregisterContextListeners.bind(this)();
-        }
-        else {
-            registerContextListeners.bind(this)();
-        }
-    }, enumerable: false, configurable: false});
+    Object.defineProperty(this, 'context', {
+        get: function () {
+            return context;
+        }, set: function (value) {
+            context = value;
+            // unregister listeners
+            unregisterContextListeners.call(self);
+            if (context != null) {
+                registerContextListeners.call(self);
+            }
+        }, enumerable: false, configurable: false
+    });
 
     /**
      * @description Gets the database object associated with this data model
@@ -594,6 +595,7 @@ function unregisterContextListeners() {
     this.removeAllListeners('after.remove');
     this.removeAllListeners('before.execute');
     this.removeAllListeners('after.execute');
+    this.removeAllListeners('before.upgrade');
     this.removeAllListeners('after.upgrade');
 }
 /**
