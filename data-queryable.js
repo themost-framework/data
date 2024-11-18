@@ -363,6 +363,17 @@ DataQueryable.prototype.and = function(attr) {
         this.query.and(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
     }
+    // check if attribute defines a many-to-many association
+    var mapping = this.model.inferMapping(attr);
+    if (mapping && mapping.associationType === 'junction') {
+        // append mapping id e.g. groups -> groups/id or members -> members/id etc
+        let attrId = attr + '/' + mapping.parentField;
+        if (mapping.parentModel === this.model.name) {
+            attrId = attr + '/' + mapping.childField;
+        }
+        this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attrId));
+        return this;
+    }
     this.query.and(this.fieldOf(attr));
     return this;
 };
@@ -383,6 +394,17 @@ DataQueryable.prototype.and = function(attr) {
 DataQueryable.prototype.or = function(attr) {
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.or(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
+        return this;
+    }
+    // check if attribute defines a many-to-many association
+    var mapping = this.model.inferMapping(attr);
+    if (mapping && mapping.associationType === 'junction') {
+        // append mapping id e.g. groups -> groups/id or members -> members/id etc
+        let attrId = attr + '/' + mapping.parentField;
+        if (mapping.parentModel === this.model.name) {
+            attrId = attr + '/' + mapping.childField;
+        }
+        this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attrId));
         return this;
     }
     this.query.or(this.fieldOf(attr));
