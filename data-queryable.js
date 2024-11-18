@@ -450,7 +450,15 @@ function resolveValue(obj) {
     });
  */
 DataQueryable.prototype.equal = function(obj) {
-
+    // check if the given object is an array
+    if (Array.isArray(obj)) {
+        var resolver = new DataValueResolver(this);
+        // and resolve each value separately
+        this.query.equal(obj.map(function(value) {
+            return resolver.resolve(value);
+        }));
+        return this;
+    }
     this.query.equal(new DataValueResolver(this).resolve(obj));
     return this;
 };
@@ -489,6 +497,16 @@ DataQueryable.prototype.is = function(obj) {
     });
  */
 DataQueryable.prototype.notEqual = function(obj) {
+    // check if the given object is an array
+    if (Array.isArray(obj)) {
+        var resolver = new DataValueResolver(this);
+        // and resolve each value separately
+        this.query.notEqual(obj.map(function(value) {
+            return resolver.resolve(value);
+        }));
+        return this;
+    }
+    // otherwise resolve the value
     this.query.notEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
