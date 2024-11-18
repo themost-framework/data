@@ -14,7 +14,7 @@ var {hasOwnProperty} = require('./has-own-property');
 var { DataAttributeResolver } = require('./data-attribute-resolver');
 var { DataExpandResolver } = require('./data-expand-resolver');
 var {instanceOf} = require('./instance-of');
-
+var { DataValueResolver } = require('./data-value-resolver');
 /**
  * @param {DataQueryable} target 
  */
@@ -235,6 +235,17 @@ DataQueryable.prototype.where = function(attr) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
     }
+    // check if attribute defines a many-to-many association
+    var mapping = this.model.inferMapping(attr);
+    if (mapping && mapping.associationType === 'junction') {
+        // append mapping id e.g. groups -> groups/id or members -> members/id etc
+        let attrId = attr + '/' + mapping.parentField;
+        if (mapping.parentModel === this.model.name) {
+            attrId = attr + '/' + mapping.childField;
+        }
+        this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attrId));
+        return this;
+    }
     this.query.where(this.fieldOf(attr));
     return this;
 };
@@ -418,7 +429,7 @@ function resolveValue(obj) {
  */
 DataQueryable.prototype.equal = function(obj) {
 
-    this.query.equal(resolveValue.bind(this)(obj));
+    this.query.equal(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -456,7 +467,7 @@ DataQueryable.prototype.is = function(obj) {
     });
  */
 DataQueryable.prototype.notEqual = function(obj) {
-    this.query.notEqual(resolveValue.bind(this)(obj));
+    this.query.notEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
 // noinspection JSUnusedGlobalSymbols
@@ -486,7 +497,7 @@ DataQueryable.prototype.notEqual = function(obj) {
  89   Nvidia GeForce GTX 650 Ti Boost               1625.49       2015-11-21 17:29:21.000+02:00
  */
 DataQueryable.prototype.greaterThan = function(obj) {
-    this.query.greaterThan(resolveValue.bind(this)(obj));
+    this.query.greaterThan(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -507,7 +518,7 @@ DataQueryable.prototype.greaterThan = function(obj) {
     });
  */
 DataQueryable.prototype.greaterOrEqual = function(obj) {
-    this.query.greaterOrEqual(resolveValue.bind(this)(obj));
+    this.query.greaterOrEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -544,7 +555,7 @@ DataQueryable.prototype.bit = function(value, result) {
  * @returns {DataQueryable}
  */
 DataQueryable.prototype.lowerThan = function(obj) {
-    this.query.lowerThan(resolveValue.bind(this)(obj));
+    this.query.lowerThan(new DataValueResolver(this).resolve(obj));
     return this;
 };
 
@@ -565,7 +576,7 @@ DataQueryable.prototype.lowerThan = function(obj) {
     });
  */
 DataQueryable.prototype.lowerOrEqual = function(obj) {
-    this.query.lowerOrEqual(resolveValue.bind(this)(obj));
+    this.query.lowerOrEqual(new DataValueResolver(this).resolve(obj));
     return this;
 };
 // noinspection JSUnusedGlobalSymbols
@@ -745,7 +756,8 @@ DataQueryable.prototype.notContains = function(value) {
  440  Bose SoundLink Bluetooth Mobile Speaker II  HS5288  155.27
  */
 DataQueryable.prototype.between = function(value1, value2) {
-    this.query.between(resolveValue.bind(this)(value1), resolveValue.bind(this)(value2));
+    const resolver = new DataValueResolver(this);
+    this.query.between(resolver.resolve(value1), resolver.resolve(value2));
     return this;
 };
 

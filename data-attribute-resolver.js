@@ -626,6 +626,12 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //create new join
                 var parentAlias = field.name + '_' + parentModel.name;
                 entity = new QueryEntity(parentModel.viewAdapter).as(parentAlias);
+                Object.defineProperty(entity, 'model', {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: parentModel.name
+                });
                 expr = QueryUtils.query().where(QueryField.select(mapping.associationObjectField).from(field.name))
                     .equal(QueryField.select(mapping.parentField).from(parentAlias));
                 //append join

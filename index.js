@@ -88,6 +88,8 @@ var { DataApplication } = require('./data-application');
 
 var { executeInUnattendedMode, executeInUnattendedModeAsync, enableUnattendedExecution, disableUnattendedExecution } = require('./UnattendedMode');
 
+var { DataValueResolver } = require('./data-value-resolver');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -171,6 +173,7 @@ module.exports = {
     executeInUnattendedMode,
     executeInUnattendedModeAsync,
     enableUnattendedExecution,
-    disableUnattendedExecution
+    disableUnattendedExecution,
+    DataValueResolver
 };
 
