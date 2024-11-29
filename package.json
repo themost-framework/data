@@ -30,7 +30,7 @@
     "@themost/promise-sequence": "^1.0.1",
     "async": "^2.6.4",
     "lodash": "^4.17.21",
-    "node-cache": "^1.1.0",
+    "node-cache": "^5.1.2",
     "pluralize": "^7.0.0",
     "q": "^1.4.1",
     "sprintf-js": "^1.1.2",
