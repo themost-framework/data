@@ -894,7 +894,7 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
             var cancel = false, assigned = false, entity = new QueryEntity(model.viewAdapter), expand = null,
                 perms1 = new QueryEntity(permissions.viewAdapter).as(permissions.viewAdapter + event.query.$lastIndex.toString()), expr = null;
             async.eachSeries(privileges, function (item, cb) {
-                if (cancel) {
+                if (assigned) {
                     return cb();
                 }
                 try {
