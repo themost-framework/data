@@ -5,7 +5,7 @@
     "hidden": false,
     "sealed": false,
     "abstract": false,
-    "version": "2.1",
+    "version": "2.2",
     "inherits": "Thing",
     "caching":"conditional",
     "fields": [

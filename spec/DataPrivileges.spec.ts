@@ -1,6 +1,6 @@
-import { resolve } from 'path';
 import { DataContext } from '../index';
 import { TestApplication, TestApplication2 } from './TestApplication';
+import { TestUtils } from "./adapter/TestUtils";
 
 describe('Permissions', () => {
     let app: TestApplication;
@@ -14,7 +14,7 @@ describe('Permissions', () => {
         await app.finalize();
     });
 
-    it('should validate read access', async () => {
+    it('should read access', async () => {
         const Products = context.model('Product');
         const items = await Products.getItems();
         expect(Array.isArray(items)).toBeTruthy();
@@ -65,43 +65,89 @@ describe('Permissions', () => {
     });
 
     it('should validate update access', async () => {
-        await context.model('ActionStatusType').getItems()
-        const Products = context.model('Product');
-        const user = {
-            name: 'margaret.davis@example.com'
-        }
-        // add user to contributors
-        const group = await context.model('Group').where('name').equal('Contributors').getTypedItem();
-        expect(group).toBeTruthy();
-        const members = group.property('members').silent();
-        await members.insert(user);
-        Object.assign(context, {
-            user
+        await TestUtils.executeInTransaction(context, async () => {
+            await context.model('ActionStatusType').getItems()
+            const Products = context.model('Product');
+            const user = {
+                name: 'margaret.davis@example.com'
+            }
+            // add user to contributors
+            const group = await context.model('Group').where('name').equal('Contributors').getTypedItem();
+            expect(group).toBeTruthy();
+            const members = group.property('members').silent();
+            await members.insert(user);
+            Object.assign(context, {
+                user
+            });
+            const user1 = await context.model('User').find(user)
+                .expand('groups').silent().getItem();
+            expect(user1).toBeTruthy();
+            expect(user1.groups).toBeTruthy();
+            const orderedItem = await Products.where('name').equal(
+                'Lenovo Yoga 2 Pro'
+            ).getItem();
+            expect(orderedItem).toBeTruthy();
+            const customer = await context.model('People').where('user/name')
+                .equal('christina.ali@example.com')
+                .getItem();
+            expect(customer).toBeTruthy();
+            const agent = await context.model('People').where('user/name')
+                .equal(user.name)
+                .getItem();
+            expect(agent).toBeTruthy();
+            const OrderActions = context.model('OrderAction');
+            let newAction = {
+                orderedItem,
+                customer,
+                agent
+            };
+            await expect(OrderActions.save(newAction)).resolves.toBeTruthy();
         });
-        const user1 = await context.model('User').find(user)
-            .expand('groups').silent().getItem();
-        expect(user1).toBeTruthy();
-        expect(user1.groups).toBeTruthy();
-        const orderedItem = await Products.where('name').equal(
-            'Lenovo Yoga 2 Pro'
-        ).getItem();
-        expect(orderedItem).toBeTruthy();
-        const customer = await context.model('People').where('user/name')
-            .equal('christina.ali@example.com')
-            .getItem();
-        expect(customer).toBeTruthy();
-        const agent = await context.model('People').where('user/name')
-            .equal(user.name)
-            .getItem();
-        expect(agent).toBeTruthy();
-        const OrderActions = context.model('OrderAction');
-        let newAction = {
-            orderedItem,
-            customer,
-            agent
-        };
-        await expect(OrderActions.save(newAction)).resolves.toBeTruthy();
+    });
 
+    it('should validate read access based based on self permissions', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            await context.model('ActionStatusTypes').getItems();
+            const OrderActions = context.model('OrderActions');
+            // set context user
+            const user = {
+                name: 'margaret.davis@example.com'
+            };
+            Object.assign(context, {
+                user
+            });
+            const group = await context.model('Group').where('name').equal('Contributors').getTypedItem();
+            expect(group).toBeTruthy();
+            const members = group.property('members').silent();
+            await members.insert(user);
+            Object.assign(context, {
+                user
+            });
+            let items = await OrderActions.getItems();
+            expect(items.length).toEqual(0);
+            const Products = context.model('Products');
+            const orderedItem = await Products.where('name').equal(
+                'Lenovo Yoga 2 Pro'
+            ).getItem();
+            expect(orderedItem).toBeTruthy();
+            const customer = await context.model('People').where('user/name')
+                .equal('christina.ali@example.com')
+                .getItem();
+            expect(customer).toBeTruthy();
+            const agent = await context.model('People').where('user/name')
+                .equal(user.name)
+                .getItem();
+            expect(agent).toBeTruthy();
+            let newAction = {
+                orderedItem,
+                customer,
+                agent
+            };
+            await expect(OrderActions.save(newAction)).resolves.toBeTruthy();
+            items = await OrderActions.getItems();
+            expect(items.length).toBeGreaterThan(0);
+
+        });
     });
 
 });
