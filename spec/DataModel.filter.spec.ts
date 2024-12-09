@@ -1,7 +1,5 @@
 import { TestApplication2 } from './TestApplication';
 import { DataContext, SchemaLoaderStrategy } from '../index';
-import { resolve } from 'path';
-const moment = require('moment');
 
 describe('DataModel.filter', () => {
     let app: TestApplication2;
@@ -12,7 +10,7 @@ describe('DataModel.filter', () => {
         return done();
     });
     afterAll(async () => {
-        await context.finalize();
+        await context.finalizeAsync();
         await app.finalize();
     });
     it('should use $filter param', async () => {
