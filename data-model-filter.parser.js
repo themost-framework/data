@@ -1,5 +1,5 @@
 const { AsyncSeriesEventEmitter } = require('@themost/events');
-const { OpenDataParser } = require('@themost/query');
+const { OpenDataParser, Expression, QueryField} = require('@themost/query');
 const { DataAttributeResolver } = require('./data-attribute-resolver');
 const { DataFilterResolver } = require('./data-filter-resolver');
 
@@ -55,7 +55,10 @@ class DataModelFilterParser {
                         }
                         else {
                             expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(thisModel, member);
-                            if (expr.$select) {
+                            if (expr && expr.$select instanceof Expression) {
+                                // // use it as select expression after converting it to query field
+                                return cb(null, expr.$select);
+                            } else if (expr.$select) {
                                 member = expr.$select.$name.replace(/\./g,'/');
                             }
                         }
