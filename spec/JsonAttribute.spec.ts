@@ -37,10 +37,12 @@ describe('JsonAttribute', () => {
                 color: 'silver'
             }
             await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
             item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
-                .select('metadata/color as color').getItem();
+                .select('metadata/color as color','metadata/dateCreated as dateCreated').getItem();
             expect(item).toBeTruthy();
             expect(item.color).toBe('silver');
+            expect(item.dateCreated).toBeTruthy();
             item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem();
             expect(item).toBeTruthy();
             expect(item.metadata).toBeTruthy();

@@ -1,5 +1,5 @@
 const {DataObjectState} = require('./types');
-const {eachSeries} = require("async");
+const {eachSeries} = require('async');
 const {DataConfigurationStrategy} = require('./data-configuration');
 const {DataError} = require('@themost/common');
 
