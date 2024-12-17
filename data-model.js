@@ -41,6 +41,7 @@ var {hasOwnProperty} = require('./has-own-property');
 var {SyncSeriesEventEmitter} = require('@themost/events');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
+var { OnJsonAttribute } = require('./OnJsonAttribute');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -637,6 +638,11 @@ function unregisterContextListeners() {
     //migration listeners
     this.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);
     this.on('after.upgrade',DataModelSeedListener.prototype.afterUpgrade);
+
+    // json listener
+    this.on('after.save', OnJsonAttribute.prototype.afterSave);
+    this.on('after.execute', OnJsonAttribute.prototype.afterExecute);
+    this.on('before.save', OnJsonAttribute.prototype.beforeSave);
 
     //get module loader
     /**
@@ -1489,15 +1495,20 @@ function cast_(obj, state) {
             if (hasOwnProperty(obj, name))
             {
                 var mapping = self.inferMapping(name);
-                //if mapping is empty and a super model is defined
+                //if mapping is empty and super model is defined
                 if (_.isNil(mapping)) {
                     if (superModel && x.type === 'Object') {
                         //try to find if superModel has a mapping for this attribute
                         mapping = superModel.inferMapping(name);
                     }
                 }
-                if (_.isNil(mapping)) {
-                    result[x.name] = obj[name];
+                if (mapping == null) {
+                    var {[name]: value} = obj;
+                    if (x.type === 'Json') {
+                        result[x.name] = value == null ? null : JSON.stringify(value);
+                    } else {
+                        result[x.name] = value;
+                    }
                 }
                 else if (mapping.associationType==='association') {
                     if (typeof obj[name] === 'object' && obj[name] !== null)

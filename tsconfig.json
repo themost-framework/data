@@ -5,6 +5,7 @@
     "target": "esnext",
     "module": "commonjs",
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "sourceMap": true,
     "noImplicitAny": true,

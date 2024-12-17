@@ -1,0 +1,43 @@
+{
+    "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+    "title": "Product Metadata",
+    "name": "ProductMetadata",
+    "abstract": true,
+    "version": "1.0.0",
+    "fields": [
+        {
+            "name": "color",
+            "title": "Color",
+            "description": "A color related to the product.",
+            "type": "Text"
+        },
+        {
+            "name": "mpn",
+            "title": "Manufacturer Part Number",
+            "description": "The manufacturer part number (MPN) of the product.",
+            "type": "Text"
+        },
+        {
+            "name": "slogan",
+            "title": "Slogan",
+            "description": "A slogan or tagline associated with the product.",
+            "type": "Text"
+        }
+    ],
+    "privileges": [
+        {
+            "mask": 1,
+            "type": "global",
+            "account": "*"
+        },
+        {
+            "mask": 15,
+            "type": "global"
+        },
+        {
+            "mask": 15,
+            "type": "global",
+            "account": "Administrators"
+        }
+    ]
+}
