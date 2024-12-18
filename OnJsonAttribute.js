@@ -46,27 +46,44 @@ class OnJsonAttribute {
             /**
              * @type {{edmtype: string,type:string}}
              */
-            const dataType = dataTypes.find((t) => t.name === attr.type);
+            const dataType = dataTypes[attr.type];
             let type = 'object';
+            let assign = {};
             if (dataType != null) {
                 type =  edmTypeToJsonType(dataType.edmtype);
+                assign = {
+                    [attr.name]: {
+                        type
+                    }
+                }
             } else {
                 // try to get related model
-                const relatedModel = context.model(attr.type);
+                let relatedModel = attr.additionalType != null ? context.model(attr.additionalType) : context.model(attr.type);
                 // if related model exists
                 if (relatedModel) {
                     // get json schema for related model
-                    type = OnJsonAttribute.getJsonSchema(relatedModel);
+                    assign = {
+                        [attr.name]: Object.assign(OnJsonAttribute.getJsonSchema(relatedModel), {
+                            type
+                        })
+                    }
+                } else {
+                    // if related model does not exist
+                    assign = {
+                        [attr.name]: {
+                            type
+                        }
+                    };
                 }
             }
             // set property
-            Object.assign(prev, {
-                [attr.name]: type
-            });
+            Object.assign(prev, assign);
             return prev;
         }, {});
         const required = model.attributes.filter((attr) => {
-            return attr.nullable === false;
+            const primary = attr.primary === true;
+            const many = attr.many === true;
+            return attr.nullable === false && many === false && primary === false;
         }).map((attr) => attr.name);
         return {
             properties,
@@ -146,21 +163,98 @@ class OnJsonAttribute {
 
     /**
      * @protected
-     * @param {{model: DataModel, result: any}} event
+     * @param {{model: DataModel, result: any, emitter?: import('./data-queryable').DataQueryable}} event
      * @param {function(err?:Error): void} callback
      * @returns void
      */
-    static afterAny(event, callback) {
-        const attributes = event.model.attributes.filter((attr) => {
+    static afterSelect(event, callback) {
+        const jsonAttributes = event.model.attributes.filter((attr) => {
             return attr.type === 'Json' && attr.additionalType != null && attr.model === event.model.name;
+        }).map((attr) => {
+            return attr.name
         });
-        if (attributes.length === 0) {
+        if (jsonAttributes.length === 0) {
             return callback();
         }
+        let select = [];
+        const { viewAdapter: entity } = event.model;
+        if (event.emitter && event.emitter.query && event.emitter.query.$select) {
+            const querySelect = event.emitter.query.$select[entity] || [];
+            select.push(...querySelect);
+        }
+        let attributes = select.reduce((prev, element) => {
+            // if select element is a typical query field with $name property
+            if (element && typeof element.$name === 'string') {
+                // split $name property by dot
+                const matches = element.$name.split('.');
+                // if there are more than one parts
+                if (matches && matches.length > 1) {
+                    // get last part
+                    if (jsonAttributes.indexOf(matches[1]) >= 0) {
+                        prev.push(matches.pop());
+                    }
+                }
+            } else {
+                // try to get first property which should be attribute alias
+                const [key] = Object.keys(element);
+                if (Object.hasOwnProperty.call(element, key)) {
+                    /**
+                     * @type {{$jsonGet?: any[]}}
+                     */
+                    const selectField = element[key];
+                    // if select field has $jsonGet property
+                    if (selectField.$jsonGet) {
+                        const [jsonGet] = selectField.$jsonGet;
+                        // if jsonGet has $name property
+                        if (jsonGet && typeof jsonGet.$name === 'string') {
+                            // split $name property by dot
+                            const matches = jsonGet.$name.split('.');
+                            if (matches && matches.length > 1) {
+                                if (jsonAttributes.indexOf(matches[1]) >= 0) {
+                                    // get json schema
+                                    if (matches.length > 2) {
+                                        // get attribute
+                                        const attribute = event.model.getAttribute(matches[1]);
+                                        if (attribute) {
+                                            // get additional model
+                                            const additionalModel = event.model.context.model(attribute.additionalType)
+                                            // and its json schema
+                                            let jsonSchema = OnJsonAttribute.getJsonSchema(additionalModel);
+                                            let index = 2;
+                                            // iterate over matches
+                                            while(index < matches.length) {
+                                                // get property
+                                                const property = jsonSchema.properties[matches[index]];
+                                                // if property is an object
+                                                if (property && property.type === 'object') {
+                                                    if (index + 1 === matches.length) {
+                                                        prev.push(matches[index]);
+                                                        break;
+                                                    }
+                                                    if (Array.isArray(property.properties)) {
+                                                        jsonSchema = property.properties;
+                                                    } else {
+                                                        prev.push(matches[index]);
+                                                        break;
+                                                    }
+                                                }
+                                                index++;
+                                            }
+                                        }
+                                    } else {
+                                        prev.push(matches[2]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return prev
+        }, []);
         // define json converter
         const parseJson = (item) => {
-            attributes.forEach((attr) => {
-                const {name} = attr;
+            attributes.forEach((name) => {
                 if (Object.prototype.hasOwnProperty.call(item, name)) {
                     const value = item[name];
                     if (typeof  value === 'string') {
@@ -171,6 +265,9 @@ class OnJsonAttribute {
         };
         // iterate over result
         const {result} = event;
+        if (result == null) {
+            return callback();
+        }
         if (Array.isArray(result)) {
             result.forEach((item) => parseJson(item));
         } else {
@@ -186,7 +283,7 @@ class OnJsonAttribute {
      * @returns void
      */
     afterSave(event, callback) {
-        return OnJsonAttribute.afterAny({
+        return OnJsonAttribute.afterSelect({
             model: event.model,
             result: event.target
         }, callback);
@@ -200,7 +297,7 @@ class OnJsonAttribute {
     afterExecute(event, callback) {
         try {
             if (event.emitter && event.emitter.query && event.emitter.query.$select && event.result) {
-                return OnJsonAttribute.afterAny(event, callback);
+                return OnJsonAttribute.afterSelect(event, callback);
             }
             return callback();
         } catch (err) {

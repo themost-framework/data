@@ -49,6 +49,58 @@ describe('JsonAttribute', () => {
         });
     });
 
+    it('should update json structured value', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.metadata = {
+                color: 'silver',
+                audience: {
+                    name: 'New customers',
+                    description: 'New customers who have never purchased before',
+                    audienceType: 'B2C',
+                    geographicArea: 'Worldwide'
+                }
+            }
+            await Products.save(item);
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem();
+            expect(item).toBeTruthy();
+            expect(item.metadata).toBeTruthy();
+            expect(item.metadata.audience).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select('metadata/audience/name as audienceName').getItem();
+            expect(item).toBeTruthy();
+            expect(item.audienceName).toBe('New customers');
+        });
+    });
+
+    it('should select json nested value', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.metadata = {
+                color: 'silver',
+                audience: {
+                    name: 'New customers',
+                    description: 'New customers who have never purchased before',
+                    audienceType: 'B2C',
+                    geographicArea: 'Worldwide'
+                }
+            }
+            await Products.save(item);
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem();
+            expect(item).toBeTruthy();
+            expect(item.metadata).toBeTruthy();
+            expect(item.metadata.audience).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select('metadata/audience as audience').getItem();
+            expect(item).toBeTruthy();
+            expect(item.audience.name).toBe('New customers');
+        });
+    });
+
     it('should throw error on invalid json', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const Products = context.model('Product').silent();

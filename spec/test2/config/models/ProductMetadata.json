@@ -42,6 +42,14 @@
             "readonly": true,
             "value": "javascript:return (new Date());",
             "calculation": "javascript:return (new Date());"
+        },
+        {
+            "@id": "https://schema.org/Audience",
+            "name": "audience",
+            "title": "Audience",
+            "description": "An intended audience associated with the product.",
+            "type": "Json",
+            "additionalType": "Audience"
         }
     ],
     "privileges": [
