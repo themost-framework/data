@@ -45,7 +45,7 @@
     "@themost/json-logger": "^1.1.0",
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.6.0",
-    "@themost/sqlite": "^2.8.3",
+    "@themost/sqlite": "^2.8.4",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",
     "@types/jest": "^27.4.1",

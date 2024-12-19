@@ -135,7 +135,10 @@ describe('JsonAttribute', () => {
     it('should use json attribute in aggregate functions', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const Products = context.model('Product').silent();
-            let items = await Products.asQueryable().select('id', 'metadata').where('category').equal('Laptops').getItems();
+            let items = await Products.asQueryable().select('id', 'metadata').where('category').equal('Laptops')
+                //.and('id').equal(19)
+                //.take(20)
+                .getItems();
             expect(items).toBeTruthy();
             const colors = ['silver', 'black', 'white', 'red', 'blue'];
             items.forEach(item => {
@@ -147,7 +150,10 @@ describe('JsonAttribute', () => {
                 await Products.save(item);
             }
             items = await Products.asQueryable().select(
+                'count(metadata/color) as total',
                 'metadata/color as color'
+            ).groupBy(
+                'metadata/color'
             ).getItems();
             expect(items).toBeTruthy();
        });
