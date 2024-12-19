@@ -5,7 +5,7 @@
   "hidden": false,
   "sealed": false,
   "abstract": false,
-  "version": "2.2.0",
+  "version": "2.2.1",
   "inherits": "Thing",
   "caching": "conditional",
   "fields": [
@@ -230,6 +230,7 @@
       "name": "metadata",
       "many": false,
       "type": "Json",
+      "indexed": true,
       "additionalType": "ProductMetadata"
     }
   ],

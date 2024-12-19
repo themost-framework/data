@@ -42,6 +42,7 @@ var {SyncSeriesEventEmitter} = require('@themost/events');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
 var { OnJsonAttribute } = require('./OnJsonAttribute');
+var { isObjectDeep } = require('./is-object');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -1505,7 +1506,7 @@ function cast_(obj, state) {
                 if (mapping == null) {
                     var {[name]: value} = obj;
                     if (x.type === 'Json') {
-                        result[x.name] = value == null ? null : JSON.stringify(value);
+                        result[x.name] = isObjectDeep(value) ? JSON.stringify(value) : null;
                     } else {
                         result[x.name] = value;
                     }

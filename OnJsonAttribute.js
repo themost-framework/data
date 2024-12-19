@@ -252,6 +252,9 @@ class OnJsonAttribute {
             }
             return prev
         }, []);
+        if (select.length === 0) {
+            attributes = jsonAttributes;
+        }
         // define json converter
         const parseJson = (item) => {
             attributes.forEach((name) => {

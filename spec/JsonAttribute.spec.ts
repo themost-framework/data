@@ -132,4 +132,25 @@ describe('JsonAttribute', () => {
         expect(items.length).toBeGreaterThan(0);
     });
 
+    it('should use json attribute in aggregate functions', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let items = await Products.asQueryable().select('id', 'metadata').where('category').equal('Laptops').getItems();
+            expect(items).toBeTruthy();
+            const colors = ['silver', 'black', 'white', 'red', 'blue'];
+            items.forEach(item => {
+                item.metadata = {
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                }
+            });
+            for (const item of items) {
+                await Products.save(item);
+            }
+            items = await Products.asQueryable().select(
+                'metadata/color as color'
+            ).getItems();
+            expect(items).toBeTruthy();
+       });
+    });
+
 });
