@@ -179,6 +179,8 @@ export declare class DataField {
     calculation?: string;
     readonly?: boolean;
     editable?: boolean;
+    insertable? : boolean;
+    additionalType?: string;
     mapping?: DataAssociationMapping;
     expandable?: boolean;
     nested?: boolean;
@@ -200,6 +202,7 @@ export declare class DataEventArgs {
     query?: any;
     previous?: any;
     throwError?: boolean;
+    result?: unknown;
 }
 
 export declare interface BeforeSaveEventListener {

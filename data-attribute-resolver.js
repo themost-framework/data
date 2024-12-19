@@ -1,4 +1,4 @@
-var {QueryField, QueryEntity, QueryUtils} = require('@themost/query');
+var {QueryField, QueryEntity, QueryUtils, MethodCallExpression, MemberExpression, Expression} = require('@themost/query');
 var {sprintf} = require('sprintf-js');
 var _ = require('lodash');
 var {DataError} = require('@themost/common');
@@ -90,6 +90,11 @@ DataAttributeResolver.prototype.resolveNestedAttribute = function(attr) {
             };
             // and pass member expression
             expr = new DataAttributeResolver().resolveNestedAttributeJoin.call(self.model, memberExpr);
+            // if expr.$select is an instance of Expression then return it
+            // important note: this operation is very important in cases where a json object is selected
+            if (expr && expr.$select instanceof Expression) {
+                return expr.$select;
+            }
             //select field
             if (member.length>2) {
                 if (memberExpr.name !== attr) {
@@ -179,6 +184,17 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
         //search for field mapping
         var mapping = self.inferMapping(arrMember[0]);
         if (_.isNil(mapping)) {
+            if (attrMember.type === 'Json') {
+                var collection = self[aliasProperty] || self.viewAdapter;
+                var objectPath = arrMember.join('.');
+                var objectGet = new MethodCallExpression('jsonGet', [
+                    new MemberExpression(collection + '.' + objectPath)
+                ]);
+                return {
+                    $select: objectGet,
+                    $expand: []
+                }
+            }
             throw new Error(sprintf('The target model does not have an association defined for attribute named %s',arrMember[0]));
         }
         if (mapping.childModel===self.name && mapping.associationType==='association') {

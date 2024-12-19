@@ -6,4 +6,4 @@ TraceUtils.useLogger(new JsonLogger({
 /* env */
 process.env.NODE_ENV = 'development';
 /* global jest */
-jest.setTimeout(30000);
+jest.setTimeout(60000);

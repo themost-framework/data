@@ -9,7 +9,7 @@
                 "Time", "URL", "Language", "Model", "Guid", "Object", "NegativeInteger",
                 "NegativeNumber", "NonNegativeInteger", "NonNegativeNumber",
                 "NonPositiveInteger", "NonPositiveNumber", "PositiveInteger",
-                "PositiveNumber", "Email", "AbsoluteURI", "RelativeURI"
+                "PositiveNumber", "Email", "AbsoluteURI", "RelativeURI", "Json"
             ]
         },
         "unknownTypes": {
@@ -172,6 +172,10 @@
                         "default": false,
                         "type": "boolean",
                         "description": "A boolean which indicates whether this attribute defines an association between two models where child objects are always treated as a part of the parent object."
+                    },
+                    "additionalType": {
+                        "type": "string",
+                        "description": "A string which represents the additional type of this property e.g. Person, Order etc. This attribute is used for properties marked as \"Json\" where a specific type should be defined for validating entities."
                     },
                     "mapping": {
                         "type": "object",

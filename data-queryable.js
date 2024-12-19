@@ -7,8 +7,8 @@ var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
 var {DataError, Args} = require('@themost/common');
-var {QueryField} = require('@themost/query');
-var {QueryEntity} = require('@themost/query');
+var {QueryField, MethodCallExpression, MemberExpression} = require('@themost/query');
+var {QueryEntity, Expression} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var Q = require('q');
 var aliasProperty = Symbol('alias');
@@ -42,6 +42,11 @@ DataValueResolver.prototype.resolve = function(value) {
                 return target.fieldOf(attr.name);
             }
         }
+    }
+    // if value is an instance of Expression e.g. an instance if MemberExpression
+    if (value instanceof Expression) {
+        // return the expression
+        return value;
     }
     if (isObjectDeep(value)) {
         // try to get in-process left operand
@@ -243,24 +248,37 @@ DataAttributeResolver.prototype.resolveNestedAttribute = function(attr) {
             };
             // and pass member expression
             expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self.model, memberExpr);
-            //select field
-            if (member.length>2) {
-                if (memberExpr.name !== attr) {
-                    // get member segments again because they have been modified
-                    member = memberExpr.name.split('/');
+            // if the returned expression is an instance of query expression
+            if (expr && expr.$select instanceof Expression) {
+                // use it as select expression after converting it to query field
+                select = new QueryField({
+                    // important note: use $value query property to set the expression
+                    $value: expr.$select.exprOf()
+                });
+            } else {
+                // select field
+                if (member.length > 2) {
+                    if (memberExpr.name !== attr) {
+                        // get member segments again because they have been modified
+                        member = memberExpr.name.split('/');
+                    }
+                    select = QueryField.select(member[member.length - 1]).from(member[member.length - 2]);
+                } else {
+                    if (memberExpr.name !== attr) {
+                        // get member segments again because they have been modified
+                        member = memberExpr.name.split('/');
+                    }
+                    // and create query field expression
+                    select = QueryField.select(member[1]).from(member[0]);
                 }
-                select = QueryField.select(member[member.length-1]).from(member[member.length-2]);
-            }
-            else {
-                if (memberExpr.name !== attr) {
-                    // get member segments again because they have been modified
-                    member = memberExpr.name.split('/');
-                }
-                // and create query field expression
-                select  = QueryField.select(member[1]).from(member[0]);
             }
         }
         if (expr) {
+            // if expand expression is an empty array
+            if (Array.isArray(expr.$expand) && expr.$expand.length === 0) {
+                // do nothing and return select expression
+                return select;
+            }
             if (_.isNil(self.query.$expand)) {
                 self.query.$expand = expr;
             }
@@ -320,6 +338,18 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
         //search for field mapping
         var mapping = self.inferMapping(arrMember[0]);
         if (_.isNil(mapping)) {
+            // add support for json objects
+            if (attrMember.type === 'Json') {
+                var collection = self[aliasProperty] || self.viewAdapter;
+                var objectPath = arrMember.join('.');
+                var objectGet = new MethodCallExpression('jsonGet', [
+                    new MemberExpression(collection + '.' + objectPath)
+                ]);
+                return {
+                    $select: objectGet,
+                    $expand: []
+                }
+            }
             throw new Error(sprintf('The target model does not have an association defined for attribute named %s',arrMember[0]));
         }
         if (mapping.childModel===self.name && mapping.associationType==='association') {

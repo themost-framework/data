@@ -1,0 +1,36 @@
+{
+  "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+  "@id": "https://schema.org/Audience",
+  "name": "Audience",
+  "description": "Intended audience for an item, i.e. the group for whom the item was created.",
+  "title": "Audience",
+  "abstract": false,
+  "sealed": false,
+  "implements": "Intangible",
+  "version": "1.0",
+  "fields": [
+    {
+      "name": "audienceType",
+      "title": "Audience Type",
+      "description": "The target group associated with a given audience (e.g. veterans, car owners, musicians, etc.).",
+      "type": "Text"
+    },
+    {
+      "name": "geographicArea",
+      "title": "Geographic Area",
+      "description": "The geographic area associated with the audience.",
+      "type": "Text"
+    }
+  ],
+  "privileges": [
+    {
+      "mask": 15,
+      "type": "global"
+    },
+    {
+      "mask": 15,
+      "type": "global",
+      "account": "Administrators"
+    }
+  ]
+}

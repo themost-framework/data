@@ -2,6 +2,7 @@ import {DataModelFilterParser} from '../data-model-filter.parser';
 import {TestApplication} from './TestApplication';
 import {DataContext} from '../types';
 import {resolve} from 'path';
+import { TestUtils } from "./adapter/TestUtils";
 
 describe('DataModelFilterParser', () => {
 
@@ -93,6 +94,23 @@ describe('DataModelFilterParser', () => {
         for (const item of items) {
             expect(item.orderStatus).toEqual(orderStatus);
         }
+    });
+
+    it('should parse filter with json attributes', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+           const Products = context.model('Product').silent();
+            const resolver = new DataModelFilterParser(Products);
+            const { $where, $expand } = await resolver.parseAsync(
+                `metadata/color eq 'silver'`
+            );
+            const q = Products.asQueryable();
+            Object.assign(q.query, {
+                $where,
+                $expand
+            });
+            const items: any[] = await q.take(25).getItems();
+            expect(items).toBeTruthy();
+        });
     });
 
 });
