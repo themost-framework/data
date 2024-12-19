@@ -1,5 +1,5 @@
 const { AsyncSeriesEventEmitter } = require('@themost/events');
-const { OpenDataParser, Expression, QueryField} = require('@themost/query');
+const { OpenDataParser, Expression} = require('@themost/query');
 const { DataAttributeResolver } = require('./data-attribute-resolver');
 const { DataFilterResolver } = require('./data-filter-resolver');
 
