@@ -223,6 +223,12 @@
                     "associationType": "association",
                     "cascade": "delete"
                 }
+            },
+            {
+                "name": "metadata",
+                "many": false,
+                "type": "Json",
+                "additionalType": "ProductMetadata"
             }
     ],
     "constraints": [

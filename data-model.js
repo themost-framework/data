@@ -4,7 +4,7 @@ var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var pluralize = require('pluralize');
 var async = require('async');
-var {QueryUtils, Expression} = require('@themost/query');
+var {QueryUtils, MethodCallExpression} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
@@ -38,6 +38,8 @@ var {hasOwnProperty} = require('./has-own-property');
 var { SyncSeriesEventEmitter } = require('@themost/events');
 require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
+var { OnJsonAttribute } = require('./OnJsonAttribute');
+var { isObjectDeep } = require('./is-object');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -640,6 +642,10 @@ function unregisterContextListeners() {
     //migration listeners
     this.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);
     this.on('after.upgrade',DataModelSeedListener.prototype.afterUpgrade);
+    // json listener
+    this.on('after.save', OnJsonAttribute.prototype.afterSave);
+    this.on('after.execute', OnJsonAttribute.prototype.afterExecute);
+    this.on('before.save', OnJsonAttribute.prototype.beforeSave);
 
     //get module loader
     /**
@@ -786,12 +792,23 @@ function filterInternal(params, callback) {
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
-                    if (expr.$select) {
-                        if (expr.$select instanceof Expression) {
-                            member = expr.$select;
+                    // get member expression
+                    if (expr && expr.$select && Object.prototype.hasOwnProperty.call(expr.$select, '$value')) {
+                        // get value
+                        var {$value} = expr.$select;
+                        // get first property
+                        var [property] = Object.keys($value);
+                        // check if property starts with $ (e.g. $concat, $jsonGet etc)
+                        if (property && property.startsWith('$')) {
+                            // get arguments
+                            var {[property]: args} = $value;
+                            // create method call expression
+                            member = new MethodCallExpression(property.substring(1), args);
                         } else {
-                            member = expr.$select.$name.replace(/\./g, '/');
+                            return cb(new Error('Invalid member expression. Expected a method call expression.'));
                         }
+                    } else if (expr && expr.$select) {
+                        member = expr.$select.$name.replace(/\./g, '/');
                     }
                 }
                 if (expr && expr.$expand) {
@@ -1556,10 +1573,14 @@ function cast_(obj, state) {
                         mapping = superModel.inferMapping(name);
                     }
                 }
-                if (_.isNil(mapping)) {
-                    result[x.name] = obj[name];
-                }
-                else if (mapping.associationType==='association') {
+                if (mapping == null) {
+                    var {[name]: value} = obj;
+                    if (x.type === 'Json') {
+                        result[x.name] = isObjectDeep(value) ? JSON.stringify(value) : null;
+                    } else {
+                        result[x.name] = value;
+                    }
+                } else if (mapping.associationType==='association') {
                     if (typeof obj[name] === 'object' && obj[name] !== null)
                     //set associated key value (e.g. primary key value)
                         result[x.name] = obj[name][mapping.parentField];

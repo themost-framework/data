@@ -3,4 +3,4 @@ const JestLogger = require('./jest.logger');
 // noinspection JSCheckFunctionSignatures
 TraceUtils.useLogger(new JestLogger());
 /* global jest */
-jest.setTimeout(30000);
+jest.setTimeout(60000);

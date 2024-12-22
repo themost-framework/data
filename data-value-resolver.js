@@ -1,6 +1,7 @@
 const {DataAttributeResolver} = require('./data-attribute-resolver');
 const {isObjectDeep} = require('./is-object');
 const {sprintf} = require('sprintf-js');
+var {Expression} = require('@themost/query');
 
 /**
  * @class DataValueResolver
@@ -29,6 +30,11 @@ DataValueResolver.prototype.resolve = function(value) {
                 return target.fieldOf(attr.name);
             }
         }
+    }
+    // if value is an instance of Expression e.g. an instance if MemberExpression
+    if (value instanceof Expression) {
+        // return the expression
+        return value;
     }
     if (isObjectDeep(value)) {
         // try to get in-process left operand
