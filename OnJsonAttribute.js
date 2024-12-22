@@ -93,6 +93,16 @@ class OnJsonAttribute {
     }
 
     /**
+     * @param {import('./data-model').DataModel} model 
+     * @returns {Array<import('./types').DataField>}
+     */
+    static getJsonAttributes(model) {
+        return model.attributes.filter((attr) => {
+            return attr.type === 'Json' && attr.additionalType != null;
+        });
+    }
+
+    /**
      * @param {import('./types').DataEventArgs} event
      * @param {function(err?:Error)} callback
      * @returns {Promise<void> | Promise<unknown>}
@@ -169,7 +179,7 @@ class OnJsonAttribute {
      */
     static afterSelect(event, callback) {
         const jsonAttributes = event.model.attributes.filter((attr) => {
-            return attr.type === 'Json' && attr.additionalType != null && attr.model === event.model.name;
+            return attr.type === 'Json' && attr.additionalType != null;
         }).map((attr) => {
             return attr.name
         });
@@ -239,6 +249,9 @@ class OnJsonAttribute {
         }, []);
         if (select.length === 0) {
             attributes = jsonAttributes;
+        }
+        if (attributes.length === 0) {
+            return callback();
         }
         // define json converter
         const parseJson = (item) => {

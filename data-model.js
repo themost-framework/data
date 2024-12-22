@@ -646,7 +646,6 @@ function unregisterContextListeners() {
     this.on('after.save', OnJsonAttribute.prototype.afterSave);
     this.on('after.execute', OnJsonAttribute.prototype.afterExecute);
     this.on('before.save', OnJsonAttribute.prototype.beforeSave);
-
     //get module loader
     /**
      * @type {ModuleLoader|*}
