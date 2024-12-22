@@ -820,7 +820,7 @@ function select_(arg) {
     else {
         a = DataAttributeResolver.prototype.testNestedAttribute.call(self,arg);
         if (a) {
-            return DataAttributeResolver.prototype.selecteNestedAttribute.call(self, a.name, a.property);
+            return DataAttributeResolver.prototype.selectNestedAttribute.call(self, a.name, a.property);
         }
         else {
             a = DataAttributeResolver.prototype.testAttribute.call(self,arg);
@@ -910,7 +910,7 @@ DataQueryable.prototype.select = function(attr) {
                         else {
                             b = DataAttributeResolver.prototype.testNestedAttribute.call(self,name);
                             if (b) {
-                                expr = DataAttributeResolver.prototype.selecteNestedAttribute.call(self, b.name, x.property);
+                                expr = DataAttributeResolver.prototype.selectNestedAttribute.call(self, b.name, x.property);
                                 if (expr) { arr.push(expr); }
                             }
                             else {

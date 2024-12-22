@@ -28,7 +28,7 @@ DataAttributeResolver.prototype.orderByNestedAttribute = function(attr) {
     return new DataAttributeResolver().resolveNestedAttribute.call(this, attr);
 };
 
-DataAttributeResolver.prototype.selecteNestedAttribute = function(attr, alias) {
+DataAttributeResolver.prototype.selectNestedAttribute = function(attr, alias) {
     var expr = new DataAttributeResolver().resolveNestedAttribute.call(this, attr);
     if (expr) {
         if (_.isNil(alias))
@@ -47,7 +47,7 @@ DataAttributeResolver.prototype.selecteNestedAttribute = function(attr, alias) {
 DataAttributeResolver.prototype.selectAggregatedAttribute = function(aggregation, attribute, alias) {
     var self=this, result;
     if (new DataAttributeResolver().testNestedAttribute(attribute)) {
-        result = new DataAttributeResolver().selecteNestedAttribute.call(self,attribute, alias);
+        result = new DataAttributeResolver().selectNestedAttribute.call(self,attribute, alias);
     }
     else {
         result = self.fieldOf(attribute);
@@ -91,35 +91,39 @@ DataAttributeResolver.prototype.resolveNestedAttribute = function(attr) {
             expr = new DataAttributeResolver().resolveNestedAttributeJoin.call(self.model, memberExpr);
             // if expr.$select is an instance of Expression then return it
             // important note: this operation is very important in cases where a json object is selected
-            if (expr && expr.$select instanceof Expression) {
-                return expr.$select;
-            }
-            //select field
-            if (member.length>2) {
-                if (memberExpr.name !== attr) {
-                    // get member segments again because they have been modified
-                    member = memberExpr.name.split('/');
+            if (expr && expr.$select && Object.prototype.hasOwnProperty.call(expr.$select, '$value')) {
+                var {$value} = expr.$select;
+                select = new QueryField({
+                    $value
+                });
+            } else {
+                //select field
+                if (member.length>2) {
+                    if (memberExpr.name !== attr) {
+                        // get member segments again because they have been modified
+                        member = memberExpr.name.split('/');
+                    }
+                    select = QueryField.select(member[member.length-1]).from(member[member.length-2]);
                 }
-                select = QueryField.select(member[member.length-1]).from(member[member.length-2]);
-            }
-            else {
-                if (memberExpr.name !== attr) {
-                    // get member segments again because they have been modified
-                    member = memberExpr.name.split('/');
-                }
-                // if attribute has been resolved by the previous attribute resolver (for join)
-                // use the returned value which is also a query field expression
-                //
-                // important note: this operation is very important in cases where
-                // we are trying to select or filter zero-or-one associated items that are 
-                // defined by an association of type junction (a typical many-to-many association)
-                // e.g. $select=orderedItem/madeId as madeInCountry&$filter=orderedItem/madeId ne null
-                // where Product.madeId is a zero-or-one associated country with a product 
-                if (expr && expr.$select) {
-                    select = expr.$select;
-                } else {
-                    // otherwise build query field expression
-                    select  = QueryField.select(member[1]).from(member[0]);
+                else {
+                    if (memberExpr.name !== attr) {
+                        // get member segments again because they have been modified
+                        member = memberExpr.name.split('/');
+                    }
+                    // if attribute has been resolved by the previous attribute resolver (for join)
+                    // use the returned value which is also a query field expression
+                    //
+                    // important note: this operation is very important in cases where
+                    // we are trying to select or filter zero-or-one associated items that are 
+                    // defined by an association of type junction (a typical many-to-many association)
+                    // e.g. $select=orderedItem/madeId as madeInCountry&$filter=orderedItem/madeId ne null
+                    // where Product.madeId is a zero-or-one associated country with a product 
+                    if (expr && expr.$select) {
+                        select = expr.$select;
+                    } else {
+                        // otherwise build query field expression
+                        select  = QueryField.select(member[1]).from(member[0]);
+                    }
                 }
             }
         }
@@ -191,7 +195,9 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                     new MemberExpression(collection + '.' + objectPath)
                 ]);
                 return {
-                    $select: objectGet,
+                    $select: new QueryField({
+                        $value: objectGet.exprOf()
+                    }),
                     $expand: []
                 }
             }

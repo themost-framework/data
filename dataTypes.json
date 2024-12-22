@@ -421,5 +421,17 @@
     "type": "string",
     "sqltype":"Text",
     "version":"1.0"
+  },
+  "Json": {
+      "comment": "A string which represents a JSON object.",
+      "label": "Json",
+      "supertypes": [
+          "Text"
+      ],
+      "url": "https://www.json.org/json-en.html",
+      "edmtype": "Edm.String",
+      "type": "string",
+    "sqltype":"Text",
+    "version":"1.0"
   }
 }
