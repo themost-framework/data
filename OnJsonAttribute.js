@@ -216,6 +216,8 @@ class OnJsonAttribute {
                                 while(index < matches.length) {
                                     let attribute = nextModel.getAttribute(matches[index]);
                                     if (attribute && attribute.type === 'Json') {
+                                        // get next model
+                                        nextModel = event.model.context.model(attribute.additionalType)
                                         // if this is the last match
                                         if (index + 1 === matches.length) {
                                             // add attribute
@@ -223,8 +225,6 @@ class OnJsonAttribute {
                                             // and exit
                                             break;
                                         }
-                                        // get next model
-                                        nextModel = event.model.context.model(attribute.additionalType)
                                     } else {
                                         break;
                                     }
