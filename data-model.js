@@ -1,5 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
+var {cloneDeep} = require('lodash');
 var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var pluralize = require('pluralize');
@@ -578,10 +579,11 @@ DataModel.prototype.initialize = function() {
  * @returns {DataModel} Returns a new DataModel instance
  */
 DataModel.prototype.clone = function(context) {
-    var result = new DataModel(this);
-    if (context)
-        result.context = context;
-    return result;
+    // create new instance
+    var cloned = new DataModel(cloneDeep(this)).silent(this.isSilent());
+    // set context or this model context
+    cloned.context = context || this.context;
+    return cloned;
 };
 /**
  * @this DataModel
