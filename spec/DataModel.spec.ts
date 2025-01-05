@@ -96,4 +96,16 @@ describe('DataModel', () => {
         expect(model.caching).toBe('none');
     });
 
+    it('should clone model', () => {
+        const model = context.model('Employee').silent();
+        expect(model).toBeTruthy();
+        const cloned = model.clone();
+        expect(cloned instanceof DataModel);
+        expect(cloned.name).toEqual(model.name);
+        // change something to parent
+        model.caching = 'always';
+        expect(cloned.caching).not.toBe(model.caching);
+        expect(cloned.isSilent()).toBeTruthy();
+    });
+
 });
