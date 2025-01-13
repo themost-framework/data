@@ -45,6 +45,20 @@ export declare interface AuthSettingsConfiguration {
     loginPage?: string;
 }
 
+export declare type DataAdapterConstructor<T> = Function & { prototype: T };
+
+export declare interface CreateDataAdapterInstance {
+    name: string;
+    invariantName?: string;
+    createInstance?(options: any): any;
+}
+
+export declare interface DataAdapterType {
+    name: string;
+    invariantName?: string;
+    type?: DataAdapterConstructor<any>;
+}
+
 export declare class DataConfiguration {
     constructor(configPath: string);
     static getCurrent(): DataConfiguration;
@@ -58,7 +72,7 @@ export declare class DataConfigurationStrategy extends ConfigurationStrategy{
 
     readonly dataTypes: Map<string, DataTypeConfiguration>;
     readonly adapters: Array<DataAdapterConfiguration>;
-    readonly adapterTypes: Array<DataAdapterTypeConfiguration>;
+    readonly adapterTypes: Map<string, (DataAdapterType | CreateDataAdapterInstance)>;
     getAuthSettings(): AuthSettingsConfiguration;
     getAdapterType(invariantName: string): DataAdapterTypeConfiguration;
     hasDataType(name: string): boolean;
