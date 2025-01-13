@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
-import {QueryExpression} from '@themost/query';
+import {QueryExpression, QueryFunc, QueryJoinFunc} from '@themost/query';
 
 export declare class DataQueryable implements DataContextEmitter {
     constructor(model: DataModel);
@@ -9,6 +9,7 @@ export declare class DataQueryable implements DataContextEmitter {
     readonly query: QueryExpression;
     clone(): this;
     where(attr: string): this;
+    where<T>(expr: QueryFunc<T>, ...params: unknown[]): this;
     search(text: string): this;
     join(model: string): this;
     and(attr: string): this;
@@ -29,12 +30,29 @@ export declare class DataQueryable implements DataContextEmitter {
     contains(value: any): this;
     notContains(value: any): this;
     between(value1: any, value2: any): this;
+    select<T>(expr: (value: T, ...param: any) => any, ...params: any[]): this;
+    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, ...params: any[]): this;
     select(...attr: any[]): this;
     orderBy(attr: any): this;
+    orderBy<T>(expr: (value: T, ...params: any[]) => any): this;
     orderByDescending(attr: any): this;
+    orderByDescending<T>(expr: (value: T) => any, ...params: any[]): this;
     thenBy(attr: any): this;
+    thenBy<T>(expr: (value: T) => any, ...params: any[]): this;
     thenByDescending(attr: any): this;
+    thenByDescending<T>(expr: (value: T) => any, ...params: any[]): this;
     groupBy(...attr: any[]): this;
+    groupBy<T>(...args: [...expr:[(value: T) => any], ...params: any[]]): this;
+    groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, ...params: any[]): this;
+    groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, arg3: QueryFunc<T>, ...params: any[]): this;
+    groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, arg3: QueryFunc<T>,
+               arg4: QueryFunc<T>, ...params: any[]): this;
+    groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, arg3: QueryFunc<T>,
+               arg4: QueryFunc<T>, arg5: QueryFunc<T>, ...params: any[]): this;
+    groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, arg3: QueryFunc<T>,
+               arg4: QueryFunc<T>, arg5: QueryFunc<T>, arg6: QueryFunc<T>, ...params: any[]): this;
+    groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, arg3: QueryFunc<T>,
+               arg4: QueryFunc<T>, arg5: QueryFunc<T>, arg6: QueryFunc<T> , arg7: QueryFunc<T>, ...params: any[]): this;
     skip(n:number): this;
     take(n:number): this;
     getItem(): Promise<any>;

@@ -15,6 +15,93 @@ var aliasProperty = Symbol('alias');
 var {hasOwnProperty} = require('./has-own-property');
 var {isObjectDeep} = require('./is-object');
 var { UnknownAttributeError } = require('./data-errors');
+var { DataExpandResolver } = require('./data-expand-resolver');
+var {instanceOf} = require('./instance-of');
+
+/**
+ * @param {DataQueryable} target 
+ */
+function resolveJoinMember(target) {
+    return function onResolvingJoinMember(event) {
+        /**
+         * @type {Array}
+         */
+        var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+        var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
+        if (instanceOf(expr, QueryField)) {
+            var member = expr.$name.split('.');
+            Object.assign(event, {
+                object: member[0],
+                member: member[1]
+            })
+        }
+        if (expr instanceof Expression) {
+            Object.assign(event, {
+                member: expr
+            })
+        }
+    }
+}
+
+// eslint-disable-next-line no-unused-vars
+function resolveZeroOrOneJoinMember(target) {
+    /**
+     * This method tries to resolve a join member e.g. product.productDimensions
+     * when this member defines a zero-or-one association
+     */
+    return function onResolvingZeroOrOneJoinMember(event) {
+        /**
+         * @type {Array<string>}
+         */
+        // eslint-disable-next-line no-unused-vars
+        var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+    }
+}
+
+/**
+ * @param {DataQueryable} target 
+ */
+function resolveMember(target) {
+    /**
+     * @param {member:string} event
+     */
+    return function onResolvingMember(event) {
+        var collection = target.model.viewAdapter;
+        var member = event.member.replace(new RegExp('^' + collection + '.'), '');
+        /**
+         * @type {import('./types').DataAssociationMapping}
+         */
+        var mapping = target.model.inferMapping(member);
+        if (mapping == null) {
+            return;
+        }
+        /**
+         * @type {import('./types').DataField}
+         */
+        var attribute = target.model.getAttribute(member);
+        if (attribute.multiplicity === 'ZeroOrOne') {
+            var resolveMember = null;
+            if (mapping.associationType === 'junction' && mapping.parentModel === self.name) {
+                // expand child field
+                resolveMember = attribute.name.concat('/', mapping.childField);
+            } else if (mapping.associationType === 'junction' && mapping.childModel === self.name) {
+                // expand parent field
+                resolveMember = attribute.name.concat('/', mapping.parentField);
+            } else if (mapping.associationType === 'association' && mapping.parentModel === target.model.name) {
+                var associatedModel = target.model.context.model(mapping.childModel);
+                resolveMember = attribute.name.concat('/', associatedModel.primaryKey);
+            }
+            if (resolveMember) {
+                // resolve attribute
+                var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, resolveMember);
+                if (instanceOf(expr, QueryField)) {
+                    event.member = expr.$name;
+                }
+            }
+        }
+        
+    }
+}
 
 /**
  * @param {DataQueryable} target
@@ -861,18 +948,6 @@ DataQueryable.prototype.ensureContext = function() {
  * Serializes the underlying query and clears current filter expression for further filter processing. This operation may be used in complex filtering.
  * @param {Boolean=} useOr - Indicates whether an or statement will be used in the resulted statement.
  * @returns {DataQueryable}
- * @example
- //retrieve a list of order
- context.model('Order')
- .where('orderStatus').equal(1).and('paymentMethod').equal(2)
- .prepare().where('orderStatus').equal(2).and('paymentMethod').equal(2)
- .prepare(true)
- //(((OrderData.orderStatus=1) AND (OrderData.paymentMethod=2)) OR ((OrderData.orderStatus=2) AND (OrderData.paymentMethod=2)))
- .list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
  */
 DataQueryable.prototype.prepare = function(useOr) {
     this.query.prepare(useOr);
@@ -881,20 +956,27 @@ DataQueryable.prototype.prepare = function(useOr) {
 
 /**
  * Initializes a where expression
- * @param attr {string} - A string which represents the field name that is going to be used as the left operand of this expression
+ * @param attr {string|*} - A string which represents the field name that is going to be used as the left operand of this expression
  * @returns {DataQueryable}
- * @example
- context.model('Person')
- .where('user/name').equal('user1@exampl.com')
- .select('description')
- .first().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
  */
 DataQueryable.prototype.where = function(attr) {
     Args.check(this.query.$where == null, new Error('The where expression has already been initialized.'));
+    // get arguments as array
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.where.apply(query, args);
+        } finally {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+        }
+        return this;
+    }
     if (typeof attr === 'string' && /\//.test(attr)) {
         this.query.where(DataAttributeResolver.prototype.resolveNestedAttribute.call(this, attr));
         return this;
@@ -1063,6 +1145,7 @@ DataQueryable.prototype.or = function(attr) {
  * @param {*} obj
  * @returns {*}
  */
+// eslint-disable-next-line no-unused-vars
 function resolveValue(obj) {
     var self = this;
     if (typeof obj === 'string' && /^\$it\//.test(obj)) {
@@ -1463,58 +1546,34 @@ function select_(arg) {
 
 /**
  * Selects a field or a collection of fields of the current model.
- * @param {...string} attr  An array of fields, a field or a view name
+ * @param {...*} attr  An array of fields, a field or a view name
  * @returns {DataQueryable}
- * @example
- //retrieve the last 5 orders
- context.model('Order').select('id','customer','orderDate','orderedItem')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- * @example
- //retrieve the last 5 orders by getting the associated customer name and product name
- context.model('Order').select('id','customer/description as customerName','orderDate','orderedItem/name as productName')
- .orderBy('orderDate')
- .take(5).list().then(function(result) {
-        console.table(result.records);
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- id   customerName         orderDate                      orderedItemName
- ---  -------------------  -----------------------------  ----------------------------------------------------
- 46   Nicole Armstrong     2014-12-31 13:35:41.000+02:00  LaCie Blade Runner
- 288  Cheyenne Hudson      2015-01-01 13:24:21.000+02:00  Canon Pixma MG5420 Wireless Photo All-in-One Printer
- 139  Christian Whitehead  2015-01-01 23:21:24.000+02:00  Olympus OM-D E-M1
- 3    Katelyn Kelly        2015-01-02 04:42:58.000+02:00  Kobo Aura
- 59   Cheyenne Hudson      2015-01-02 10:47:53.000+02:00  Google Nexus 7 (2013)
-
- @example
- //retrieve the best customers by getting the associated customer name and a count of orders made by the customer
- context.model('Order').select('customer/description as customerName','count(id) as orderCount')
- .orderBy('count(id)')
- .groupBy('customer/description')
- .take(3).list().then(function(result) {
-        done(null, result);
-    }).catch(function(err) {
-        done(err);
-    });
- @example //The result set of this example may be:
- customerName      orderCount
- ----------------  ----------
- Miranda Bird      19
- Alex Miles        16
- Isaiah Morton     16
  */
 DataQueryable.prototype.select = function(attr) {
 
     var self = this, arr, expr,
         arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+
+    // get arguments as array
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        var onResolvingMember = resolveMember(this);
+        query.resolvingMember.subscribe(onResolvingMember);
+        try {
+            query.select.apply(query, args);
+        } finally {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+            query.resolvingMember.unsubscribe(onResolvingMember);
+        }
+        return this;
+    }
+    
 
     if (typeof arg === 'string') {
         if (arg==='*') {
@@ -1811,8 +1870,23 @@ DataQueryable.prototype.orderBy = function(attr) {
  HR6205        Samsung Galaxy Note 10.1 (2014 Edition)  2
  */
 DataQueryable.prototype.groupBy = function(attr) {
-    var arr = [],
-        arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    var arr = [];
+    var arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): attr;
+    var args = Array.from(arguments);
+    if (typeof args[0] === 'function') {
+        /**
+         * @type {import("@themost/query").QueryExpression}
+         */
+        var query = this.query;
+        var onResolvingJoinMember = resolveJoinMember(this);
+        query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+        try {
+            query.groupBy.apply(query, args);
+        } finally {
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+        }
+        return this;
+    }
     if (_.isArray(arg)) {
         for (var i = 0; i < arg.length; i++) {
             var x = arg[i];
@@ -2973,9 +3047,52 @@ DataQueryable.prototype.cache = function(value) {
  */
 DataQueryable.prototype.expand = function(attr) {
 
-    var self = this,
-        arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): [attr];
+    var self = this;
+    var arg = (arguments.length>1) ? Array.prototype.slice.call(arguments): [attr];
     var expanded;
+    if (typeof attr === 'function') {
+        var args = Array.from(arguments);
+        try {
+            /**
+             * @type {import("@themost/query").QueryExpression}
+             */
+            var query = this.clone().query;
+            // clear select
+            var onResolvingMember = function(event) {
+                var member = event.member.split('.');
+                self.expand(member[1]);
+            };
+            var onResolvingJoinMember = function(event) {
+                /**
+                 * @type {string}
+                 */
+                var member = event.fullyQualifiedMember;
+                var index = member.lastIndexOf('.');
+                while(index >= 0) {
+                    member = member.substring(0, index) + '($expand=' +  member.substring(index + 1, member.length) + ')'
+                    index = member.lastIndexOf('.');
+                }
+                var result = new DataExpandResolver().test(member);
+                if (result && result.length) {
+                    self.expand(result[0]);
+                }
+            };
+            query.resolvingMember.subscribe(onResolvingMember);
+            query.resolvingJoinMember.subscribe(onResolvingJoinMember);
+            // check if last argument is closure parameters
+            let params = null;
+            if (typeof args[args.length - 1] !== 'function') {
+                params = args.pop();
+            }
+            args.forEach(function(argument) {
+                query.select.call(query, argument, params);
+            });
+        } finally {
+            query.resolvingMember.unsubscribe(onResolvingMember);
+            query.resolvingJoinMember.unsubscribe(onResolvingJoinMember);
+        }
+        return this;
+    }
     if (_.isNil(arg)) {
         delete self.$expand;
     }
