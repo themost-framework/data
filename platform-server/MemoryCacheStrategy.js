@@ -9,6 +9,9 @@ const fs = require('fs');
 const { Guid, TraceUtils } = require('@themost/common');
 const { CacheEntrySchema } = require('./CacheEntry');
 const MD5 = require('crypto-js/md5');
+const { QueryExpression } = require('@themost/query');
+
+const CACHE_ABSOLUTE_EXPIRATION = 1200;
 
 if (typeof Guid.from !== 'function') {
     Guid.from = function(value) {
@@ -79,6 +82,12 @@ class MemoryCacheApplication extends DataApplication {
                 }
             }
         });
+        const absoluteExpiration = this.configuration.getSourceAt('settings/cache/absoluteExpiration');
+        if (typeof absoluteExpiration === 'number' && absoluteExpiration >= 0) {
+            this.absoluteExpiration = absoluteExpiration;
+        } else {
+            this.absoluteExpiration = CACHE_ABSOLUTE_EXPIRATION;
+        }
     }
 }
 
@@ -86,17 +95,41 @@ class MemoryCacheStrategy extends DataCacheStrategy {
     
     constructor(config) {
         super(config);
-        this.cache = new MemoryCacheApplication();
+        this.rawCache = new MemoryCacheApplication();
     }
 
+    /**
+     * Gets a key value pair from cache
+     * @param {*} key 
+     * @returns Promise<*>
+     */
     async get(key) {
-        const context = this.cache.createContext();
+        const context = this.rawCache.createContext();
         try {
             const entry = await context.model('CacheEntry').asQueryable().where((x, key) => {
                 return x.path === key && x.location === 'server';
             }, key).getItem();
+            const {sourceAdapter: CacheEntries} = context.model('CacheEntry');
             if (entry && entry.doomed) {
+                // execute ad-hoc query
+                // remove doomed entry
+                await context.db.executeAsync(
+                    new QueryExpression().delete(CacheEntries).where((x, id) => {
+                        return x.id === id;
+                    }, entry.id)
+                );
                 return;
+            }
+            if (entry && entry.expiredAt && entry.expiredAt < new Date()) {
+                // execute ad-hoc query
+                // set doomed to true
+                await context.db.executeAsync(
+                    new QueryExpression().update(CacheEntries).set({
+                        doomed: true
+                    }).where((x, id) => {
+                        return x.id === id;
+                    }, entry.id)
+                );
             }
             if (entry && entry.content) {
                 return entry.content;
@@ -107,8 +140,15 @@ class MemoryCacheStrategy extends DataCacheStrategy {
         }
     }
 
+    /**
+     * Sets a key value pair in cache.
+     * @param {*} key - The key to be cached
+     * @param {*} value - The value to be cached
+     * @param {number=} absoluteExpiration - The expiration time in seconds
+     * @returns {Promise<*>}
+     */
     async add(key, value, absoluteExpiration) {
-        const context = this.cache.createContext();
+        const context = this.rawCache.createContext();
         const CacheEntries = context.model('CacheEntry');
         try {
             // create uuid from unique constraint attributes
@@ -129,7 +169,7 @@ class MemoryCacheStrategy extends DataCacheStrategy {
                 content: value,
                 createdAt: new Date(),
                 modifiedAt: new Date(),
-                expiredAt: absoluteExpiration ? new Date(Date.now() + (absoluteExpiration || 0)) : null,
+                expiredAt: absoluteExpiration ? new Date(Date.now() + ((absoluteExpiration || 0) * 1000)) : null,
                 doomed: false
             });
             // insert or update cache entry
@@ -139,13 +179,22 @@ class MemoryCacheStrategy extends DataCacheStrategy {
             await context.finalizeAsync();
         }
     }
+
+    /**
+     * Removes a key from cache
+     * @param {*} key 
+     */
     async remove(key) {
-        const context = this.cache.createContext();
-        const CacheEntries = context.model('CacheEntry');
+        const context = this.rawCache.createContext();
+        const {sourceAdapter: CacheEntries} = context.model('CacheEntry');
         try {
-            await CacheEntries.remove({
-                path: key
-            });
+            // remove using an ad-hoc query to support wildcard characters
+            const searchPath = key.replace(/\*/g, '%');
+            await context.db.executeAsync(
+                new QueryExpression().delete(CacheEntries).where((x, search) => {
+                    return x.path.includes(search) === true && x.location === 'server';
+                }, searchPath)
+            );
         } finally {
             await context.finalizeAsync();
         }
@@ -155,29 +204,27 @@ class MemoryCacheStrategy extends DataCacheStrategy {
         throw new Error('Method not implemented.');
     }
 
+    /**
+     * Gets a key value pair from cache or invokes the given function and returns the value before caching it.
+     * @param {*} key 
+     * @param {function():Promise<*>} getFunc The function to be invoked if the key is not found in cache
+     * @param {number=} absoluteExpiration The expiration time in seconds
+     * @returns 
+     */
     async getOrDefault(key, getFunc, absoluteExpiration) {
-        const context = this.cache.createContext();
-        const CacheEntries = context.model('CacheEntry');
-        try {
-            const entry = await CacheEntries.asQueryable().where((x, key) => {
-                return x.path === key &&
-                    x.location === 'server' &&
-                    x.doomed === false;
-            }, key).select(({content, contentEncoding}) => ({
-                content, contentEncoding
-            })).getItem();
-            if (entry && typeof entry.content !== 'undefined') {
-                return entry.content;
-            }
-            // get value from function
-            const result = await getFunc();
-            // add value to cache
-            await this.add(key, result, absoluteExpiration);
+        // try to get entry from cache
+        const value = await this.get(key);
+        // if entry exists
+        if (typeof value !== 'undefined') {
             // return value
-            return result;
-        } finally {
-            await context.finalizeAsync();
+            return value;
         }
+        // otherwise, get value by invoking function
+        const result = await getFunc();
+        // add value to cache
+        await this.add(key, typeof result === 'undefined' ? null : result, absoluteExpiration);
+        // return value
+        return result;
     }
 }
 

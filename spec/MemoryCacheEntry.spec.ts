@@ -34,4 +34,16 @@ describe('MemoryCacheEntry', () => {
             items = await Groups.getItems();
         }
     });
+
+    it('should delete memory cache entry', async () => {
+        const schema = context.getConfiguration().getStrategy(SchemaLoaderStrategy);
+        const model = schema.getModelDefinition('Group');
+        model.caching = 'always';
+        schema.setModelDefinition(model);
+        const Groups = context.model('Group');
+        await Groups.getItems();
+        const cache: any = app.getConfiguration().getStrategy(DataCacheStrategy);
+        await cache.remove('/Group/*');
+
+    });
 });
