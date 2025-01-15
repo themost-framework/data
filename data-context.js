@@ -7,6 +7,7 @@ var {DataConfigurationStrategy} = require('./data-configuration');
 var cfg = require('./data-configuration');
 var Symbol = require('symbol');
 var nameProperty = Symbol('name');
+var { DataModel } = require('./data-model');
 
 /**
  * @classdesc Represents the default data context of MOST Data Applications.
@@ -171,8 +172,7 @@ DefaultDataContext.prototype.model = function(name) {
     var obj = self.getConfiguration().getStrategy(DataConfigurationStrategy).model(modelName);
     if (_.isNil(obj))
         return null;
-    var DataModel = require('./data-model').DataModel,
-        model = new DataModel(obj);
+    var model = new DataModel(obj);
     //set model context
     model.context = self;
     //return model
