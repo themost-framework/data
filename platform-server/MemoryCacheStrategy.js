@@ -8,6 +8,20 @@ const path = require('path');
 const fs = require('fs');
 const { Guid, TraceUtils } = require('@themost/common');
 const { CacheEntrySchema } = require('./CacheEntry');
+const MD5 = require('crypto-js/md5');
+
+if (typeof Guid.from !== 'function') {
+    Guid.from = function(value) {
+        var str = MD5(value).toString();
+        return new Guid([
+            str.substring(0, 8),
+            str.substring(8, 12),
+            str.substring(12, 16),
+            str.substring(16, 20),
+            str.substring(20, 32)
+        ].join('-'));
+    }
+}
 
 class MemoryCacheApplication extends DataApplication {
     constructor() {
@@ -97,25 +111,29 @@ class MemoryCacheStrategy extends DataCacheStrategy {
         const context = this.cache.createContext();
         const CacheEntries = context.model('CacheEntry');
         try {
-            const entry = await CacheEntries.asQueryable().where((x, key) => {
-                return x.path === key &&
-                    x.location === 'server' &&
-                    x.contentEncoding === 'application/json';
-            }, key).select(
-                ({id}) => ({id})
-            ).getItem();
-            const id = entry && entry.id;
-            await CacheEntries.upsert({
-                id: id || Guid.newGuid().toString(),
+            // create uuid from unique constraint attributes
+            // (avoid checking if exists)
+            const entry = {
                 path: key,
                 location: 'server',
-                content: value,
                 contentEncoding: 'application/json',
+                headers: null,
+                params: null,
+                customParams: null
+            }
+            // get id
+            const id = Guid.from(entry).toString();
+            // assign extra properties
+            Object.assign(entry, {
+                id: id,
+                content: value,
                 createdAt: new Date(),
                 modifiedAt: new Date(),
                 expiredAt: absoluteExpiration ? new Date(Date.now() + (absoluteExpiration || 0)) : null,
                 doomed: false
             });
+            // insert or update cache entry
+            await CacheEntries.upsert(entry);
             return value;
         } finally {
             await context.finalizeAsync();
@@ -141,36 +159,21 @@ class MemoryCacheStrategy extends DataCacheStrategy {
         const context = this.cache.createContext();
         const CacheEntries = context.model('CacheEntry');
         try {
-            const exists = await CacheEntries.asQueryable().where((x, key) => {
+            const entry = await CacheEntries.asQueryable().where((x, key) => {
                 return x.path === key &&
                     x.location === 'server' &&
-                    x.contentEncoding === 'application/json' &&
                     x.doomed === false;
-            }, key).count();
-            if (exists) {
-                return CacheEntries.asQueryable().where((x) => {
-                    return x.path === key && x.doomed === false;
-                }).select(({content}) => ({
-                    content
-                })).value().then((result) => {
-                    if (result) {
-                        return JSON.parse(result.content);
-                    }
-                    return null;
-                });
+            }, key).select(({content, contentEncoding}) => ({
+                content, contentEncoding
+            })).getItem();
+            if (entry && typeof entry.content !== 'undefined') {
+                return entry.content;
             }
+            // get value from function
             const result = await getFunc();
-            await CacheEntries.insert({
-                id: Guid.newGuid().toString(),
-                path: key,
-                location: 'server',
-                content: result,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-                contentEncoding: 'application/json',
-                expiredAt: absoluteExpiration ? new Date(Date.now() + (absoluteExpiration || 0)) : null,
-                doomed: false
-            });
+            // add value to cache
+            await this.add(key, result, absoluteExpiration);
+            // return value
             return result;
         } finally {
             await context.finalizeAsync();

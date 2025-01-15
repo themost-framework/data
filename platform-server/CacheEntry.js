@@ -59,7 +59,8 @@ const CacheEntrySchema = {
             "nullable": false,
             "readonly": false,
             "editable": true,
-            "size": 24
+            "size": 24,
+            "indexed": true
         },
         {
             "name": "params",

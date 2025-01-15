@@ -30,6 +30,7 @@
     "@themost/promise-sequence": "^1.0.1",
     "ajv": "^8.17.1",
     "async": "^2.6.4",
+    "crypto-js": "^4.2.0",
     "lodash": "^4.17.21",
     "node-cache": "^5.1.2",
     "pluralize": "^7.0.0",
