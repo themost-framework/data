@@ -1,0 +1,11 @@
+{
+    "name": "themost-data-platform-server",
+    "private": true,
+    "peerDependencies": {
+        "@themost/query": "^2.6.73",
+        "@themost/sqlite": "^2.8.4",
+        "@themost/pool": "^2.10.1",
+        "@themost/common": "^2.5.11",
+        "crypto-js": "^4.2.0"
+    }
+}

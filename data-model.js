@@ -44,6 +44,7 @@ require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
 var { OnJsonAttribute } = require('./OnJsonAttribute');
 var { isObjectDeep } = require('./is-object');
+var { DataStateValidatorListener } = require('./data-state-validator');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -616,8 +617,7 @@ function unregisterContextListeners() {
     var DataCachingListener = dataListeners.DataCachingListener;
     var DataModelCreateViewListener = dataListeners.DataModelCreateViewListener;
     var DataModelSeedListener = dataListeners.DataModelSeedListener;
-    var DataStateValidatorListener = require('./data-state-validator').DataStateValidatorListener;
-
+    
     //1. State validator listener
     this.on('before.save', DataStateValidatorListener.prototype.beforeSave);
     this.on('before.remove', DataStateValidatorListener.prototype.beforeRemove);
@@ -710,9 +710,10 @@ DataModel.prototype.join = function(model) {
  * @param {String|*} attr - A string that represents the name of a field
  * @returns DataQueryable
 */
+// eslint-disable-next-line no-unused-vars
 DataModel.prototype.where = function(attr) {
     var result = new DataQueryable(this);
-    return result.where(attr);
+    return result.where.apply(result, Array.from(arguments));
 };
 
 /**
@@ -1508,7 +1509,13 @@ function cast_(obj, state) {
                 if (mapping == null) {
                     var {[name]: value} = obj;
                     if (x.type === 'Json') {
-                        result[x.name] = isObjectDeep(value) ? JSON.stringify(value) : null;
+                        if (value != null) {
+                            // set json value
+                            result[x.name] = typeof value === 'string' ? value : JSON.stringify(value);
+                        } else { 
+                            // set null value
+                            result[x.name] = value;
+                        }
                     } else {
                         result[x.name] = value;
                     }
@@ -1758,8 +1765,7 @@ DataModel.prototype.save = function(obj, callback)
  * @see DataObjectState
  */
 DataModel.prototype.inferState = function(obj, callback) {
-    var self = this,
-        DataStateValidatorListener = require('./data-state-validator').DataStateValidatorListener;
+    var self = this;
     var e = { model:self, target:obj };
     DataStateValidatorListener.prototype.beforeSave(e, function(err) {
         //if error return error

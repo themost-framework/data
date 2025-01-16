@@ -12,6 +12,7 @@ var {TraceUtils} = require('@themost/common');
 var {TextUtils} = require('@themost/common');
 var {DataCacheStrategy} = require('./data-cache');
 var {DataFieldQueryResolver} = require('./data-field-query-resolver');
+var functions = require('./functions');
 
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
@@ -222,8 +223,7 @@ function CalculatedValueListener() {
  */
 CalculatedValueListener.prototype.beforeSave = function(event, callback) {
     //get function context
-    var functions = require('./functions'),
-        functionContext = functions.createContext();
+    var functionContext = functions.createContext();
     _.assign(functionContext, event);
     functionContext.context = event.model.context;
     //find all attributes that have a default value
@@ -555,7 +555,7 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
     }
     else {
         //get function context
-        var functions = require('./functions'), functionContext = functions.createContext();
+        var functionContext = functions.createContext();
         _.assign(functionContext, event);
         //find all attributes that have a default value
         var attrs = event.model.attributes.filter(function(x) { return (typeof x.value!== 'undefined'); });

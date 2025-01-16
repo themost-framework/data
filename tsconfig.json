@@ -17,6 +17,9 @@
         "dom"
         ],
     "paths": {
+      "@themost/data/platform-server": [
+        "./platform-server/index"
+      ],
       "@themost/data": [
         "./index"
       ]
