@@ -46,6 +46,181 @@ describe('JsonAttribute', () => {
         });
     });
 
+    it('should update and get unknown json attribute', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select('extraAttributes/cpu as cpu').getItem();
+            expect(item).toBeTruthy();
+            expect(item.cpu).toStrictEqual(
+                {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                }
+            );
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem();
+            expect(item).toBeTruthy();
+            expect(item.extraAttributes).toBeTruthy();
+        });
+    });
+
+    it('should update and get unknown json attribute value', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select('extraAttributes/cpu/brand as cpuBrand').getItem();
+            expect(item).toBeTruthy();
+            expect(item.cpuBrand).toBe('Intel');
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem();
+            expect(item).toBeTruthy();
+            expect(item.extraAttributes).toBeTruthy();
+        });
+    });
+
+    it('should update and get unknown json attribute value (without alias)', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select('extraAttributes/cpu/brand').getItem();
+            expect(item).toBeTruthy();
+            expect(item.extraAttributes_cpu_brand).toBe('Intel');
+        });
+    });
+
+    it('should update and get unknown json attribute value (with closure)', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select((x: any) => {
+                    return {
+                        brand: x.extraAttributes.cpu.brand
+                    }
+                }).getItem();
+            expect(item).toBeTruthy();
+            expect(item.brand).toBe('Intel');
+        });
+    });
+
+    it('should query and get unknown json attribute value (with closure)', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .where((x: any) => {
+                    return x.extraAttributes.cpu.brand === 'Intel'
+                }).getItem();
+            expect(item).toBeTruthy();
+            expect(item.name).toBe('Apple MacBook Air (13.3-inch, 2013 Version)');
+        });
+    });
+
+    it('should update and get unknown json attribute value (with closure and function)', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select((x: any) => {
+                    return {
+                        brand: x.extraAttributes.cpu.brand.toUpperCase()
+                    }
+                }).getItem();
+            expect(item).toBeTruthy();
+            expect(item.brand).toBe('INTEL');
+        });
+    });
+
+    it('should update and get unknown json object value (with closure)', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select((x: any) => {
+                    return {
+                        cpu: x.extraAttributes.cpu
+                    }
+                }).getItem();
+            expect(item).toBeTruthy();
+            expect(item.cpu).toStrictEqual({
+                brand: 'Intel',
+                model: 'Core i5'
+            });
+        });
+    });
+
     it('should update json structured value', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const Products = context.model('Product').silent();
@@ -67,6 +242,15 @@ describe('JsonAttribute', () => {
             expect(item.metadata.audience).toBeTruthy();
             item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
                 .select('metadata/audience/name as audienceName').getItem();
+            expect(item).toBeTruthy();
+            expect(item.audienceName).toBe('New customers');
+            item = await Products.where((x: any) => {
+                return x.name === 'Apple MacBook Air (13.3-inch, 2013 Version)'
+            }).select((x: any) => {
+                    return {
+                        audienceName: x.metadata.audience.name
+                    }
+                }).getItem();
             expect(item).toBeTruthy();
             expect(item.audienceName).toBe('New customers');
         });

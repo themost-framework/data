@@ -20,7 +20,7 @@ var DataObjectAssociationListener = dataAssociations.DataObjectAssociationListen
 var {DataModelView} = require('./data-model-view');
 var {DataFilterResolver} = require('./data-filter-resolver');
 var Q = require('q');
-var {SequentialEventEmitter} = require('@themost/common');
+var {SequentialEventEmitter,Args} = require('@themost/common');
 var {LangUtils} = require('@themost/common');
 var {TraceUtils} = require('@themost/common');
 var {DataError} = require('@themost/common');
@@ -43,6 +43,7 @@ var { OnJsonAttribute } = require('./OnJsonAttribute');
 var { isObjectDeep } = require('./is-object');
 var { DataStateValidatorListener } = require('./data-state-validator');
 var resolver = require('./data-expand-resolver');
+var { isArrayLikeObject } = require('lodash/isArrayLikeObject');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -1577,7 +1578,13 @@ function cast_(obj, state) {
                 if (mapping == null) {
                     var {[name]: value} = obj;
                     if (x.type === 'Json') {
-                        result[x.name] = isObjectDeep(value) ? JSON.stringify(value) : null;
+                        if (value == null) {
+                            result[x.name] = null;
+                        } else {
+                            var isObjectOrArray = isObjectDeep(value) || isArrayLikeObject(value);
+                            Args.check(isObjectOrArray, new DataError('ERR_VALUE','Invalid attribute value. Expected a valid object or an array.', null, self.name, x.name));
+                            result[x.name] = JSON.stringify(value);
+                        }
                     } else {
                         result[x.name] = value;
                     }

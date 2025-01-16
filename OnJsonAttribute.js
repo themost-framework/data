@@ -3,6 +3,14 @@ const {eachSeries} = require('async');
 const {DataConfigurationStrategy} = require('./data-configuration');
 const {DataError} = require('@themost/common');
 
+function isJSON(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
 
 function edmTypeToJsonType(edmType) {
     switch (edmType) {
@@ -179,13 +187,12 @@ class OnJsonAttribute {
      */
     static afterSelect(event, callback) {
         const jsonAttributes = event.model.attributes.filter((attr) => {
-            return attr.type === 'Json' && attr.additionalType != null;
-        }).map((attr) => {
-            return attr.name
-        });
+            return attr.type === 'Json' && attr.model === event.model.name;
+        }).map((attr) => attr.name);
         if (jsonAttributes.length === 0) {
             return callback();
         }
+        
         let select = [];
         const { viewAdapter: entity } = event.model;
         if (event.emitter && event.emitter.query && event.emitter.query.$select) {
@@ -226,13 +233,17 @@ class OnJsonAttribute {
                                 while(index < matches.length) {
                                     let attribute = nextModel.getAttribute(matches[index]);
                                     if (attribute && attribute.type === 'Json') {
-                                        // get next model
-                                        nextModel = event.model.context.model(attribute.additionalType)
-                                        // if this is the last match
                                         if (index + 1 === matches.length) {
-                                            // add attribute
-                                            prev.push(matches[index]);
-                                            // and exit
+                                            prev.push(key);
+                                            break;
+                                        } 
+                                        if (attribute.additionalType) {
+                                            // get next model
+                                            nextModel = event.model.context.model(attribute.additionalType)
+                                        } else {
+                                            // add last part
+                                            prev.push(key);
+                                            // and exit loop
                                             break;
                                         }
                                     } else {
@@ -258,8 +269,8 @@ class OnJsonAttribute {
             attributes.forEach((name) => {
                 if (Object.prototype.hasOwnProperty.call(item, name)) {
                     const value = item[name];
-                    if (typeof  value === 'string') {
-                        item[name] = JSON.parse(value);
+                    if (typeof value === 'string') {
+                        item[name] = isJSON(value) ? JSON.parse(value) : value;
                     }
                 }
             });
