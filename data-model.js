@@ -44,6 +44,8 @@ require('@themost/promise-sequence');
 var DataObjectState = types.DataObjectState;
 var { OnJsonAttribute } = require('./OnJsonAttribute');
 var { isObjectDeep } = require('./is-object');
+var { DataStateValidatorListener } = require('./data-state-validator');
+var resolver = require('./data-expand-resolver');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -616,8 +618,7 @@ function unregisterContextListeners() {
     var DataCachingListener = dataListeners.DataCachingListener;
     var DataModelCreateViewListener = dataListeners.DataModelCreateViewListener;
     var DataModelSeedListener = dataListeners.DataModelSeedListener;
-    var DataStateValidatorListener = require('./data-state-validator').DataStateValidatorListener;
-
+    
     //1. State validator listener
     this.on('before.save', DataStateValidatorListener.prototype.beforeSave);
     this.on('before.remove', DataStateValidatorListener.prototype.beforeRemove);
@@ -887,8 +888,6 @@ function filterInternal(params, callback) {
                         });
                     }
                     if (expand) {
-
-                        var resolver = require('./data-expand-resolver');
                         var matches = resolver.testExpandExpression(expand);
                         if (matches && matches.length>0) {
                             q.expand.apply(q, matches);
@@ -1758,8 +1757,7 @@ DataModel.prototype.save = function(obj, callback)
  * @see DataObjectState
  */
 DataModel.prototype.inferState = function(obj, callback) {
-    var self = this,
-        DataStateValidatorListener = require('./data-state-validator').DataStateValidatorListener;
+    var self = this;
     var e = { model:self, target:obj };
     DataStateValidatorListener.prototype.beforeSave(e, function(err) {
         //if error return error
