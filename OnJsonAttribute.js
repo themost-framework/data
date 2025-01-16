@@ -168,14 +168,52 @@ class OnJsonAttribute {
      * @returns void
      */
     static afterSelect(event, callback) {
-        const jsonAttributes = event.model.attributes.filter((attr) => {
-            return attr.type === 'Json' && attr.additionalType != null && attr.model === event.model.name;
+        const anyJsonAttributes = event.model.attributes.filter((attr) => {
+            return attr.type === 'Json' && attr.model === event.model.name;
+        });
+        if (anyJsonAttributes.length === 0) {
+            return callback();
+        }
+        const jsonAttributes = anyJsonAttributes.filter((attr) => {
+            return attr.additionalType != null;
         }).map((attr) => {
             return attr.name
         });
+        // if there are no json attributes with additional type
         if (jsonAttributes.length === 0) {
+            // get json attributes with no additional type
+            const unknownJsonAttributes = anyJsonAttributes.filter((attr) => {
+                return attr.additionalType == null;
+            }).map((attr) => {
+                return attr.name
+            });
+            // parse json for each item
+            if (unknownJsonAttributes.length > 0) {
+                const parseUnknownJson = (item) => {
+                    unknownJsonAttributes.forEach((name) => {
+                        if (Object.prototype.hasOwnProperty.call(item, name)) {
+                            const value = item[name];
+                            if (typeof value === 'string') {
+                                item[name] = JSON.parse(value);
+                            }
+                        }
+                    });
+                };
+                // iterate over result
+                const {result} = event;
+                if (result == null) {
+                    return callback();
+                }
+                if (Array.isArray(result)) {
+                    result.forEach((item) => parseUnknownJson(item));
+                } else {
+                    // or parse json for single item
+                    parseUnknownJson(result)
+                }
+            }
             return callback();
         }
+        
         let select = [];
         const { viewAdapter: entity } = event.model;
         if (event.emitter && event.emitter.query && event.emitter.query.$select) {

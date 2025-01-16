@@ -49,6 +49,27 @@ describe('JsonAttribute', () => {
         });
     });
 
+    it('should update unknown json attribute', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: 'Intel Core i5',
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+                .select('extraAttributes/cpu as cpu').getItem();
+            expect(item).toBeTruthy();
+            expect(item.cpu).toBe('Intel Core i5');
+            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem();
+            expect(item).toBeTruthy();
+            expect(item.extraAttributes).toBeTruthy();
+        });
+    });
+
     it('should update json structured value', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const Products = context.model('Product').silent();
