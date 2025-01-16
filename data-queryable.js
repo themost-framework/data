@@ -32,8 +32,9 @@ function resolveJoinMember(target) {
             Args.check(expr.$value != null, 'Invalid expression. Expected a JSON expression.');
             var [method] = Object.keys(expr.$value); // get method name
             var methodWithoutSign = method.replace(/\$/g, '');
+            var { [method]: args } = expr.$value;
             Object.assign(event, {
-                member: new MethodCallExpression(methodWithoutSign, expr.$value.$jsonGet)
+                member: new MethodCallExpression(methodWithoutSign, args)
             });
             return;
         } 
