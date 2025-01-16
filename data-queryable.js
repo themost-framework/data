@@ -5,8 +5,8 @@ var _ = require('lodash');
 var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
-var {DataError} = require('@themost/common');
-var {QueryField, Expression} = require('@themost/query');
+var {DataError, Args} = require('@themost/common');
+var {QueryField, Expression, MethodCallExpression} = require('@themost/query');
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var Q = require('q');
@@ -15,6 +15,7 @@ var { DataAttributeResolver } = require('./data-attribute-resolver');
 var { DataExpandResolver } = require('./data-expand-resolver');
 var {instanceOf} = require('./instance-of');
 var { DataValueResolver } = require('./data-value-resolver');
+
 /**
  * @param {DataQueryable} target 
  */
@@ -24,7 +25,18 @@ function resolveJoinMember(target) {
          * @type {Array}
          */
         var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+        // validate first member
+        const attribute = target.model.getAttribute(fullyQualifiedMember[0]);
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
+        if (attribute && attribute.type === 'Json') {
+            Args.check(expr.$value != null, 'Invalid expression. Expected a JSON expression.');
+            var [method] = Object.keys(expr.$value); // get method name
+            var methodWithoutSign = method.replace(/\$/g, '');
+            Object.assign(event, {
+                member: new MethodCallExpression(methodWithoutSign, expr.$value.$jsonGet)
+            });
+            return;
+        } 
         if (instanceOf(expr, QueryField)) {
             var member = expr.$name.split('.');
             Object.assign(event, {
