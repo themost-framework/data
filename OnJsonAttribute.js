@@ -3,6 +3,14 @@ const {eachSeries} = require('async');
 const {DataConfigurationStrategy} = require('./data-configuration');
 const {DataError} = require('@themost/common');
 
+function isJSON(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
 
 function edmTypeToJsonType(edmType) {
     switch (edmType) {
@@ -168,52 +176,12 @@ class OnJsonAttribute {
      * @returns void
      */
     static afterSelect(event, callback) {
-        const anyJsonAttributes = event.model.attributes.filter((attr) => {
+        const jsonAttributes = event.model.attributes.filter((attr) => {
             return attr.type === 'Json' && attr.model === event.model.name;
-        });
-        if (anyJsonAttributes.length === 0) {
-            return callback();
-        }
-        const jsonAttributes = anyJsonAttributes.filter((attr) => {
-            return attr.additionalType != null;
-        }).map((attr) => {
-            return attr.name
-        });
-        // if there are no json attributes with additional type
+        }).map((attr) => attr.name);
         if (jsonAttributes.length === 0) {
-            // get json attributes with no additional type
-            const unknownJsonAttributes = anyJsonAttributes.filter((attr) => {
-                return attr.additionalType == null;
-            }).map((attr) => {
-                return attr.name
-            });
-            // parse json for each item
-            if (unknownJsonAttributes.length > 0) {
-                const parseUnknownJson = (item) => {
-                    unknownJsonAttributes.forEach((name) => {
-                        if (Object.prototype.hasOwnProperty.call(item, name)) {
-                            const value = item[name];
-                            if (typeof value === 'string') {
-                                item[name] = JSON.parse(value);
-                            }
-                        }
-                    });
-                };
-                // iterate over result
-                const {result} = event;
-                if (result == null) {
-                    return callback();
-                }
-                if (Array.isArray(result)) {
-                    result.forEach((item) => parseUnknownJson(item));
-                } else {
-                    // or parse json for single item
-                    parseUnknownJson(result)
-                }
-            }
             return callback();
         }
-        
         let select = [];
         const { viewAdapter: entity } = event.model;
         if (event.emitter && event.emitter.query && event.emitter.query.$select) {
@@ -248,40 +216,29 @@ class OnJsonAttribute {
                             // split $name property by dot
                             const matches = jsonGet.$name.split('.');
                             if (matches && matches.length > 1) {
-                                if (jsonAttributes.indexOf(matches[1]) >= 0) {
-                                    // get json schema
-                                    if (matches.length > 2) {
-                                        // get attribute
-                                        const attribute = event.model.getAttribute(matches[1]);
-                                        if (attribute) {
-                                            // get additional model
-                                            const additionalModel = event.model.context.model(attribute.additionalType)
-                                            // and its json schema
-                                            let jsonSchema = OnJsonAttribute.getJsonSchema(additionalModel);
-                                            let index = 2;
-                                            // iterate over matches
-                                            while(index < matches.length) {
-                                                // get property
-                                                const property = jsonSchema.properties[matches[index]];
-                                                // if property is an object
-                                                if (property && property.type === 'object') {
-                                                    if (index + 1 === matches.length) {
-                                                        prev.push(matches[index]);
-                                                        break;
-                                                    }
-                                                    if (Array.isArray(property.properties)) {
-                                                        jsonSchema = property.properties;
-                                                    } else {
-                                                        prev.push(matches[index]);
-                                                        break;
-                                                    }
-                                                }
-                                                index++;
-                                            }
+                                let index = 1;
+                                let nextModel = event.model;
+                                // iterate over matches
+                                while(index < matches.length) {
+                                    let attribute = nextModel.getAttribute(matches[index]);
+                                    if (attribute && attribute.type === 'Json') {
+                                        if (index + 1 === matches.length) {
+                                            prev.push(key);
+                                            break;
+                                        } 
+                                        if (attribute.additionalType) {
+                                            // get next model
+                                            nextModel = event.model.context.model(attribute.additionalType)
+                                        } else {
+                                            // add last part
+                                            prev.push(key);
+                                            // and exit loop
+                                            break;
                                         }
                                     } else {
-                                        prev.push(matches[2]);
+                                        break;
                                     }
+                                    index++;
                                 }
                             }
                         }
@@ -299,7 +256,7 @@ class OnJsonAttribute {
                 if (Object.prototype.hasOwnProperty.call(item, name)) {
                     const value = item[name];
                     if (typeof  value === 'string') {
-                        item[name] = JSON.parse(value);
+                        item[name] = isJSON(value) ? JSON.parse(value) : value;
                     }
                 }
             });
