@@ -31,7 +31,7 @@
     "async": "^2.6.4",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
-    "node-cache": "^5.1.2",
+    "node-cache": "^4.2.1",
     "pluralize": "^7.0.0",
     "q": "^1.4.1",
     "sprintf-js": "^1.1.2",
