@@ -27,7 +27,18 @@ function resolveJoinMember(target) {
          * @type {Array}
          */
         var fullyQualifiedMember = event.fullyQualifiedMember.split('.');
+        var attribute = target.model.getAttribute(fullyQualifiedMember[0]);
         var expr = DataAttributeResolver.prototype.resolveNestedAttribute.call(target, fullyQualifiedMember.join('/'));
+        if (attribute && attribute.type === 'Json') {
+            Args.check(expr.$value != null, 'Invalid expression. Expected a JSON expression.');
+            var [method] = Object.keys(expr.$value); // get method name
+            var methodWithoutSign = method.replace(/\$/g, '');
+            var { [method]: args } = expr.$value;
+            Object.assign(event, {
+                member: new MethodCallExpression(methodWithoutSign, args)
+            });
+            return;
+        } 
         if (instanceOf(expr, QueryField)) {
             var member = expr.$name.split('.');
             Object.assign(event, {
