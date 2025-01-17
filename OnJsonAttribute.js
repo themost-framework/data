@@ -54,7 +54,7 @@ class OnJsonAttribute {
             /**
              * @type {{edmtype: string,type:string}}
              */
-            const dataType = dataTypes[attr.type];
+            const dataType = attr.type !== 'Json' ? dataTypes[attr.type] : null;
             let type = 'object';
             let assign = {};
             if (dataType != null) {
@@ -98,6 +98,16 @@ class OnJsonAttribute {
             required,
             additionalProperties
         }
+    }
+
+    /**
+     * @param {import('./data-model').DataModel} model 
+     * @returns {Array<import('./types').DataField>}
+     */
+    static getJsonAttributes(model) {
+        return model.attributes.filter((attr) => {
+            return attr.type === 'Json' && attr.additionalType != null;
+        });
     }
 
     /**
@@ -182,6 +192,7 @@ class OnJsonAttribute {
         if (jsonAttributes.length === 0) {
             return callback();
         }
+        
         let select = [];
         const { viewAdapter: entity } = event.model;
         if (event.emitter && event.emitter.query && event.emitter.query.$select) {
@@ -250,12 +261,15 @@ class OnJsonAttribute {
         if (select.length === 0) {
             attributes = jsonAttributes;
         }
+        if (attributes.length === 0) {
+            return callback();
+        }
         // define json converter
         const parseJson = (item) => {
             attributes.forEach((name) => {
                 if (Object.prototype.hasOwnProperty.call(item, name)) {
                     const value = item[name];
-                    if (typeof  value === 'string') {
+                    if (typeof value === 'string') {
                         item[name] = isJSON(value) ? JSON.parse(value) : value;
                     }
                 }
