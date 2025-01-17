@@ -1,8 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var {LangUtils, Args, AbstractMethodError, ConfigurationStrategy} = require('@themost/common');
+var {AbstractMethodError, ConfigurationStrategy} = require('@themost/common');
+var NodeCache = require( 'node-cache' );
 var CACHE_ABSOLUTE_EXPIRATION = 1200;
-
-
 
 class DataCacheStrategy extends ConfigurationStrategy {
     /**
@@ -82,10 +81,9 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
      */
     constructor(config) {
         super(config);
-        var NodeCache = require( 'node-cache' );
         var expiration = CACHE_ABSOLUTE_EXPIRATION;
-        var absoluteExpiration = LangUtils.parseInt(config.getSourceAt('settings/cache/absoluteExpiration'));
-        if (absoluteExpiration>0) {
+        var absoluteExpiration = config.getSourceAt('settings/cache/absoluteExpiration');
+        if (typeof absoluteExpiration === 'number' && absoluteExpiration > 0) {
             expiration = absoluteExpiration;
         }
         this.rawCache = new NodeCache({
@@ -104,8 +102,12 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
         var self = this;
         return new Promise(function(resolve, reject) {
             try {
-                self.rawCache.set(key, value, absoluteExpiration);
-                return resolve();
+                void self.rawCache.set(key, value, absoluteExpiration, (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve();
+                });
             } catch (err) {
                 return reject(err);
             }
@@ -121,8 +123,12 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
         var self = this;
         return new Promise(function(resolve, reject) {
             try {
-                var res = self.rawCache.get(key);
-                return resolve(res);
+                void self.rawCache.get(key, function(err, res) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(res);
+                });
             } catch (err) {
                 return reject(err);
             }
@@ -138,8 +144,12 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
         var self = this;
         return new Promise(function(resolve, reject) {
             try {
-                self.rawCache.del(key);
-                return resolve();
+                void self.rawCache.del(key, (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve();
+                });
             } catch (err) {
                 return reject(err);
             }
@@ -154,7 +164,12 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
         var self = this;
         return new Promise(function(resolve, reject) {
             try {
-                self.rawCache.flushAll();
+                void self.rawCache.flushAll((err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve();
+                });
             } catch (err) {
                 return reject(err);
             }
@@ -184,18 +199,25 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
         return new Promise(function(resolve, reject) {
             //try to get from cache
             try {
-                if (self.rawCache.has(key)) {
-                    return resolve(self.rawCache.get(key));
-                }
-                var source = getFunc();
-                Args.check(typeof source !== 'undefined' && typeof source.then === 'function', 'Invalid argument. Expected a valid promise.');
-                void source.then(function (res) {
-                    self.rawCache.set(key, res, absoluteExpiration);
-                    return resolve(res);
-                }).catch(function(err) {
+                void self.rawCache.get(key, (err, res) => {
+                    if (typeof res !== 'undefined') {
+                        return resolve(res);
+                    }
+                    try {
+                        void getFunc().then(function (res) {
+                            void self.rawCache.set(key, res, absoluteExpiration, (err) => {
+                                if (err) {
+                                    return reject(err);
+                                }
+                                return resolve(res);
+                            });
+                        }).catch(function(err) {
+                            return reject(err);
+                        })
+                    } catch (err) {
                         return reject(err);
-                    });
-
+                    }
+                });
             } catch (err) {
                 return reject(err);
             }
