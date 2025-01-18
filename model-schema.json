@@ -217,7 +217,9 @@
                                 "type": "string",
                                 "enum": [
                                     "delete",
-                                    "none"
+                                    "none",
+                                    "null",
+                                    "default"
                                 ]
                             },
                             "options": {
