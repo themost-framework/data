@@ -21,3 +21,4 @@ export * from './data-associations';
 export * from './data-application';
 export * from './UnattendedMode';
 export * from './data-value-resolver';
+export * from './ValueFormatter';

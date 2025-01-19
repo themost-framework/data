@@ -29,13 +29,15 @@
     "@themost/events": "^1.0.5",
     "@themost/promise-sequence": "^1.0.1",
     "async": "^2.6.4",
+    "esprima": "^4.0.1",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "node-cache": "^4.2.1",
     "pluralize": "^7.0.0",
     "q": "^1.4.1",
     "sprintf-js": "^1.1.2",
-    "symbol": "^0.3.1"
+    "symbol": "^0.3.1",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.17.2",
