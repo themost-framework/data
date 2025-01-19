@@ -1,4 +1,6 @@
-# Create a simple data model
+# Use `@themost/data` to create a data model
+
+`@themost/data` is a module that provides a simple way to create a data model schema. A data model schema is a set of rules that define the structure of a data model. It defines the fields of the data model, the type of each field, and other properties of the data model.
 
 This tutorial will show you how to create a simple data model schema.
 

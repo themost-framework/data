@@ -1,5 +1,5 @@
 
-# Create a simple field
+# Defining fields
 
 To create a simple field in your data model schema, you need to define the field's name, type, and any additional constraints or properties. Here is an example of how to define a simple field:
 
@@ -67,7 +67,7 @@ Here is an example of how to use different primitive types in your schema:
 }
 ```
 
-Read more about [primitive types](Primitive%20types.md).
+Read more about [primitive types](use-primitive-types.md).
 
 In this example:
 - `age` is defined as an integer.
