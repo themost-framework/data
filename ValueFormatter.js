@@ -23,7 +23,7 @@ function getValueReplacer(formatter, model, emitter) {
         if (/^\$\$/.test(value)) {
           return formatter.formatVariableSync(value);
         }
-        if (/^\$(?:\w+\.?)+$/.test(value)) {
+        if (/^\$(\w+)(\.(\w+))+$/.test(value)) {
             const name = value.replace(/^\$/, '');
             const parts = name.split('.');
             if (parts.length === 1) {
