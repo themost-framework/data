@@ -1,4 +1,4 @@
-const { Args, Guid } = require('@themost/common');
+const { Args, Guid, DataError } = require('@themost/common');
 const moment = require('moment');
 const { v4 } = require('uuid');
 const {isObjectDeep} = require('./is-object');
@@ -9,6 +9,38 @@ require('@themost/promise-sequence');
 const { AsyncSeriesEventEmitter } = require('@themost/events');
 const { round } = require('@themost/query');
 const MD5 = require('crypto-js/md5');
+
+/**
+ * @param {ValueFormatter} formatter 
+ * @param {import('@themost/common').DataModelBase} model
+ * @returns 
+ */
+function getValueReplacer(formatter, model) {
+  return function(key, value) {
+    if (typeof value === 'string') {
+        if (/^\$\$/.test(value)) {
+          return formatter.formatVariableSync(value);
+        }
+        if (/^\$(\w+)$/.test(value)) {
+            const name = value.replace(/^\$/, '');
+            const { viewAdapter: collection } = model;
+            const field = model.getAttribute(name);
+            if (field) {
+                return {
+                    $name: collection + '.' + name
+                }
+            }
+            throw new DataError('An expression contains an attribute that cannot be found', null, model.name, name);
+        } else if (/^\$((\w+)(\.(\w+)){1,})$/.test(value)) {
+            return {
+                $name: value.replace(/^\$/, '')
+            }
+        }
+    }
+    return value;
+  }
+}
+
 
 function getFunctionArguments(fn) {
   if (typeof fn !== 'function') {
@@ -365,6 +397,20 @@ class ValueDialect {
     return Array.from(arguments).reduce((a, b) => a / b, 1);
   }
 
+  async $toString(value) {
+    if (value == null) {
+      return null;
+    } 
+    return String(value).toString();
+  }
+
+  async $trim(value) {
+    if (value == null) {
+      return null;
+    } 
+    return String(value).trim();
+  }
+
   async $toInt(value) {
     return parseInt(value, 10);
   }
@@ -453,6 +499,25 @@ class ValueDialect {
     return ifExpr ? thenExpr : elseExpr;
   }
 
+  async $replaceOne(input, find, replacement) {
+    if (input == null) {
+      return null;
+    }
+    return input.replace(find, replacement);
+  }
+
+  /**
+   * @param {string} input 
+   * @param {string} find
+   * @param {string} replacement
+   */
+  async $replaceAll(input, find, replacement) {
+    if (input == null) {
+      return null;
+    }
+    return input.replaceAll(new RegExp(find, 'g'), replacement);
+  }
+
 }
 
 class ValueFormatter {
@@ -495,6 +560,60 @@ class ValueFormatter {
     }
   }
 
+  formatVariableSync(value) {
+    const propertyPath = value.substring(2).split('.');
+    const property = propertyPath.shift();
+    if (Object.prototype.hasOwnProperty.call(this.dialect, property)) {
+      return getProperty(this.dialect[property], propertyPath.join('.'));
+    } else {
+      throw new Error(`Variable '${property}' not found.`);
+    }
+  }
+
+  /**
+   * 
+   * @param {{$collection: string, $select: { value: string }, $where: *, $order: Array<*>=, $group: Array<*>=}} query 
+   */
+  async formatQuery(query) {
+    const model = this.context.model(query.$collection);
+    const q = model.asQueryable();
+    if (Object.prototype.hasOwnProperty.call(query, '$select') === false) {
+      throw new Error('Query expression $select statement not found.');
+    }
+    if (Object.prototype.hasOwnProperty.call(query.$select, 'value') === false) {
+      throw new Error('Query expression $select statement should a value property.');
+    }
+    // use select expression
+    // get value property
+    const { value: attribute } = query.$select;
+    // parse select expression
+    q.select(attribute.replace(/^\$/, '').replace(/^\./, '/'));
+    if (Object.prototype.hasOwnProperty.call(query, '$where') === false) {
+      throw new Error('Query expression $where statement not found.');
+    }
+    /**
+     * @returns {function(string, *)}
+     */
+    const nameReplacer = getValueReplacer(this, model);
+    const $where = JSON.parse(JSON.stringify(query.$where, function(key, value) {
+      return nameReplacer(key, value);
+    }));
+    Object.assign(q.query, {
+      $where
+    });
+    if (Array.isArray(query.$order)) {
+      Object.assign(q.query, {
+        $order: query.$order
+      });
+    }
+    if (Array.isArray(query.$group)) {
+      Object.assign(q.query, {
+        $group: query.$group
+      });
+    }
+    return q.value();
+  }
+
   /**
    * @param {*} value 
    * @returns Promise<any>
@@ -519,6 +638,25 @@ class ValueFormatter {
     if (property.startsWith('$$')) {
       return this.formatVariable(value);
     }
+    // exception $cond method which is a special case of formatting method
+    if (property === '$cond') {
+      // use language keywords if, then, else
+      const cond = value[property];
+      if (Object.prototype.hasOwnProperty.call(cond, 'if') && Object.prototype.hasOwnProperty.call(cond, 'then') && Object.prototype.hasOwnProperty.call(cond, 'else')) {
+        return Promise.all([
+          this.format(cond.if),
+          this.format(cond.then),
+          this.format(cond.else)
+        ]).then(([ifExpr, thenExpr, elseExpr]) => {
+          return this.dialect.$cond(ifExpr, thenExpr, elseExpr);
+        });
+      }
+    }
+
+    if (property === '$query') {
+      return this.formatQuery(value[property]);
+    }
+
     // check if method exists
     const propertyDescriptor  = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this.dialect), property);
     if (propertyDescriptor) {

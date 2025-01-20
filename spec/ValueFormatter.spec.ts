@@ -247,6 +247,98 @@ describe('ValueFormatter', () => {
         expect(value).toBeFalsy();
     });
 
+    it('should use $cond operator', async () => {
+        const formatter = new ValueFormatter(context, context.model('Product'), {
+            name: 'Macbook Pro 13',
+            dateReleased: new Date(2024, 11, 14),
+            price: 949.458
+        });
+        expect(formatter).toBeTruthy();
+        let value: any = await formatter.format({
+            $cond: {
+                if: {
+                    $gt: [
+                        '$$target.dateReleased',
+                        new Date(2024, 11, 1)
+                    ]
+                },
+                then: 'Released',
+                else: 'Not Released'
+            }
+        });
+        expect(value).toBe('Released');
+    });
+
+    it('should use $replaceAll operator', async () => {
+        const formatter = new ValueFormatter(context, context.model('Product'), {
+            name: 'Macbook Pro 13',
+            dateReleased: new Date(2024, 11, 14),
+            price: 949.458
+        });
+        expect(formatter).toBeTruthy();
+        let value: any = await formatter.format({
+            $replaceAll: {
+                input: {
+                    $newGuid: 1
+                },
+                find: '-',
+                replacement: ''
+            }
+        });
+        expect(value).toMatch(/^[a-f0-9]{32}$/);
+    });
+
+    it('should use $replaceOne operator', async () => {
+        const formatter = new ValueFormatter(context, context.model('Product'), {
+            name: 'Macbook Pro 13',
+            dateReleased: new Date(2024, 11, 14),
+            price: 949.458
+        });
+        expect(formatter).toBeTruthy();
+        let value: any = await formatter.format({
+            $replaceOne: {
+                input: {
+                    $newGuid: 1
+                },
+                find: '-',
+                replacement: ''
+            }
+        });
+        expect(value).toMatch(/^[a-f0-9\-]{35}$/);
+    });
+
+    it('should use $query function', async () => {
+        const formatter = new ValueFormatter(context, context.model('Product'), {
+            name: 'Macbook Pro 13',
+            dateReleased: new Date(2024, 11, 14),
+            price: 949.458,
+            defaultOrderStatus: {
+                name: 'Processing',
+            }
+        });
+        expect(formatter).toBeTruthy();
+        let value: any = await formatter.format({
+            $query: {
+                $collection: 'OrderStatusType',
+                $select: {
+                    value: '$alternateName'
+                },
+                $where: {
+                    $eq: [
+                        '$name',
+                        '$$target.defaultOrderStatus.name'
+                    ]
+                },
+                $order: [
+                    {
+                        $asc: '$name'
+                    }
+                ]
+            }
+        });
+        expect(value).toBe('OrderProcessing');
+    });
+
     
 
 });
