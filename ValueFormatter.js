@@ -11,6 +11,8 @@ const { round } = require('@themost/query');
 const MD5 = require('crypto-js/md5');
 const { DataAttributeResolver } = require('./data-attribute-resolver');
 
+const testFieldRegex = /^\$\w+(\.\w+)*$/g;
+
 /**
  * @param {ValueFormatter} formatter 
  * @param {import('./data-model').DataModel} model
@@ -23,7 +25,7 @@ function getValueReplacer(formatter, model, emitter) {
         if (/^\$\$/.test(value)) {
           return formatter.formatVariableSync(value);
         }
-        if (/^\$(\w+)(\.(\w+))+$/.test(value)) {
+        if (testFieldRegex.test(value)) {
             const name = value.replace(/^\$/, '');
             const parts = name.split('.');
             if (parts.length === 1) {
@@ -42,11 +44,7 @@ function getValueReplacer(formatter, model, emitter) {
               }
               throw new DataError('An nested expression contains an attribute that cannot be found', null, model.name, name);
             }
-          } else if (/^\$(?:(?:\w+)(\.(\w+)){1,})$/.test(value)) {
-            return {
-                $name: value.replace(/^\$/, '')
-            }
-        }
+          }
     }
     return value;
   }
