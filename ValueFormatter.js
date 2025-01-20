@@ -223,6 +223,14 @@ class ValueDialect {
     return this.$toUpperCase(value);
   }
 
+  $length(value) {
+    return value == null ? 0 : value.length;
+  }
+
+  $substring(value, start, length) {
+    return value == null ? null : value.substring(start, length);
+  }
+
   /**
    * Returns a random string with the specified length
    * @param {number=} length 
@@ -281,6 +289,10 @@ class ValueDialect {
    */
   $int(min, max) {
     return this.$randomInt(min, max);
+  }
+
+  $abs(value) {
+    return value != null ? Math.abs(value) : null;
   }
 
   /**
@@ -407,6 +419,10 @@ class ValueDialect {
   async $divide() {
     return Array.from(arguments).reduce((a, b) => a / b, 1);
   }
+
+  async $mod() {
+    return Array.from(arguments).reduce((a, b) => a % b, 0);
+  } 
 
   async $toString(value) {
     if (value == null) {
@@ -583,7 +599,7 @@ class ValueFormatter {
 
   /**
    * 
-   * @param {{$collection: string, $select: { value: string }, $where: *, $order: Array<*>=, $group: Array<*>=}} query 
+   * @param {{$collection: string, $select: { value: string }, $where: *, $sort: *=, $order: Array<*>=, $group: Array<*>=}} query 
    */
   async formatQuery(query) {
     const model = this.context.model(query.$collection);
