@@ -367,40 +367,19 @@ Returns the value of the second expression if the first expression is true, othe
     "type": "Text",
     "calculation": {
         "$cond": {
-            if: {
+            "if": {
                 "$eq": [
                     "$$target.orderStatus.alternateName",
                     "OrderDelivered"
                 ]
             },
-            then: "Closed",
-            else: "Open"
+            "then": "Closed",
+            "else": "Open"
         }
     }
 }
 ```
 
-e.g. the following example demonstrates how to calculate the value of a field based on a conditional operation:
-
-```json
-{
-    "name": "effectiveStatus",
-    "title": "Effective status",
-    "type": "Text",
-    "calculation": {
-        "$cond": {
-            if: {
-                "$eq": [
-                    "$$target.orderStatus.alternateName",
-                    "OrderDelivered"
-                ]
-            },
-            then: "Closed",
-            else: "Open"
-        }
-    }
-}
-```
 where `$cond` dialect is being used for calculating the value of the field `status` based on the value of the field `target.orderStatus.alternateName`.
 
 `$cond` operation uses named properties `if`, `then` and `else` for defining the conditional operation.
@@ -454,8 +433,8 @@ Returns the value of a number rounded to the nearest integer.
     "type": "Float",
     "calculation": {
         "$round": {
-            value: "$$target.price",
-            place: 2
+            "value": "$$target.price",
+            "place": 2
         }
     }
 }
@@ -511,9 +490,9 @@ Concatenates two or more strings.
     "type": "Text",
     "calculation": {
         "$substring": {
-            value: "$$target.lastName",
-            start: 0,
-            length: 1
+            "value": "$$target.lastName",
+            "start": 0,
+            "length": 1
         }
     }
 }
@@ -594,9 +573,9 @@ or
             " ",
             {
                 "$substring": {
-                    value: "$$target.lastName",
-                    start: 0,
-                    length: 1
+                    "value": "$$target.lastName",
+                    "start": 0,
+                    "length": 1
                 }
             }
         ]
@@ -903,7 +882,7 @@ Converts any value to a GUID.
     "type": "Guid",
     "calculation": {
         "$toGuid": {
-            value: "$$target.code"
+            "value": "$$target.code"
         }
     }
 }
@@ -932,7 +911,7 @@ or
     "type": "Guid",
     "calculation": {
         "$toGuid": {
-            value: "$$target.code"
+            "value": "$$target.code"
         }
     }
 }
@@ -952,7 +931,7 @@ Converts any value to a string.
     "type": "Text",
     "calculation": {
         "$toString": {
-            value: "$$target.id"
+            "value": "$$target.id"
         }
     }
 }
@@ -980,7 +959,7 @@ Converts a value to a decimal.
     "type": "Decimal",
     "calculation": {
         "$toDecimal": {
-            value: "$$target.price"
+            "value": "$$target.price"
         }
     }
 }
@@ -994,7 +973,7 @@ Converts a value to a double.
     "type": "Number",
     "calculation": {
         "$toDouble": {
-            value: "$$target.price"
+            "value": "$$target.price"
         }
     }
 }
@@ -1009,7 +988,7 @@ e.g. the following example demonstrates how to calculate the value of a field ba
     "type": "Number",
     "calculation": {
         "$toDouble": {
-            value: "$$target.price"
+            "value": "$$target.price"
         }
     }
 }
