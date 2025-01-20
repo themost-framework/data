@@ -1,5 +1,5 @@
 import {TestApplication, TestApplication2} from './TestApplication';
-import { DataContext, ValueFormatter } from '@themost/data';
+import { DataContext, executeInUnattendedMode, executeInUnattendedModeAsync, ValueFormatter } from '@themost/data';
 import moment from 'moment';
 
 describe('ValueFormatter', () => {
@@ -337,6 +337,44 @@ describe('ValueFormatter', () => {
             }
         });
         expect(value).toBe('OrderProcessing');
+    });
+
+    it('should use $query function with nested joins', async () => {
+        await executeInUnattendedModeAsync(context, async () => {
+            const product = await context.model('Product').where('name').equal('Microsoft Sculpt Mobile Mouse').getItem();
+            expect(product).toBeTruthy();
+            const formatter = new ValueFormatter(context, context.model('Product'), product);
+            let lastOrder: any = await formatter.format({
+                $query: {
+                    $collection: 'Order',
+                    $select: {
+                        value: '$orderDate'
+                    },
+                    $where: {
+                        $and: [
+                            {
+                                $eq: [
+                                    '$orderedItem',
+                                    '$$target.id'
+                                ]
+                            },
+                            {
+                                $eq: [
+                                    '$orderStatus.alternateName',
+                                    'OrderDelivered'
+                                ]
+                            }
+                        ]
+                    },
+                    $order: [
+                        {
+                            $desc: '$orderDate'
+                        }
+                    ]
+                }
+            });
+            expect(lastOrder).toBeTruthy();
+        });
     });
 
     

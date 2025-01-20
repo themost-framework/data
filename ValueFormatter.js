@@ -9,28 +9,39 @@ require('@themost/promise-sequence');
 const { AsyncSeriesEventEmitter } = require('@themost/events');
 const { round } = require('@themost/query');
 const MD5 = require('crypto-js/md5');
+const { DataAttributeResolver } = require('./data-attribute-resolver');
 
 /**
  * @param {ValueFormatter} formatter 
- * @param {import('@themost/common').DataModelBase} model
+ * @param {import('./data-model').DataModel} model
+ * @param {import('./data-queryable').DataQueryable} emitter
  * @returns 
  */
-function getValueReplacer(formatter, model) {
+function getValueReplacer(formatter, model, emitter) {
   return function(key, value) {
     if (typeof value === 'string') {
         if (/^\$\$/.test(value)) {
           return formatter.formatVariableSync(value);
         }
-        if (/^\$(\w+)$/.test(value)) {
+        if (/^\$(\w+\.?)+$/.test(value)) {
             const name = value.replace(/^\$/, '');
-            const { viewAdapter: collection } = model;
-            const field = model.getAttribute(name);
-            if (field) {
-                return {
-                    $name: collection + '.' + name
-                }
+            const parts = name.split('.');
+            if (parts.length === 1) {
+              const { viewAdapter: collection } = model;
+              const field = model.getAttribute(name);
+              if (field) {
+                  return {
+                      $name: collection + '.' + name
+                  }
+              }
+              throw new DataError('An expression contains an attribute that cannot be found', null, model.name, name);
+            } else {
+              const result = new DataAttributeResolver().resolveNestedAttribute.bind(emitter)(name.replace(/\./g, '/'));
+              if (result) {
+                return result;
+              }
+              throw new DataError('An nested expression contains an attribute that cannot be found', null, model.name, name);
             }
-            throw new DataError('An expression contains an attribute that cannot be found', null, model.name, name);
         } else if (/^\$((\w+)(\.(\w+)){1,})$/.test(value)) {
             return {
                 $name: value.replace(/^\$/, '')
@@ -594,7 +605,7 @@ class ValueFormatter {
     /**
      * @returns {function(string, *)}
      */
-    const nameReplacer = getValueReplacer(this, model);
+    const nameReplacer = getValueReplacer(this, model, q);
     const $where = JSON.parse(JSON.stringify(query.$where, function(key, value) {
       return nameReplacer(key, value);
     }));
