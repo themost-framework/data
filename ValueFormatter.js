@@ -1,11 +1,14 @@
-const { Args } = require('@themost/common');
+const { Args, Guid } = require('@themost/common');
 const moment = require('moment');
 const { v4 } = require('uuid');
 const {isObjectDeep} = require('./is-object');
 const random = require('lodash/random');
+const getProperty = require('lodash/get');
 const esprima = require('esprima');
-
 require('@themost/promise-sequence');
+const { AsyncSeriesEventEmitter } = require('@themost/events');
+const { round } = require('@themost/query');
+const MD5 = require('crypto-js/md5');
 
 function getFunctionArguments(fn) {
   if (typeof fn !== 'function') {
@@ -14,7 +17,11 @@ function getFunctionArguments(fn) {
   const fnString = fn.toString().trim();
   let ast;
   if (/^function\s+/i.test(fnString) === false) {
-    ast = esprima.parseScript('function ' + fnString);
+    if (/^async\s+/i.test(fnString)) {
+      ast = esprima.parseScript(fnString.replace(/^async\s+/, 'async function '));
+    } else {
+      ast = esprima.parseScript('function ' + fnString);
+    }
   } else {
     ast = esprima.parseScript(fnString);
   }
@@ -24,33 +31,80 @@ function getFunctionArguments(fn) {
 class ValueDialect {
   /**
    * @param {import('./types').DataContext} context 
+   * @param {*} target
    */
-  constructor(context) {
+  constructor(context, model, target) {
     this.context = context;
+    this.model = model;
+    this.target = target;
   }
 
   /**
    * Get the current date and time
    * @returns {Promise<Date>}
    */
-  $date() {
-    return Promise.resolve(new Date());
+  async $date() {
+    return new Date();
+  }
+
+  /**
+   * Add the specified amount of time to the specified date
+   * @returns {Promise<Date>}
+   */
+  async $dateAdd(startDate, unit, amount) {
+    return moment(startDate).add(amount, unit).toDate();
+  }
+
+  /**
+   * Add the specified amount of time to the specified date
+   * @returns {Promise<Date>}
+   */
+  async $dateSubtract(startDate, unit, amount) {
+    return moment(startDate).subtract(amount, unit).toDate();
   }
 
   /**
    * A shorthand for $date method
    * @returns {Promise<Date>}
    */
-  $now() {
-    return Promise.resolve(new Date());
+  async $now() {
+    return new Date();
   }
 
   /**
    * Get the current date
    * @returns {Promise<Date>}
    */
-  $today() {
-    return Promise.resolve(moment(new Date()).startOf('day').toDate()); // new Date();
+  async $today() {
+    return moment(new Date()).startOf('day').toDate();
+  }
+
+  async $year(date) {
+    return moment(date).year();
+  }
+
+  async $month(date) {
+    return moment(date).month();
+  }
+
+  async $dayOfMonth(date) {
+    return moment(date).date();
+  }
+
+  async $dayOfWeek(date) {
+    return moment(date).day();
+  }
+
+  async $hour(date) {
+    return moment(date).hour();
+  }
+
+  async $minutes(date) {
+    return moment(date).minutes();
+  }
+
+  async $seconds(date) {
+    return moment(date).seconds();
   }
 
   /**
@@ -80,6 +134,21 @@ class ValueDialect {
    */
   $newGuid() {
     return Promise.resolve(v4().toString());
+  }
+
+  /**
+   * Get a new identifier value for the current data model
+   * @returns {Promise<any>}
+   */
+  $newid() {
+    return new Promise((resolve, reject) => {
+        this.model.context.db.selectIdentity(this.model.sourceAdapter, this.model.primaryKey, (err, result) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(result);
+        });
+    });
   }
 
   /**
@@ -252,6 +321,138 @@ class ValueDialect {
     return this.$randomPassword(length);
   }
 
+  /**
+   * Rounds the specified value to the nearest integer
+   * @param {*} value The value to round
+   * @param {*} place The number of decimal places to round
+   * @returns 
+   */
+  async $round(value, place) {
+    return round(value, place);
+  }
+
+  /**
+   * Converts the specified value to a number and returns the absolute value
+   * @param {*} value 
+   * @returns 
+   */
+  async $ceil(value) {
+    return Math.ceil(value);
+  }
+
+  /**
+   * Converts the specified value to a number and returns the lowest integer value
+   * @param {*} value 
+   * @returns 
+   */
+  async $floor(value) {
+    return Math.floor(value);
+  }
+
+  async $add() {
+    return Array.from(arguments).reduce((a, b) => a + b, 0);
+  }
+
+  async $subtract() {
+    return Array.from(arguments).reduce((a, b) => a - b, 0);
+  }
+
+  async $multiply() {
+    return Array.from(arguments).reduce((a, b) => a * b, 1);
+  }
+
+  async $divide() {
+    return Array.from(arguments).reduce((a, b) => a / b, 1);
+  }
+
+  async $toInt(value) {
+    return parseInt(value, 10);
+  }
+
+  async $toDouble(value) {
+    if (typeof value === 'number') {
+      return Promise.resolve(value);
+    }
+    return parseFloat(value);
+  }
+
+  async $toDecimal(value) {
+    if (typeof value === 'number') {
+      return Promise.resolve(value);
+    }
+    return parseFloat(value);
+  }
+
+  /**
+   * Converts the specified value to a UUID
+   * @param {*} value 
+   * @returns 
+   */
+  async $toGuid(value) {
+    if (Guid.isGuid(value)) {
+      return Promise.resolve(value);
+    }
+    var str = MD5(value).toString();
+    return new Guid([
+      str.substring(0, 8),
+      str.substring(8, 12),
+      str.substring(12, 16),
+      str.substring(16, 20),
+      str.substring(20, 32)
+    ].join('-'));
+  }
+
+  /**
+   * A shorthand for $toGuid method
+   * @param {*} value 
+   * @returns 
+   */
+  async $toUUID(value) {
+    return this.$toGuid(value);
+  }
+
+  async $eq() {
+    const [a,b] = Array.from(arguments);
+    return a === b;
+  }
+
+  async $gt() {
+    const [a,b] = Array.from(arguments);
+    return a > b;
+  }
+
+  async $lt() {
+    const [a,b] = Array.from(arguments);
+    return a < b;
+  } 
+
+  async $gte() {
+    const [a,b] = Array.from(arguments);
+    return a >= b;
+  }
+
+  async $lte() {
+    const [a,b] = Array.from(arguments);
+    return a <= b;
+  }
+
+  async $ne() {
+    const [a,b] = Array.from(arguments);
+    return a !== b;
+  }
+
+  async $or() {
+    return Array.from(arguments).reduce((a, b) => a || b, false);
+  }
+
+  async $and() {
+    return Array.from(arguments).reduce((a, b) => a && b, true);
+  }
+
+  async $cond(ifExpr, thenExpr, elseExpr) {
+    return ifExpr ? thenExpr : elseExpr;
+  }
+
 }
 
 class ValueFormatter {
@@ -259,14 +460,39 @@ class ValueFormatter {
   /**
    * 
    * @param {import('./types').DataContext} context 
-   * @param {import('./types').DataMo} model 
-   * @param {*} target
+   * @param {import('@themost/common').DataModelBase=} model 
+   * @param {*=} target
    */
   constructor(context, model, target) {
     this.context = context;
     this.model = model;
     this.target = target;
-    this.dialect = new ValueDialect();
+    this.dialect = new ValueDialect(context, model, target);
+    this.resolvingVariable = new AsyncSeriesEventEmitter();
+  }
+
+  /**
+   * @param {string} value
+   * @returns Promise<any>
+   */
+  async formatVariable(value) {
+    const propertyPath = value.substring(2).split('.');
+    const property = propertyPath.shift();
+    if (Object.prototype.hasOwnProperty.call(this.dialect, property)) {
+      return getProperty(this.dialect[property], propertyPath.join('.'));
+    } else {
+      const event = {
+        name: value,
+        model: this.model,
+        context: this.context,
+        target: this.target
+      }
+      await this.resolvingVariable.emit('resolve', event);
+      if (Object.prototype.hasOwnProperty.call(event, 'value')) {
+        return event.value;
+      }
+      throw new Error(`Variable '${property}' not found.`);
+    }
   }
 
   /**
@@ -275,13 +501,23 @@ class ValueFormatter {
    */
   format(value) {
     if (isObjectDeep(value) === false) {
+      if (typeof value === 'string' && value.startsWith('$$')) {
+        return this.formatVariable(value);
+      }
       return Promise.resolve(value);
     }
     // get property
     const [property] = Object.keys(value);
     // check if method is $value e.g. $value: 'Hello World'
     if (property === '$value') {
-      return Promise.resolve(value[property]);
+      const val = value[property];
+      if (typeof val === 'string' && val.startsWith('$$')) {
+        return this.formatVariable(val);
+      }
+      return Promise.resolve(this.format(value));
+    }
+    if (property.startsWith('$$')) {
+      return this.formatVariable(value);
     }
     // check if method exists
     const propertyDescriptor  = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this.dialect), property);
