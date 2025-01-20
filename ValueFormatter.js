@@ -23,7 +23,7 @@ function getValueReplacer(formatter, model, emitter) {
         if (/^\$\$/.test(value)) {
           return formatter.formatVariableSync(value);
         }
-        if (/^\$(\w+\.?)+$/.test(value)) {
+        if (/^\$(?:\w+\.?)+$/.test(value)) {
             const name = value.replace(/^\$/, '');
             const parts = name.split('.');
             if (parts.length === 1) {
@@ -42,7 +42,7 @@ function getValueReplacer(formatter, model, emitter) {
               }
               throw new DataError('An nested expression contains an attribute that cannot be found', null, model.name, name);
             }
-        } else if (/^\$((\w+)(\.(\w+)){1,})$/.test(value)) {
+        } else if (/^\$(?:(\w+)(\.(\w+)){1,})$/.test(value)) {
             return {
                 $name: value.replace(/^\$/, '')
             }
