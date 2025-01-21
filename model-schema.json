@@ -16,6 +16,678 @@
             "not": {
                 "$ref": "#/definitions/types"
             }
+        },
+        "stringFunction": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "anyOf": [
+                        { "type": "string" },
+                        { "$ref": "#/definitions/valueType" }
+                    ],
+                    "default": "$field1"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "default": {
+                "value": "$field1"
+            },
+            "additionalProperties": false
+        },
+        "anyFunctionWithValueParam": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "anyOf": [
+                        { "type": "string" },
+                        { "$ref": "#/definitions/valueType" }
+                    ],
+                    "default": "$field"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "default": {
+                "value": "$field"
+            },
+            "additionalProperties": false
+        },
+        "comparisonFunction": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "$ref": "#/definitions/valueType" }
+                ]
+            },
+            "minLength": 2,
+            "maxLength": 2,
+            "default": [
+                "$field1",
+                "$field2"
+            ],
+            "additionalProperties": false
+        },
+        "anyFunctionWithParams": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "$ref": "#/definitions/valueType" }
+                ]
+            },
+            "default": [
+                "$field1",
+                "$field2"
+            ]
+        },
+        "logicalFunction": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "$eq": {
+                                "$ref": "#/definitions/comparisonFunction"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "$ne": {
+                                "$ref": "#/definitions/comparisonFunction"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "$gt": {
+                                "$ref": "#/definitions/comparisonFunction"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "$gte": {
+                                "$ref": "#/definitions/comparisonFunction"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "$lt": {
+                                "$ref": "#/definitions/comparisonFunction"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "$lte": {
+                                "$ref": "#/definitions/comparisonFunction"
+                            }
+                        }
+                    }
+                ]
+            },
+            "minLength": 2,
+            "default": [
+                {
+                    "$eq": [
+                        "$field1",
+                        "$field2"
+                    ]
+                },
+                {
+                    "$eq": [
+                        "$field3",
+                        "$field4"
+                    ]
+                }
+            ],
+            "additionalProperties": false
+        },
+        "dateFunctionWithValueParam": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "anyOf": [
+                        { "type": "string" },
+                        { "$ref": "#/definitions/valueType" }
+                    ],
+                    "default": "$dateField1"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "default": {
+                "value": "$dateField1"
+            },
+            "additionalProperties": false
+        },
+        "valueType": {
+            "type": "object",
+            "properties": {
+                "$date": {
+                    "type": "number",
+                    "default": 1
+                },
+                "$now": {
+                    "type": "number",
+                    "default": 1
+                },
+                "$today": {
+                    "type": "number",
+                    "default": 1
+                },
+                "$year": {
+                    "$ref": "#/definitions/dateFunctionWithValueParam"
+                },
+                "$month": {
+                    "$ref": "#/definitions/dateFunctionWithValueParam"
+                },
+                "$dayOfMonth": {
+                    "$ref": "#/definitions/dateFunctionWithValueParam"
+                },
+                "$hour": {
+                    "$ref": "#/definitions/dateFunctionWithValueParam"
+                },
+                "$minutes": {
+                    "$ref": "#/definitions/dateFunctionWithValueParam"
+                },
+                "$seconds": {
+                    "$ref": "#/definitions/dateFunctionWithValueParam"
+                },
+                "$dateAdd": {
+                    "type": "object",
+                    "properties": {
+                        "startDate": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$dateField"
+                        },
+                        "unit": {
+                            "type": "string",
+                            "default": "day"
+                        },
+                        "amount": {
+                            "type": "number",
+                            "default": 1
+                        }
+                    },
+                    "required": [
+                        "startDate", "unit", "amount"
+                    ],
+                    "default": {
+                        "startDate": "$dateField",
+                        "unit": "day",
+                        "amount": 1
+                    },
+                    "additionalProperties": false
+                },
+                "$dateSubtract": {
+                    "type": "object",
+                    "properties": {
+                        "startDate": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$dateField"
+                        },
+                        "unit": {
+                            "type": "string",
+                            "default": "day"
+                        },
+                        "amount": {
+                            "type": "number",
+                            "default": 1
+                        }
+                    },
+                    "required": [
+                        "startDate", "unit", "amount"
+                    ],
+                    "default": {
+                        "startDate": "$dateField",
+                        "unit": "day",
+                        "amount": 1
+                    },
+                    "additionalProperties": false
+                },
+                "$user": {
+                    "oneOf": [
+                        {
+                            "type": "number",
+                            "default": 1
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "property": {
+                                    "type": "string",
+                                    "default": "name"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "$me": {
+                    "oneOf": [
+                        {
+                            "type": "number",
+                            "default": 1
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "property": {
+                                    "type": "string",
+                                    "default": "name"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "$randomString": {
+                    "type": "object",
+                    "properties": {
+                        "length": {
+                            "type": "number",
+                            "default": 8
+                        }
+                    },
+                    "required": [
+                        "length"
+                    ],
+                    "default": {
+                        "length": 8
+                    },
+                    "additionalProperties": false
+                },
+                "$chars": {
+                    "type": "object",
+                    "properties": {
+                        "length": {
+                            "type": "number",
+                            "default": 8
+                        }
+                    },
+                    "required": [
+                        "length"
+                    ],
+                    "default": {
+                        "length": 8
+                    },
+                    "additionalProperties": false
+                },
+                "$randomNumber": {
+                    "type": "object",
+                    "properties": {
+                        "length": {
+                            "type": "number",
+                            "default": 8
+                        }
+                    },
+                    "required": [
+                        "length"
+                    ],
+                    "default": {
+                        "length": 8
+                    },
+                    "additionalProperties": false
+                },
+                "$randomPassword": {
+                    "type": "object",
+                    "properties": {
+                        "length": {
+                            "type": "number",
+                            "default": 8
+                        }
+                    },
+                    "required": [
+                        "length"
+                    ],
+                    "default": {
+                        "length": 8
+                    },
+                    "additionalProperties": false
+                },
+                "$randomInt": {
+                    "type": "object",
+                    "properties": {
+                        "min": {
+                            "type": "number",
+                            "default": 0
+                        },
+                        "max": {
+                            "type": "number",
+                            "default": 100
+                        }
+                    },
+                    "required": [
+                        "min", "max"
+                    ],
+                    "default": {
+                        "min": 0,
+                        "max": 100
+                    },
+                    "additionalProperties": false
+                },
+                "$int": {
+                    "type": "object",
+                    "properties": {
+                        "min": {
+                            "type": "number",
+                            "default": 0
+                        },
+                        "max": {
+                            "type": "number",
+                            "default": 100
+                        }
+                    },
+                    "required": [
+                        "min", "max"
+                    ],
+                    "default": {
+                        "min": 0,
+                        "max": 100
+                    },
+                    "additionalProperties": false
+                },
+                "$query": {
+                    "type": "object",
+                    "properties": {
+                        "$collection": {
+                            "type": "string"
+                        },
+                        "$select": {
+                            "type": "object"
+                        },
+                        "$where": {
+                            "type": "object"
+                        },
+                        "$order": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "$newGuid": {
+                    "type": "number",
+                    "default": 1
+                },
+                "$uuid": {
+                    "type": "number",
+                    "default": 1
+                },
+                "$newId": {
+                    "type": "number",
+                    "default": 1
+                },
+                "$concat": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            { "type": "string" },
+                            { "$ref": "#/definitions/valueType" }
+                        ]
+                    },
+                    "default": [
+                        "$stringField1",
+                        "$stringField2"
+                    ]
+                },
+                "$toLower": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toLowerCase": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toUpper": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toUpperCase": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$trim": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$length": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$substring": {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$field"
+                        },
+                        "start": {
+                            "type": "number",
+                            "default": 0
+                        },
+                        "length": {
+                            "type": "number",
+                            "default": 1
+                        }
+                    },
+                    "required": [
+                        "value"
+                    ],
+                    "default": {
+                        "value": "$field",
+                        "start": 0,
+                        "length": 1
+                    },
+                    "additionalProperties": false
+                },
+                "$abs": {
+                    "$ref": "#/definitions/anyFunctionWithValueParam"
+                },
+                "$ceil": {
+                    "$ref": "#/definitions/anyFunctionWithValueParam"
+                },
+                "$floor": {
+                    "$ref": "#/definitions/anyFunctionWithValueParam"
+                },
+                "$add": {
+                    "$ref": "#/definitions/anyFunctionWithParams"
+                },
+                "$subtract": {
+                    "$ref": "#/definitions/anyFunctionWithParams"
+                },
+                "$multiply": {
+                    "$ref": "#/definitions/anyFunctionWithParams"
+                },
+                "$divide": {
+                    "$ref": "#/definitions/anyFunctionWithParams"
+                },
+                "$mod": {
+                    "$ref": "#/definitions/anyFunctionWithParams"
+                },
+                "$round": {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "$ref": "#/definitions/valueType",
+                            "default": "$field1"
+                        },
+                        "place": {
+                            "type": "number",
+                            "default": 2
+                        }
+                    },
+                    "required": [
+                        "value", "place"
+                    ],
+                    "default": {
+                        "value": "$field1",
+                        "place": 2
+                    },
+                    "additionalProperties": false
+                },
+                "$toString": {
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toGuid":{
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toUUID":{
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toInt":{
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toDouble":{
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$toDecimal":{
+                    "$ref": "#/definitions/stringFunction"
+                },
+                "$eq": {
+                    "$ref": "#/definitions/comparisonFunction"
+                },
+                "$ne": {
+                    "$ref": "#/definitions/comparisonFunction"
+                },
+                "$gt": {
+                    "$ref": "#/definitions/comparisonFunction"
+                },
+                "$gte": {
+                    "$ref": "#/definitions/comparisonFunction"
+                },
+                "$lt": {
+                    "$ref": "#/definitions/comparisonFunction"
+                },
+                "$lte": {
+                    "$ref": "#/definitions/comparisonFunction"
+                },
+                "$and": {
+                    "$ref": "#/definitions/logicalFunction"
+                },
+                "$or": {
+                    "$ref": "#/definitions/logicalFunction"
+                },
+                "$cond": {
+                    "type": "object",
+                    "properties": {
+                        "if": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$field"
+                        },
+                        "then": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": true
+                        },
+                        "else": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": false
+                        }
+                    },
+                    "required": [
+                        "if", "then", "else"
+                    ],
+                    "default": {
+                        "if": "$field",
+                        "start": 0,
+                        "length": 1
+                    },
+                    "additionalProperties": false
+                },
+                "$replaceAll": {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$field"
+                        },
+                        "find": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        },
+                        "replacement": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        }
+                    },
+                    "required": [
+                        "input", "find", "replacement"
+                    ],
+                    "default": {
+                        "input": "$field",
+                        "find": "",
+                        "replacement": ""
+                    },
+                    "additionalProperties": false
+                },
+                "$replaceOne": {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$field"
+                        },
+                        "find": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        },
+                        "replacement": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        }
+                    },
+                    "required": [
+                        "input", "find", "replacement"
+                    ],
+                    "default": {
+                        "input": "$field",
+                        "find": "",
+                        "replacement": ""
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": true
         }
     },
     "properties": {
@@ -133,12 +805,26 @@
                         "description": "A boolean which indicates whether this attribute is a key column or not."
                     },
                     "value": {
-                        "type": "string",
-                        "description": "An expression which represents the default value for this attribute."
+                        "description": "An expression which represents the default value for this attribute.",
+                        "anyOf": [
+                            { 
+                                "type": "string" 
+                            },
+                            {
+                                "$ref": "#/definitions/valueType"
+                            }
+                        ]
                     },
                     "calculation": {
-                        "type": "string",
-                        "description": "An expression which represents the calculated value for this attribute."
+                        "description": "An expression which represents the calculated value for this attribute.",
+                        "anyOf": [
+                            { 
+                                "type": "string" 
+                            },
+                            {
+                                "$ref": "#/definitions/valueType"
+                            }
+                        ]
                     },
                     "readonly": {
                         "default": false,

@@ -13,6 +13,8 @@ var {TextUtils} = require('@themost/common');
 var {DataCacheStrategy} = require('./data-cache');
 var {DataFieldQueryResolver} = require('./data-field-query-resolver');
 var {FunctionContext} = require('./functions');
+var {isObjectDeep} = require('./is-object');
+var {ValueFormatter} = require('./ValueFormatter');
 
 /**
  * @classdesc Represents an event listener for validating not nullable fields. This listener is automatically  registered in all data models.
@@ -228,8 +230,19 @@ CalculatedValueListener.prototype.beforeSave = function(event, callback) {
     functionContext.context = event.model.context;
     //find all attributes that have a default value
     var attrs = event.model.attributes.filter(function(x) { return (x.calculation!==undefined); });
+    // create an instance of ValueFormatter
+    var valueFormatter = new ValueFormatter(event.model.context, event.model, event.target);
     async.eachSeries(attrs, function(attr, cb) {
         var expr = attr.calculation;
+        // use value formatter for object-like expressions
+        if (isObjectDeep(expr)) {
+            return valueFormatter.format(expr).then(function(result) {
+                event.target[attr.name] = result;
+                void cb();
+            }).catch(function(err) {
+                void cb(err);
+            });
+        }
         //validate expression
         if (typeof expr !== 'string') {
             event.target[attr.name] = expr;
@@ -559,9 +572,20 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
         _.assign(functionContext, event);
         //find all attributes that have a default value
         var attrs = event.model.attributes.filter(function(x) { return (typeof x.value!== 'undefined'); });
+        // create an instance of ValueFormatter
+        var valueFormatter = new ValueFormatter(event.model.context, event.model, event.target);
         async.eachSeries(attrs, function(attr, cb) {
             try {
                 var expr = attr.value;
+                // use value formatter for object-like expressions
+                if (isObjectDeep(expr)) {
+                    return valueFormatter.format(expr).then(function(result) {
+                        event.target[attr.name] = result;
+                        void cb();
+                    }).catch(function(err) {
+                        void cb(err);
+                    });
+                }
                 //if attribute is already defined
                 if (typeof event.target[attr.name] !== 'undefined') {
                     //do nothing

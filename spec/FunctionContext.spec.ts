@@ -79,11 +79,12 @@ describe('FunctionContext', () => {
     it('should use undefined user', async() => {
         await TestUtils.executeInTransaction(context, async () => {
             context.user = null;
-            await context.model('EventStatusType').silent().save({
+            const newItem: { id?: number, name: string, alternateName: string, description: string } = {
                 "name": "Postponed",
                 "alternateName": "postponed",
                 "description": "The event has been postponed."
-            });
+            };
+            await context.model('EventStatusType').silent().save(newItem);
             const item: any = await context.model('EventStatusType').where(
                 (x: any) => x.alternateName === 'postponed'
                 ).getItem();

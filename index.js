@@ -90,6 +90,8 @@ var { executeInUnattendedMode, executeInUnattendedModeAsync, enableUnattendedExe
 
 var { DataValueResolver } = require('./data-value-resolver');
 
+var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -174,6 +176,9 @@ module.exports = {
     executeInUnattendedModeAsync,
     enableUnattendedExecution,
     disableUnattendedExecution,
-    DataValueResolver
+    DataValueResolver,
+    ValueFormatter,
+    ValueDialect
+
 };
 
