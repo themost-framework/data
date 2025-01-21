@@ -238,6 +238,7 @@ CalculatedValueListener.prototype.beforeSave = function(event, callback) {
         if (isObjectDeep(expr)) {
             return valueFormatter.format(expr).then(function(result) {
                 event.target[attr.name] = result;
+                void cb();
             }).catch(function(err) {
                 void cb(err);
             });
@@ -580,6 +581,7 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
                 if (isObjectDeep(expr)) {
                     return valueFormatter.format(expr).then(function(result) {
                         event.target[attr.name] = result;
+                        void cb();
                     }).catch(function(err) {
                         void cb(err);
                     });

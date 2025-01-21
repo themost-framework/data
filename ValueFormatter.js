@@ -55,6 +55,11 @@ function getFunctionArguments(fn) {
   if (typeof fn !== 'function') {
     throw new Error('Invalid parameter. Expected function.');
   }
+  // if dialect function params are already cached
+  if (Object.prototype.hasOwnProperty.call(fn, 'dialectFunctionParams')) {
+    // return cached function params
+    return fn.dialectFunctionParams;
+  }
   const fnString = fn.toString().trim();
   let ast;
   if (/^function\s+/i.test(fnString) === false) {
@@ -66,7 +71,15 @@ function getFunctionArguments(fn) {
   } else {
     ast = esprima.parseScript(fnString);
   }
-  return ast.body[0].params.map((param) => param.name);
+  const params = ast.body[0].params.map((param) => param.name);
+  // cache function params
+  Object.defineProperty(fn, 'dialectFunctionParams', {
+    configurable: true,
+    enumerable: false,
+    writable: true,
+    value: params
+  });
+  return params;
 } 
 
 class ValueDialect {
@@ -155,9 +168,12 @@ class ValueDialect {
    */
   $user(property) {
     const selectAttribute = property || 'id';
-    const name = this.context.user && this.context.user.name;
+    let name = this.context.user && this.context.user.name;
+    if (Object.prototype.hasOwnProperty.call(this.context, 'interactiveUser') === true) {
+      name = this.context.interactiveUser && this.context.interactiveUser.name;
+    }
     return this.context.model('User').asQueryable().where((x, username) => {
-      return x.name === username;
+      return x.name === username && x.name != null && x.name != 'anonymous';
     }, name).select(selectAttribute).value();
   }
   /**
@@ -176,6 +192,14 @@ class ValueDialect {
   $newGuid() {
     return Promise.resolve(v4().toString());
   }
+
+  /**
+   * Get a new GUID value
+   * @returns {Promise<string>}
+   */
+    $uuid() {
+      return Promise.resolve(v4().toString());
+    }
 
   /**
    * Get a new identifier value for the current data model
