@@ -1,6 +1,7 @@
 import {TestApplication, TestApplication2} from './TestApplication';
-import { DataContext, executeInUnattendedMode, executeInUnattendedModeAsync, ValueFormatter } from '@themost/data';
+import { DataContext, executeInUnattendedMode, executeInUnattendedModeAsync, ValueFormatter, ValueDialect } from '@themost/data';
 import moment from 'moment';
+import MD5 from 'crypto-js/md5';
 
 describe('ValueFormatter', () => {
     let app: TestApplication;
@@ -377,6 +378,42 @@ describe('ValueFormatter', () => {
         });
     });
 
+    it('should use custom functions', async () => {
+        Object.assign(ValueDialect.prototype, {
+            async $initials(first: string, last: string) {
+                return `${first.charAt(0)}${last.charAt(0)}`;
+            }
+        });
+        const formatter = new ValueFormatter(context, context.model('Person'), {
+            givenName: 'John',
+            familyName: 'Doe'
+        });
+        const initials = await formatter.format({
+            $initials: {
+                first: '$$target.givenName',
+                last: '$$target.familyName'
+            }
+        });
+        expect(initials).toBe('JD');
+    });
+
+    it('should use register for custom dialect functions', async () => {
+        ValueFormatter.register('initials', {
+            async $md5 (value: any) {
+                return MD5(value).toString();
+            }
+        });
+        const formatter = new ValueFormatter(context, context.model('Person'), {
+            givenName: 'John',
+            familyName: 'Doe'
+        });
+        const hash = await formatter.format({
+            $md5: {
+                value: 'Hello World'
+            }
+        });
+        expect(hash).toBe(MD5('Hello World').toString());
+    });
     
 
 });

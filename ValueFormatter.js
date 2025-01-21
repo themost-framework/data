@@ -719,6 +719,15 @@ class ValueFormatter {
       Promise.reject(new Error(`Dialect method '${property}' not found.`));
     }
   }
+
+  /**
+   * @param {*} name 
+   * @param {*} definition 
+   */
+  static register(name, definition) {
+    Object.assign(ValueDialect.prototype, definition)
+  }
+
 }
 //** @ts-ignore **/
 module.exports = {

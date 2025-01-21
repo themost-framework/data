@@ -50,6 +50,7 @@
     "@themost/sqlite": "^2.8.4",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/jest": "^27.4.1",
     "@types/lodash": "^4.14.149",
     "@types/node": "^10.12.0",

@@ -29,4 +29,15 @@ export declare class ValueFormatter {
      * @returns The formatted value.
      */
     format(value: unknown): any;
+
+    static register(name: string, definition: { [k: string]:  (...value: any[]) => Promise<any> }): void;
+}
+
+export declare class ValueDialect {
+    /**
+     * Creates an instance of ValueDialect.
+     * @param context - The data context in which the dialect operates.
+     */
+    constructor(context: DataContext, model: DataModelBase, target: any);
+
 }

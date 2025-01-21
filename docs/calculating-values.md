@@ -1178,3 +1178,46 @@ Returns the result of a query expression.
 }
 ```
 where `$query` dialect is being used for calculating the sum of the field `price` of the `Order` model based on the value of the field `target.id`.
+
+## Custom functions
+
+Use `ValueFormatter` class for defining custom functions.
+
+```json
+{
+    "name": "initials",
+    "type": "Text",
+    "calculation": {
+        "$initials": {
+            "first": "$$target.firstName",
+            "last": "$$target.lastName"
+        }
+    }
+}
+```
+
+where `$initials` dialect is being used for calculating the initials of the fields `target.firstName` and `target.lastName`.
+
+Use `ValueDialect` class and extend it for defining custom functions.
+
+```javascript
+const { ValueDialect } = require('@themost/data');
+Object.assign(ValueDialect.prototype, {
+    async $initials(first, last) {
+        return `${first.charAt(0)}${last.charAt(0)}`;
+    }
+});
+```
+
+A shorthand for defining custom functions is to use the `ValueFormatter.register` method.
+
+```javascript
+const { ValueFormatter } = require('@themost/data');
+ValueFormatter.register('$initials', {
+        async (first, last) => {
+            return `${first.charAt(0)}${last.charAt(0)}`;
+        }
+    }
+);
+```
+
