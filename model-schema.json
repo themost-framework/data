@@ -615,6 +615,76 @@
                         "length": 1
                     },
                     "additionalProperties": false
+                },
+                "$replaceAll": {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$field"
+                        },
+                        "find": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        },
+                        "replacement": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        }
+                    },
+                    "required": [
+                        "input", "find", "replacement"
+                    ],
+                    "default": {
+                        "input": "$field",
+                        "find": "",
+                        "replacement": ""
+                    },
+                    "additionalProperties": false
+                },
+                "$replaceOne": {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": "$field"
+                        },
+                        "find": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        },
+                        "replacement": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "$ref": "#/definitions/valueType" }
+                            ],
+                            "default": ""
+                        }
+                    },
+                    "required": [
+                        "input", "find", "replacement"
+                    ],
+                    "default": {
+                        "input": "$field",
+                        "find": "",
+                        "replacement": ""
+                    },
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": true
