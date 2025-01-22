@@ -3,6 +3,7 @@ import { DataContext, executeInUnattendedMode, executeInUnattendedModeAsync, Val
 import moment from 'moment';
 import MD5 from 'crypto-js/md5';
 import { resolve } from 'path';
+import { TestUtils } from './adapter/TestUtils';
 
 describe('ValueFormatter', () => {
     let app: TestApplication;
@@ -414,6 +415,24 @@ describe('ValueFormatter', () => {
             }
         });
         expect(hash).toBe(MD5('Hello World').toString());
+    });
+
+    it('should use $user function', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            context.user = {
+                name: 'angela.parry@example.com'
+            };
+            const user = await context.model('User').asQueryable().where((x: { id: number, name: string}, username: string) => {
+                return x.name === username;
+            }, context.user.name).getItem()
+            const Products = context.model('Product');
+            const formatter = new ValueFormatter(context, Products);
+            const value: number = await formatter.format({
+                $user: 1
+            });
+            expect(value).toBeTruthy();
+            expect(value).toEqual(user.id);
+        });
     });
     
 

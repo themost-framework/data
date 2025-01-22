@@ -341,4 +341,64 @@ describe('DataObjectAssociationListener', () => {
         });
     });
 
+    it('should validate foreign key constraint while inserting object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const product = await context.model('Product').asQueryable().where((x: any) => x.name === 'Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: -400,
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            try {
+                await context.model('Offer').silent().save(newOffer);
+                throw new Error('An error is expected');
+            } catch (error) {
+                expect(error).toBeInstanceOf(DataObjectAssociationError);
+                expect(error.model).toEqual('Offer');
+                expect(error.field).toEqual('itemOffered');
+            }
+        });
+    });
+
+    it('should validate foreign key constraint while updating object', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const product = await context.model('Product').asQueryable().where((x: any) => x.name === 'Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            let newOffer: any = {
+                itemOffered: product,
+                price: 999,
+                validFrom: new Date('2021-12-20'),
+                validThrough: new Date('2021-12-31')
+            }
+            await context.model('Offer').silent().save(newOffer);
+            newOffer.offeredBy = -400;
+            try {
+                await context.model('Offer').silent().save(newOffer);
+                throw new Error('An error is expected');
+            } catch (error) {
+                expect(error).toBeInstanceOf(DataObjectAssociationError);
+                expect(error.model).toEqual('Offer');
+                expect(error.field).toEqual('offeredBy');
+            }
+        });
+    });
+
+    it('should validate foreign key constraint of readonly fields without calculating values', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const product = await context.model('Product').asQueryable().where((x: any) => x.name === 'Samsung Galaxy S4').getItem();
+            expect(product).toBeTruthy();
+            product.createdBy = -400;
+            try {
+                await context.model('Product').silent().save(product);
+                throw new Error('An error is expected');
+            } catch (error) {
+                expect(error).toBeInstanceOf(DataObjectAssociationError);
+                expect(error.model).toEqual('Thing');
+                expect(error.field).toEqual('createdBy');
+            }
+        });
+    });
+
 });

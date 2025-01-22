@@ -174,7 +174,12 @@ class ValueDialect {
     }
     return this.context.model('User').asQueryable().where((x, username) => {
       return x.name === username && x.name != null && x.name != 'anonymous';
-    }, name).select(selectAttribute).value();
+    }, name).select(selectAttribute).value().then((result) => {
+      if (typeof result === 'undefined') {
+        return null;
+      }
+      return result;
+    });
   }
   /**
    * A shorthand for $user method
