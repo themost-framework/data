@@ -89,6 +89,8 @@ var { UnknownAttributeError } = require('./data-errors');
 
 var { executeInUnattendedModeAsync, executeInUnattendedMode, enableUnattendedExecution, disableUnattendedExecution  } = require('./UnattendedMode');
 
+var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -174,6 +176,8 @@ module.exports = {
     enableUnattendedExecution,
     disableUnattendedExecution,
     executeInUnattendedMode,
-    executeInUnattendedModeAsync
+    executeInUnattendedModeAsync,
+    ValueFormatter,
+    ValueDialect
 };
 
