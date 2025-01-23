@@ -127,7 +127,10 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
                     if (err) {
                         return reject(err);
                     }
-                    return resolve(res);
+                    if (Object.prototype.hasOwnProperty.call(res, key)) {
+                        return resolve(res[key]);
+                    }
+                    return resolve();
                 });
             } catch (err) {
                 return reject(err);
@@ -180,9 +183,9 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
     finalize() {
         var self = this;
         return self.clear().then(function() {
-            // destroy timer
-            if (self.rawCache) {
-                self.rawCache.close();
+            if (self.rawCache.checkTimeout != null) {
+                clearTimeout(self.rawCache.checkTimeout);
+                return Promise.resolve();
             }
         });
     }
@@ -201,7 +204,9 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
             try {
                 void self.rawCache.get(key, (err, res) => {
                     if (typeof res !== 'undefined') {
-                        return resolve(res);
+                        if (Object.prototype.hasOwnProperty.call(res, key)) {
+                            return resolve(res[key]);
+                        }
                     }
                     try {
                         void getFunc().then(function (res) {

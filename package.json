@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.6.76",
+  "version": "2.6.77",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "types": "index.d.ts",
@@ -34,7 +34,7 @@
     "esprima": "^4.0.1",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
-    "node-cache": "^4.2.1",
+    "node-cache": "^1.1.0",
     "pluralize": "^7.0.0",
     "q": "^1.4.1",
     "sprintf-js": "^1.1.2",
