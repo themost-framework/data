@@ -449,13 +449,13 @@ e.g. the following example demonstrates how to calculate the value of a field ba
     "type": "Float",
     "calculation": {
         "$round": {
-            value: {
+            "value": {
                 "$multiply": [
                     "$$target.price",
                     "$$target.quantity"
                 ]
             },
-            place: 2
+            "place": 2
         }
     }
 }
@@ -482,7 +482,8 @@ Concatenates two or more strings.
     }
 }
 ```
-### `$substring`: Returns a substring of a string.
+### `$substring`
+Returns a substring of a string.
 ```json
 {
     "name": "initial",
@@ -497,7 +498,8 @@ Concatenates two or more strings.
     }
 }
 ```
-### `$length`: Returns the length of a string.
+### `$length`
+Returns the length of a string.
 ```json
 {
     "name": "length",
@@ -508,7 +510,8 @@ Concatenates two or more strings.
     }
 }
 ```
-### `$toLower`: Converts a string to lowercase.
+### `$toLower`
+Converts a string to lowercase.
 ```json
 {
     "name": "lower",
@@ -519,7 +522,8 @@ Concatenates two or more strings.
     }
 }
 ```
-### `$toUpper`: Converts a string to uppercase.
+### `$toUpper`
+Converts a string to uppercase.
 ```json
 {
     "name": "upper",
@@ -530,7 +534,8 @@ Concatenates two or more strings.
     }
 }
 ```
-### `$trim`: Removes whitespace from the beginning and end of a string.
+### `$trim`
+Removes whitespace from the beginning and end of a string.
 ```json
 {
     "name": "trimmed",
@@ -588,9 +593,12 @@ where `$substring` dialect is being used for extracting the first character of t
 
 The following context variables are supported by `@themost/data`:
 
-### `$$target`: Refers to the object being inserted or updated.
-### `$$model`: Refers to an instance of `DataModel` class.
-### `$$context`: Refers to an instance of `DataContext` class.
+### `$$target`
+Refers to the object being inserted or updated.
+### `$$model`
+Refers to an instance of `DataModel` class.
+### `$$context`
+Refers to an instance of `DataContext` class.
 
 These variables can be used in the calculation expression for accessing the object being inserted or updated, the data model or the data context.
 
@@ -945,7 +953,7 @@ Converts a value to an integer.
     "type": "Integer",
     "calculation": {
         "$toInt": {
-            value: "$$target.price"
+            "value": "$$target.price"
         }
     }
 }
@@ -1213,11 +1221,13 @@ A shorthand for defining custom functions is to use the `ValueFormatter.register
 
 ```javascript
 const { ValueFormatter } = require('@themost/data');
-ValueFormatter.register('$initials', {
-        async (first, last) => {
+ValueFormatter.register({
+        async $initials(first, last) => {
             return `${first.charAt(0)}${last.charAt(0)}`;
         }
     }
 );
 ```
+
+A custom dialect should be as an async function and return a value.
 
