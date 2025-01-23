@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.6.75",
+  "version": "2.6.76",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "types": "index.d.ts",
@@ -39,7 +39,7 @@
     "q": "^1.4.1",
     "sprintf-js": "^1.1.2",
     "symbol": "^0.3.1",
-    "uuid": "^11.0.5"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.17.2",
