@@ -12,7 +12,7 @@ describe('DataObjectAssociationListener', () => {
         return done();
     });
     afterAll(async () => {
-        await context.finalize();
+        await context.finalizeAsync();
         await app.finalize();
     });
     it('should validate foreign-key association', async ()=> {

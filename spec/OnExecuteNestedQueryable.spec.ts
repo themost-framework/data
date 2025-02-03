@@ -5,19 +5,22 @@ import { DataConfigurationStrategy } from '../data-configuration';
 import { OnExecuteNestedQueryable } from '../OnExecuteNestedQueryable';
 import { TestUtils } from './adapter/TestUtils';
 import { TestApplication2 } from './TestApplication';
+import { DataContext } from 'types';
 
 describe('OnExecuteNestedQueryable', () => {
     let app: TestApplication2;
+    let context: DataContext;
     beforeAll((done) => {
         app = new TestApplication2();
+        context = app.createContext();
         return done();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should find listener', () => {
         expect(app).toBeTruthy();
-        const context = app.createContext();
         const model = context.model('Product');
         expect(model).toBeTruthy();
         let listeners = model.rawListeners('before.execute');
@@ -35,7 +38,6 @@ describe('OnExecuteNestedQueryable', () => {
     });
 
     it('should use nested query', async () => {
-        const context = app.createContext();
         let Actions = context.model('Action');
         const beforeExecute = OnExecuteNestedQueryable.prototype.beforeExecute;
         Actions.removeListener('before.execute', beforeExecute);
@@ -47,14 +49,12 @@ describe('OnExecuteNestedQueryable', () => {
     });
 
     it('should use nested many-to-one query', async () => {
-        const context = app.createContext();
         let Orders = context.model('Order');
         await expect(Orders.where('customer/gender/alternateName')
         .equal('Female').silent().getItems()).resolves.toBeTruthy();
     });
 
     it('should use nested one-to-many query', async () => {
-        const context = app.createContext();
         let People = context.model('Person');
         await expect(People.where('orders/orderStatus/alternateName')
             .equal('OrderProblem').silent().getItems()).resolves.toBeTruthy();
