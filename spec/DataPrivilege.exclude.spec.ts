@@ -29,7 +29,7 @@ describe('DataPrivilege', () => {
         return done();
     });
     afterAll(async () => {
-        await context.finalize();
+        await context.finalizeAsync();
         await app.finalize();
     });
 

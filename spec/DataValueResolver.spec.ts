@@ -10,6 +10,7 @@ describe('DataValueResolver', () => {
         context = app.createContext();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should resolve value from an associated parent object', async () => {

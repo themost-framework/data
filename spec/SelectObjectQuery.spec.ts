@@ -14,6 +14,7 @@ describe('SelectParser', () => {
         context = app.createContext();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should select object', async () => {

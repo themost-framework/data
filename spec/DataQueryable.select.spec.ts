@@ -14,6 +14,7 @@ describe('DataQueryable.select()', () => {
         context = app.createContext();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should use a simple select closure', async () => {

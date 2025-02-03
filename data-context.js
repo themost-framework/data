@@ -42,7 +42,7 @@ function DefaultDataContext()
     /**
      * @type {DataAdapter|*}
      */
-    var db_= null;
+    var _db= null;
     /**
      * @name DataAdapter#hasConfiguration
      * @type {Function}
@@ -51,10 +51,15 @@ function DefaultDataContext()
     /**
      * @private
      */
-    this.finalize_ = function() {
-        if (db_)
-            db_.close();
-        db_=null;
+    this._finalize = function(cb) {
+        if (_db) {
+            return _db.close(function(err) {
+                // destroy db context
+                _db = null;
+                return cb(err);
+            });
+        }
+        return cb();
     };
     var self = this;
     // set data context name with respect to DataContext implementation
@@ -69,8 +74,8 @@ function DefaultDataContext()
 
     self.getDb = function() {
 
-        if (db_)
-            return db_;
+        if (_db)
+            return _db;
         var er;
         //otherwise load database options from configuration
         var strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
@@ -98,23 +103,23 @@ function DefaultDataContext()
         /**
          * @type {DataAdapter|*}
          */
-        db_ = adapterType.createInstance(adapter.options);
-        if (typeof db_.hasConfiguration === 'function') {
-            db_.hasConfiguration(function() {
+        _db = adapterType.createInstance(adapter.options);
+        if (typeof _db.hasConfiguration === 'function') {
+            _db.hasConfiguration(function() {
                return self.getConfiguration();
             });
         }
-        return db_;
+        return _db;
     };
 
     self.setDb = function(value) {
         /**
          * @type {DataAdapter|*}
          */
-        db_ = value;
-        if (db_) {
-            if (typeof db_.hasConfiguration === 'function') {
-                db_.hasConfiguration(function() {
+        _db = value;
+        if (_db) {
+            if (typeof _db.hasConfiguration === 'function') {
+                _db.hasConfiguration(function() {
                     return self.getConfiguration();
                 });
             }
@@ -184,8 +189,13 @@ DefaultDataContext.prototype.model = function(name) {
  */
 DefaultDataContext.prototype.finalize = function(cb) {
     cb = cb || function () {};
-    this.finalize_();
-    cb.call(this);
+    void this._finalize(function(err) {
+        if (err) {
+            TraceUtils.error('An error occurred while finalizing the underlying database context.');
+            TraceUtils.error(err);
+        }
+        return cb();
+    });
 };
 
 
@@ -204,27 +214,26 @@ function NamedDataContext(name)
      * @type {DataAdapter}
      * @private
      */
-    var db_;
+    var _db;
     /**
      * @private
      */
-    this.finalize_ = function() {
-        try {
-            if (db_)
-                db_.close();
+    this._finalize = function(cb) {
+        if (_db) {
+            return _db.close(function(err) {
+                // destroy db context
+                _db = null;
+                return cb(err);
+            });
         }
-        catch(err) {
-            TraceUtils.debug('An error occurred while closing the underlying database context.');
-            TraceUtils.debug(err);
-        }
-        db_ = null;
+        return cb();
     };
     var self = this;
     self[nameProperty] = name;
 
     self.getDb = function() {
-        if (db_)
-            return db_;
+        if (_db)
+            return _db;
         var strategy = self.getConfiguration().getStrategy(DataConfigurationStrategy);
         //otherwise load database options from configuration
         var adapter = strategy.adapters.find(function(x) {
@@ -247,23 +256,23 @@ function NamedDataContext(name)
             throw er;
         }
         //otherwise load adapter
-        db_ = adapterType.createInstance(adapter.options);
-        if (typeof db_.hasConfiguration === 'function') {
-            db_.hasConfiguration(function() {
+        _db = adapterType.createInstance(adapter.options);
+        if (typeof _db.hasConfiguration === 'function') {
+            _db.hasConfiguration(function() {
                 return self.getConfiguration();
             });
         }
-        return db_;
+        return _db;
     };
 
     /**
      * @param {DataAdapter|*} value
      */
     self.setDb = function(value) {
-        db_ = value;
-        if (db_) {
-            if (typeof db_.hasConfiguration === 'function') {
-                db_.hasConfiguration(function() {
+        _db = value;
+        if (_db) {
+            if (typeof _db.hasConfiguration === 'function') {
+                _db.hasConfiguration(function() {
                     return self.getConfiguration();
                 });
             }
@@ -352,8 +361,13 @@ NamedDataContext.prototype.model = function(name) {
 
 NamedDataContext.prototype.finalize = function(cb) {
     cb = cb || function () {};
-    this.finalize_();
-    cb.call(this);
+    void this._finalize(function(err) {
+        if (err) {
+            TraceUtils.error('An error occurred while finalizing the underlying database context.');
+            TraceUtils.error(err);
+        }
+        return cb();
+    });
 };
 
 module.exports = {
