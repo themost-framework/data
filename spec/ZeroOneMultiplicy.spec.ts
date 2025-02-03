@@ -18,7 +18,7 @@ Object.assign(DataContext.prototype, {
 })
 
 
-fdescribe('ZeroOrOneMultiplicity', () => {
+describe('ZeroOrOneMultiplicity', () => {
     let app: TestApplication;
     let context: DataContext;
     beforeAll(async () => {

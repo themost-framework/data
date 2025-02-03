@@ -10,6 +10,7 @@ describe('DataAssociationMapping', () => {
         context = app.createContext();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should get item children (for one-to-many association)', async () => {

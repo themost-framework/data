@@ -12,6 +12,7 @@ describe('DataAssociationPrivileges', () => {
         context = app.createContext();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should set associated object', async () => {
