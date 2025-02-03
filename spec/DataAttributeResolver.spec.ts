@@ -12,6 +12,7 @@ describe('DataAttributeResolver', () => {
         context = app.createContext();
     });
     afterAll(async () => {
+        await context.finalizeAsync();
         await app.finalize();
     })
     it('should resolve child nested attributes', async () => {

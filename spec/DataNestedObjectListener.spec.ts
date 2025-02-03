@@ -13,7 +13,7 @@ describe('DataNestedObjectListener', () => {
         return done();
     });
     afterAll(async () => {
-        await context.finalize();
+        await context.finalizeAsync();
         await app.finalize();
     });
     it('should use zero-or-one multiplicity', async () => {
