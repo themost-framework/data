@@ -850,16 +850,12 @@ function filterInternal(params, callback) {
                 if (select == null) {
                     return cb(null, []);
                 }
-                return alternateParser.parseSelectSequence(select, function(err, result) {
+                return parser.parseSelectSequence(select, function(err, result) {
                     if (err) {
                         return cb(err);
                     }
                     if (Array.isArray(result)) {
-                        // get tokens
-                        var tokens = result.map(function(x) {
-                            return x.source;
-                        });
-                        return cb(null, tokens);
+                        return cb(null, result);
                     }
                     return cb(null, []);
                 });
@@ -870,16 +866,12 @@ function filterInternal(params, callback) {
                 if (orderBy == null) {
                     return cb(null, []);
                 }
-                return alternateParser.parseOrderBySequence(orderBy, function(err, result) {
+                return parser.parseOrderBySequence(orderBy, function(err, result) {
                     if (err) {
                         return cb(err);
                     }
                     if (Array.isArray(result)) {
-                        // get tokens
-                        var tokens = result.map(function(x) {
-                            return x.source;
-                        });
-                        return cb(null, tokens);
+                        return cb(null, result);
                     }
                     return cb(null, []);
                 });
@@ -890,16 +882,12 @@ function filterInternal(params, callback) {
                 if (groupBy == null) {
                     return cb(null, []);
                 }
-                return alternateParser.parseGroupBySequence(groupBy, function(err, result) {
+                return parser.parseGroupBySequence(groupBy, function(err, result) {
                     if (err) {
                         return cb(err);
                     }
                     if (Array.isArray(result)) {
-                        // get tokens
-                        var tokens = result.map(function(x) {
-                            return x.source;
-                        });
-                        return cb(null, tokens);
+                        return cb(null, result);
                     }
                     return cb(null, []);
                 });
@@ -927,12 +915,19 @@ function filterInternal(params, callback) {
                         var levels = parseInt(params.$levels);
                         var top = params.$top || params.$take;
                         //select fields
+                        var { viewAdapter: collection } = self;
                         if (selectArgs.length>0) {
-                            q.select.apply(q, selectArgs);
+                            q.query.$select = {
+                                [collection]: selectArgs.map(function(selectArg) {
+                                    return selectArg.exprOf();
+                                })
+                            };
                         }
                         //apply group by fields
                         if (groupByArgs.length>0) {
-                            q.groupBy.apply(q, groupByArgs);
+                            q.query.$group = groupByArgs.map(function(groupByArg) {
+                                return groupByArg.exprOf();
+                            });
                         }
                         if ((typeof levels === 'number') && !isNaN(levels)) {
                             //set expand levels
@@ -949,18 +944,8 @@ function filterInternal(params, callback) {
                         }
                         //set $orderby
                         if (orderByArgs.length) {
-                            orderByArgs.map(function(x) {
-                                return x.replace(/^\s+|\s+$/g, '');
-                            }).forEach(function(x) {
-                                if (/\s+desc$/i.test(x)) {
-                                    q.orderByDescending(x.replace(/\s+desc$/i, ''));
-                                }
-                                else if (/\s+asc/i.test(x)) {
-                                    q.orderBy(x.replace(/\s+asc/i, ''));
-                                }
-                                else {
-                                    q.orderBy(x);
-                                }
+                            q.query.$order = orderByArgs.map(function(orderByArg) {
+                                return orderByArg.exprOf();
                             });
                         }
                         if (expand) {
