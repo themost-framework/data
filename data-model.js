@@ -834,82 +834,150 @@ function filterInternal(params, callback) {
     }
 
     try {
-        parser.parse(filter, function(err, query) {
+        // backward compatibility: create a new open data parser (without any resolver)
+        // for splitting tokens and get list of attributes to select, order by, group by etc
+        // for this operation we are using a new instance of OpenDataParser and execute parseSelectSequence,
+        // parseOrderBySequence and parseGroupBySequence methods
+        // each of these methods will return a list of tokens which are going to be passed to query
+        const alternateParser = new OpenDataParser();
+        async.series([
+            function(cb) {
+                return parser.parse(filter, cb);
+            },
+            function (cb) {
+                // use parseSelectSequence to split tokens
+                var select = params.$select;
+                if (select == null) {
+                    return cb(null, []);
+                }
+                return alternateParser.parseSelectSequence(select, function(err, result) {
+                    if (err) {
+                        return cb(err);
+                    }
+                    if (Array.isArray(result)) {
+                        // get tokens
+                        var tokens = result.map(function(x) {
+                            return x.source;
+                        });
+                        return cb(null, tokens);
+                    }
+                    return cb(null, []);
+                });
+            },
+            function (cb) {
+                // use parseSelectSequence to split tokens
+                var orderBy = params.$orderby || params.$orderBy || params.$order;
+                if (orderBy == null) {
+                    return cb(null, []);
+                }
+                return alternateParser.parseOrderBySequence(orderBy, function(err, result) {
+                    if (err) {
+                        return cb(err);
+                    }
+                    if (Array.isArray(result)) {
+                        // get tokens
+                        var tokens = result.map(function(x) {
+                            return x.source;
+                        });
+                        return cb(null, tokens);
+                    }
+                    return cb(null, []);
+                });
+            },
+            function (cb) {
+                // use parseSelectSequence to split tokens
+                var groupBy = params.$groupby || params.$groupBy || params.$group;
+                if (groupBy == null) {
+                    return cb(null, []);
+                }
+                return alternateParser.parseGroupBySequence(groupBy, function(err, result) {
+                    if (err) {
+                        return cb(err);
+                    }
+                    if (Array.isArray(result)) {
+                        // get tokens
+                        var tokens = result.map(function(x) {
+                            return x.source;
+                        });
+                        return cb(null, tokens);
+                    }
+                    return cb(null, []);
+                });
+            }
+        ], function(err, results) {
             if (err) {
                 callback(err);
-            }
-            else {
-                //create a DataQueryable instance
-                var q = new DataQueryable(self);
-                q.query.$where = query;
-                if ($joinExpressions.length>0)
-                    q.query.$expand = $joinExpressions;
-                //prepare
-                q.query.prepare();
-
-                if (typeof params === 'object') {
-                    //apply query parameters
-                    var select = params.$select,
-                        skip = params.$skip || 0,
-                        orderBy = params.$orderby || params.$order,
-                        groupBy = params.$groupby || params.$group,
-                        expand = params.$expand,
-                        levels = parseInt(params.$levels),
-                        top = params.$top || params.$take;
-                    //select fields
-                    if (typeof select === 'string') {
-                        q.select.apply(q, select.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
-                    }
-                    //apply group by fields
-                    if (typeof groupBy === 'string') {
-                        q.groupBy.apply(q, groupBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
-                    }
-                    if ((typeof levels === 'number') && !isNaN(levels)) {
-                        //set expand levels
-                        q.levels(levels);
-                    }
-                    //set $skip
-                    q.skip(skip);
-                    if (top)
-                        q.query.take(top);
-                    //set caching
-                    if (params.$cache && self.caching === 'conditional') {
-                        q.cache(true);
-                    }
-                    //set $orderby
-                    if (orderBy) {
-                        orderBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }).forEach(function(x) {
-                            if (/\s+desc$/i.test(x)) {
-                                q.orderByDescending(x.replace(/\s+desc$/i, ''));
-                            }
-                            else if (/\s+asc/i.test(x)) {
-                                q.orderBy(x.replace(/\s+asc/i, ''));
-                            }
-                            else {
-                                q.orderBy(x);
-                            }
-                        });
-                    }
-                    if (expand) {
-                        var matches = resolver.testExpandExpression(expand);
-                        if (matches && matches.length>0) {
-                            q.expand.apply(q, matches);
+            } else {
+                try {
+                    var query = results[0];
+                    var selectArgs = results[1];
+                    var orderByArgs = results[2];
+                    var groupByArgs = results[3];
+                    //create a DataQueryable instance
+                    var q = new DataQueryable(self);
+                    q.query.$where = query;
+                    if ($joinExpressions.length>0)
+                        q.query.$expand = $joinExpressions;
+                    //prepare
+                    q.query.prepare();
+                    if (typeof params === 'object') {
+                        //apply query parameters
+                        var skip = params.$skip || 0;
+                        var expand = params.$expand;
+                        var levels = parseInt(params.$levels);
+                        var top = params.$top || params.$take;
+                        //select fields
+                        if (selectArgs.length>0) {
+                            q.select.apply(q, selectArgs);
                         }
+                        //apply group by fields
+                        if (groupByArgs.length>0) {
+                            q.groupBy.apply(q, groupByArgs);
+                        }
+                        if ((typeof levels === 'number') && !isNaN(levels)) {
+                            //set expand levels
+                            q.levels(levels);
+                        }
+                        //set $skip
+                        q.skip(skip);
+                        if (top) {
+                            q.query.take(top);
+                        }
+                        //set caching
+                        if (params.$cache && self.caching === 'conditional') {
+                            q.cache(true);
+                        }
+                        //set $orderby
+                        if (orderByArgs.length) {
+                            orderByArgs.map(function(x) {
+                                return x.replace(/^\s+|\s+$/g, '');
+                            }).forEach(function(x) {
+                                if (/\s+desc$/i.test(x)) {
+                                    q.orderByDescending(x.replace(/\s+desc$/i, ''));
+                                }
+                                else if (/\s+asc/i.test(x)) {
+                                    q.orderBy(x.replace(/\s+asc/i, ''));
+                                }
+                                else {
+                                    q.orderBy(x);
+                                }
+                            });
+                        }
+                        if (expand) {
+                            var matches = resolver.testExpandExpression(expand);
+                            if (matches && matches.length>0) {
+                                q.expand.apply(q, matches);
+                            }
+                        }
+                        //return
+                        callback(null, q);
+                    } else {
+                        //and finally return DataQueryable instance
+                        callback(null, q);
                     }
-                    //return
-                    callback(null, q);
+                } catch (err) {
+                    return callback(err);
                 }
-                else {
-                    //and finally return DataQueryable instance
-                    callback(null, q);
-                }
-
             }
         });
     }
