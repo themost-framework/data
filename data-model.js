@@ -779,8 +779,13 @@ function filterInternal(params, callback) {
                     var arrExpr = [];
                     if (_.isArray(expr))
                         arrExpr.push.apply(arrExpr, expr);
-                    else
-                        arrExpr.push(expr);
+                    else {
+                        if (expr.$expand) {
+                            arrExpr.push.apply(arrExpr, expr.$expand);
+                        } else {
+                            arrExpr.push(expr);
+                        }
+                    }
                     arrExpr.forEach(function(y) {
                         var joinExpr = $joinExpressions.find(function(x) {
                             if (x.$entity && x.$entity.$as) {
@@ -791,6 +796,9 @@ function filterInternal(params, callback) {
                         if (_.isNil(joinExpr))
                             $joinExpressions.push(y);
                     });
+                    if (expr.$select) {
+                        return cb(null, expr.$select);
+                    }
                 }
             }
             catch (err) {
