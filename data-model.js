@@ -745,18 +745,67 @@ DataModel.prototype.asQueryable = function() {
 function filterInternal(params, callback) {
     var self = this;
     var parser = OpenDataParser.create(), $joinExpressions = [], view;
-    if (typeof params !== 'undefined' && params !== null && typeof params.$select === 'string') {
-        //split select
-        var arr = params.$select.split(',');
-        if (arr.length===1) {
-            //try to get data view
-            view = self.dataviews(arr[0]);
+    if (params && typeof params.$select === 'string') {
+        if (/^(\w+)$/g.test(params.$select)) {
+            // try to get data view
+            view = self.dataviews(params.$select);
+            if (view) {
+                const viewParams =Object.assign({}, params);
+                // define view attributes
+                var $select = view.fields.map(function(x) {
+                    if (x.property) {
+                        return sprintf('%s as %s', x.name, x.property);
+                    }
+                    return x.name;
+                }).join(',');
+                Object.assign(viewParams, {
+                    $select
+                });
+                if (view.levels) {
+                    Object.assign(viewParams, { $levels: view.levels });
+                }
+                // assign view
+                Object.assign(viewParams, { $view: view.name });
+                return self.filter(viewParams, function(err, q) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    // assign view to query
+                    Object.assign(q, { $view: view });
+                    // return query
+                    return callback(null, q);
+                });
+            }
         }
+    }
+    // important: if $view parameter is defined then try to get view
+    // in order to validate member expressions
+    if (params && typeof params.$view === 'string') {
+        view = self.getDataView(params.$view);
     }
     parser.resolveMember = function(member, cb) {
         if (view) {
-            var field = view.fields.find(function(x) { return x.property === member });
-            if (field) { member = field.name; }
+            var field = view.fields.find(function(x) { 
+                if (typeof x.property === 'string') {
+                    return x.name === member || x.property === member;
+                }
+                return x.name === member;
+             });
+            if (field) { 
+                member = field.name;
+            } else {
+                var memberParts = member.split('/');
+                field = view.fields.find(function(x) { 
+                    if (typeof x.property === 'string') {
+                        return x.property === memberParts[0];
+                    }
+                    return x.name === memberParts[0];
+                });
+                if (field == null) {
+                    // throw exception for invalid usage of field
+                    throw new DataError('E_INVALID_ATTR', 'The specified attribute is not valid at the context of a pre-defined object view.', null, self.name, member);
+                }
+            }
         }
         var attr = self.field(member);
         if (attr)
@@ -834,12 +883,6 @@ function filterInternal(params, callback) {
     }
 
     try {
-        // backward compatibility: create a new open data parser (without any resolver)
-        // for splitting tokens and get list of attributes to select, order by, group by etc
-        // for this operation we are using a new instance of OpenDataParser and execute parseSelectSequence,
-        // parseOrderBySequence and parseGroupBySequence methods
-        // each of these methods will return a list of tokens which are going to be passed to query
-        const alternateParser = new OpenDataParser();
         async.series([
             function(cb) {
                 return parser.parse(filter, cb);
@@ -850,15 +893,7 @@ function filterInternal(params, callback) {
                 if (select == null) {
                     return cb(null, []);
                 }
-                return parser.parseSelectSequence(select, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    if (Array.isArray(result)) {
-                        return cb(null, result);
-                    }
-                    return cb(null, []);
-                });
+                return parser.parseSelectSequence(select, cb);
             },
             function (cb) {
                 // use parseSelectSequence to split tokens
@@ -866,15 +901,7 @@ function filterInternal(params, callback) {
                 if (orderBy == null) {
                     return cb(null, []);
                 }
-                return parser.parseOrderBySequence(orderBy, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    if (Array.isArray(result)) {
-                        return cb(null, result);
-                    }
-                    return cb(null, []);
-                });
+                return parser.parseOrderBySequence(orderBy, cb);
             },
             function (cb) {
                 // use parseSelectSequence to split tokens
@@ -882,31 +909,21 @@ function filterInternal(params, callback) {
                 if (groupBy == null) {
                     return cb(null, []);
                 }
-                return parser.parseGroupBySequence(groupBy, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    if (Array.isArray(result)) {
-                        return cb(null, result);
-                    }
-                    return cb(null, []);
-                });
+                return parser.parseGroupBySequence(groupBy, cb);
             }
         ], function(err, results) {
             if (err) {
                 callback(err);
             } else {
                 try {
-                    var query = results[0];
-                    var selectArgs = results[1];
-                    var orderByArgs = results[2];
-                    var groupByArgs = results[3];
+                    var [where, select, orderBy, groupBy] = results;
                     //create a DataQueryable instance
                     var q = new DataQueryable(self);
-                    q.query.$where = query;
-                    if ($joinExpressions.length>0)
+                    q.query.$where = where;
+                    if ($joinExpressions.length>0) {
                         q.query.$expand = $joinExpressions;
-                    //prepare
+                    }
+                    // use prepare statement to allow further processing
                     q.query.prepare();
                     if (typeof params === 'object') {
                         //apply query parameters
@@ -916,16 +933,16 @@ function filterInternal(params, callback) {
                         var top = params.$top || params.$take;
                         //select fields
                         var { viewAdapter: collection } = self;
-                        if (selectArgs.length>0) {
+                        if (select.length>0) {
                             q.query.$select = {
-                                [collection]: selectArgs.map(function(selectArg) {
+                                [collection]: select.map(function(selectArg) {
                                     return selectArg.exprOf();
                                 })
                             };
                         }
                         //apply group by fields
-                        if (groupByArgs.length>0) {
-                            q.query.$group = groupByArgs.map(function(groupByArg) {
+                        if (groupBy.length>0) {
+                            q.query.$group = groupBy.map(function(groupByArg) {
                                 return groupByArg.exprOf();
                             });
                         }
@@ -943,8 +960,8 @@ function filterInternal(params, callback) {
                             q.cache(true);
                         }
                         //set $orderby
-                        if (orderByArgs.length) {
-                            q.query.$order = orderByArgs.map(function(orderByArg) {
+                        if (orderBy.length) {
+                            q.query.$order = orderBy.map(function(orderByArg) {
                                 return orderByArg.exprOf();
                             });
                         }
@@ -954,10 +971,10 @@ function filterInternal(params, callback) {
                                 q.expand.apply(q, matches);
                             }
                         }
-                        //return
-                        callback(null, q);
+                        
+                        return callback(null, q);
                     } else {
-                        //and finally return DataQueryable instance
+                        // and finally return an instance of DataQueryable
                         callback(null, q);
                     }
                 } catch (err) {
@@ -976,14 +993,6 @@ function filterInternal(params, callback) {
  * @param {String|{$filter:string=, $skip:number=, $levels:number=, $top:number=, $take:number=, $order:string=, $inlinecount:string=, $expand:string=,$select:string=, $orderby:string=, $group:string=, $groupby:string=}} params - A string that represents an open data filter or an object with open data parameters
  * @param {Function=} callback -  A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain an instance of DataQueryable class.
  * @returns Promise<DataQueryable>|*
- * @example
- context.model('Order').filter(context.params, function(err,q) {
-    if (err) { return callback(err); }
-    q.take(10, function(err, result) {
-        if (err) { return callback(err); }
-        callback(null, result);
-    });
- });
  */
 DataModel.prototype.filter = function(params, callback) {
     if (typeof callback === 'function') {

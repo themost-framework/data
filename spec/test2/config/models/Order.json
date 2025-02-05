@@ -179,6 +179,9 @@
                     "name": "orderDate"
                 },
                 {
+                    "name": "orderStatus"
+                },
+                {
                     "name": "orderedItem"
                 },
                 {
