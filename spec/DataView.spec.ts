@@ -33,6 +33,19 @@ function getNewContributor() {
       }
 }
 
+function getNewAgent() {
+    return {
+        "enabled": 1,
+        "name": "jenna.borrows@example.com",
+        "description": "Jenna Borrows",
+        "groups": [
+            {
+                "name": "Agents"
+            }
+        ]
+      }
+}
+
 describe('DataView', () => {
     let app: TestApplication;
     let context: DataContextWithUser;
@@ -105,6 +118,70 @@ describe('DataView', () => {
             });
             const items = await q.getList();
             expect(items.value.length).toBeGreaterThan(0);
+        });
+    });
+
+    it('should try to expand a view attribute using a specific child view', async () => {
+        await executeInTransaction(context, async () => {
+            await context.model('Group').silent().save({
+                "name": "Agents",
+                "alternateName": "agents",
+                "description": "Site Agents"
+            });
+            const newUser = getNewAgent();
+            await context.model('User').silent().save(newUser);
+            Object.assign(context, {
+                user: {
+                    name: newUser.name
+                }
+            });
+            const Orders = context.model('Order');
+            let q = await Orders.filterAsync({
+                $select: 'Processing',
+                $expand: 'customer($select=summary)'
+            });
+            let items = await q.getList();
+            expect(items.value.length).toBeGreaterThan(0);
+            for (const item of items.value) {
+                expect(item.customer).toBeTruthy();
+                expect(item.customer.familyName).toBeTruthy();
+            }
+            q = await Orders.filterAsync({
+                $select: 'Processing',
+                $expand: 'customer'
+            });
+            items = await q.getList();
+            expect(items.value.length).toBeGreaterThan(0);
+            for (const item of items.value) {
+                expect(item.customer).toBeFalsy();
+            }
+        });
+    });
+
+    it('should try to expand a view attribute using a an attribute which is not included in child view', async () => {
+        await executeInTransaction(context, async () => {
+            await context.model('Group').silent().save({
+                "name": "Agents",
+                "alternateName": "agents",
+                "description": "Site Agents"
+            });
+            const newUser = getNewAgent();
+            await context.model('User').silent().save(newUser);
+            Object.assign(context, {
+                user: {
+                    name: newUser.name
+                }
+            });
+            const Orders = context.model('Order');
+            let q = await Orders.filterAsync({
+                $select: 'Processing',
+                $expand: 'customer($select=familyName,jobTitle)'
+            });
+            let items = await q.getList();
+            expect(items.value.length).toBeGreaterThan(0);
+            for (const item of items.value) {
+                expect(item.customer).toBeFalsy();
+            }
         });
     });
 

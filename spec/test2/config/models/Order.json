@@ -202,6 +202,42 @@
             ]
         },
         {
+            "name": "Processing",
+            "title": "Processing Orders",
+            "filter": "orderStatus eq 6",
+            "order": "dateCreated desc",
+            "fields": [
+                {
+                    "name": "id"
+                },
+                {
+                    "name": "orderDate"
+                },
+                {
+                    "name": "orderStatus"
+                },
+                {
+                    "name": "orderedItem"
+                },
+                {
+                    "name": "customer",
+                    "type": "Person"
+                }
+            ],
+            "privileges": [
+                {
+                    "mask": 1,
+                    "account": "Contributors",
+                    "type": "global"
+                },
+                {
+                    "mask": 1,
+                    "account": "Agents",
+                    "type": "global"
+                }
+            ]
+        },
+        {
             "name": "Latest",
             "title": "Latest Orders",
             "filter": "orderDate gt lastMonth()",

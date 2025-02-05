@@ -179,6 +179,44 @@
             }
         }
     ],
+    "views": [
+        {
+            "name": "Summary",
+            "fields": [
+                {
+                    "name": "id"
+                },
+                {
+                    "name": "familyName"
+                },
+                {
+                    "name": "givenName"
+                }
+            ],
+            "privileges": [
+                {
+                    "mask": 15,
+                    "type": "global"
+                },
+                {
+                    "mask": 15,
+                    "type": "global",
+                    "account": "Administrators"
+                },
+                {
+                    "mask": 1,
+                    "type": "global",
+                    "account": "Contributors"
+                },
+                {
+                    "mask": 1,
+                    "type": "global",
+                    "account": "Agents"
+                }
+            ]
+            
+        }
+    ],
     "privileges": [
         {
             "mask": 15,
