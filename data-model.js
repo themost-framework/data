@@ -752,7 +752,21 @@ function filterInternal(params, callback) {
             if (view) {
                 const viewParams =Object.assign({}, params);
                 // define view attributes
-                var $select = view.fields.map(function(x) {
+                var $select = view.fields.filter((x) => {
+                    const member = x.name.split('/');
+                    if (member.length === 1) {
+                        var attribute = self.getAttribute(member[0]);
+                        if (attribute) {
+                            var many = typeof attribute.many === 'boolean' ? attribute.many : false;
+                            if (many) {
+                                return attribute.multiplicity === 'ZeroOrOne';
+                            }
+                            return !many;
+                        }
+                    }
+                    // todo: check for nested attributes with many-to-many association
+                    return true;
+                }).map(function(x) {
                     if (x.property) {
                         return sprintf('%s as %s', x.name, x.property);
                     }
@@ -761,6 +775,29 @@ function filterInternal(params, callback) {
                 Object.assign(viewParams, {
                     $select
                 });
+                // get auto-expand attributes
+                var $expand = view.fields.filter((x) => {
+                    const member = x.name.split('/');
+                    if (member.length === 1) {
+                        var attribute = self.getAttribute(member[0]);
+                        if (attribute) {
+                            var many = typeof attribute.many === 'boolean' ? attribute.many && attribute.expandable : false;
+                            if (many) {
+                                return attribute.multiplicity !== 'ZeroOrOne';
+                            }
+                            return many;
+                        }
+                    }
+                    // todo: check for nested attributes with many-to-many association
+                    return false;
+                }).map(function(x) {
+                    return x.name;
+                }).join(',');
+                if ($expand.length) {
+                    Object.assign(viewParams, {
+                        $expand
+                    });
+                }
                 if (view.levels) {
                     Object.assign(viewParams, { $levels: view.levels });
                 }
