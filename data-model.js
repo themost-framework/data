@@ -2,7 +2,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var _ = require('lodash');
-var {cloneDeep} = require('lodash');
+var cloneDeep = require('lodash/cloneDeep');
 var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var path = require('path');
@@ -738,30 +738,27 @@ DataModel.prototype.asQueryable = function() {
 /**
  * @private
  * @this DataModel
- * @param {*} params
+ * @param {*} filterParams
  * @param {Function} callback
  * @returns {*}
  */
-function filterInternal(params, callback) {
+function filterInternal(filterParams, callback) {
     var self = this;
     var parser = OpenDataParser.create(), $joinExpressions = [], view;
+    var params =  cloneDeep(filterParams);
     if (params && typeof params.$select === 'string') {
-        if (/^(\w+)$/g.test(params.$select)) {
+        if (/^(\w+)$/.test(params.$select)) {
             // try to get data view
             view = self.dataviews(params.$select);
             if (view) {
                 const viewParams =Object.assign({}, params);
                 // define view attributes
-                var $select = view.fields.filter((x) => {
+                var $select = view.fields.filter(function(x) {
                     const member = x.name.split('/');
                     if (member.length === 1) {
                         var attribute = self.getAttribute(member[0]);
                         if (attribute) {
-                            var many = typeof attribute.many === 'boolean' ? attribute.many : false;
-                            if (many) {
-                                return attribute.multiplicity === 'ZeroOrOne';
-                            }
-                            return !many;
+                            return typeof attribute.many === 'boolean' ? !attribute.many : true;
                         }
                     }
                     // todo: check for nested attributes with many-to-many association
@@ -776,16 +773,12 @@ function filterInternal(params, callback) {
                     $select
                 });
                 // get auto-expand attributes
-                var $expand = view.fields.filter((x) => {
+                var $expand = view.fields.filter(function(x) {
                     const member = x.name.split('/');
                     if (member.length === 1) {
                         var attribute = self.getAttribute(member[0]);
                         if (attribute) {
-                            var many = typeof attribute.many === 'boolean' ? attribute.many && attribute.expandable : false;
-                            if (many) {
-                                return attribute.multiplicity !== 'ZeroOrOne';
-                            }
-                            return many;
+                            return typeof attribute.many === 'boolean' ? attribute.many && attribute.expandable : false;
                         }
                     }
                     // todo: check for nested attributes with many-to-many association
@@ -956,7 +949,9 @@ function filterInternal(params, callback) {
                     var [where, select, orderBy, groupBy] = results;
                     //create a DataQueryable instance
                     var q = new DataQueryable(self);
-                    q.query.$where = where;
+                    if (where) {
+                        q.query.$where = where;
+                    }
                     if ($joinExpressions.length>0) {
                         q.query.$expand = $joinExpressions;
                     }
@@ -976,6 +971,8 @@ function filterInternal(params, callback) {
                                     return selectArg.exprOf();
                                 })
                             };
+                        } else {
+                            q.select();
                         }
                         //apply group by fields
                         if (groupBy.length>0) {
@@ -984,7 +981,7 @@ function filterInternal(params, callback) {
                             });
                         }
                         if ((typeof levels === 'number') && !isNaN(levels)) {
-                            //set expand levels
+                            // set expand levels
                             q.levels(levels);
                         }
                         //set $skip
