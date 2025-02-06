@@ -1011,7 +1011,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                         });
                         return resolve();
                     }).catch(function(err) {
-                        return resolve(err);
+                        return reject(err);
                     });
                 });
             });

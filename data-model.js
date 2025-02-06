@@ -2,7 +2,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var _ = require('lodash');
-var {cloneDeep} = require('lodash');
+var cloneDeep = require('lodash/cloneDeep');
 var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var path = require('path');
@@ -738,25 +738,104 @@ DataModel.prototype.asQueryable = function() {
 /**
  * @private
  * @this DataModel
- * @param {*} params
+ * @param {*} filterParams
  * @param {Function} callback
  * @returns {*}
  */
-function filterInternal(params, callback) {
+function filterInternal(filterParams, callback) {
     var self = this;
     var parser = OpenDataParser.create(), $joinExpressions = [], view;
-    if (typeof params !== 'undefined' && params !== null && typeof params.$select === 'string') {
-        //split select
-        var arr = params.$select.split(',');
-        if (arr.length===1) {
-            //try to get data view
-            view = self.dataviews(arr[0]);
+    var params =  cloneDeep(filterParams);
+    if (params && typeof params.$select === 'string') {
+        if (/^(\w+)$/.test(params.$select)) {
+            // try to get data view
+            view = self.dataviews(params.$select);
+            if (view) {
+                const viewParams =Object.assign({}, params);
+                // define view attributes
+                var $select = view.fields.filter(function(x) {
+                    const member = x.name.split('/');
+                    if (member.length === 1) {
+                        var attribute = self.getAttribute(member[0]);
+                        if (attribute) {
+                            return typeof attribute.many === 'boolean' ? !attribute.many : true;
+                        }
+                    }
+                    // todo: check for nested attributes with many-to-many association
+                    return true;
+                }).map(function(x) {
+                    if (x.property) {
+                        return sprintf('%s as %s', x.name, x.property);
+                    }
+                    return x.name;
+                }).join(',');
+                Object.assign(viewParams, {
+                    $select
+                });
+                // get auto-expand attributes
+                var $expand = view.fields.filter(function(x) {
+                    const member = x.name.split('/');
+                    if (member.length === 1) {
+                        var attribute = self.getAttribute(member[0]);
+                        if (attribute) {
+                            return typeof attribute.many === 'boolean' ? attribute.many && attribute.expandable : false;
+                        }
+                    }
+                    // todo: check for nested attributes with many-to-many association
+                    return false;
+                }).map(function(x) {
+                    return x.name;
+                }).join(',');
+                if ($expand.length) {
+                    Object.assign(viewParams, {
+                        $expand
+                    });
+                }
+                if (view.levels) {
+                    Object.assign(viewParams, { $levels: view.levels });
+                }
+                // assign view
+                Object.assign(viewParams, { $view: view.name });
+                return self.filter(viewParams, function(err, q) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    // assign view to query
+                    Object.assign(q, { $view: view });
+                    // return query
+                    return callback(null, q);
+                });
+            }
         }
+    }
+    // important: if $view parameter is defined then try to get view
+    // in order to validate member expressions
+    if (params && typeof params.$view === 'string') {
+        view = self.getDataView(params.$view);
     }
     parser.resolveMember = function(member, cb) {
         if (view) {
-            var field = view.fields.find(function(x) { return x.property === member });
-            if (field) { member = field.name; }
+            var field = view.fields.find(function(x) { 
+                if (typeof x.property === 'string') {
+                    return x.name === member || x.property === member;
+                }
+                return x.name === member;
+             });
+            if (field) { 
+                member = field.name;
+            } else {
+                var memberParts = member.split('/');
+                field = view.fields.find(function(x) { 
+                    if (typeof x.property === 'string') {
+                        return x.property === memberParts[0];
+                    }
+                    return x.name === memberParts[0];
+                });
+                if (field == null) {
+                    // throw exception for invalid usage of field
+                    throw new DataError('E_INVALID_ATTR', 'The specified attribute is not valid at the context of a pre-defined object view.', null, self.name, member);
+                }
+            }
         }
         var attr = self.field(member);
         if (attr)
@@ -779,8 +858,13 @@ function filterInternal(params, callback) {
                     var arrExpr = [];
                     if (_.isArray(expr))
                         arrExpr.push.apply(arrExpr, expr);
-                    else
-                        arrExpr.push(expr);
+                    else {
+                        if (expr.$expand) {
+                            arrExpr.push.apply(arrExpr, expr.$expand);
+                        } else {
+                            arrExpr.push(expr);
+                        }
+                    }
                     arrExpr.forEach(function(y) {
                         var joinExpr = $joinExpressions.find(function(x) {
                             if (x.$entity && x.$entity.$as) {
@@ -791,6 +875,9 @@ function filterInternal(params, callback) {
                         if (_.isNil(joinExpr))
                             $joinExpressions.push(y);
                     });
+                    if (expr.$select) {
+                        return cb(null, expr.$select);
+                    }
                 }
             }
             catch (err) {
@@ -826,82 +913,107 @@ function filterInternal(params, callback) {
     }
 
     try {
-        parser.parse(filter, function(err, query) {
+        async.series([
+            function(cb) {
+                return parser.parse(filter, cb);
+            },
+            function (cb) {
+                // use parseSelectSequence to split tokens
+                var select = params.$select;
+                if (select == null) {
+                    return cb(null, []);
+                }
+                return parser.parseSelectSequence(select, cb);
+            },
+            function (cb) {
+                // use parseSelectSequence to split tokens
+                var orderBy = params.$orderby || params.$orderBy || params.$order;
+                if (orderBy == null) {
+                    return cb(null, []);
+                }
+                return parser.parseOrderBySequence(orderBy, cb);
+            },
+            function (cb) {
+                // use parseSelectSequence to split tokens
+                var groupBy = params.$groupby || params.$groupBy || params.$group;
+                if (groupBy == null) {
+                    return cb(null, []);
+                }
+                return parser.parseGroupBySequence(groupBy, cb);
+            }
+        ], function(err, results) {
             if (err) {
                 callback(err);
-            }
-            else {
-                //create a DataQueryable instance
-                var q = new DataQueryable(self);
-                q.query.$where = query;
-                if ($joinExpressions.length>0)
-                    q.query.$expand = $joinExpressions;
-                //prepare
-                q.query.prepare();
-
-                if (typeof params === 'object') {
-                    //apply query parameters
-                    var select = params.$select,
-                        skip = params.$skip || 0,
-                        orderBy = params.$orderby || params.$order,
-                        groupBy = params.$groupby || params.$group,
-                        expand = params.$expand,
-                        levels = parseInt(params.$levels),
-                        top = params.$top || params.$take;
-                    //select fields
-                    if (typeof select === 'string') {
-                        q.select.apply(q, select.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
+            } else {
+                try {
+                    var [where, select, orderBy, groupBy] = results;
+                    //create a DataQueryable instance
+                    var q = new DataQueryable(self);
+                    if (where) {
+                        q.query.$where = where;
                     }
-                    //apply group by fields
-                    if (typeof groupBy === 'string') {
-                        q.groupBy.apply(q, groupBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }));
+                    if ($joinExpressions.length>0) {
+                        q.query.$expand = $joinExpressions;
                     }
-                    if ((typeof levels === 'number') && !isNaN(levels)) {
-                        //set expand levels
-                        q.levels(levels);
-                    }
-                    //set $skip
-                    q.skip(skip);
-                    if (top)
-                        q.query.take(top);
-                    //set caching
-                    if (params.$cache && self.caching === 'conditional') {
-                        q.cache(true);
-                    }
-                    //set $orderby
-                    if (orderBy) {
-                        orderBy.split(',').map(function(x) {
-                            return x.replace(/^\s+|\s+$/g, '');
-                        }).forEach(function(x) {
-                            if (/\s+desc$/i.test(x)) {
-                                q.orderByDescending(x.replace(/\s+desc$/i, ''));
-                            }
-                            else if (/\s+asc/i.test(x)) {
-                                q.orderBy(x.replace(/\s+asc/i, ''));
-                            }
-                            else {
-                                q.orderBy(x);
-                            }
-                        });
-                    }
-                    if (expand) {
-                        var matches = resolver.testExpandExpression(expand);
-                        if (matches && matches.length>0) {
-                            q.expand.apply(q, matches);
+                    // use prepare statement to allow further processing
+                    q.query.prepare();
+                    if (typeof params === 'object') {
+                        //apply query parameters
+                        var skip = params.$skip || 0;
+                        var expand = params.$expand;
+                        var levels = parseInt(params.$levels);
+                        var top = params.$top || params.$take;
+                        //select fields
+                        var { viewAdapter: collection } = self;
+                        if (select.length>0) {
+                            q.query.$select = {
+                                [collection]: select.map(function(selectArg) {
+                                    return selectArg.exprOf();
+                                })
+                            };
+                        } else {
+                            q.select();
                         }
+                        //apply group by fields
+                        if (groupBy.length>0) {
+                            q.query.$group = groupBy.map(function(groupByArg) {
+                                return groupByArg.exprOf();
+                            });
+                        }
+                        if ((typeof levels === 'number') && !isNaN(levels)) {
+                            // set expand levels
+                            q.levels(levels);
+                        }
+                        //set $skip
+                        q.skip(skip);
+                        if (top) {
+                            q.query.take(top);
+                        }
+                        //set caching
+                        if (params.$cache && self.caching === 'conditional') {
+                            q.cache(true);
+                        }
+                        //set $orderby
+                        if (orderBy.length) {
+                            q.query.$order = orderBy.map(function(orderByArg) {
+                                return orderByArg.exprOf();
+                            });
+                        }
+                        if (expand) {
+                            var matches = resolver.testExpandExpression(expand);
+                            if (matches && matches.length>0) {
+                                q.expand.apply(q, matches);
+                            }
+                        }
+                        
+                        return callback(null, q);
+                    } else {
+                        // and finally return an instance of DataQueryable
+                        callback(null, q);
                     }
-                    //return
-                    callback(null, q);
+                } catch (err) {
+                    return callback(err);
                 }
-                else {
-                    //and finally return DataQueryable instance
-                    callback(null, q);
-                }
-
             }
         });
     }
@@ -915,14 +1027,6 @@ function filterInternal(params, callback) {
  * @param {String|{$filter:string=, $skip:number=, $levels:number=, $top:number=, $take:number=, $order:string=, $inlinecount:string=, $expand:string=,$select:string=, $orderby:string=, $group:string=, $groupby:string=}} params - A string that represents an open data filter or an object with open data parameters
  * @param {Function=} callback -  A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain an instance of DataQueryable class.
  * @returns Promise<DataQueryable>|*
- * @example
- context.model('Order').filter(context.params, function(err,q) {
-    if (err) { return callback(err); }
-    q.take(10, function(err, result) {
-        if (err) { return callback(err); }
-        callback(null, result);
-    });
- });
  */
 DataModel.prototype.filter = function(params, callback) {
     if (typeof callback === 'function') {

@@ -113,4 +113,43 @@ describe('DataModelFilterParser', () => {
         });
     });
 
+
+    it('should parse select filter with expression', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            delete context.user;
+            const Orders = context.model('Order');
+            let q = await Orders.filterAsync({
+                $select: 'orderedItem/name as product,round(orderedItem/price,2) as price, max(orderDate) as lastOrderDate',
+                $filter: 'orderedItem/category eq \'Laptops\'',
+                $orderBy: 'orderedItem/price desc',
+                $groupBy: 'orderedItem/name,orderedItem/price'
+            })
+            let items: {product: string, price: number, lastOrderDate: Date}[] = await q.take(25).getItems();
+            expect(items.length).toBeFalsy();
+            context.user = {
+                name: 'aaron.matthews@example.com'
+            }
+            q = await Orders.filterAsync({
+                $select: 'orderedItem/name as product,round(orderedItem/price,2) as price, max(orderDate) as lastOrderDate',
+                //$filter: 'orderedItem/category eq \'Laptops\'',
+                $orderBy: 'orderedItem/price desc',
+                $groupBy: 'orderedItem/name,orderedItem/price'
+            })
+            items = await q.getItems();
+            expect(items.length).toBeTruthy();
+            // get orders
+            const orders = await context.model('Order').select(
+                'orderedItem/name as product',
+                'orderDate'
+            ).getItems();
+            for (const item of items) {
+                const order = orders.sort((a, b) => {
+                    return a.orderDate < b.orderDate ? 1 : -1;
+                }).find(o => o.product === item.product);
+                expect(order).toBeTruthy();
+                expect(order.orderDate).toEqual(item.lastOrderDate);
+            }
+        });
+    });
+
 });

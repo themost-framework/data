@@ -52,6 +52,11 @@
         "name": "Contributors",
         "alternateName": "contributors",
         "description": "Site Contributors"
+    },
+    {
+        "name": "Agents",
+        "alternateName": "agents",
+        "description": "Site Agents"
     }
 ]
 }
