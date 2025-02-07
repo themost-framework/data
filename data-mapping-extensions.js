@@ -8,6 +8,7 @@ var {QueryEntity} = require('@themost/query');
 var {QueryField} = require('@themost/query');
 var {DataError} = require('@themost/common')
 var {hasOwnProperty} = require('./has-own-property');
+var {isObjectDeep} = require('./is-object');
 
 /**
  * @param {Array<QueryField|*>} fields 
@@ -351,11 +352,22 @@ class DataMappingExtender {
                 if (_.isNil(childField)) {
                     return reject('The specified field cannot be found on child model');
                 }
+                var childFieldType = thisQueryable.model.context.model(childField.type);
                 var values = _.intersection(_.map(_.filter(arr, function(x) {
                         return hasOwnProperty(x, keyField) && x[keyField] != null;
                     }), function (x) {
                         return x[keyField];
-                    }));
+                    })).map(function(x) {
+                        if (isObjectDeep(x)) {
+                            if (childFieldType) {
+                                return x[childFieldType.primaryKey];
+                            } 
+                            throw new Error('The child item is an object but its type cannot determined.');
+                        }
+                        return x;
+                    }).filter(function(x) {
+                        return x != null;
+                    });
                 if (values.length===0) {
                     return resolve();
                 }
@@ -431,9 +443,20 @@ class DataMappingExtender {
                     return reject('The specified field cannot be found on parent model');
                 }
                 var keyField = parentField.property || parentField.name;
+                var parentFieldType = thisQueryable.model.context.model(parentField.type);
                 var values = _.intersection(_.map(_.filter(arr, function(x) {
                     return hasOwnProperty(x, keyField);
-                }), function (x) { return x[keyField];}));
+                }), function (x) { return x[keyField];})).map(function(x) {
+                    if (isObjectDeep(x)) {
+                        if (parentFieldType) {
+                            return x[parentFieldType.primaryKey];
+                        } 
+                        throw new Error('The parent item is an object but its type cannot determined.');
+                    }
+                    return x;
+                }).filter(function(x) {
+                    return x != null;
+                });
                 if (values.length===0) {
                     return resolve();
                 }
@@ -528,7 +551,7 @@ class DataMappingExtender {
                         });
                         return resolve();
                     }).catch(function(err) {
-                        return resolve(err);
+                        return reject(err);
                     });
                 });
             });
@@ -867,11 +890,22 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                     return reject('The specified field cannot be found on parent model');
                 }
                 var keyField = parentField.property || parentField.name;
+                var parentFieldType = thisQueryable.model.context.model(parentField.type);
                 var values = _.intersection(_.map(_.filter(arr, function(x) {
                     return hasOwnProperty(x, keyField);
                 }), function (x) {
                     return x[keyField];
-                }));
+                })).map(function(x) {
+                    if (isObjectDeep(x)) {
+                        if (parentFieldType) {
+                            return x[parentFieldType.primaryKey];
+                        } 
+                        throw new Error('The parent item is an object but its type cannot determined.');
+                    }
+                    return x;
+                }).filter(function(x) {
+                    return x != null;
+                });
                 if (values.length===0) {
                     return resolve();
                 }
@@ -962,7 +996,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                         });
                         return resolve();
                     }).catch(function(err) {
-                        return resolve(err);
+                        return reject(err);
                     });
                 });
             });
