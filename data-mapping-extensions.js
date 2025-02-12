@@ -6,6 +6,7 @@ var {QueryField} = require('@themost/query');
 var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var {isObjectDeep} = require('./is-object');
+var {DataError} = require('@themost/common')
 
 class DataMappingExtender {
     constructor(mapping) {
@@ -60,7 +61,7 @@ class DataMappingExtender {
                 return resolve();
             }
             if (_.isNil(thisQueryable)) {
-                return reject('The underlying data queryable cannot be empty at this context.');
+                return reject(new Error('The underlying data queryable cannot be empty at this context.'));
             }
             if ((mapping.childModel !== thisQueryable.model.name) || (mapping.associationType!=='junction')) {
                 return resolve();
@@ -341,7 +342,7 @@ class DataMappingExtender {
                 var childField = thisQueryable.model.field(mapping.childField);
                 var keyField = childField.property || childField.name;
                 if (_.isNil(childField)) {
-                    return reject('The specified field cannot be found on child model');
+                    return reject(new DataError('E_ATTR', `The specified field "${mapping.childField}" cannot be found in child model "${mapping.childModel}"`, null, mapping.childModel, mapping.childField));
                 }
                 var childFieldType = thisQueryable.model.context.model(childField.type);
                 var values = _.intersection(_.map(_.filter(arr, function(x) {
@@ -430,7 +431,7 @@ class DataMappingExtender {
                 if (err) { return reject(err); }
                 var parentField = thisQueryable.model.field(mapping.parentField);
                 if (_.isNil(parentField)) {
-                    return reject('The specified field cannot be found on parent model');
+                    return reject(new DataError('E_ATTR', `The specified field "${mapping.parentField}" cannot be found in parent model "${mapping.parentModel}"`, null, mapping.parentModel, mapping.parentField));
                 }
                 var keyField = parentField.property || parentField.name;
                 var parentFieldType = thisQueryable.model.context.model(parentField.type);
@@ -450,14 +451,15 @@ class DataMappingExtender {
                 if (values.length===0) {
                     return resolve();
                 }
+                const childModel = thisArg.getChildModel();
                 //search for view named summary
-                thisArg.getChildModel().filter(mapping.options, function(err, q) {
+                childModel.filter(mapping.options, function(err, q) {
                     if (err) {
                         return reject(err);
                     }
-                    var childField = thisArg.getChildModel().field(mapping.childField);
+                    var childField = childModel.field(mapping.childField);
                     if (_.isNil(childField)) {
-                        return reject('The specified field cannot be found on child model');
+                        return reject(new DataError('E_ATTR', `The specified field "${mapping.childField}" cannot be found in child model "${mapping.childModel}"`, null, mapping.childModel, mapping.childField));
                     }
                     var foreignKeyField = childField.property || childField.name;
                     //Important Backward compatibility issue (<1.8.0)
@@ -892,7 +894,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                 }
                 var parentField = thisArg.getParentModel().field(mapping.parentField);
                 if (parentField == null) {
-                    return reject('The specified field cannot be found on parent model');
+                    return reject(new DataError('E_ATTR', `The specified field "${mapping.parentField}" cannot be found in parent model "${mapping.parentModel}"`, null, mapping.parentModel, mapping.parentField));
                 }
                 var keyField = parentField.property || parentField.name;
                 var parentFieldType = thisQueryable.model.context.model(parentField.type);
@@ -921,7 +923,7 @@ class DataMappingOptimizedExtender extends DataMappingExtender {
                     }
                     var childField = thisArg.getChildModel().field(mapping.childField);
                     if (childField == null) {
-                        return reject('The specified field cannot be found on child model');
+                        return reject(new DataError('E_ATTR', `The specified field "${mapping.childField}" cannot be found in child model "${mapping.childModel}"`, null, mapping.childModel, mapping.childField));
                     }
                     var foreignKeyField = childField.property || childField.name;
                     //Important Backward compatibility issue (<1.8.0)
