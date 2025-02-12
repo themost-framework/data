@@ -2841,7 +2841,8 @@ function afterExecute_(result, callback) {
                 }
             }
             else {
-                return cb(new DataError('EASSOC', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.title)));
+                const expandName = typeof expand === 'string' ? expand : expand && expand.name;
+                return cb(new DataError('EASSOC', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expandName, self.model.name)));
             }
         }, function(err) {
             if (err) {
