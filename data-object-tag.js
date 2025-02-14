@@ -81,8 +81,7 @@ function DataObjectTag(obj, association) {
                 // get value type
                 var refersTo = context.model(self.mapping.parentModel).getAttribute(self.mapping.refersTo);
                 var refersToType = (refersTo && refersTo.type) || 'Text';
-                var objectFieldType = parentModel.getAttribute(self.mapping.parentField).type;
-                if (objectFieldType === 'Counter') { objectFieldType = 'Integer'; }
+                var objectFieldType = self.mapping.parentModel;
                 definition = {
                     'name': self.mapping.associationAdapter,
                     'hidden': true,
@@ -100,6 +99,7 @@ function DataObjectTag(obj, association) {
                             'name': associationObjectField,
                             'type': objectFieldType,
                             'nullable': false,
+                            'editable': false,
                             'many': false,
                             'indexed': true
                         },
