@@ -99,6 +99,7 @@ function DataObjectTag(obj, association) {
                             'name': associationObjectField,
                             'type': objectFieldType,
                             'nullable': false,
+                            'editable': false,
                             'many': false,
                             'indexed': true
                         },
