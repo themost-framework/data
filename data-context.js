@@ -152,6 +152,21 @@ class DefaultDataContext extends DataContext {
         }
         return cb();
     }
+
+    /**
+     * Gets the current user
+     * @returns {import('rxjs').Observable<any}>}
+     */
+    getUser() {
+        return this.user$;
+    }
+    /**
+     * Gets the interactive user
+     * @returns {import('rxjs').Observable<any>}
+     */
+    getInteractiveUser() {
+        return this.interactiveUser$;
+    }
 }
 
 class NamedDataContext extends DataContext {
@@ -191,14 +206,15 @@ class NamedDataContext extends DataContext {
     }
 
     get db() {
-        if (this._db)
+        if (this._db) {
             return this._db;
+        }
         const strategy = this.getConfiguration().getStrategy(DataConfigurationStrategy);
         //otherwise load database options from configuration
         const adapter = strategy.adapters.find((x) => {
             return x.name === this.name;
         });
-        if (typeof adapter === 'undefined' || adapter === null) {
+        if (adapter == null) {
             throw new DataError('ERR_ADAPTER', 'The specified data adapter is missing.');
         }
         //get data adapter type
@@ -247,7 +263,7 @@ class NamedDataContext extends DataContext {
      * @returns {import('rxjs').Observable<{id: string, name: string, groups: Array<{id: string, name: string}>}>}
      */
     getInteractiveUser() {
-        return this.interactiveUser$$;
+        return this.interactiveUser$;
     }
     /**
      * Gets a string which represents the name of this context
