@@ -75,19 +75,19 @@ export declare interface ContextUser extends ContextUserBase {
     
 }
 
-export declare class DataContext extends SequentialEventEmitter implements DataContextBase {
+export declare abstract class DataContext extends SequentialEventEmitter implements DataContextBase {
     
     user?: ContextUser;
 
     interactiveUser?: ContextUser;
 
-    model(name:any): DataModel;
-
     db: DataAdapterBase;
 
-    getConfiguration(): ConfigurationBase;
+    abstract model(name:any): DataModel;
 
-    finalize(callback?:(err?:Error) => void): void;
+    abstract getConfiguration(): ConfigurationBase;
+
+    abstract finalize(callback?:(err?:Error) => void): void;
 
     finalizeAsync(): Promise<void>;
 

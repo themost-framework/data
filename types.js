@@ -295,18 +295,7 @@ function DataContext() {
     if (this.constructor === DataContext.prototype.constructor) {
         throw new AbstractClassError();
     }
-    /**
-     * @property db
-     * @description Gets the current database adapter
-     * @type {DataAdapter}
-     * @memberOf DataContext#
-     */
-    Object.defineProperty(this, 'db', {
-        get : function() {
-            return null;
-        },
-        configurable : true,
-        enumerable:false });
+    
 }
 // noinspection JSUnusedLocalSymbols
 /**
