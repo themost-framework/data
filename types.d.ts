@@ -1,15 +1,24 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {ConfigurationBase, SequentialEventEmitter} from "@themost/common";
+import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration, DataContextBase, ContextUserBase} from "@themost/common";
+import {DataAssociationMappingBase, DataFieldBase} from '@themost/common';
+import { BehaviorSubject, Observable } from "rxjs";
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
-export declare class DataAdapter {
+export declare class DataAdapter implements DataAdapterBase {
     /**
      *
      * @param options
      */
     constructor(options:any);
+    openAsync(): Promise<void>;
+    closeAsync(): Promise<void>;
+    executeAsync(query: any, values: any): Promise<any>;
+    selectIdentityAsync(entity: string, attribute: string): Promise<any>;
+    executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
+    migrate(obj: DataAdapterMigration, callback: (err: Error, result?: any) => void): void;
+    migrateAsync(obj: DataAdapterMigration): Promise<any>;
     /**
      *
      */
@@ -63,56 +72,85 @@ export declare class DataAdapter {
     createView(name:string, query:any, callback:(err?:Error) => void): void;
 }
 
-
-/**
- * Holds user information of a data context
- */
-export interface AuthenticatedUser {
-    /**
-     * Gets or sets a string which represents the name of the user
-     */
-    name: string;
-    /**
-     * Gets or sets a string which represents the current authentication type e.g. Basic, Bearer, None etc
-     */
-    authenticationType?: string;
-    /**
-     * Gets or sets a string which represents a token associated with this user
-     */
-    authenticationToken?: string;
-    /**
-     * Gets or sets a scope if current authentication type is associated with scopes like OAuth2 authentication
-     */
-    authenticationScope?: string;
-    /**
-     * Gets or sets a key returned by authentication provider and identifies this user e.g. The id of the user
-     */
-    authenticationProviderKey?: any;
-}
-
-/**
- * Holds user information when a data context is in unattended mode
- */
-export interface InteractiveUser extends AuthenticatedUser{
-}
-
-export declare class DataContext extends SequentialEventEmitter {
+export declare interface ContextUser extends ContextUserBase {
     
-    model(name:any): DataModel
+}
 
-    db: DataAdapter;
+export declare abstract class DataContext extends SequentialEventEmitter implements DataContextBase {
+    
+    /**
+     * Optional property representing the use of the current context.
+     * 
+     * @type {ContextUser}
+     */
+    user?: ContextUser;
 
-    getConfiguration(): ConfigurationBase;
+    /**
+     * Optional property representing the interactive user of the current context.
+     * The interactive user is the original user who initiated the current context.
+     */
+    interactiveUser?: ContextUser;
 
-    finalize(callback?:(err?:Error) => void): void;
+    /**
+     * An observable stream that emits user-related data.
+     * 
+     * @type {Observable<any>}
+     */
+    user$: Observable<any>;
+    
+    /**
+     * An observable stream that emits interactive user-related data.
+     * 
+     * @type {Observable}
+     */
+    interactiveUser$: Observable<any>;
 
+    /**
+     * The database adapter instance used for interacting with the database.
+     * This property provides the necessary methods and properties to perform
+     * database operations such as querying, inserting, updating, and deleting records.
+     */
+    db: DataAdapterBase;
+
+    /**
+     * Returns an instance of the data model with the specified name.
+     * @param {*} name 
+     */
+    abstract model(name:any): DataModel;
+
+    /**
+     * Returns the configuration service of the parent application.
+     * @returns {ConfigurationBase}
+     */
+    abstract getConfiguration(): ConfigurationBase;
+
+    /**
+     * Finalizes the current context and releases all resources.
+     * @param {(err?: Error) => void} callback 
+     */
+    abstract finalize(callback?:(err?:Error) => void): void;
+
+    /**
+     * Finalizes the current context and releases all resources.
+     * @returns {Promise<void>}
+     */
     finalizeAsync(): Promise<void>;
 
+    /**
+     * Executes the specified function within a transaction.
+     * A transaction is a set of operations that are executed as a single unit of work.
+     * @param func 
+     */
     executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
 
-    user?: AuthenticatedUser;
+    switchUser(user?: ContextUser): void;
 
-    interactiveUser?: InteractiveUser;
+    setUser(user?: ContextUser): void;
+
+    switchInteractiveUser(user?: ContextUser): void;
+
+    setInteractiveUser(user?: ContextUser): void;
+    
 }
 
 export declare class DataContextEmitter {
@@ -120,17 +158,16 @@ export declare class DataContextEmitter {
 }
 
 export declare interface DataModelPrivilege {
-    type: string;
+    type: 'self' | 'global' | 'parent' | 'item';
     mask: number;
     account?: string;
-    when?: string;
     filter?: string;
     scope?: string[];
-    exclude?: string;
+    [k: string]: unknown;
 }
 
-export declare class DataAssociationMapping {
-    constructor(obj: any);
+export declare class DataAssociationMapping implements DataAssociationMappingBase {
+    constructor(obj?: any);
     associationAdapter?: string;
     parentModel?: string;
     childModel?: string;
@@ -139,11 +176,11 @@ export declare class DataAssociationMapping {
     refersTo?: string;
     associationObjectField?: string;
     associationValueField?: string;
-    cascade?: any;
-    associationType?: string;
+    cascade?: 'delete' | 'none';
+    associationType?: 'association' | 'junction';
     select?: Array<string>;
     privileges?: Array<DataModelPrivilege>;
-  
+    [k: string]: unknown;
 }
 
 export declare interface QueryPipelineLookup {
@@ -151,9 +188,7 @@ export declare interface QueryPipelineLookup {
     localField?: string;
     foreignField?: string;
     let?: string;
-    pipeline?: {
-        $match: any;
-    }
+    pipeline?: { $match: { $expr: any } }[],
     as?: string
 }
 
@@ -166,7 +201,7 @@ export declare interface QueryPipelineStage {
     $project?: QueryPipelineProject;
 }
 
-export declare class DataField {
+export declare class DataField implements DataFieldBase {
     name: string;
     property?: string;
     title?: string;
@@ -179,8 +214,7 @@ export declare class DataField {
     calculation?: string;
     readonly?: boolean;
     editable?: boolean;
-    insertable? : boolean;
-    additionalType?: string;
+    insertable?: boolean;
     mapping?: DataAssociationMapping;
     expandable?: boolean;
     nested?: boolean;
@@ -188,10 +222,11 @@ export declare class DataField {
     help?: string;
     validation?: any;
     virtual?: boolean;
-    multiplicity?: string;
+    multiplicity?: 'ZeroOrOne' | 'Many' | 'One' | 'Unknown';
     indexed?: boolean;
     size?: number;
     query?: QueryPipelineStage[];
+    [k: string]: unknown;
 }
 
 export declare class DataEventArgs {
@@ -202,7 +237,6 @@ export declare class DataEventArgs {
     query?: any;
     previous?: any;
     throwError?: boolean;
-    result?: unknown;
 }
 
 export declare interface BeforeSaveEventListener {
