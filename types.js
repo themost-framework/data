@@ -1,6 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
 var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
+var { shareReplay, Observable, BehaviorSubject, switchMap, of } = require('rxjs');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -286,7 +287,6 @@ function DataEventArgs() {
  * @classdesc Represents the main data context.
  * @class
  * @augments SequentialEventEmitter
- * @constructor
  * @abstract
  */
 function DataContext() {
@@ -295,7 +295,55 @@ function DataContext() {
     if (this.constructor === DataContext.prototype.constructor) {
         throw new AbstractClassError();
     }
-    
+
+    this.refreshUser$ = new BehaviorSubject(void 0);
+
+    this.user$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+        return this.getUser();
+    }), shareReplay(1));
+
+    this.refreshInteractiveUser$ = new BehaviorSubject(void 0);
+
+    this.interactiveUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+        return this.getInteractiveUser();
+    }), shareReplay(1));
+
+    var _user = null;
+    Object.defineProperty(this, 'user', {
+        get: function() {
+            return _user;
+        },
+        set: function(value) {
+            const previous = _user;
+            _user = value;
+            if ((previous && previous.name) !== (value && value.name)) {
+                this.user$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+                    return this.getUser();
+                }), shareReplay(1));
+            }
+        },
+        configurable: false,
+        enumerable: false
+    });
+
+    var _interactiveUser = null;
+    Object.defineProperty(this, 'interactiveUser', {
+        get: function() {
+            return _interactiveUser;
+        },
+        set: function(value) {
+            const previous = _interactiveUser;
+            _interactiveUser = value;
+            if ((previous && previous.name) !== (value && value.name)) {
+                this.interactiveUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+                    return this.getInteractiveUser();
+                }), shareReplay(1));
+            }
+        },
+        configurable: false,
+        enumerable: false
+    });
+
 }
 // noinspection JSUnusedLocalSymbols
 /**
@@ -307,6 +355,59 @@ function DataContext() {
 // eslint-disable-next-line no-unused-vars
 DataContext.prototype.model = function(name) {
     throw new AbstractMethodError();
+};
+/**
+ * 
+ * @returns {Observable<any>}
+ */
+DataContext.prototype.getUser = function() {
+    return new Observable((observer) => {
+        if ((this.user && this.user.name) == null) {
+            return observer.next(null);
+        }
+        void this.model('User').where(
+            (x, name) => x.name === name, this.user && this.user.name
+        ).expand((x) => x.groups).silent().getItem().then((result) => {
+            return observer.next(result);
+        }).catch((err) => {
+            return observer.error(err);
+        });
+    });
+};
+
+DataContext.prototype.switchUser = function(user) {
+    this.user = user;
+};
+
+DataContext.prototype.setUser = function(user) {
+    this.user = user;
+};
+
+/**
+ * 
+ * @returns {Observable<any>}
+ */
+DataContext.prototype.getInteractiveUser = function() {
+    return new Observable((observer) => {
+        if ((this.interactiveUser && this.interactiveUser.name) == null) {
+            return observer.next(null);
+        }
+        void this.model('User').where(
+            (x, name) => x.name === name, this.interactiveUser && this.interactiveUser.name
+        ).expand((x) => x.groups).silent().getItem().then((result) => {
+            return observer.next(result)
+        }).catch((err) => {
+            return observer.error(err);
+        });
+    });
+};
+
+DataContext.prototype.switchInteractiveUser = function(user) {
+    this.interactiveUser = user;
+};
+
+DataContext.prototype.setInteractiveUser = function(user) {
+    this.interactiveUser = user;
 };
 
 /**

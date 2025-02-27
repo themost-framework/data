@@ -10,8 +10,6 @@ export declare class DefaultDataContext extends DataContext {
     finalize(callback?: (err?: Error) => void): void;
     constructor();
     readonly name: string;
-    user$: Observable<any>;
-    interactiveUser$: Observable<any>;
 }
 
 export declare class NamedDataContext extends DataContext {
@@ -20,7 +18,5 @@ export declare class NamedDataContext extends DataContext {
     finalize(callback?: (err?: Error) => void): void;
     constructor(name: string);
     readonly name: string;
-    getName(): string
-    user$: Observable<any>;
-    interactiveUser$: Observable<any>;
+    getName(): string;
 }

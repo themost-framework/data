@@ -5,7 +5,6 @@ const {DataContext} = require('./types');
 const {DataConfigurationStrategy} = require('./data-configuration');
 const cfg = require('./data-configuration');
 const { DataModel } = require('./data-model');
-const { shareReplay, Observable } = require('rxjs');
 
 class DefaultDataContext extends DataContext {
     constructor() {
@@ -22,18 +21,6 @@ class DefaultDataContext extends DataContext {
             configurable: true,
             value: 'default'
         });
-
-        this.user$ = new Observable((observer) => {
-            void this.model('User').where(
-                (x, name) => x.name === name, this.user && this.user.name
-            ).expand((x) => x.groups).getItem().then((result) => observer.next(result)).catch((err) => observer.error(err));
-        }).pipe(shareReplay());
-
-        this.interactiveUser$ = new Observable((observer) => {
-            void this.model('User').where(
-                (x, name) => x.name === name, this.interactiveUser && this.interactiveUser.name
-            ).expand((x) => x.groups).getItem().then((result) => observer.next(result)).catch((err) => observer.error(err));
-        }).pipe(shareReplay());
 
     }
 
@@ -153,20 +140,6 @@ class DefaultDataContext extends DataContext {
         return cb();
     }
 
-    /**
-     * Gets the current user
-     * @returns {import('rxjs').Observable<any}>}
-     */
-    getUser() {
-        return this.user$;
-    }
-    /**
-     * Gets the interactive user
-     * @returns {import('rxjs').Observable<any>}
-     */
-    getInteractiveUser() {
-        return this.interactiveUser$;
-    }
 }
 
 class NamedDataContext extends DataContext {
@@ -190,18 +163,6 @@ class NamedDataContext extends DataContext {
             configurable: true,
             value: name
         });
-
-        this.user$ = new Observable((observer) => {
-            void this.model('User').where(
-                (x, name) => x.name === name, this.user && this.user.name
-            ).expand((x) => x.groups).getItem().then((result) => observer.next(result)).catch((err) => observer.error(err));
-        }).pipe(shareReplay(1));
-
-        this.interactiveUser$ = new Observable((observer) => {
-            void this.model('User').where(
-                (x, name) => x.name === name, this.interactiveUser && this.interactiveUser.name
-            ).expand((x) => x.groups).getItem().then((result) => observer.next(result)).catch((err) => observer.error(err));
-        }).pipe(shareReplay(1));
 
     }
 
@@ -251,20 +212,6 @@ class NamedDataContext extends DataContext {
         }
     }
 
-    /**
-     * Gets the current user
-     * @returns {import('rxjs').Observable<{id: string, name: string, groups: Array<{id: string, name: string}>}>}
-     */
-    getUser() {
-        return this.user$;
-    }
-    /**
-     * Gets the interactive user
-     * @returns {import('rxjs').Observable<{id: string, name: string, groups: Array<{id: string, name: string}>}>}
-     */
-    getInteractiveUser() {
-        return this.interactiveUser$;
-    }
     /**
      * Gets a string which represents the name of this context
      * @returns {string}
