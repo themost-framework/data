@@ -20,7 +20,7 @@ describe('Parent permissions', () => {
         await app.finalize();
     });
     afterEach(() => {
-        delete context.user;
+        context.user = null;
     });
 
     it('should allow to read objects based on parent', async () => {

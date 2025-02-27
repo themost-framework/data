@@ -43,7 +43,7 @@ class DefaultDataContext extends DataContext {
         /**
          * @type {*}
          */
-        const adapterType = strategy.adapterTypes.get(adapter.invariantName);
+        const adapterType = strategy.adapterTypes[adapter.invariantName];
         //validate data adapter type
         if (adapterType == null) {
             throw new DataError('ERR_ADAPTER_TYPE', 'Invalid adapter type.');
@@ -179,7 +179,7 @@ class NamedDataContext extends DataContext {
             throw new DataError('ERR_ADAPTER', 'The specified data adapter is missing.');
         }
         //get data adapter type
-        const adapterType = strategy.adapterTypes.get(adapter.invariantName);
+        const adapterType = strategy.adapterTypes[adapter.invariantName];
         // get data adapter instance
         const createInstance = adapterType.createInstance;
         // get adapter type constructor if any

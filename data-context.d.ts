@@ -2,7 +2,7 @@
 import { Observable } from 'rxjs';
 import {DataContext} from "./types";
 import { ConfigurationBase, DataAdapterBase } from '@themost/common';
-import { DataModel } from 'data-model';
+import { DataModel } from './data-model';
 
 export declare class DefaultDataContext extends DataContext {
     model(name: any): DataModel;

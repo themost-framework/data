@@ -1,7 +1,6 @@
-import { TestApplication, TestApplication2 } from './TestApplication';
-import { DataContext, DataModel, DataObjectAssociationError, DataQueryable, DefaultDataContext, FunctionContext } from '../index';
+import { TestApplication } from './TestApplication';
+import { DataQueryable, DefaultDataContext, FunctionContext } from '../index';
 import { resolve } from 'path';
-import { TestUtils } from './adapter/TestUtils';
 import { firstValueFrom } from 'rxjs';
 
 describe('DataContext', () => {
@@ -9,7 +8,7 @@ describe('DataContext', () => {
     let app: TestApplication;
     let context: DefaultDataContext;
     beforeAll((done) => {
-        app = new TestApplication2();
+        app = new TestApplication(resolve(__dirname, 'test2'));
         context = app.createContext() as DefaultDataContext;
         return done();
     });

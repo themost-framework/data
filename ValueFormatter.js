@@ -169,7 +169,7 @@ class ValueDialect {
   $user(property) {
     const selectAttribute = property || 'id';
     let name = this.context.user && this.context.user.name;
-    if (Object.prototype.hasOwnProperty.call(this.context, 'interactiveUser') === true) {
+    if (this.context.interactiveUser) {
       name = this.context.interactiveUser && this.context.interactiveUser.name;
     }
     return this.context.model('User').asQueryable().where((x, username) => {

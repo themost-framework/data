@@ -15,7 +15,7 @@ describe('Global permissions', () => {
         await app.finalize();
     });
     afterEach(async () => {
-        delete context.user;
+        context.user = null;
         const configuration = context.getConfiguration();
         // @ts-ignore
         delete configuration.cache;
