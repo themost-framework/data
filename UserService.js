@@ -45,7 +45,7 @@ class UserService extends ApplicationService {
    * @returns {Promise<any>}
    */
   getAnonymousUser(context) {
-    return context.model('User').where('name').equal('anonymous').expand('groups').silent().getTypedItem();
+    return context.model('User').where('name').equal('anonymous').expand('groups').silent().getItem();
   }
   
 }
