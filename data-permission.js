@@ -11,7 +11,6 @@ var {DataModelFilterParser} = require('./data-model-filter.parser');
 var {DataQueryable} = require('./data-queryable');
 var {SelectObjectQuery} = require('./select-object-query');
 var { firstValueFrom } = require('rxjs');
-var {UserService} = require('./UserService');
 
 /**
  * @class

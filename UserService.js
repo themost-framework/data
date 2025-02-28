@@ -8,7 +8,7 @@ class UserService extends ApplicationService {
     this.refreshAnonymousUser$ = new BehaviorSubject(void 0);
     
     this.anonymousUser$ = this.refreshAnonymousUser$.pipe(switchMap((value) => {
-        if (value) {
+        if (typeof value !== 'undefined') {
             return of(value);
         }
         // create a new context
