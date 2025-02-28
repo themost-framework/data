@@ -10,7 +10,8 @@ var {hasOwnProperty} = require('./has-own-property');
 var {DataModelFilterParser} = require('./data-model-filter.parser');
 var {DataQueryable} = require('./data-queryable');
 var {SelectObjectQuery} = require('./select-object-query');
-const { firstValueFrom } = require('rxjs');
+var { firstValueFrom } = require('rxjs');
+var {UserService} = require('./UserService');
 
 /**
  * @class
@@ -667,7 +668,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
     });
 };
 /**
- * @param {DataContext} context
+ * @param {import('./types').DataContext} context
  * @param {function(Error=,Array=)} callback
  * @private
  */
@@ -680,7 +681,8 @@ function effectiveAccounts(context, callback) {
     // validate context user
     context.user = context.user || { name:'anonymous',authenticationType:'None' };
     try {
-        void firstValueFrom(context.user$).then(function(user) {
+        var source$ = context.user.name === 'anonymous' ? context.anonymousUser$ : context.user$;
+        void firstValueFrom(source$).then(function(user) {
             if (user) {
                 accounts = [
                     { id: user.id, name: user.name }

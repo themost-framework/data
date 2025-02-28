@@ -2,6 +2,7 @@
 var _ = require('lodash');
 var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 var { shareReplay, Observable, BehaviorSubject, switchMap } = require('rxjs');
+const { UserService } = require('./UserService');
 /**
  * @classdesc Represents an abstract data connector to a database
  * @description
@@ -343,6 +344,23 @@ function DataContext() {
         enumerable: false
     });
 
+    this.anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+        const application = this.getApplication();
+        if (application) {
+            const userService = application.getService(UserService);
+            if (userService) {
+                return userService.anonymousUser$;
+            }
+        }
+        return new Observable((observer) => {
+            void this.model('User').where('name').equal('anonymous').expand('groups').silent().getItem().then((result) => {
+                return observer.next(result);
+            }).catch((err) => {
+                return observer.error(err);
+            });
+        });
+    }), shareReplay(1));
+
 }
 // noinspection JSUnusedLocalSymbols
 /**
@@ -364,6 +382,23 @@ DataContext.prototype.getUser = function() {
         if ((this.user && this.user.name) == null) {
             return observer.next(null);
         }
+
+        // get current application
+        const application = this.getApplication();
+        if (application != null) {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getUser(this, this.user.name).then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            }
+        }
+        // otherwise get user from data context
         void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
             return observer.next(result);
         }).catch((err) => {
@@ -389,6 +424,23 @@ DataContext.prototype.getInteractiveUser = function() {
         if ((this.interactiveUser && this.interactiveUser.name) == null) {
             return observer.next(null);
         }
+
+        // get current application
+        const application = this.getApplication();
+        if (application != null) {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getUser(this, this.interactiveUser.name).then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            }
+        }
+        // otherwise get user from data context
         void this.model('User').where('name').expand('groups').silent().getItem().then((result) => {
             return observer.next(result)
         }).catch((err) => {
@@ -468,6 +520,28 @@ DataContext.prototype.executeInTransactionAsync = function(func) {
         });
     });
 }
+
+/**
+ * Sets the application that is associated with this data context
+ * @param {import('@themost/common').ApplicationBase} application 
+ */
+DataContext.prototype.setApplication = function(application) {
+    Object.defineProperty(this, 'application', {
+        get: function() {
+            return application;
+        },
+        configurable: true,
+        enumerable: false
+    });
+};
+
+/**
+ * Returns the application that is associated with this data context
+ * @returns {import('@themost/common').ApplicationBase}
+ */
+DataContext.prototype.getApplication = function() {
+    return this.application;
+};
 
 LangUtils.inherits(DataContext, SequentialEventEmitter);
 

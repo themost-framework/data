@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration, DataContextBase, ContextUserBase} from "@themost/common";
+import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration, DataContextBase, ContextUserBase, ApplicationBase} from "@themost/common";
 import {DataAssociationMappingBase, DataFieldBase} from '@themost/common';
 import { BehaviorSubject, Observable } from "rxjs";
 
@@ -150,6 +150,10 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
     switchInteractiveUser(user?: ContextUser): void;
 
     setInteractiveUser(user?: ContextUser): void;
+
+    setApplication(application: ApplicationBase): void;
+
+    getApplication(): ApplicationBase;
     
 }
 

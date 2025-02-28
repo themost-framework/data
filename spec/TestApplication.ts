@@ -1,4 +1,4 @@
-import { IApplication, ConfigurationBase } from "@themost/common";
+import { IApplication, ConfigurationBase, ApplicationServiceConstructor, ApplicationBase } from "@themost/common";
 import {resolve} from 'path';
 import * as fs from 'fs';
 import {
@@ -10,31 +10,11 @@ import {
     DataCacheFinalize
 } from '../index';
 
-export class TestApplication extends IApplication {
-
-    private _services: Map<any,any> = new Map();
-    private _configuration: ConfigurationBase;
-
-    useStrategy(serviceCtor: void, strategyCtor: void): this {
-        const ServiceClass: any = serviceCtor;
-        const StrategyClass: any = strategyCtor;
-        this._services.set(ServiceClass.name, new StrategyClass(this));
-        return this;
-    }
-    hasStrategy(serviceCtor: void): boolean {
-        return this._services.has((<any>serviceCtor).name);
-    }
-    getStrategy<T>(serviceCtor: new () => T): T {
-        return this._services.get(serviceCtor.name);
-    }
-    getConfiguration(): ConfigurationBase {
-        return this._configuration;
-    }
+export class TestApplication extends DataApplication {
+    
     constructor(executionPath: string) {
-        super();
-        // init application configuration
-        this._configuration = new ConfigurationBase(resolve(executionPath, 'config'));
-        this._configuration.setSourceAt('adapterTypes', [
+        super(executionPath);
+        this.configuration.setSourceAt('adapterTypes', [
             {
                 'name':'Test Data Adapter',
                 'invariantName': 'test',
@@ -53,7 +33,7 @@ export class TestApplication extends IApplication {
             // copy local.db to test.db
             fs.copyFileSync(local, db)
         }
-        this._configuration.setSourceAt('adapters', [
+        this.configuration.setSourceAt('adapters', [
             { 
                 'name': 'test-storage',
                 'invariantName': 'test',
@@ -64,17 +44,18 @@ export class TestApplication extends IApplication {
             }
         ]);
         // use data configuration strategy
-        this._configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
+        this.configuration.useStrategy(DataConfigurationStrategy, DataConfigurationStrategy);
     }
 
     createContext(): DataContext {
-        const adapters = this._configuration.getSourceAt('adapters');
+        const adapters = this.configuration.getSourceAt('adapters');
         const adapter: { name: string; invariantName: string; default: boolean } = adapters.find((item: any)=> {
             return item.default;
         });
         const context = new NamedDataContext(adapter.name);
+        context.setApplication(this);
         context.getConfiguration = () => {
-            return this._configuration;
+            return this.configuration;
         };
         return context;
     }
