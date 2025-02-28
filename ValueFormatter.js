@@ -10,6 +10,7 @@ const { AsyncSeriesEventEmitter } = require('@themost/events');
 const { round } = require('@themost/query');
 const MD5 = require('crypto-js/md5');
 const { DataAttributeResolver } = require('./data-attribute-resolver');
+const { firstValueFrom } = require('rxjs');
 
 const testFieldRegex = /^\$\w+(\.\w+)*$/g;
 
@@ -166,20 +167,14 @@ class ValueDialect {
    * @param {string=} property 
    * @returns Promise<any>
    */
-  $user(property) {
-    const selectAttribute = property || 'id';
-    let name = this.context.user && this.context.user.name;
-    if (this.context.interactiveUser) {
-      name = this.context.interactiveUser && this.context.interactiveUser.name;
+  async $user(property) {
+    const selectProperty = property || 'id';
+    const source$ = this.context.interactiveUser ? this.context.interactiveUser$ : this.context.user$;
+    const user = await firstValueFrom(source$);
+    if (user == null) {
+      return null;
     }
-    return this.context.model('User').asQueryable().where((x, username) => {
-      return x.name === username && x.name != null && x.name != 'anonymous';
-    }, name).select(selectAttribute).value().then((result) => {
-      if (typeof result === 'undefined') {
-        return null;
-      }
-      return result;
-    });
+    return getProperty(user, selectProperty.replace(/^\//, '.'));
   }
   /**
    * A shorthand for $user method
