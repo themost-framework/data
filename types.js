@@ -137,6 +137,7 @@ function DataContext() {
         },
         set: function(value) {
             _user = value;
+            this.refreshUser$.next(void 0);
         },
         configurable: false,
         enumerable: false
@@ -148,13 +149,8 @@ function DataContext() {
             return _interactiveUser;
         },
         set: function(value) {
-            const previous = _interactiveUser;
             _interactiveUser = value;
-            if ((previous && previous.name) !== (value && value.name)) {
-                this.interactiveUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
-                    return this.getInteractiveUser();
-                }), shareReplay(1));
-            }
+            this.refreshInteractiveUser$.next(void 0);
         },
         configurable: false,
         enumerable: false
