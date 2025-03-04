@@ -85,11 +85,16 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
      */
     user?: ContextUser;
 
+    refreshUser$:BehaviorSubject<any>;
+
     /**
      * Optional property representing the interactive user of the current context.
      * The interactive user is the original user who initiated the current context.
      */
     interactiveUser?: ContextUser;
+
+
+    refreshInteractiveUser$:BehaviorSubject<any>;
 
     /**
      * An observable stream that emits user-related data.

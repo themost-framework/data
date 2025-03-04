@@ -34,7 +34,7 @@ function DataPermissionEventArgs() {
     this.model = null;
     /**
      * The underlying query expression
-     * @type {QueryExpression}
+     * @type {import('@themost/query').QueryExpression}
      */
     this.query = null;
     /**

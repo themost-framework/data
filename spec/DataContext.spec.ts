@@ -22,6 +22,7 @@ describe('DataContext', () => {
         context.user = {
             name: 'alexis.rees@example.com'
         };
+        // noinspection TypeScriptValidateTypes
         const getItemSpy = jest.spyOn(DataQueryable.prototype, 'getItem');
         let user = await firstValueFrom(context.user$);
         expect(getItemSpy).toHaveBeenCalled();
@@ -30,8 +31,9 @@ describe('DataContext', () => {
         getItemSpy.mockClear();
         context.switchUser({
             name: 'anonymous'
-        })
+        });
         user = await firstValueFrom(context.user$);
+        expect(user).toBeDefined();
         expect(getItemSpy).toHaveBeenCalled();
         getItemSpy.mockClear();
         user = await firstValueFrom(context.user$);
@@ -41,9 +43,9 @@ describe('DataContext', () => {
 
     it('should use function context',async () => {
         expect(context).toBeDefined();
-        context.user = {
+        context.switchUser({
             name: 'alexis.rees@example.com'
-        };
+        });
         const getItemSpy = jest.spyOn(DataQueryable.prototype, 'getItem');
         const functionContext = new FunctionContext(context);
         let user = await functionContext.me();
@@ -52,7 +54,7 @@ describe('DataContext', () => {
         getItemSpy.mockClear();
         context.switchUser({
             name: 'anonymous'
-        })
+        });
         user = await functionContext.me();
         expect(getItemSpy).toHaveBeenCalled();
         getItemSpy.mockClear();
