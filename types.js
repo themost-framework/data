@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
 var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
-var { shareReplay, Observable, BehaviorSubject, switchMap } = require('rxjs');
+var { shareReplay, Observable, BehaviorSubject, switchMap, defer } = require('rxjs');
 const { UserService } = require('./UserService');
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -116,19 +116,9 @@ function DataContext() {
         throw new AbstractClassError();
     }
 
-    this.refreshUser$ = new BehaviorSubject(void 0);
+    this.user$ = defer(() => this.getUser()).pipe(shareReplay());
 
-    // noinspection JSCheckFunctionSignatures
-    this.user$ = this.refreshUser$.pipe(switchMap(() => {
-        return this.getUser();
-    }), shareReplay(1));
-
-    this.refreshInteractiveUser$ = new BehaviorSubject(void 0);
-
-    // noinspection JSCheckFunctionSignatures
-    this.interactiveUser$ = this.refreshInteractiveUser$.pipe(switchMap(() => {
-        return this.getInteractiveUser();
-    }), shareReplay());
+    this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
 
     var _user = null;
     Object.defineProperty(this, 'user', {
@@ -137,7 +127,7 @@ function DataContext() {
         },
         set: function(value) {
             _user = value;
-            this.refreshUser$.next(void 0);
+            this.user$ = defer(() => this.getUser()).pipe(shareReplay());
         },
         configurable: false,
         enumerable: false
@@ -150,7 +140,7 @@ function DataContext() {
         },
         set: function(value) {
             _interactiveUser = value;
-            this.refreshInteractiveUser$.next(void 0);
+            this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
         },
         configurable: false,
         enumerable: false
@@ -220,12 +210,10 @@ DataContext.prototype.getUser = function() {
 };
 
 DataContext.prototype.switchUser = function(user) {
-    this.refreshUser$.next(void 0);
     this.user = user;
 };
 
 DataContext.prototype.setUser = function(user) {
-    this.refreshUser$.next(void 0);
     this.user = user;
 };
 
@@ -264,12 +252,10 @@ DataContext.prototype.getInteractiveUser = function() {
 };
 
 DataContext.prototype.switchInteractiveUser = function(user) {
-    this.refreshInteractiveUser$.next(void 0);
     this.interactiveUser = user;
 };
 
 DataContext.prototype.setInteractiveUser = function(user) {
-    this.refreshInteractiveUser$.next(void 0);
     this.interactiveUser = user;
 };
 

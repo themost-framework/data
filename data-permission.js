@@ -319,7 +319,9 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
     //validate throwError
     if (typeof event.throwError === 'undefined')
         event.throwError = true;
-    context.user = context.user || { name:'anonymous',authenticationType:'None' };
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
     if (authSettings)
@@ -678,7 +680,9 @@ DataPermissionEventListener.prototype.effectiveAccounts = function (context, cal
         return callback(null, accounts);
     }
     // validate context user
-    context.user = context.user || { name:'anonymous',authenticationType:'None' };
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
     try {
         var source$ = context.user.name === 'anonymous' ? context.anonymousUser$ : context.user$;
         void firstValueFrom(source$).then(function(user) {
@@ -760,7 +764,9 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         }
     }
     //ensure context user
-    context.user = context.user || { name:'anonymous',authenticationType:'None' };
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
     //change: 2-May 2015
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
