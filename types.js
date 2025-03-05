@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
 var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
-var { shareReplay, Observable, BehaviorSubject, switchMap, defer } = require('rxjs');
+var { shareReplay, Observable, switchMap, defer } = require('rxjs');
 const { UserService } = require('./UserService');
 /**
  * @classdesc Represents an abstract data connector to a database
