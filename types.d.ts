@@ -154,6 +154,8 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
     setApplication(application: ApplicationBase): void;
 
     getApplication(): ApplicationBase;
+
+    protected refreshState(): void;
     
 }
 

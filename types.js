@@ -127,7 +127,7 @@ function DataContext() {
         },
         set: function(value) {
             _user = value;
-            this.user$ = defer(() => this.getUser()).pipe(shareReplay());
+            this.refreshState();
         },
         configurable: false,
         enumerable: false
@@ -140,7 +140,7 @@ function DataContext() {
         },
         set: function(value) {
             _interactiveUser = value;
-            this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+            this.refreshState();
         },
         configurable: false,
         enumerable: false
@@ -215,6 +215,14 @@ DataContext.prototype.switchUser = function(user) {
 
 DataContext.prototype.setUser = function(user) {
     this.user = user;
+};
+
+/**
+ * @protected
+ */
+DataContext.prototype.refreshState = function() {
+    this.user$ = defer(() => this.getUser()).pipe(shareReplay());
+    this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
 };
 
 /**
