@@ -143,18 +143,45 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
      */
     executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
 
+    /**
+     * Switches the current user of the context.
+     * @param {ContextUser} user 
+     */
     switchUser(user?: ContextUser): void;
 
+    /**
+     * An alternative method to switch the current user of the context.
+     * @param {ContextUser} user 
+     */
     setUser(user?: ContextUser): void;
 
+    /**
+     * Switches the interactive user of the context. The interactive user is the original user who initiated the current context.
+     * @param {ContextUser} user 
+     */
     switchInteractiveUser(user?: ContextUser): void;
 
+    /**
+     * An alternative method to switch the interactive user of the context.
+     * @param {ContextUser} user 
+     */
     setInteractiveUser(user?: ContextUser): void;
 
+    /**
+     * Sets the application of the current context. The application is the parent application that created the current context.
+     * @param {ApplicationBase} application 
+     */
     setApplication(application: ApplicationBase): void;
 
+    /**
+     * Returns the application of the current context.
+     * 
+     */
     getApplication(): ApplicationBase;
 
+    /**
+     * Refreshes the state of the current context including the state of the current user and the interactive user.
+     */
     protected refreshState(): void;
     
 }
