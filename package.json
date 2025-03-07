@@ -49,6 +49,7 @@
     "@themost/common": "^2.11.0",
     "@themost/json-logger": "^1.1.0",
     "@themost/peers": "^1.0.2",
+    "@themost/pg": "^2.12.0",
     "@themost/query": "^2.6.73",
     "@themost/sqlite": "^2.8.4",
     "@themost/xml": "^2.5.2",

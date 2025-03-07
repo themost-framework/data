@@ -2,8 +2,11 @@ import {TestApplication} from './TestApplication';
 import { DataContext } from '@themost/data';
 import { resolve } from 'path';
 import { LocalUserService } from './LocalUserService';
-import { firstValueFrom, BehaviorSubject } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { UserService } from '../UserService';
+import '@themost/promise-sequence';
+import { performance } from 'perf_hooks';
+import { TraceUtils } from '@themost/common';
 
 describe('TestUserService', () => {
     let app: TestApplication;
@@ -52,6 +55,36 @@ describe('TestUserService', () => {
         const getItemSpy = jest.spyOn(LocalUserService.prototype, 'getAnonymousUser');
         getItemSpy.mockClear();
         anonymous = await firstValueFrom(userService.anonymousUser$);
+        expect(getItemSpy).not.toHaveBeenCalled();
+    });
+
+    it('should return cached items', async () => {
+        const Users = context.model('User');
+        const items = await Users.asQueryable().select((x: any) => {
+            return {
+                name: x.name
+            }
+        }).take(50).silent().getItems();
+        const userService = app.getService(UserService);
+        let start  = performance.now();
+        await Promise.sequence(items.map((x: any) => {
+            return () => userService.getUser(context, x.name);
+        }));
+        let end = performance.now();
+        TraceUtils.log(`Elapsed time: ${end-start} ms`);
+        const getItemSpy = jest.spyOn(UserService.prototype, 'getUser');
+        start  = performance.now();
+        await Promise.sequence(items.map((x: any) => {
+            return () => userService.getUser(context, x.name);
+        }));
+        end = performance.now();
+        TraceUtils.log(`Elapsed time from cache: ${end-start} ms`);
+        start  = performance.now();
+        await Promise.sequence(items.map((x: any) => {
+            return () => userService.getUser(context, x.name);
+        }));
+        end = performance.now();
+        TraceUtils.log(`Elapsed time from cache: ${end-start} ms`);
         expect(getItemSpy).not.toHaveBeenCalled();
     });
 

@@ -1,4 +1,4 @@
-import { ApplicationBase, DataModelProperties } from "@themost/common";
+import { ApplicationBase, DataModelProperties, TraceUtils } from "@themost/common";
 import { UserService } from "../UserService";
 import { DataApplication } from "../data-application";
 import { DataConfigurationStrategy } from "../data-configuration";
@@ -6,6 +6,7 @@ import { createInstance } from "@themost/sqlite";
 import { DataContext } from "../types";
 import { DataModel } from "../data-model";
 import { DataCacheStrategy, DataCacheFinalize } from "../data-cache";
+import { performance } from "perf_hooks";
 
 const LocalUserServiceCache: DataModelProperties = {
     name: 'LocalUserServiceCache',
@@ -103,11 +104,16 @@ class LocalUserService extends UserService {
   }
 
   async getUser(context: DataContext, name: string): Promise<any> {
+    const start = performance.now();
     let item = await this.cache.asQueryable().where('key').equal(name).getItem();
     if (item) {
         if (item.doomed) {
             await this.cache.remove(item);
         } else {
+            if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+                const end = performance.now();
+                TraceUtils.log(`LocalUserService: Cache hit for user '${name}' in ${(end - start).toFixed(2)} ms.`);
+            }
             return item.value;
         }
     }
