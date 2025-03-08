@@ -129,7 +129,7 @@ function DataContext() {
             _user = value;
             this.refreshState();
         },
-        configurable: false,
+        configurable: true,
         enumerable: false
     });
 
@@ -142,7 +142,7 @@ function DataContext() {
             _interactiveUser = value;
             this.refreshState();
         },
-        configurable: false,
+        configurable: true,
         enumerable: false
     });
 
