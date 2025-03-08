@@ -91,6 +91,10 @@ var { executeInUnattendedModeAsync, executeInUnattendedMode, enableUnattendedExe
 
 var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
 
+var { UserService } = require('./UserService');
+
+var { LocalUserService } = require('./LocalUserService');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -178,6 +182,8 @@ module.exports = {
     executeInUnattendedMode,
     executeInUnattendedModeAsync,
     ValueFormatter,
-    ValueDialect
+    ValueDialect,
+    UserService,
+    LocalUserService
 };
 
