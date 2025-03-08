@@ -2,6 +2,14 @@ import { ApplicationBase, ApplicationService } from '@themost/common';
 import { DataContext } from './types';
 import { BehaviorSubject, Observable } from 'rxjs';
 
+export declare interface OnFinalizeService {
+    finalizeAsync(): Promise<void>;
+}
+
+export declare interface OnRemoveUser {
+    removeUser(name: string): Promise<void>;
+}
+
 export declare class UserService extends ApplicationService {
     
     constructor(app:any);
