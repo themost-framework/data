@@ -1,11 +1,8 @@
-const { TraceUtils } = require('@themost/common');
 const { UserService } = require('./UserService');
 const { DataApplication } = require('./data-application');
 const { DataConfigurationStrategy } = require('./data-configuration');
 const { createInstance } = require('@themost/sqlite');
-const { DataContext } = require('./types');
 const { DataCacheStrategy } = require('./data-cache');
-const { performance } = require('perf_hooks');
 
 /**
  * @type {import('@themost/common').DataModelProperties}
@@ -51,37 +48,7 @@ const LocalUserServiceCache = {
     ]
 }
 
-class NoCacheStrategy extends DataCacheStrategy {
-
-    async get(key) {
-        return;
-    }
-
-    async add(key, value, absoluteExpiration) {
-        return;
-    }
-
-    async getOrDefault(key, getFunc, absoluteExpiration) {
-        return getFunc();
-    }
-
-    async remove(key) {
-        return;
-    }
-
-    async clear() {
-        return;
-    }
-
-    async finalize() {
-        return;
-    }
-}
-
-
 class LocalUserService extends UserService {
-
-
     /**
      * @param {import('@themost/common').ApplicationBase} app
      */
@@ -113,21 +80,16 @@ class LocalUserService extends UserService {
 
     /**
      * Get user by name
-     * @param {DataContext} context 
+     * @param {import('./types').DataContext} context 
      * @param {string} name 
      * @returns 
      */
     async getUser(context, name) {
-        const start = performance.now();
         let item = await this.cache.asQueryable().where('key').equal(name).getItem();
         if (item) {
             if (item.doomed) {
                 await this.cache.remove(item);
             } else {
-                if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
-                    const end = performance.now();
-                    TraceUtils.log(`LocalUserService: Cache hit for user '${name}' in ${(end - start).toFixed(2)} ms.`);
-                }
                 return item.value;
             }
         }
@@ -146,7 +108,7 @@ class LocalUserService extends UserService {
 
     /**
      * Get anonymous user
-     * @param {DataContext} context 
+     * @param {import('./types').DataContext} context 
      * @returns 
      */
     getAnonymousUser(context) {

@@ -1,7 +1,7 @@
 import {TestApplication} from './TestApplication';
 import { DataContext } from '@themost/data';
 import { resolve } from 'path';
-import { LocalUserService } from './LocalUserService';
+import { LocalUserService } from '../LocalUserService';
 import { firstValueFrom } from 'rxjs';
 import { UserService } from '../UserService';
 import '@themost/promise-sequence';
@@ -71,20 +71,20 @@ describe('TestUserService', () => {
             return () => userService.getUser(context, x.name);
         }));
         let end = performance.now();
-        TraceUtils.log(`Elapsed time: ${end-start} ms`);
+        TraceUtils.log(`Elapsed time: ${(end-start).toFixed(2)} ms`);
         const getItemSpy = jest.spyOn(UserService.prototype, 'getUser');
         start  = performance.now();
         await Promise.sequence(items.map((x: any) => {
             return () => userService.getUser(context, x.name);
         }));
         end = performance.now();
-        TraceUtils.log(`Elapsed time from cache: ${end-start} ms`);
+        TraceUtils.log(`Elapsed time from cache: ${(end-start).toFixed(2)} ms`);
         start  = performance.now();
-        await Promise.sequence(items.map((x: any) => {
-            return () => userService.getUser(context, x.name);
+        await Promise.all(items.map((x: any) => {
+            return userService.getUser(context, x.name);
         }));
         end = performance.now();
-        TraceUtils.log(`Elapsed time from cache: ${end-start} ms`);
+        TraceUtils.log(`Elapsed time from cache: ${(end-start).toFixed(2)} ms`);
         expect(getItemSpy).not.toHaveBeenCalled();
     });
 
