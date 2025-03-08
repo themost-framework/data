@@ -2,6 +2,7 @@
 var {Args, PathUtils, SequentialEventEmitter} = require('@themost/common');
 var {DataConfiguration} = require('./data-configuration');
 var {DefaultDataContext} = require('./data-context');
+const { UserService } = require('./UserService');
 /**
  * @class
  * @param {string} cwd - A string which defines application root directory
@@ -21,6 +22,7 @@ class DataApplication extends SequentialEventEmitter {
             writable: false,
             value: new DataConfiguration(PathUtils.join(cwd, 'config'))
         });
+        this.useService(UserService);
     }
     hasService(serviceCtor) {
         if (serviceCtor == null) {

@@ -54,10 +54,11 @@ export declare class DataModel extends SequentialEventEmitter{
     getList():Promise<any>;
     skip(n: number): DataQueryable;
     base(): DataModel;
-    convert(obj: any): DataObject;
+    convert<DataObject>(obj: any): DataObject;
     cast(obj: any, state: number): any;
     save(obj: any): Promise<any>;
     inferState(obj: any, callback: (err?: Error, res?: any) => void): void;
+    inferStateAsync(obj: any): Promise<any>;
     getSuperTypes(): Array<string>;
     update(obj: any): Promise<any>;
     insert(obj: any): Promise<any>;
@@ -71,7 +72,7 @@ export declare class DataModel extends SequentialEventEmitter{
     validateForUpdate(obj: any): Promise<any>;
     validateForInsert(obj: any): Promise<any>;
     levels(value: number): DataQueryable;
-    getSubTypes(): Promise<string>;
+    getSubTypes(): Promise<string[]>;
     getReferenceMappings(deep?: boolean): Array<any>;
     getAttribute(name: string): DataField;
     getTypedItems(): Promise<DataObject|any>;
