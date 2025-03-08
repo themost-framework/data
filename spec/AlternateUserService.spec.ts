@@ -27,12 +27,20 @@ describe('TestUserService', () => {
     });
 
     it('should return user', async () => {
-        const userService = app.getService(UserService);
+        const userService = app.getService(UserService) as LocalUserService;
+        const getItemSpy = jest.spyOn(UserService.prototype, 'getUser');
         let user = await userService.getUser(context, 'alexis.rees@example.com');
         expect(user).toBeTruthy();
         expect(user.name).toBe('alexis.rees@example.com');
+        expect(getItemSpy).toHaveBeenCalled();
+        getItemSpy.mockClear();
         user = await userService.getUser(context, 'alexis.rees@example.com');
+        expect(getItemSpy).not.toHaveBeenCalled();
         expect(user).toBeTruthy();
+        await userService.removeUser('alexis.rees@example.com');
+        getItemSpy.mockClear();
+        user = await userService.getUser(context, 'alexis.rees@example.com');
+        expect(getItemSpy).toHaveBeenCalled();
     });
 
     it('should return anonymous user', async () => {
@@ -73,6 +81,7 @@ describe('TestUserService', () => {
         let end = performance.now();
         TraceUtils.log(`Elapsed time: ${(end-start).toFixed(2)} ms`);
         const getItemSpy = jest.spyOn(UserService.prototype, 'getUser');
+        getItemSpy.mockClear();
         start  = performance.now();
         await Promise.sequence(items.map((x: any) => {
             return () => userService.getUser(context, x.name);

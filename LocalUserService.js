@@ -3,15 +3,16 @@ const { DataApplication } = require('./data-application');
 const { DataConfigurationStrategy } = require('./data-configuration');
 const { createInstance } = require('@themost/sqlite');
 const { DataCacheStrategy } = require('./data-cache');
+const { QueryExpression } = require('@themost/query');
 
 /**
  * @type {import('@themost/common').DataModelProperties}
  */
-const LocalUserServiceCache = {
-    name: 'LocalUserServiceCache',
+const LocalUser = {
+    name: 'LocalUser',
     version: '1.0.0',
-    source: 'LocalUserServiceCache',
-    view: 'LocalUserServiceCache',
+    source: 'LocalUser',
+    view: 'LocalUser',
     fields: [
         {
             name: 'key',
@@ -54,9 +55,8 @@ class LocalUserService extends UserService {
      */
     constructor(app) {
         super(app);
-
-        this.cacheApplication = new DataApplication(__dirname);
-        const configuration = this.cacheApplication.configuration.getStrategy(DataConfigurationStrategy);
+        const cacheApplication = new DataApplication(__dirname);
+        const configuration = cacheApplication.configuration.getStrategy(DataConfigurationStrategy);
         Object.assign(configuration.adapterTypes, {
             ['sqlite']: {
                 invariantName: 'sqlite',
@@ -72,10 +72,10 @@ class LocalUserService extends UserService {
                 database: ':memory:'
             }
         });
-        configuration.setModelDefinition(LocalUserServiceCache);
-        const context = this.cacheApplication.createContext();
-        this.cache = context.model(LocalUserServiceCache.name);
-        // remove unused services
+        configuration.setModelDefinition(LocalUser);
+        const context = cacheApplication.createContext();
+        context.setApplication(cacheApplication);
+        this.cache = context.model(LocalUser.name);
     }
 
     /**
@@ -85,10 +85,20 @@ class LocalUserService extends UserService {
      * @returns 
      */
     async getUser(context, name) {
-        let item = await this.cache.asQueryable().where('key').equal(name).getItem();
+        // upgrade cache if needed
+        if (this.cache.upgraded !== true) {
+            await this.cache.migrateAsync();
+            this.cache.upgraded = true;
+        }
+        const select = this.cache.attributeNames;
+        const [item] = await this.cache.context.db.executeAsync(
+            new QueryExpression().select(
+                ...select
+            ).from(LocalUser.name).where('key').equal(name)
+        );
         if (item) {
             if (item.doomed) {
-                await this.cache.remove(item);
+                await this.removeUser(name);
             } else {
                 return item.value;
             }
@@ -116,11 +126,28 @@ class LocalUserService extends UserService {
     }
 
     /**
+     * Remove user by name
+     * @param {string} name 
+     */
+    async removeUser(name) {
+        await this.cache.context.db.executeAsync(
+            new QueryExpression().delete(LocalUser.name).where('key').equal(name)
+        );
+    }
+
+    /**
      * Finalize user service
      */
     async finalizeAsync() {
+        if (this.cache == null) {
+            return
+        }
+        if (this.cache.context == null) {
+            return
+        }
+        const cacheApplication = this.cache.context.getApplication();
         await this.cache.context.finalizeAsync();
-        const service = this.cacheApplication.getConfiguration().getStrategy(DataCacheStrategy);
+        const service = cacheApplication.getConfiguration().getStrategy(DataCacheStrategy);
         if (service != null && typeof service.finalize === 'function') {
             await service.finalize();
         }
