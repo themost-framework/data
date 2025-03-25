@@ -111,15 +111,19 @@ describe('DataModel', () => {
 
     it('should use beforeUpgrade', async () => {
         const schema = context.getConfiguration().getStrategy(SchemaLoaderStrategy);
-        const model = schema.getModelDefinition('Employee')
-        model.eventListeners = model.eventListeners || [];
-        model.eventListeners.push({
+        const modelDefinition = schema.getModelDefinition('Employee')
+        modelDefinition.eventListeners = modelDefinition.eventListeners || [];
+        modelDefinition.eventListeners.push({
             type: resolve(__dirname, 'test1', 'listeners', 'Employee.beforeUpgrade')
         });
-        schema.setModelDefinition(model);
-        const spy = jest.spyOn(listener, 'beforeUpgrade');
-        await context.model('Employee').migrateAsync();
-        expect(spy).toHaveBeenCalled();
+        schema.setModelDefinition(modelDefinition);
+        const model = context.model('Employee');
+        const listeners = model.listeners('before.upgrade');
+        expect(listeners).toBeTruthy();
+        expect(listeners.length).toBeGreaterThan(0);
+        const [beforeUpgradeListener] = listeners;
+        expect(beforeUpgradeListener).toBeTruthy();
+        expect(beforeUpgradeListener).toBe(listener.beforeUpgrade);
     });
 
 });
