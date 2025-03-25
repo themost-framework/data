@@ -663,36 +663,23 @@ function unregisterContextListeners() {
             if (listener.type && !listener.disabled)
             {
                 /**
-                 * @type DataEventListener
+                 * @type {{beforeSave?:function,afterSave?:function,beforeRemove?:function,afterRemove?:function,beforeExecute?:function,afterExecute?:function,beforeUpgrade?:function,afterUpgrade?:function}}
                  */
-                var dataEventListener;
-                if (/^@themost\/data\//i.test(listener.type)) {
-                    dataEventListener = moduleLoader.require(listener.type);
-                    //dataEventListener = require(listener.type.replace(/^@themost\/data\//,'./'));
-                }
-                else {
-                    dataEventListener = moduleLoader.require(listener.type);
-                }
-
-                //if listener exports beforeSave function then register this as before.save event listener
+                var dataEventListener = moduleLoader.require(listener.type);
+                if (typeof dataEventListener.beforeUpgrade === 'function')
+                    this.on('before.upgrade', dataEventListener.beforeUpgrade);
                 if (typeof dataEventListener.beforeSave === 'function')
                     this.on('before.save', dataEventListener.beforeSave);
-                //if listener exports afterSave then register this as after.save event listener
                 if (typeof dataEventListener.afterSave === 'function')
                     this.on('after.save', dataEventListener.afterSave);
-                //if listener exports beforeRemove then register this as before.remove event listener
                 if (typeof dataEventListener.beforeRemove === 'function')
                     this.on('before.remove', dataEventListener.beforeRemove);
-                //if listener exports afterRemove then register this as after.remove event listener
                 if (typeof dataEventListener.afterRemove === 'function')
                     this.on('after.remove', dataEventListener.afterRemove);
-                //if listener exports beforeExecute then register this as before.execute event listener
                 if (typeof dataEventListener.beforeExecute === 'function')
                     this.on('before.execute', dataEventListener.beforeExecute);
-                //if listener exports afterExecute then register this as after.execute event listener
                 if (typeof dataEventListener.afterExecute === 'function')
                     this.on('after.execute', dataEventListener.afterExecute);
-                //if listener exports afterUpgrade then register this as after.upgrade event listener
                 if (typeof dataEventListener.afterUpgrade === 'function')
                     this.on('after.upgrade', dataEventListener.afterUpgrade);
             }
