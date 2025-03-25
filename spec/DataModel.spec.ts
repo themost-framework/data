@@ -1,7 +1,8 @@
-import {DataModel, EdmMapping, DataContext} from '../index';
+import {DataModel, EdmMapping, DataContext, SchemaLoaderStrategy} from '../index';
 import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
 import { SqliteAdapter} from '@themost/sqlite';
+import * as listener from './test1/listeners/Employee.beforeUpgrade';
 
 class Employee {
     public EmployeeID?: number;
@@ -106,6 +107,23 @@ describe('DataModel', () => {
         model.caching = 'always';
         expect(cloned.caching).not.toBe(model.caching);
         expect(cloned.isSilent()).toBeTruthy();
+    });
+
+    it('should use beforeUpgrade', async () => {
+        const schema = context.getConfiguration().getStrategy(SchemaLoaderStrategy);
+        const modelDefinition = schema.getModelDefinition('Employee')
+        modelDefinition.eventListeners = modelDefinition.eventListeners || [];
+        modelDefinition.eventListeners.push({
+            type: resolve(__dirname, 'test1', 'listeners', 'Employee.beforeUpgrade')
+        });
+        schema.setModelDefinition(modelDefinition);
+        const model = context.model('Employee');
+        const listeners = model.listeners('before.upgrade');
+        expect(listeners).toBeTruthy();
+        expect(listeners.length).toBeGreaterThan(0);
+        const [beforeUpgradeListener] = listeners;
+        expect(beforeUpgradeListener).toBeTruthy();
+        expect(beforeUpgradeListener).toBe(listener.beforeUpgrade);
     });
 
 });
