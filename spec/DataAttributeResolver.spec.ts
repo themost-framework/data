@@ -116,14 +116,12 @@ describe('DataAttributeResolver', () => {
 
     it('should get nested item', async () => {
         await TestUtils.executeInTransaction(context, async () => {
+            context.user = null;
             const product = await context.model('Product').asQueryable().silent().getItem();
             product.productImage = {
                 url: '/images/products/abc.png'
             }
             await context.model('Product').silent().save(product);
-            Object.assign(context, {
-                user: null
-            });
             let item = await context.model('Product').where('id').equal(product.id).getItem();
             expect(item.productImage).toBeTruthy();
         });
