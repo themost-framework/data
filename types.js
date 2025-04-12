@@ -963,10 +963,10 @@ class DataContext extends SequentialEventEmitter {
      */
     getInteractiveUser() {
         return new Observable((observer) => {
-            if ((this.interactiveUser && this.interactiveUser.name) == null) {
-                return observer.next(null);
+            let username = this.interactiveUser && this.interactiveUser.name;
+            if (username == null) {
+                username = this.user && this.user.name;
             }
-
             // get current application
             const application = this.getApplication();
             if (application != null) {
@@ -975,7 +975,7 @@ class DataContext extends SequentialEventEmitter {
                 // check if user service is available
                 if (userService != null) {
                     // get user
-                    return userService.getUser(this, this.interactiveUser.name).then((result) => {
+                    return userService.getUser(this, username).then((result) => {
                         return observer.next(result);
                     }).catch((err) => {
                         return observer.error(err);
@@ -983,7 +983,7 @@ class DataContext extends SequentialEventEmitter {
                 }
             }
             // otherwise get user from data context
-            void this.model('User').where('name').expand('groups').silent().getItem().then((result) => {
+            void this.model('User').where('name').equal(username).expand('groups').silent().getItem().then((result) => {
                 return observer.next(result);
             }).catch((err) => {
                 return observer.error(err);

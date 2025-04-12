@@ -76,5 +76,20 @@ describe('DataContext', () => {
         expect(user2).toBeTruthy();
         expect(user2.name).toBe(name);
     });
+
+    it('should switch get context interactive user', async () => {
+        const name = 'alexis.rees@example.com'
+        context.user = {
+            name
+        };
+        const spyOnGetInteractiveUser = jest.spyOn(context, 'getInteractiveUser')
+        const interactiveUser = await firstValueFrom(context.interactiveUser$);
+        expect(spyOnGetInteractiveUser).toHaveBeenCalled();
+        spyOnGetInteractiveUser.mockClear();
+        expect(interactiveUser).toBeTruthy();
+        expect(interactiveUser.name).toBe(name);
+        await firstValueFrom(context.user$);
+        expect(spyOnGetInteractiveUser).not.toHaveBeenCalled();
+    });
     
 });
