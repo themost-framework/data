@@ -39,11 +39,36 @@ describe('DataContext', () => {
         const spyOnGetUser = jest.spyOn(context, 'getUser')
         const user = await firstValueFrom(context.user$);
         expect(spyOnGetUser).toHaveBeenCalled();
+        spyOnGetUser.mockClear();
         expect(user).toBeTruthy();
         expect(user.name).toBe(name);
         name = 'luis.nash@example.com';
         context.switchUser({
             name
+        });
+        const user2 = await firstValueFrom(context.user$);
+        expect(spyOnGetUser).toHaveBeenCalled();
+        spyOnGetUser.mockClear();
+        expect(user2).toBeTruthy();
+        expect(user2.name).toBe(name);
+    });
+
+    it('should switch context user with assignment', async () => {
+        let name = 'alexis.rees@example.com';
+        context.user = {
+            name
+        };
+        const spyOnGetUser = jest.spyOn(context, 'getUser')
+        const user = await firstValueFrom(context.user$);
+        expect(spyOnGetUser).toHaveBeenCalled();
+        spyOnGetUser.mockClear();
+        expect(user).toBeTruthy();
+        expect(user.name).toBe(name);
+        name = 'luis.nash@example.com';
+        Object.assign(context, {
+            user: {
+                name
+            }
         });
         const user2 = await firstValueFrom(context.user$);
         expect(spyOnGetUser).toHaveBeenCalled();
