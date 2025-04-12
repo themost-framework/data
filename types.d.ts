@@ -183,6 +183,10 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
      * Refreshes the state of the current context including the state of the current user and the interactive user.
      */
     protected refreshState(): void;
+
+    getUser(): Observable<unknown>;
+
+    getInteractiveUser(): Observable<unknown>;
     
 }
 
