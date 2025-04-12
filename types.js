@@ -1,7 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
-var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
-
+var {SequentialEventEmitter, AbstractClassError, AbstractMethodError} = require('@themost/common');
+var { shareReplay, Observable, switchMap, defer } = require('rxjs');
 /**
  * @classdesc Represents an abstract data connector to a database
  * @description
@@ -281,110 +281,6 @@ DataAdapter.prototype.createView = function(name, query, callback) {
 function DataEventArgs() {
     //
 }
-
-/**
- * @classdesc Represents the main data context.
- * @class
- * @augments SequentialEventEmitter
- * @constructor
- * @abstract
- */
-function DataContext() {
-    DataContext.super_.bind(this)();
-    //throw abstract class error
-    if (this.constructor === DataContext.prototype.constructor) {
-        throw new AbstractClassError();
-    }
-    /**
-     * @property db
-     * @description Gets the current database adapter
-     * @type {DataAdapter}
-     * @memberOf DataContext#
-     */
-    Object.defineProperty(this, 'db', {
-        get : function() {
-            return null;
-        },
-        configurable : true,
-        enumerable:false });
-}
-// noinspection JSUnusedLocalSymbols
-/**
- * Gets a data model based on the given data context
- * @param name {string} A string that represents the model to be loaded.
- * @returns {DataModel}
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataContext.prototype.model = function(name) {
-    throw new AbstractMethodError();
-};
-
-/**
- * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase}
- * @abstract
- */
-DataContext.prototype.getConfiguration = function() {
-    throw new AbstractMethodError();
-};
-// noinspection JSUnusedLocalSymbols
-/**
- * @param {Function} callback
- * @abstract
- */
-// eslint-disable-next-line no-unused-vars
-DataContext.prototype.finalize = function(callback) {
-    throw new AbstractMethodError();
-};
-/**
- * Finalizes data context
- * @returns {Promise<void>}
- */
-DataContext.prototype.finalizeAsync = function() {
-    const self = this;
-    return new Promise(function(resolve, reject) {
-        return self.finalize(function(err) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve();
-        });
-    });
-}
-/**
- * 
- * @param {function():Promise<void>} func 
- * @returns {Promise<void>}
- */
-DataContext.prototype.executeInTransactionAsync = function(func) {
-    const self = this;
-    return new Promise((resolve, reject) => {
-        // start transaction
-        return self.db.executeInTransaction(function(cb) {
-            try {
-                func().then(function() {
-                    // commit
-                    return cb();
-                }).catch( function(err) {
-                    // rollback
-                    return cb(err);
-                });
-            }
-            catch (err) {
-                return cb(err);
-            }
-        }, function(err) {
-            if (err) {
-                return reject(err);
-            }
-            // end transaction
-            return resolve();
-        });
-    });
-}
-
-LangUtils.inherits(DataContext, SequentialEventEmitter);
 
 /**
  * @classdesc Represents a data model's listener
@@ -942,6 +838,249 @@ class TypeParser {
 }
 // backward compatibility issue (this constant should be removed in next version)
 var parsers = TypeParser;
+
+/**
+ * @classdesc Represents the main data context.
+ * @class
+ * @augments SequentialEventEmitter
+ * @abstract
+ */
+class DataContext extends SequentialEventEmitter {
+    constructor() {
+        super();
+        if (this.constructor === DataContext.prototype.constructor) {
+            throw new AbstractClassError();
+        }
+
+        this.user$ = defer(() => this.getUser()).pipe(shareReplay());
+
+        this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+
+        var _user = null;
+        Object.defineProperty(this, 'user', {
+            get: function () {
+                return _user;
+            },
+            set: function (value) {
+                _user = value;
+                this.refreshState();
+            },
+            configurable: true,
+            enumerable: false
+        });
+
+        var _interactiveUser = null;
+        Object.defineProperty(this, 'interactiveUser', {
+            get: function () {
+                return _interactiveUser;
+            },
+            set: function (value) {
+                _interactiveUser = value;
+                this.refreshState();
+            },
+            configurable: true,
+            enumerable: false
+        });
+
+        this.anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+            const application = this.getApplication();
+            if (application) {
+                const userService = application.getService(function UserService() {});
+                if (userService) {
+                    return userService.anonymousUser$;
+                }
+            }
+            return new Observable((observer) => {
+                void this.model('User').where('name').equal('anonymous').expand('groups').silent().getItem().then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            });
+        }), shareReplay(1));
+
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Gets a data model based on the given data context
+     * @param name {string} A string that represents the model to be loaded.
+     * @returns {DataModel}
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    model(name) {
+        throw new AbstractMethodError();
+    }
+    /**
+     *
+     * @returns {Observable<unknown>}
+     */
+    getUser() {
+        return new Observable((observer) => {
+            if ((this.user && this.user.name) == null) {
+                return observer.next(null);
+            }
+
+            // get current application
+            const application = this.getApplication();
+            if (application != null) {
+                // get user service
+                const userService = application.getService(function UserService() {});
+                // check if user service is available
+                if (userService != null) {
+                    // get user
+                    return userService.getUser(this, this.user.name).then((result) => {
+                        return observer.next(result);
+                    }).catch((err) => {
+                        return observer.error(err);
+                    });
+                }
+            }
+            // otherwise get user from data context
+            void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
+                return observer.next(result);
+            }).catch((err) => {
+                return observer.error(err);
+            });
+        });
+    }
+    switchUser(user) {
+        this.user = user;
+    }
+    setUser(user) {
+        this.user = user;
+    }
+    /**
+     * @protected
+     */
+    refreshState() {
+        this.user$ = defer(() => this.getUser()).pipe(shareReplay());
+        this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    }
+    /**
+     *
+     * @returns {Observable<any>}
+     */
+    getInteractiveUser() {
+        return new Observable((observer) => {
+            if ((this.interactiveUser && this.interactiveUser.name) == null) {
+                return observer.next(null);
+            }
+
+            // get current application
+            const application = this.getApplication();
+            if (application != null) {
+                // get user service
+                const userService = application.getService(function UserService() {});
+                // check if user service is available
+                if (userService != null) {
+                    // get user
+                    return userService.getUser(this, this.interactiveUser.name).then((result) => {
+                        return observer.next(result);
+                    }).catch((err) => {
+                        return observer.error(err);
+                    });
+                }
+            }
+            // otherwise get user from data context
+            void this.model('User').where('name').expand('groups').silent().getItem().then((result) => {
+                return observer.next(result);
+            }).catch((err) => {
+                return observer.error(err);
+            });
+        });
+    }
+    switchInteractiveUser(user) {
+        this.interactiveUser = user;
+    }
+    setInteractiveUser(user) {
+        this.interactiveUser = user;
+    }
+    /**
+     * Gets an instance of DataConfiguration class which is associated with this data context
+     * @returns {ConfigurationBase}
+     * @abstract
+     */
+    getConfiguration() {
+        throw new AbstractMethodError();
+    }
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * @param {Function} callback
+     * @abstract
+     */
+    // eslint-disable-next-line no-unused-vars
+    finalize(callback) {
+        throw new AbstractMethodError();
+    }
+    /**
+     * Finalizes data context
+     * @returns {Promise<void>}
+     */
+    finalizeAsync() {
+        const self = this;
+        return new Promise(function (resolve, reject) {
+            return self.finalize(function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve();
+            });
+        });
+    }
+    /**
+     *
+     * @param {function():Promise<void>} func
+     * @returns {Promise<void>}
+     */
+    executeInTransactionAsync(func) {
+        const self = this;
+        return new Promise((resolve, reject) => {
+            // start transaction
+            return self.db.executeInTransaction(function (cb) {
+                try {
+                    func().then(function () {
+                        // commit
+                        return cb();
+                    }).catch(function (err) {
+                        // rollback
+                        return cb(err);
+                    });
+                }
+                catch (err) {
+                    return cb(err);
+                }
+            }, function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                // end transaction
+                return resolve();
+            });
+        });
+    }
+    /**
+     * Sets the application that is associated with this data context
+     * @param {import('@themost/common').ApplicationBase} application
+     */
+    setApplication(application) {
+        Object.defineProperty(this, 'application', {
+            get: function () {
+                return application;
+            },
+            configurable: true,
+            enumerable: false
+        });
+    }
+    /**
+     * Returns the application that is associated with this data context
+     * @returns {import('@themost/common').ApplicationBase}
+     */
+    getApplication() {
+        return this.application;
+    }
+}
+
 
 module.exports = {
     TypeParser,
