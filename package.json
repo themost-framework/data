@@ -48,7 +48,7 @@
     "@themost/common": "^2.10.4",
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.14.7",
-    "@themost/sqlite": "^2.8.4",
+    "@themost/sqlite": "^2.10.0",
     "@themost/xml": "^2.5.2",
     "@types/core-js": "^2.5.0",
     "@types/crypto-js": "^4.2.2",

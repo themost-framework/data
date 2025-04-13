@@ -8,12 +8,11 @@ var async = require('async');
 var { AccessDeniedError } = require('@themost/common');
 var { DataConfigurationStrategy } = require('./data-configuration');
 var _ = require('lodash');
-var { DataCacheStrategy } = require('./data-cache');
 var Q = require('q');
 var { hasOwnProperty } = require('./has-own-property');
 var { at } = require('lodash');
 var { DataModelFilterParser } = require('./data-model-filter.parser');
-
+var { firstValueFrom } = require('rxjs');
 /**
  * @class
  * @constructor
@@ -319,7 +318,9 @@ DataPermissionEventListener.prototype.validate = function (event, callback) {
     //validate throwError
     if (typeof event.throwError === 'undefined')
         event.throwError = true;
-    context.user = context.user || { name: 'anonymous', authenticationType: 'None' };
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
     if (authSettings) {
@@ -634,122 +635,39 @@ DataPermissionEventListener.prototype.validate = function (event, callback) {
 
     });
 };
-/**
- * @private
- * @type {string}
- */
-var ANONYMOUS_USER_CACHE_PATH = '/User/anonymous';
-/**
- * @param {DataContext} context
- * @param {function(Error=,*=)} callback
- * @private
- */
-function anonymousUser(context, callback) {
-    queryUser(context, 'anonymous', function (err, result) {
-        if (err) {
-            callback(err);
-        }
-        else {
-            callback(null, result || { id: null, name: 'anonymous', groups: [], enabled: false });
-        }
-    });
-}
-/**
- *
- * @param {DataContext} context
- * @param {string} username
- * @param {function(Error=,*=)} callback
- * @private
- */
-function queryUser(context, username, callback) {
-    try {
-        if (_.isNil(context)) {
-            return callback();
-        }
-        var users = context.model('User');
-        if (_.isNil(users)) {
-            return callback();
-        }
-        users.where('name').equal(username).silent().select('id', 'name').expand('groups').getTypedItem().then(function (result) {
-            return callback(null, result);
-        }).catch(function (err) {
-            return callback(err);
-        });
-    }
-    catch (err) {
-        callback(err);
-    }
-}
+
 /**
  * @param {DataContext} context
  * @param {function(Error=,Array=)} callback
  * @private
  */
 function effectiveAccounts(context, callback) {
-    if (_.isNil(context)) {
-        //push no account
-        return callback(null, [{ id: null }]);
+    var accounts = [ { id: null } ];
+    if (context == null) {
+        //push empty accounts
+        return callback(null, accounts);
     }
-
-    /**
-     * @type {DataCacheStrategy}
-     */
-    var cache = context.getConfiguration().getStrategy(DataCacheStrategy);
-    /**
-     * Gets or sets an object that represents the user of the current data context.
-     * @property {*|{name: string, authenticationType: string}}
-     * @name DataContext#user
-     * @memberof DataContext
-     */
-    context.user = context.user || { name: 'anonymous', authenticationType: 'None' };
-    context.user.name = context.user.name || 'anonymous';
-    //if the current user is anonymous
-    if (context.user.name === 'anonymous') {
-        //get anonymous user data
-        cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function () {
-            return Q.nfbind(anonymousUser)(context);
-        }).then(function (result) {
-            var arr = [];
-            if (result) {
-                arr.push({ 'id': result.id, 'name': result.name });
-                result.groups = result.groups || [];
-                result.groups.forEach(function (x) { arr.push({ 'id': x.id, 'name': x.name }); });
+    // validate context user
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
+    try {
+        var source$ = context.user.name === 'anonymous' ? context.anonymousUser$ : context.user$;
+        void firstValueFrom(source$).then(function(user) {
+            if (user) {
+                accounts = [
+                    { id: user.id, name: user.name }
+                ];
+                if (Array.isArray(user.groups)) {
+                    accounts.push.apply(accounts, user.groups.map(function(x) { return { id: x.id, name: x.name }; }));
+                }
             }
-            if (arr.length === 0)
-                arr.push({ id: null });
-            return callback(null, arr);
+            return callback(null, accounts);
         }).catch(function (err) {
             return callback(err);
         });
-    }
-    else {
-        //try to get data from cache
-        var USER_CACHE_PATH = '/User/' + context.user.name;
-
-        cache.getOrDefault(USER_CACHE_PATH, function () {
-            return Q.nfbind(queryUser)(context, context.user.name);
-        }).then(function (user) {
-            return cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function () {
-                return Q.nfbind(anonymousUser)(context);
-            }).then(function (anonymous) {
-                var arr = [];
-                if (user) {
-                    arr.push({ 'id': user.id, 'name': user.name });
-                    if (_.isArray(user.groups))
-                        user.groups.forEach(function (x) { arr.push({ 'id': x.id, 'name': x.name }); });
-                }
-                if (anonymous) {
-                    arr.push({ 'id': anonymous.id, 'name': 'anonymous' });
-                    if (_.isArray(anonymous.groups))
-                        anonymous.groups.forEach(function (x) { arr.push({ 'id': x.id, 'name': x.name }); });
-                }
-                if (arr.length === 0)
-                    arr.push({ id: null });
-                return callback(null, arr);
-            });
-        }).catch(function (err) {
-            return callback(err);
-        });
+    } catch (err) {
+        return callback(err);
     }
 }
 
@@ -811,7 +729,9 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
         }
     }
     //ensure context user
-    context.user = context.user || { name: 'anonymous', authenticationType: 'None' };
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
     //change: 2-May 2015
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();

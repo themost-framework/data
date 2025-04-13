@@ -86,9 +86,8 @@ describe('DataContext', () => {
         const interactiveUser = await firstValueFrom(context.interactiveUser$);
         expect(spyOnGetInteractiveUser).toHaveBeenCalled();
         spyOnGetInteractiveUser.mockClear();
-        expect(interactiveUser).toBeTruthy();
-        expect(interactiveUser.name).toBe(name);
-        await firstValueFrom(context.user$);
+        expect(interactiveUser).toBeFalsy();
+        await firstValueFrom(context.interactiveUser$);
         expect(spyOnGetInteractiveUser).not.toHaveBeenCalled();
     });
     

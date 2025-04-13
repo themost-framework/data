@@ -965,7 +965,7 @@ class DataContext extends SequentialEventEmitter {
         return new Observable((observer) => {
             let username = this.interactiveUser && this.interactiveUser.name;
             if (username == null) {
-                username = this.user && this.user.name;
+                return observer.next(null);
             }
             // get current application
             const application = this.getApplication();
