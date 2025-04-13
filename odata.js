@@ -1635,31 +1635,30 @@ ODataModelBuilder.prototype.hasJsonFormatter = function(jsonFormatterFunc) {
  * @augments DataContext
  * @extends DataContext
  */
-function EntityDataContext(configuration) {
-    EntityDataContext.super_.bind(this)();
-    /**
-     * @returns {ConfigurationBase}
-     */
-    this.getConfiguration = function() {
-        return configuration;
-    };
+class EntityDataContext extends DataContext {
+    constructor(configuration) {
+        super();
+        /**
+         * @returns {ConfigurationBase}
+         */
+        this.getConfiguration = function () {
+            return configuration;
+        };
+    }
+    model(name) {
+        var strategy = this.getConfiguration().getStrategy(DataConfigurationStrategy);
+        if (hasOwnProperty(strategy.dataTypes, name)) {
+            return;
+        }
+        var definition = strategy.model(name);
+        if (_.isNil(definition)) {
+            return;
+        }
+        var res = new DataModel(definition);
+        res.context = this;
+        return res;
+    }
 }
-LangUtils.inherits(EntityDataContext, DataContext);
-
-EntityDataContext.prototype.model = function(name) {
-    var strategy = this.getConfiguration().getStrategy(DataConfigurationStrategy);
-    if (hasOwnProperty(strategy.dataTypes, name)) {
-        return;
-    }
-    var definition = strategy.model(name);
-    if (_.isNil(definition)) {
-        return;
-    }
-    var res = new DataModel(definition);
-    res.context = this;
-    return res;
-};
-
 
 /**
  * @class
