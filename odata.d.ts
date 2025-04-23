@@ -14,34 +14,38 @@ export declare interface SystemQueryOptions {
     $count?: any;
 }
 
-export declare class EdmType {
-    static EdmBinary: string;
-    static EdmBoolean: string;
-    static EdmByte: string;
-    static EdmDate: string;
-    static EdmDateTimeOffset: string;
-    static EdmDouble: string;
-    static EdmDecimal: string;
-    static EdmDuration: string;
-    static EdmGuid: string;
-    static EdmInt16: string;
-    static EdmInt32: string;
-    static EdmInt64: string;
-    static EdmSByte: string;
-    static EdmSingle: string;
-    static EdmStream: string;
-    static EdmString: string;
-    static EdmTimeOfDay: string;
-    static CollectionOf(type: string): string;
-    static IsCollection(type: string): boolean;
+export declare enum EdmType {
+    EdmAny = 'Edm.Any',
+    EdmBinary = 'Edm.Binary',
+    EdmBoolean = 'Edm.Boolean',
+    EdmByte = 'Edm.Byte',
+    EdmDate = 'Edm.Date',
+    EdmDateTimeOffset = 'Edm.DateTimeOffset',
+    EdmDouble = 'Edm.Double',
+    EdmDecimal = 'Edm.Decimal',
+    EdmDuration = 'Edm.Duration',
+    EdmGuid = 'Edm.Guid',
+    EdmInt16 = 'Edm.Int16',
+    EdmInt32 = 'Edm.Int32',
+    EdmInt64 = 'Edm.Int64',
+    EdmSByte = 'Edm.SByte',
+    EdmSingle = 'Edm.Single',
+    EdmStream = 'Edm.Stream',
+    EdmString = 'Edm.String',
+    EdmTimeOfDay = 'Edm.TimeOfDay'
 }
 
-export declare class EdmMultiplicity {
-    static Many: string;
-    static One: string;
-    static Unknown: string;
-    static ZeroOrOne: string;
-    static parse(value: string): string;
+export declare namespace EdmType {
+    export function CollectionOf(type: string): string;
+    export function  Collection(type: string): boolean;
+}
+
+
+export declare enum EdmMultiplicity {
+    Many = 'Many',
+    One = 'One',
+    Unknown = 'Unknown',
+    ZeroOrOne = 'ZeroOrOne'
 }
 
 
@@ -53,7 +57,7 @@ export declare class EntitySetKind {
 }
 
 export class EdmMapping {
-    static entityType(name: string): Function;
+    static entityType(name?: string): Function;
     static action(name: string, returnType: any): Function;
     static func(name: string, returnType: any): Function;
     static param(name: string, type: string, nullable?: boolean, fromBody?: boolean): Function;
