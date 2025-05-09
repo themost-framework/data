@@ -20,7 +20,7 @@ describe('Parent permissions', () => {
         await app.finalize();
     });
     afterEach(() => {
-        delete context.user;
+        context.user = null;
     });
 
     it('should allow to read objects based on parent', async () => {
@@ -81,7 +81,7 @@ describe('Parent permissions', () => {
                 mask: 1,
                 target: merchant.id // set target id which the identifier of the merchant
             });
-            context.user = user;
+            context.switchUser(user);
             const items = await context.model('Order').getItems();
             expect(items.length).toBe(1);
         });

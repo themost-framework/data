@@ -22,3 +22,5 @@ export * from './data-application';
 export * from './data-errors';
 export * from './UnattendedMode';
 export * from './ValueFormatter';
+export * from './UserService';
+export * from './LocalUserService';
