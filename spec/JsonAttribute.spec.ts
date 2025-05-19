@@ -2,6 +2,8 @@ import {TestApplication} from './TestApplication';
 import {DataContext} from '../types';
 import { TestUtils } from "./adapter/TestUtils";
 import { resolve } from 'path';
+import {EdmType, ODataConventionModelBuilder, ODataModelBuilder} from "@themost/data";
+import {XDocument} from "@themost/xml";
 
 describe('JsonAttribute', () => {
 
@@ -24,6 +26,21 @@ describe('JsonAttribute', () => {
         ).take(10).getItems();
         expect(items).toBeTruthy();
         expect(items.length).toBeGreaterThan(0);
+    });
+
+    it('should validate metadata document', async () => {
+        app.getConfiguration().useStrategy(ODataModelBuilder, ODataConventionModelBuilder);
+        const builder = app.getConfiguration().getStrategy(ODataModelBuilder);
+        const schema: XDocument = await builder.getEdmDocument();
+        expect(schema).toBeTruthy();
+        const { property } = builder.getEntity('Product')
+        const metadataProperty = property.find((x) => x.name === 'metadata');
+        expect(metadataProperty).toBeDefined();
+        expect(metadataProperty.type).toBe('ProductMetadata');
+
+        const extraAttributesProperty = property.find((x) => x.name === 'extraAttributes');
+        expect(extraAttributesProperty).toBeDefined();
+        expect(extraAttributesProperty.type).toBe('Edm.Untyped');
     });
 
     it('should update json attribute', async () => {
