@@ -52,6 +52,7 @@ EdmType.EdmSingle='Edm.Single';
 EdmType.EdmStream='Edm.Stream';
 EdmType.EdmString='Edm.String';
 EdmType.EdmTimeOfDay='Edm.TimeOfDay';
+EdmType.EdmUntyped='Edm.Untyped';
 /**
  * @static
  * @param {*} type
@@ -1749,6 +1750,32 @@ LangUtils.inherits(ODataConventionModelBuilder, ODataModelBuilder);
                         var dataType = strategy.dataTypes[x.type];
                         //add property
                         var edmType = _.isObject(dataType) ? (hasOwnProperty(dataType, 'edmtype') ? dataType['edmtype']: 'Edm.' + x.type) : x.type;
+                        // add an exception for Edm.Untyped and check DataField.many attribute
+                        if (edmType === EdmType.EdmUntyped) {
+                            // check DataField.additionalType property
+                            if (x.additionalType) {
+                                // if additional type is equal to the current entity type
+                                if (x.additionalType === entityType) {
+                                    // set edm type and continue
+                                    edmType = x.additionalType;
+                                } else {
+                                    // otherwise, try to get type
+                                    let additionalEntity = self.getEntity(x.additionalType);
+                                    // if the specified entity type has not been included yet
+                                    if (additionalEntity == null) {
+                                        // try to add it
+                                        self.addEntitySet(x.additionalType, pluralize(x.additionalType));
+                                        additionalEntity = self.getEntity(x.additionalType);
+                                    }
+                                    // and edm type
+                                    edmType = additionalEntity.name;
+                                }
+                            }
+                            if (x.many === true) {
+                                // set type to Collection(.)
+                                edmType = EdmType.CollectionOf(edmType);
+                            }
+                        }
                         modelEntityType.addProperty(name, edmType, hasOwnProperty(x, 'nullable') ? x.nullable : true);
                         if (x.primary) {
                             modelEntityType.hasKey(name, edmType);
