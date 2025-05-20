@@ -32,6 +32,7 @@ export declare class EdmType {
     static EdmStream: string;
     static EdmString: string;
     static EdmTimeOfDay: string;
+    static EdmUntyped: string;
     static CollectionOf(type: string): string;
     static IsCollection(type: string): boolean;
 }
