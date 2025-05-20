@@ -423,14 +423,15 @@
     "version":"1.0"
   },
   "Json": {
-      "comment": "A string which represents a JSON object.",
-      "label": "Json",
-      "supertypes": [
-          "Text"
-      ],
-      "url": "https://www.json.org/json-en.html",
-      "edmtype": "Edm.String",
-      "type": "string",
+    "comment": "A string which represents an untyped json object",
+    "label": "Json",
+    "properties": {
+    },
+    "supertypes": [
+      "Text"
+    ],
+    "edmtype": "Edm.Untyped",
+    "type": "object",
     "sqltype":"Text",
     "version":"1.0"
   }
