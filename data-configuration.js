@@ -384,9 +384,12 @@ function DataConfigurationStrategy(config) {
         this.getConfiguration().setSourceAt('settings/auth', new AuthSettingsConfiguration());
     }
 
+    /**
+     * @type {Map<string, Function>}
+     */
     var adapterTypes = new Map();
-    Object.defineProperty(this,'adapterTypes', {
-        get:function() {
+    Object.defineProperty(this, 'adapterTypes', {
+        get: function () {
             return adapterTypes;
         },
         enumerable: false,
@@ -403,8 +406,25 @@ function DataConfigurationStrategy(config) {
         var valid = false;
         var adapterModule;
         var AdapterCtor;
+        // if adapter type is function
+        if (typeof x.type === 'function') {
+            // set adapter
+            self.adapterTypes.set(x.invariantName, {
+                invariantName: x.invariantName,
+                name: x.name,
+                type: AdapterCtor
+            });
+            return;
+        }
         if (x.type) {
             try {
+                // add current execution directory to module.paths
+                const executionPath = self.getConfiguration().getExecutionPath() || process.cwd();
+                let extraPath = path.resolve(executionPath, 'node_modules');
+                while(extraPath.length && module.paths.includes(extraPath) === false) {
+                    module.paths.push(extraPath);
+                    extraPath = path.resolve(extraPath, '..', '..', 'node_modules');
+                }
                 if (/#/.test(x.type)) {
                     var modulePath = x.type.substr(0, x.type.indexOf('#'));
                     var moduleMember = x.type.substr(x.type.indexOf('#')+1);
