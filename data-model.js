@@ -5,7 +5,7 @@ var {sprintf} = require('sprintf-js');
 var Symbol = require('symbol');
 var pluralize = require('pluralize');
 var async = require('async');
-var {QueryUtils, MethodCallExpression} = require('@themost/query');
+var {QueryUtils, MethodCallExpression, ObjectNameValidator} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
@@ -2437,12 +2437,28 @@ DataModel.prototype.migrate = function(callback)
     if (context===null)
         throw new Error('The underlying data context cannot be empty.');
 
+    // get source adapter name (without schema)
+    var qualifiedNameRegEx = new RegExp(ObjectNameValidator.validator.pattern, 'g');
+    var matches = migration.appliesTo.match(qualifiedNameRegEx);
+    Args.check(matches && matches.length, new DataError('ERR_INVALID_SOURCE', 'The database object of the given data model appears to be invalid based on the current validation rules.', null, self.name));
+    // Select the last match from the regex results because it represents the most specific or relevant part of the qualified name.
+    var [appliesTo] = matches.slice(-1);
+
     //get all related models
     var models = [];
     var db = context.db;
     var baseModel = self.base();
     if (baseModel!==null) {
         models.push(baseModel);
+    }
+    /**
+     * Formats index name
+     * @param {string} table
+     * @param {string} attribute
+     * @returns {string}
+     */
+    const formatIndexName = function(table, attribute) {
+        return 'INDEX_' + table.toUpperCase() + '_' + attribute.toUpperCase();
     }
     //validate associated models
     migration.add.forEach(function(x) {
@@ -2464,13 +2480,13 @@ DataModel.prototype.migrate = function(callback)
                 }
             }
             migration.indexes.push({
-                name: 'INDEX_' + migration.appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
+                name: formatIndexName(appliesTo, x.name),
                 columns: [ x.name ]
             });
         }
         else if (x.indexed === true) {
             migration.indexes.push({
-                name: 'INDEX_' + migration.appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
+                name: formatIndexName(appliesTo, x.name),
                 columns: [ x.name ]
             });
         }
