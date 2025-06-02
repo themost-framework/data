@@ -2451,6 +2451,14 @@ DataModel.prototype.migrate = function(callback)
     if (baseModel!==null) {
         models.push(baseModel);
     }
+    /**
+     * Formats index name
+     * @param {string} table
+     * @param {string} attribute
+     */
+    const formatIndexName = function(table, attribute) {
+        return 'INDEX_' + table.toUpperCase() + '_' + attribute.toUpperCase()
+    }
     //validate associated models
     migration.add.forEach(function(x) {
         //validate mapping
@@ -2471,13 +2479,13 @@ DataModel.prototype.migrate = function(callback)
                 }
             }
             migration.indexes.push({
-                name: 'INDEX_' + appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
+                name: formatIndexName(appliesTo, x.name),
                 columns: [ x.name ]
             });
         }
         else if (x.indexed === true) {
             migration.indexes.push({
-                name: 'INDEX_' + appliesTo.toUpperCase() + '_' + x.name.toUpperCase(),
+                name: formatIndexName(appliesTo, x.name),
                 columns: [ x.name ]
             });
         }
