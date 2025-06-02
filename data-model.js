@@ -2438,11 +2438,10 @@ DataModel.prototype.migrate = function(callback)
         throw new Error('The underlying data context cannot be empty.');
 
     // get source adapter name (without schema)
-    var re = new RegExp(ObjectNameValidator.validator.pattern, 'g');
-    var matches = migration.appliesTo.match(re);
+    var qualifiedNameRegEx = new RegExp(ObjectNameValidator.validator.pattern, 'g');
+    var matches = migration.appliesTo.match(qualifiedNameRegEx);
     Args.check(matches && matches.length, new DataError('ERR_INVALID_SOURCE', 'The database object of the given data model appears to be invalid based on the current validation rules.', null, self.name));
     var [appliesTo] = matches.slice(-1);
-
 
     //get all related models
     var models = [];
