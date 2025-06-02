@@ -2440,7 +2440,7 @@ DataModel.prototype.migrate = function(callback)
     // get source adapter name (without schema)
     var re = new RegExp(ObjectNameValidator.validator.pattern, 'g');
     var matches = migration.appliesTo.match(re);
-    Args.check(matches && matches.length, new DataError('ERR_INVALID_SOURCE', 'The database object of the given data model seems to invalid based on the current validation rules.', null, self.name));
+    Args.check(matches && matches.length, new DataError('ERR_INVALID_SOURCE', 'The database object of the given data model appears to be invalid based on the current validation rules.', null, self.name));
     var [appliesTo] = matches.slice(-1);
 
 
