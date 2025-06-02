@@ -2457,7 +2457,7 @@ DataModel.prototype.migrate = function(callback)
      * @param {string} attribute
      */
     const formatIndexName = function(table, attribute) {
-        return 'INDEX_' + table.toUpperCase() + '_' + attribute.toUpperCase()
+        return 'INDEX_' + table.toUpperCase() + '_' + attribute.toUpperCase();
     }
     //validate associated models
     migration.add.forEach(function(x) {
