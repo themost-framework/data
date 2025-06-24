@@ -43,7 +43,7 @@ var { OnJsonAttribute } = require('./OnJsonAttribute');
 var { isObjectDeep } = require('./is-object');
 var { DataStateValidatorListener } = require('./data-state-validator');
 var resolver = require('./data-expand-resolver');
-var { isArrayLikeObject } = require('lodash/isArrayLikeObject');
+var isArrayLikeObject = require('lodash/isArrayLikeObject');
 /**
  * @this DataModel
  * @param {DataField} field
