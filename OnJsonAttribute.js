@@ -186,10 +186,11 @@ class OnJsonAttribute {
      */
     static tryGetJsonAttributeFromString(model , expr) {
         const matches = expr.split('.');
+        const {context} = model;
         if (matches && matches.length > 1) {
             //  get view source
             const { viewAdapter: view } = model;
-            if (matches[0].replace(/^$/, '') !== view) {
+            if (matches[0].replace(/^\\$/, '') !== view) {
                 return;
             }
             let index = 1;
@@ -203,7 +204,7 @@ class OnJsonAttribute {
                     }
                     if (attribute.additionalType) {
                         // get next model
-                        nextModel = model.context.model(attribute.additionalType)
+                        nextModel = context.model(attribute.additionalType)
                     } else {
                         return attribute;
                     }
