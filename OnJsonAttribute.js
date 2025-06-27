@@ -181,20 +181,38 @@ class OnJsonAttribute {
 
     /**
      * @protected
-     * @param {import('./data-model').DataModel} model
+     * @param {import('./data-queryable').DataQueryable} queryable
      * @param {string} expr
      */
-    static tryGetJsonAttributeFromString(model , expr) {
+    static tryGetJsonAttributeFromString(queryable , expr) {
+        if (queryable == null) {
+            return;
+        }
+        const model = queryable.model;
         const matches = expr.split('.');
         const {context} = model;
         if (matches && matches.length > 1) {
-            //  get view source
-            const { viewAdapter: view } = model;
-            if (matches[0].replace(/^\$/, '') !== view) {
-                return;
-            }
             let index = 1;
             let nextModel = model;
+            //  get view source
+            const { viewAdapter: viewEntity } = model;
+            const fromEntity = matches[0].replace(/^\$/, '')
+            if (fromEntity !== viewEntity) {
+                if (Array.isArray(queryable.query.$expand) === false) {
+                    return;
+                }
+                // find join entity with the same name
+                const join = queryable.query.$expand.find((join) => {
+                    return join.$entity.$as === fromEntity;
+                });
+                const fromModel = join && join.$entity && join.$entity.model;
+                if (typeof fromModel !== 'string') {
+                    return;
+                }
+                // change next model to join model
+                nextModel = context.model(fromModel);
+            }
+
             // iterate over matches
             while(index < matches.length) {
                 let attribute = nextModel.getAttribute(matches[index]);
@@ -223,98 +241,120 @@ class OnJsonAttribute {
      * @returns void
      */
     static afterSelect(event, callback) {
-        const jsonAttributes = event.model.attributes.filter((attr) => {
-            return attr.type === 'Json' && attr.model === event.model.name;
-        }).map((attr) => attr.name);
-        if (jsonAttributes.length === 0) {
-            return callback();
-        }
-        
-        let select = [];
-        const { viewAdapter: entity } = event.model;
-        if (event.emitter && event.emitter.query && event.emitter.query.$select) {
-            const querySelect = event.emitter.query.$select[entity] || [];
-            select.push(...querySelect);
-        }
-        let attributes = select.reduce((prev, element) => {
-            // if select element is a typical query field with $name property
-            if (element && typeof element.$name === 'string') {
-                // split $name property by dot
-                const matches = element.$name.split('.');
-                // if there are more than one parts
-                if (matches && matches.length > 1) {
-                    // get last part
-                    if (jsonAttributes.indexOf(matches[1]) >= 0) {
-                        prev.push(matches.pop());
-                    }
-                }
-            } else {
-                // try to get first property which should be attribute alias
-                const [key] = Object.keys(element);
-                if (Object.hasOwnProperty.call(element, key)) {
+        try {
+            const jsonAttributes = event.model.attributes.filter((attr) => {
+                return attr.type === 'Json' && attr.model === event.model.name;
+            }).map((attr) => attr.name);
+            // try to find json attributes that are included in join expressions
+            const joins = event.emitter && event.emitter.query && event.emitter.query.$expand;
+            if (joins && joins.length > 0) {
+                joins.forEach((join) => {
                     /**
-                     * @type {{$jsonGet?: any[]}|string}
+                     * @type {{ $as: string=, model: string= }}
                      */
-                    const selectField = element[key];
-                    // if select field has $jsonGet property
-                    if (selectField.$jsonGet) {
-                        const [jsonGet] = selectField.$jsonGet;
-                        // if jsonGet has $name property
-                        if (jsonGet && typeof jsonGet.$name === 'string') {
-                            const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.model, jsonGet.$name);
-                            if (attribute) {
-                                prev.push(key);
-                            }
+                    const entity = join.$entity;
+                    if (entity && typeof entity.model === 'string') {
+                        const joinModel = event.model.context.model(entity.model);
+                        if (joinModel) {
+                            const attributes = joinModel.attributes.filter((attr) => {
+                                return attr.type === 'Json' && attr.model === joinModel.name;
+                            }).map((attr) => attr.name);
+                            jsonAttributes.push(...attributes);
                         }
                     }
-
-                    // try to validate query expressions where the query field has an alias
-                    // e.g. { 'orderTags': { $name: 'OrderData.tags' } }
-                    // or // { 'orderTags': 'OrderData.tags' }
-                    // the tags attribute is a Json attribute and should be converted to object
-                    if (!key.startsWith('$')) {
-                        if (typeof selectField === 'string') {
-                            const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.model, selectField);
-                            if (attribute) {
-                                prev.push(key);
-                            }
-                        }
-                    }
-
-
-                }
+                })
             }
-            return prev
-        }, []);
-        if (select.length === 0) {
-            attributes = jsonAttributes;
-        }
-        if (attributes.length === 0) {
-            return callback();
-        }
-        // define json converter
-        const parseJson = (item) => {
-            attributes.forEach((name) => {
-                if (Object.prototype.hasOwnProperty.call(item, name)) {
-                    const value = item[name];
-                    if (typeof value === 'string') {
-                        item[name] = isJSON(value) ? JSON.parse(value) : value;
+            if (jsonAttributes.length === 0) {
+                return callback();
+            }
+            let select = [];
+            const {viewAdapter: entity} = event.model;
+            if (event.emitter && event.emitter.query && event.emitter.query.$select) {
+                const querySelect = event.emitter.query.$select[entity] || [];
+                select.push(...querySelect);
+            }
+            let attributes = select.reduce((prev, element) => {
+                // if select element is a typical query field with $name property
+                if (element && typeof element.$name === 'string') {
+                    // split $name property by dot
+                    const matches = element.$name.split('.');
+                    // if there are more than one parts
+                    if (matches && matches.length > 1) {
+                        // get last part
+                        if (jsonAttributes.indexOf(matches[1]) >= 0) {
+                            prev.push(matches.pop());
+                        }
+                    }
+                } else {
+                    // try to get first property which should be attribute alias
+                    const [key] = Object.keys(element);
+                    if (Object.hasOwnProperty.call(element, key)) {
+                        /**
+                         * @type {{$jsonGet?: any[]}|string}
+                         */
+                        const selectField = element[key];
+                        // if select field has $jsonGet property
+                        if (selectField.$jsonGet) {
+                            const [jsonGet] = selectField.$jsonGet;
+                            // if jsonGet has $name property
+                            if (jsonGet && typeof jsonGet.$name === 'string') {
+                                const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.emitter, jsonGet.$name);
+                                if (attribute) {
+                                    prev.push(key);
+                                }
+                            }
+                        }
+
+                        // try to validate query expressions where the query field has an alias
+                        // e.g. { 'orderTags': { $name: 'OrderData.tags' } }
+                        // or // { 'orderTags': 'OrderData.tags' }
+                        // the tags attribute is a Json attribute and should be converted to object
+                        if (!key.startsWith('$')) {
+                            if (typeof selectField === 'string') {
+                                const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.emitter, selectField);
+                                if (attribute) {
+                                    prev.push(key);
+                                }
+                            }
+                        }
+
+
                     }
                 }
-            });
-        };
-        // iterate over result
-        const {result} = event;
-        if (result == null) {
+                return prev
+            }, []);
+            if (select.length === 0) {
+                attributes = jsonAttributes;
+            }
+            if (attributes.length === 0) {
+                return callback();
+            }
+            // define json converter
+            const parseJson = (item) => {
+                attributes.forEach((name) => {
+                    if (Object.prototype.hasOwnProperty.call(item, name)) {
+                        const value = item[name];
+                        if (typeof value === 'string') {
+                            item[name] = isJSON(value) ? JSON.parse(value) : value;
+                        }
+                    }
+                });
+            };
+            // iterate over result
+            const {result} = event;
+            if (result == null) {
+                return callback();
+            }
+            if (Array.isArray(result)) {
+                result.forEach((item) => parseJson(item));
+            } else {
+                // or parse json for single item
+                parseJson(result)
+            }
             return callback();
+        } catch (err) {
+            return callback(err);
         }
-        if (Array.isArray(result)) {
-            result.forEach((item) => parseJson(item));
-        } else {
-            // or parse json for single item
-            parseJson(result)
-        }
-        return callback();
     }
 
     /**

@@ -392,4 +392,29 @@ describe('JsonAttribute', () => {
         });
     });
 
+    it('should use nested json attribute using filter', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            const order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            const { customer } = order;
+            // get customer orders
+            const People = context.model('Person').silent();
+            // force set aliases
+            const q = await People.filterAsync({
+                $filter: `id eq ${customer}`,
+                $select: 'orders/id as id,orders/orderedItem as orderedItem,orders/tags as orderTags'
+            });
+            const items = await q.getItems();
+            const item = items.find((item) => item.id === id);
+            expect(item).toBeTruthy();
+            expect(Array.isArray(item.orderTags)).toBeTruthy();
+        });
+    });
+
 });
