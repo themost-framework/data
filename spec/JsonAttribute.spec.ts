@@ -353,4 +353,43 @@ describe('JsonAttribute', () => {
        });
     });
 
+    it('should use json attribute with array', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            let order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            order = await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }, id: number)=> {
+                return x.id === id;
+            }, id).getItem();
+            expect(order).toBeTruthy();
+            expect(Array.isArray(order.tags)).toBeTruthy();
+        });
+    });
+
+    it('should use json attribute using filter', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            const order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            // force set aliases
+            const q = await Orders.filterAsync({
+                $filter: `id eq ${id}`,
+                $select: 'id as id,orderedItem as orderedItem,tags as orderTags'
+            });
+            const [item] = await q.getItems();
+            expect(item).toBeTruthy();
+            expect(Array.isArray(item.orderTags)).toBeTruthy();
+        });
+    });
+
 });

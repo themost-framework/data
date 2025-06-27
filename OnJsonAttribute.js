@@ -181,6 +181,42 @@ class OnJsonAttribute {
 
     /**
      * @protected
+     * @param {import('./data-model').DataModel} model
+     * @param {string} expr
+     */
+    static tryGetJsonAttributeFromString(model , expr) {
+        const matches = expr.split('.');
+        if (matches && matches.length > 1) {
+            //  get view source
+            const { viewAdapter: view } = model;
+            if (matches[0].replace(/^$/, '') !== view) {
+                return;
+            }
+            let index = 1;
+            let nextModel = model;
+            // iterate over matches
+            while(index < matches.length) {
+                let attribute = nextModel.getAttribute(matches[index]);
+                if (attribute && attribute.type === 'Json') {
+                    if (index + 1 === matches.length) {
+                        return attribute;
+                    }
+                    if (attribute.additionalType) {
+                        // get next model
+                        nextModel = model.context.model(attribute.additionalType)
+                    } else {
+                        return attribute;
+                    }
+                } else {
+                    break;
+                }
+                index++;
+            }
+        }
+    }
+
+    /**
+     * @protected
      * @param {{model: DataModel, result: any, emitter?: import('./data-queryable').DataQueryable}} event
      * @param {function(err?:Error): void} callback
      * @returns void
@@ -216,7 +252,7 @@ class OnJsonAttribute {
                 const [key] = Object.keys(element);
                 if (Object.hasOwnProperty.call(element, key)) {
                     /**
-                     * @type {{$jsonGet?: any[]}}
+                     * @type {{$jsonGet?: any[]}|string}
                      */
                     const selectField = element[key];
                     // if select field has $jsonGet property
@@ -224,36 +260,27 @@ class OnJsonAttribute {
                         const [jsonGet] = selectField.$jsonGet;
                         // if jsonGet has $name property
                         if (jsonGet && typeof jsonGet.$name === 'string') {
-                            // split $name property by dot
-                            const matches = jsonGet.$name.split('.');
-                            if (matches && matches.length > 1) {
-                                let index = 1;
-                                let nextModel = event.model;
-                                // iterate over matches
-                                while(index < matches.length) {
-                                    let attribute = nextModel.getAttribute(matches[index]);
-                                    if (attribute && attribute.type === 'Json') {
-                                        if (index + 1 === matches.length) {
-                                            prev.push(key);
-                                            break;
-                                        } 
-                                        if (attribute.additionalType) {
-                                            // get next model
-                                            nextModel = event.model.context.model(attribute.additionalType)
-                                        } else {
-                                            // add last part
-                                            prev.push(key);
-                                            // and exit loop
-                                            break;
-                                        }
-                                    } else {
-                                        break;
-                                    }
-                                    index++;
-                                }
+                            const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.model, jsonGet.$name);
+                            if (attribute) {
+                                prev.push(key);
                             }
                         }
                     }
+
+                    // try to validate query expressions where the query field has an alias
+                    // e.g. { 'orderTags': { $name: 'OrderData.tags' } }
+                    // or // { 'orderTags': 'OrderData.tags' }
+                    // the tags attribute is a Json attribute and should be converted to object
+                    if (!key.startsWith('$')) {
+                        if (typeof selectField === 'string') {
+                            const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.model, selectField);
+                            if (attribute) {
+                                prev.push(key);
+                            }
+                        }
+                    }
+
+
                 }
             }
             return prev
