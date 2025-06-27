@@ -190,7 +190,7 @@ class OnJsonAttribute {
         if (matches && matches.length > 1) {
             //  get view source
             const { viewAdapter: view } = model;
-            if (matches[0].replace(/^\\$/, '') !== view) {
+            if (matches[0].replace(/^\$/, '') !== view) {
                 return;
             }
             let index = 1;
