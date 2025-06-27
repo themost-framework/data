@@ -205,12 +205,12 @@ class OnJsonAttribute {
                 const join = queryable.query.$expand.find((join) => {
                     return join.$entity.$as === fromEntity;
                 });
-                const fromModel = join && join.$entity && join.$entity.model;
-                if (typeof fromModel !== 'string') {
+                const joinModel = join && join.$entity && join.$entity.model;
+                if (typeof joinModel !== 'string') {
                     return;
                 }
                 // change next model to join model
-                nextModel = context.model(fromModel);
+                nextModel = context.model(joinModel);
             }
 
             // iterate over matches

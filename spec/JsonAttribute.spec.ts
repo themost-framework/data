@@ -1,8 +1,7 @@
 import {TestApplication} from './TestApplication';
-import {DataContext} from '../types';
 import { TestUtils } from "./adapter/TestUtils";
 import { resolve } from 'path';
-import {EdmType, ODataConventionModelBuilder, ODataModelBuilder} from "@themost/data";
+import { DataContext, EdmType, ODataConventionModelBuilder, ODataModelBuilder} from "@themost/data";
 import {XDocument} from "@themost/xml";
 
 describe('JsonAttribute', () => {
