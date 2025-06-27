@@ -5,7 +5,7 @@
     "hidden": false,
     "sealed": false,
     "abstract": false,
-    "version": "2.0",
+    "version": "2.1.0",
     "fields": [
         {
             "@id": "https://themost.io/schemas/id",
@@ -163,6 +163,12 @@
             "type": "Integer",
             "calculation": "javascript:return this.user();",
             "readonly": true
+        },
+        {
+            "name": "tags",
+            "title": "Tags",
+            "description": "Tags associated with this item.",
+            "type": "Json"
         }
     ],
     "views": [

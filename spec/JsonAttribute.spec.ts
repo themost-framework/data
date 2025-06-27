@@ -1,8 +1,7 @@
 import {TestApplication} from './TestApplication';
-import {DataContext} from '../types';
 import { TestUtils } from "./adapter/TestUtils";
 import { resolve } from 'path';
-import {EdmType, ODataConventionModelBuilder, ODataModelBuilder} from "@themost/data";
+import { DataContext, EdmType, ODataConventionModelBuilder, ODataModelBuilder} from "@themost/data";
 import {XDocument} from "@themost/xml";
 
 describe('JsonAttribute', () => {
@@ -351,6 +350,70 @@ describe('JsonAttribute', () => {
             ).getItems();
             expect(items).toBeTruthy();
        });
+    });
+
+    it('should use json attribute with array', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            let order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            order = await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }, id: number)=> {
+                return x.id === id;
+            }, id).getItem();
+            expect(order).toBeTruthy();
+            expect(Array.isArray(order.tags)).toBeTruthy();
+        });
+    });
+
+    it('should use json attribute using filter', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            const order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            // force set aliases
+            const q = await Orders.filterAsync({
+                $filter: `id eq ${id}`,
+                $select: 'id as id,orderedItem as orderedItem,tags as orderTags'
+            });
+            const [item] = await q.getItems();
+            expect(item).toBeTruthy();
+            expect(Array.isArray(item.orderTags)).toBeTruthy();
+        });
+    });
+
+    it('should use nested json attribute using filter', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            const order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            const { customer } = order;
+            // get customer orders
+            const People = context.model('Person').silent();
+            // force set aliases
+            const q = await People.filterAsync({
+                $filter: `id eq ${customer}`,
+                $select: 'orders/id as id,orders/orderedItem as orderedItem,orders/tags as orderTags'
+            });
+            const items = await q.getItems();
+            const item = items.find((item) => item.id === id);
+            expect(item).toBeTruthy();
+            expect(Array.isArray(item.orderTags)).toBeTruthy();
+        });
     });
 
 });
