@@ -73,6 +73,12 @@ class SelectObjectQuery {
                 const name = attribute.property || attribute.name;
                 // get property value
                 const value = source[name];
+                if (attribute.type === 'Json') {
+                    Object.assign(prev, {
+                        [name]: JSON.stringify(value)
+                    });
+                    return prev;
+                }
                 // if this property is a primitive typed property
                 if (mapping == null) {
                     // assign property value
