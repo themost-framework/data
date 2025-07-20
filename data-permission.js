@@ -35,7 +35,7 @@ function DataPermissionEventArgs() {
     this.model = null;
     /**
      * The underlying query expression
-     * @type {QueryExpression}
+     * @type {import('@themost/query').QueryExpression}
      */
     this.query = null;
     /**
@@ -198,8 +198,7 @@ DataPermissionExclusion.prototype.shouldExclude = function (privilege, callback)
     });
 };
 /**
- * @param {import("./types").DataModelPrivilege} privilege 
- * @param {function(Error=,boolean=)} callback
+ * @param {import("./types").DataModelPrivilege} privilege
  */
 DataPermissionExclusion.prototype.shouldExcludeAsync = function (privilege) {
     var self = this;
@@ -345,7 +344,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
         //do nothing
         return callback();
     }
-    effectiveAccounts(context, function(err, accounts) {
+    DataPermissionEventListener.prototype.effectiveAccounts(context, function(err, accounts) {
         if (err) { 
             return callback(err);
         }
@@ -718,7 +717,7 @@ function queryUser(context, username, callback) {
  * @param {function(Error=,Array=)} callback
  * @private
  */
-function effectiveAccounts(context, callback) {
+DataPermissionEventListener.prototype.effectiveAccounts = function(context, callback) {
     if (_.isNil(context)) {
         //push no account
         return callback(null, [ { id: null } ]);
@@ -876,7 +875,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         //get model privileges (and clone them)
         var modelPrivileges = _.cloneDeep(model.privileges || []);
         // if there are no privileges
-        if (modelPrivileges.length == 0) {
+        if (modelPrivileges.length === 0) {
             // add defaults
             modelPrivileges.push.apply(modelPrivileges, [
                 {
@@ -920,7 +919,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
             return callback();
         }
 
-        effectiveAccounts(context, function(err, accounts) {
+        DataPermissionEventListener.prototype.effectiveAccounts(context, function(err, accounts) {
             if (err) { callback(err); return; }
             //get all enabled privileges
             var privileges = modelPrivileges.filter(function(x) {
