@@ -1,4 +1,4 @@
-var {QueryField, QueryEntity, QueryUtils, MethodCallExpression, MemberExpression, Expression} = require('@themost/query');
+var {QueryField, QueryEntity, QueryUtils, MethodCallExpression, MemberExpression} = require('@themost/query');
 var {sprintf} = require('sprintf-js');
 var _ = require('lodash');
 var {DataError} = require('@themost/common');
@@ -166,7 +166,7 @@ DataAttributeResolver.prototype.resolveNestedAttribute = function(attr) {
 /**
  *
  * @param {*} memberExpr - A string that represents a member expression e.g. user/id or article/published etc.
- * @returns {{$select?:QueryField,$expand?:{QueryEntity}[]}} - An object that represents a query join expression
+ * @returns {{$select?:QueryField,$expand?:{QueryEntity}[],$distinct?:boolean}} - An object that represents a query join expression
  */
 DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr) {
     var self = this, childField, parentField, res, expr, entity;
@@ -221,7 +221,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             var childFieldName = childField.property || childField.name;
             /**
              * store temp query expression
-             * @type QueryExpression
+             * @type {import('@themost/query').QueryExpression}
              */
             res =QueryUtils.query(self.viewAdapter).select(['*']);
             expr = QueryUtils.query().where(QueryField.select(childField.name)
@@ -239,6 +239,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 parentModel[aliasProperty] = mapping.childField;
                 expr = new DataAttributeResolver().resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
                 return {
+                    $distinct: expr.$distinct,
                     $select: expr.$select,
                     $expand: [].concat(res.$expand).concat(expr.$expand)
                 };
@@ -528,10 +529,11 @@ DataAttributeResolver.prototype.testNestedAttribute = function(s) {
 
 /**
  * @param {string} attr
- * @returns {{$select?:QueryField,$expand?:{QueryEntity}[]}}
+ * @returns {{$select?:QueryField,$expand?:{QueryEntity}[],$distinct?:boolean}}
  */
 DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
     var self = this, member = attr.split('/');
+    var $distinct = false;
     //get the data association mapping
     var mapping = self.inferMapping(member[0]);
     //if mapping defines a junction between two models
@@ -548,6 +550,8 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             entity = new QueryEntity(mapping.associationAdapter).as(associationAlias);
             if (field.multiplicity === 'ZeroOrOne') {
                 entity.$join = 'left';
+            } else {
+                $distinct = true;
             }
             Object.defineProperty(entity, 'model', {
                 configurable: true,
@@ -564,12 +568,13 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             //data object tagging
             if (typeof mapping.childModel === 'undefined') {
                 return {
+                    $distinct,
                     $expand:[q.$expand],
                     $select:QueryField.select(mapping.associationValueField).from(associationAlias)
                 }
             }
 
-            //return the resolved attribute for futher processing e.g. members.id
+            //return the resolved attribute for further processing e.g. members.id
             // if (member[1] === mapping.childField) {
             //     return {
             //         $expand:[q.$expand],
@@ -585,8 +590,12 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //create new join
                 var alias = field.name; // + '_' + childModel.name;
                 entity = new QueryEntity(childModel.viewAdapter).as(alias);
+
                 if (field.multiplicity === 'ZeroOrOne') {
                     entity.$join = 'left';
+                } else {
+                    // issue #226: enable getting distinct values
+                    $distinct = true;
                 }
                 // set model
                 Object.defineProperty(entity, 'model', {
@@ -600,6 +609,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //append join
                 q.join(entity).with(expr);
                 return {
+                    $distinct,
                     $expand:q.$expand,
                     $select:QueryField.select(member[1] || mapping.childField).from(alias)
                 }
@@ -643,6 +653,7 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
                 //append join
                 q.join(entity).with(expr);
                 return {
+                    $distinct: true,
                     $expand:q.$expand,
                     $select:QueryField.select(member[1]).from(parentAlias)
                 }
@@ -668,7 +679,7 @@ DataAttributeResolver.prototype.resolveZeroOrOneNestedAttribute = function(attr)
     while (index < fullyQualifiedMember.length) {
         var member = fullyQualifiedMember[index];
         var attribute = currentModel.getAttribute(member);
-        if (attribute.multiplicity != 'ZeroOrOne') {
+        if (attribute.multiplicity !== 'ZeroOrOne') {
             // do nothing
         }
     }
