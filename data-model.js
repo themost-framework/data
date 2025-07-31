@@ -735,6 +735,8 @@ function filterInternal(params, callback) {
     var self = this;
     var parser = OpenDataParser.create()
     var $joinExpressions = [];
+    // issue #226: enable getting distinct values
+    var $distinct = false;
     var view;
     var selectAs = [];
     parser.resolveMember = function(member, cb) {
@@ -777,11 +779,17 @@ function filterInternal(params, callback) {
                     expr = {
                         $expand: expr1.$expand
                     };
+                    if (expr1.$distinct) {
+                        $distinct = true;
+                    }
                     //replace member expression
                     member = expr1.$select.$name.replace(/\./g,'/');
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
+                    if (expr.$distinct) {
+                        $distinct = true;
+                    }
                     // get member expression
                     if (expr && expr.$select && Object.prototype.hasOwnProperty.call(expr.$select, '$value')) {
                         // get value
@@ -974,6 +982,11 @@ function filterInternal(params, callback) {
                     }
                     if (query.$group) {
                         q.query.$group = query.$group;
+                    } else {
+                        // issue #226: enable getting distinct values
+                        if ($distinct) {
+                            q.distinct();
+                        }
                     }
                     // assign join expressions
                     if ($joinExpressions.length>0) {

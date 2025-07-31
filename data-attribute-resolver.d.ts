@@ -5,9 +5,9 @@ export declare class DataAttributeResolver {
     selectNestedAttribute(attr: string): any;
     selectAggregatedAttribute(aggregation: string, attribute: string, alias: string): any;
     resolveNestedAttribute(attr: string): any;
-    resolveNestedAttributeJoin(memberExpr: string): { $select?: QueryField | MethodCallExpression, $expand?: QueryEntity[] };
+    resolveNestedAttributeJoin(memberExpr: string): { $select?: QueryField | MethodCallExpression, $expand?: QueryEntity[], $distinct?: boolean };
     testAttribute(s: string): any;
     testAggregatedNestedAttribute(s: string): any;
     testNestedAttribute(s: string): any;
-    resolveJunctionAttributeJoin(attr: string): { $select?: QueryField | MethodCallExpression, $expand?: QueryEntity[] };
+    resolveJunctionAttributeJoin(attr: string): { $select?: QueryField | MethodCallExpression, $expand?: QueryEntity[], $distinct?: boolean };
 }
