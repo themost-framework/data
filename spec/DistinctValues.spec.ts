@@ -99,4 +99,48 @@ describe('Distinct Values', () => {
         });
     });
 
+    it('should force distinct items using a many-to-many association', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'alexis.rees@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            const q = await context.model('Person').filterAsync({
+                $select: 'id,givenName,familyName,email',
+                $filter: `orders/orderedItem/name eq 'Asus VivoBook X202E-DH31T' or orders/orderedItem/name eq 'Sony VAIO Flip 15'`,
+            });
+            const items = await q.getItems();
+            const distinctValues = items.reduce((acc, current) => {
+                if (!acc.includes(current.email)) {
+                    acc.push(current.email);
+                }
+                return acc;
+            }, []);
+            expect(items.length).toEqual(distinctValues.length);
+        });
+    });
+
+    it('should force distinct items using a many-to-many association with identifiers', async () => {
+        Object.assign(context, {
+            user: {
+                name: 'alexis.rees@example.com'
+            }
+        });
+        await TestUtils.executeInTransaction(context, async () => {
+            const q = await context.model('Person').filterAsync({
+                $select: 'id,givenName,familyName,email',
+                $filter: `orders/orderedItem eq 16 or orders/orderedItem eq 18`,
+            });
+            const items = await q.getItems();
+            const distinctValues = items.reduce((acc, current) => {
+                if (!acc.includes(current.email)) {
+                    acc.push(current.email);
+                }
+                return acc;
+            }, []);
+            expect(items.length).toEqual(distinctValues.length);
+        });
+    });
+
 });

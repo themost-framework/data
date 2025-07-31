@@ -265,6 +265,10 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             };
         }
         else if (mapping.parentModel===self.name && mapping.associationType==='association') {
+            var $distinct = false;
+            if (attrMember.multiplicity !== 'ZeroOrOne') {
+                $distinct = true;
+            }
             var childModel = self.context.model(mapping.childModel);
             if (_.isNil(childModel)) {
                 throw new Error(sprintf('Association child model (%s) cannot be found.', mapping.childModel));
@@ -298,6 +302,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 expr = new DataAttributeResolver().resolveNestedAttributeJoin.call(childModel, arrMember.slice(1).join('/'));
                 // concat and return joins
                 return {
+                    $distinct,
                     $select: expr.$select,
                     $expand: [].concat(res.$expand).concat(expr.$expand)
                 };
@@ -316,6 +321,7 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
                 }
             }
             return {
+                $distinct,
                 $expand: res.$expand
             };
         }
