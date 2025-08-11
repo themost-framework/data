@@ -2,12 +2,13 @@
 var {Args, PathUtils, SequentialEventEmitter} = require('@themost/common');
 var {DataConfiguration} = require('./data-configuration');
 var {DefaultDataContext} = require('./data-context');
+var isObjectLike = require('lodash/isObjectLike');
 /**
  * @class
- * @param {string} cwd - A string which defines application root directory
+ * @param {string} cwdOrConfig
  */
 class DataApplication extends SequentialEventEmitter {
-    constructor(cwd) {
+    constructor(cwdOrConfig) {
         super();
         Object.defineProperty(this, '_services', {
             configurable: true,
@@ -15,11 +16,20 @@ class DataApplication extends SequentialEventEmitter {
             writable: false,
             value: {}
         });
+        if (isObjectLike(cwdOrConfig)) {
+            Object.defineProperty(this, 'configuration', {
+                configurable: true,
+                enumerable: false,
+                writable: false,
+                value: new DataConfiguration(cwdOrConfig)
+            });
+            return;
+        }
         Object.defineProperty(this, 'configuration', {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: new DataConfiguration(PathUtils.join(cwd, 'config'))
+            value: new DataConfiguration(PathUtils.join(cwdOrConfig, 'config'))
         });
     }
     hasService(serviceCtor) {

@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.19.0",
+  "version": "2.19.1",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "scripts": {
@@ -44,7 +44,7 @@
     "@babel/plugin-proposal-decorators": "^7.17.2",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
-    "@themost/common": "^2.10.4",
+    "@themost/common": "^2.12.0",
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.14.7",
     "@themost/sqlite": "^2.8.4",
