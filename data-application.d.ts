@@ -4,8 +4,8 @@ import { IApplication, ConfigurationBase,
 import {DataContext} from "./types";
 
 export declare class DataApplication extends SequentialEventEmitter implements ApplicationBase {
-    constructor(cwd?: string);
-    configuration: ConfigurationBase;    
+    constructor(cwdOrConfig?: string | unknown);
+    readonly configuration: ConfigurationBase;
     useStrategy(serviceCtor: ApplicationServiceConstructor<any>, strategyCtor: ApplicationServiceConstructor<any>): this;
     useService(serviceCtor: ApplicationServiceConstructor<any>): this;
     hasService<T>(serviceCtor: ApplicationServiceConstructor<T>): boolean;

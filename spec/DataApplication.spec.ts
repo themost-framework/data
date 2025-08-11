@@ -1,4 +1,4 @@
-import {DataApplication} from '../data-application';
+import {DataApplication} from '@themost/data';
 import { ApplicationService, ApplicationBase } from '@themost/common';
 import {resolve} from 'path';
 import {TestUtils} from './adapter/TestUtils';
@@ -28,6 +28,19 @@ describe('DataApplication', () => {
     it('should create instance', async () => {
         const app = new DataApplication(cwd);
         expect(app).toBeTruthy();
+        await TestUtils.finalize(app);
+    });
+    it('should create an instance with configuration', async () => {
+        const app = new DataApplication({
+            settings: {
+                service1: {
+                    origin: 'https://api.example.com',
+                }
+            }
+        });
+        expect(app).toBeTruthy();
+        const origin = app.configuration.getSourceAt('settings/service1/origin');
+        expect(origin).toBe('https://api.example.com');
         await TestUtils.finalize(app);
     });
     it('should get configuration', async () => {

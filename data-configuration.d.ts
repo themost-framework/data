@@ -60,7 +60,7 @@ export declare interface DataAdapterType {
 }
 
 export declare class DataConfiguration {
-    constructor(configPath: string);
+    constructor(configPathOrSource?: string | unknown);
     static getCurrent(): DataConfiguration;
     static setCurrent(config: DataConfiguration): DataConfiguration;
     static getNamedConfiguration(name: string): DataConfiguration;
