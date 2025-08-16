@@ -3,6 +3,7 @@ import { DataContext } from '../index';
 import { TestApplication, TestApplication2 } from './TestApplication';
 import { TestUtils } from './adapter/TestUtils';
 import { promisify } from 'util';
+import { firstValueFrom } from 'rxjs';
 
 describe('DataAttributeResolver', () => {
     let app: TestApplication;
@@ -16,10 +17,8 @@ describe('DataAttributeResolver', () => {
         await app.finalize();
     })
     it('should resolve child nested attributes', async () => {
-        Object.assign(context, {
-            user: {
-                name: 'anonymous'
-            }
+        context.switchUser({
+            name: 'anonymous'
         });
         let items = await context.model('Product').select(
             'id',
@@ -31,10 +30,8 @@ describe('DataAttributeResolver', () => {
             expect(item.orderID).toBe(null);
             expect(item.customer).toBe(null);
         }
-        Object.assign(context, {
-            user: {
-                name: 'luis.nash@example.com'
-            }
+        context.switchUser({
+            name: 'luis.nash@example.com'
         });
         const customer = await context.model('Person').where('user/name').equal('luis.nash@example.com').getItem();
         expect(customer).toBeTruthy();
@@ -46,9 +43,7 @@ describe('DataAttributeResolver', () => {
     });
 
     it('should resolve parent nested attributes', async () => {
-        Object.assign(context, {
-            user: null
-        });
+        context.switchUser();
         const items = await context.model('Order').select(
             'id',
             'orderedItem/name as productName',
@@ -73,10 +68,8 @@ describe('DataAttributeResolver', () => {
                   ]
                 }
               ]);
-            Object.assign(context, {
-                user: {
-                    name: 'michael.barret@example.com'
-                }
+            context.switchUser({
+                name: 'michael.barret@example.com'
             });
             let items = await context.model('Order').select('Delivered').getList();
             expect(items).toBeTruthy();
@@ -93,10 +86,8 @@ describe('DataAttributeResolver', () => {
                 ]
               };
             await context.model('User').silent().save(newUser);
-            Object.assign(context, {
-                user: {
-                    name: 'tom.hutchinson@example.com'
-                }
+            context.switchUser({
+                name: 'tom.hutchinson@example.com'
             });
             items = await context.model('Order').select('Delivered').getList();
             expect(items.value.length).toBe(0);
@@ -117,9 +108,7 @@ describe('DataAttributeResolver', () => {
 
     it('should get nested item', async () => {
         await TestUtils.executeInTransaction(context, async () => {
-            Object.assign(context, {
-                user: null
-            });
+            context.switchUser(null);
             const product = await context.model('Product').asQueryable().silent().getItem();
             product.productImage = {
                 url: '/images/products/abc.png'

@@ -45,7 +45,7 @@ function executeInUnattendedMode(context, callable, callback) {
                 if (interactiveUser) {
                     context.user = Object.assign({}, interactiveUser);
                 }
-                delete context.interactiveUser;
+                context.interactiveUser = null;
                 // exit unattended mode
                 delete context[unattendedMode];
                 return callback(err);
@@ -55,7 +55,7 @@ function executeInUnattendedMode(context, callable, callback) {
             if (interactiveUser) {
                 context.user = Object.assign({}, interactiveUser);
             }
-            delete context.interactiveUser;
+            context.interactiveUser = null;
             // exit unattended mode
             delete context[unattendedMode];
             return callback(err);
