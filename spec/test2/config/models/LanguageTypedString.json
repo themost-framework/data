@@ -1,0 +1,41 @@
+{
+  "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+  "caching": "conditional",
+  "hidden": true,
+  "name": "LanguageTypedString",
+  "title": "LanguageTypedString",
+  "description": "A String with an associated language code.",
+  "version": "1.0.0",
+  "fields": [
+    {
+      "@id": "urn:themost:framework:schemas:recordLanguage",
+      "name": "recordLanguage",
+      "description": "The primary language used in the described entity.",
+      "type": "Text",
+      "nullable": false,
+      "many": false,
+      "size": 5
+    },
+    {
+      "@id": "urn:themost:framework:schemas:value",
+      "name": "value",
+      "description": "No description supplied.",
+      "type": "Text",
+      "nullable": false,
+      "many": false
+    }
+  ],
+  "constraints": [],
+  "eventListeners": [],
+  "privileges": [
+    {
+      "type": "global",
+      "mask": 15
+    },
+    {
+      "type": "global",
+      "mask": 15,
+      "account": "Administrators"
+    }
+  ]
+}

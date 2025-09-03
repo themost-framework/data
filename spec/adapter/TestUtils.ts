@@ -1,8 +1,8 @@
 /**
  * @description An error for cancelling transaction in testing environments
  */
-import {DataApplication} from '../../data-application';
-import {DataCacheFinalize, DataCacheStrategy} from '../../data-cache';
+import {DataApplication} from '@themost/data';
+import {DataCacheFinalize, DataCacheStrategy} from '@themost/data';
 
 export class CancelTransactionError extends Error {
     constructor() {
@@ -58,6 +58,7 @@ export class TestUtils {
         if (app == null) {
             return;
         }
+        // @ts-ignore
         const service = app.getConfiguration().getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
         if (typeof service.finalize === 'function') {
             await service.finalize();

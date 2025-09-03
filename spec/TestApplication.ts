@@ -4,16 +4,15 @@ import {
     DataConfigurationStrategy,
     NamedDataContext,
     DataContext,
-    DataApplication,
     DataCacheStrategy,
-    DataCacheFinalize
+    DataCacheFinalize, DataAdapterTypeConfiguration
 } from '../index';
 import fs from 'fs';
 
 export class TestApplication extends IApplication {
 
     private _services: Map<any,any> = new Map();
-    private _configuration: ConfigurationBase;
+    private readonly _configuration: ConfigurationBase;
 
     useStrategy(serviceCtor: void, strategyCtor: void): this {
         const ServiceClass: any = serviceCtor;
@@ -60,8 +59,8 @@ export class TestApplication extends IApplication {
     }
 
     createContext(): DataContext {
-        const adapters = this._configuration.getSourceAt('adapters');
-        const adapter: { name: string; invariantName: string; default: boolean } = adapters.find((item: any)=> {
+        const adapters: DataAdapterTypeConfiguration[] = this._configuration.getSourceAt('adapters') as DataAdapterTypeConfiguration[];
+        const adapter: DataAdapterTypeConfiguration = adapters.find((item: any)=> {
             return item.default;
         });
         const context = new NamedDataContext(adapter.name);
@@ -72,6 +71,7 @@ export class TestApplication extends IApplication {
     }
 
     async finalize(): Promise<void> {
+        // @ts-ignore
         const service = this.getConfiguration().getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
         if (typeof service.finalize === 'function') {
             await service.finalize();
@@ -89,7 +89,9 @@ export class TestApplication2 extends TestApplication {
         const source = resolve(__dirname, 'test2/db', 'local.db');
         const dest = resolve(__dirname, 'test2/db', 'test.db');
         fs.copyFileSync(source, dest);
-        this.getConfiguration().getSourceAt('adapters').unshift({
+        // noinspection JSMismatchedCollectionQueryUpdate
+        const adapters: unknown[] = this.getConfiguration().getSourceAt('adapters') as unknown[];
+        adapters.unshift({
             name: 'test-local',
             invariantName: 'test',
             default: true,

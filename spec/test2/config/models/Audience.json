@@ -10,6 +10,14 @@
   "version": "1.0",
   "fields": [
     {
+      "@id": "https://themost.io/schemas/id",
+      "name": "id",
+      "title": "ID",
+      "description": "The identifier of the item.",
+      "type": "Counter",
+      "primary": true
+    },
+    {
       "name": "audienceType",
       "title": "Audience Type",
       "description": "The target group associated with a given audience (e.g. veterans, car owners, musicians, etc.).",

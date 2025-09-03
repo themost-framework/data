@@ -187,4 +187,34 @@ describe('DataObjectTag', () => {
         });
     });
 
+    it('should try to insert json objects', async () => {
+        const PeopleAudience = context.model('PeopleAudience').silent();
+        const newAudience = {
+            name: 'Top customers',
+            preferredName: [
+                { recordLanguage: 'en',  value: 'Top customers' },
+                { recordLanguage: 'fr',  value: 'Meilleurs clients' }
+            ]
+        };
+        await PeopleAudience.save(newAudience)
+        let audience = await PeopleAudience
+            .where((x: { name: string })=> {
+                return x.name === 'Top customers';
+            })
+            .expand((x: { preferredName: unknown }) => x.preferredName)
+            .getTypedItem();
+        expect(audience).toBeTruthy();
+        expect(Array.isArray(audience.preferredName)).toBeTruthy();
+        const preferredName = audience.preferredName.find((x) => x.recordLanguage === 'en');
+        expect(preferredName).toBeTruthy();
+
+        audience = await PeopleAudience
+            .where((x: { preferredName: { value: string } }) => {
+                return x.preferredName.value === 'Meilleurs clients';
+            }).equal('Meilleurs clients')
+            .getTypedItem();
+        expect(audience).toBeTruthy();
+
+    });
+
 });

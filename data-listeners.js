@@ -104,13 +104,18 @@ UniqueConstraintListener.prototype.beforeSave = function(event, callback) {
             }
             //check field mapping
             var mapping = event.model.inferMapping(attr);
-            if (typeof mapping !== 'undefined' && mapping !== null) {
+            var attribute = event.model.getAttribute(attr);
+            if (mapping) {
                 if (typeof event.target[attr] === 'object') {
                     value=event.target[attr][mapping.parentField];
                 }
             }
-            if (typeof value=== 'undefined')
+            if (typeof value === 'undefined') {
                 value = null;
+            }
+            if (attribute.type === 'Json' && value != null) {
+                value = JSON.stringify(value);
+            }
             if (q) {
                 q.and(attr).equal(value);
             }
