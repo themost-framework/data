@@ -1,4 +1,3 @@
-process.env.NODE_ENV = 'development';
 const {TraceUtils} = require('@themost/common');
 const JestLogger = require('./jest.logger');
 // noinspection JSCheckFunctionSignatures
