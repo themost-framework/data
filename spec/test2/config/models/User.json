@@ -51,31 +51,7 @@
                 "childModel":"User",
                 "childField":"id",
                 "associationType":"junction",
-                "cascade":"delete"
-            }
-        },
-        {
-            "@id": "https://themost.io/schemas/userFlags",
-            "name": "userFlags",
-            "title": "userFlags",
-            "description": "This field contains additional user flags.",
-            "type": "Integer"
-        },
-        {
-            "name": "lastActivation",
-            "type": "UserActivationAction",
-            "multiplicity": "ZeroOrOne",
-            "many": true,
-            "mapping": {
-                "associationType": "association",
-                "cascade": "delete",
-                "parentModel": "User",
-                "parentField": "id",
-                "childModel": "UserActivationAction",
-                "childField": "object",
-                "options": {
-                    "$levels": "2"
-                },
+                "cascade":"delete",
                 "privileges": [
                     {
                         "mask": 15,
@@ -85,9 +61,82 @@
                         "mask": 15,
                         "type": "global",
                         "account": "Administrators"
+                    },
+                    {
+                        "type": "self",
+                        "mask": 1,
+                        "filter": "valueId eq me()"
                     }
                 ]
             }
+        },
+        {
+            "@id": "https://themost.io/schemas/userFlags",
+            "name": "userFlags",
+            "title": "userFlags",
+            "description": "This field contains additional user flags.",
+            "type": "Integer"
+        },
+      {
+        "name": "lastActivation",
+        "type": "UserActivationAction",
+        "multiplicity": "ZeroOrOne",
+        "many": true,
+        "mapping": {
+          "associationType": "association",
+          "cascade": "delete",
+          "parentModel": "User",
+          "parentField": "id",
+          "childModel": "UserActivationAction",
+          "childField": "object",
+          "options": {
+            "$levels": "2"
+          },
+          "privileges": [
+            {
+              "mask": 15,
+              "type": "global"
+            },
+            {
+              "mask": 15,
+              "type": "global",
+              "account": "Administrators"
+            }
+          ]
+        }
+      },
+        {
+            "@id": "https://themost.io/schemas/tags",
+            "name": "tags",
+            "type": "Text",
+            "many": true,
+            "size": 64,
+            "mapping": {
+                "associationAdapter": "UserTags",
+                "associationObjectField": "user",
+                "associationValueField": "tag",
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "mask": 1,
+                        "type": "self",
+                        "filter": "user eq me()"
+                    }
+                ]
+            }
+        },
+        {
+            "@id": "https://themost.io/schemas/userReviews",
+            "name": "userReviews",
+            "type": "UserReview"
         }
     ],
     "privileges": [

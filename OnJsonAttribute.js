@@ -125,6 +125,8 @@ class OnJsonAttribute {
                 return include && attr.type === 'Json' && attr.additionalType != null && attr.model === event.model.name;
             }).filter((attr) => {
                 return Object.prototype.hasOwnProperty.call(event.target, attr.name);
+            }).filter((attr) => {
+                return !attr.many;
             });
             // exit if there are no json attributes
             if (attributes.length === 0) {
@@ -244,6 +246,8 @@ class OnJsonAttribute {
         try {
             const jsonAttributes = event.model.attributes.filter((attr) => {
                 return attr.type === 'Json' && attr.model === event.model.name;
+            }).filter((attr) => {
+                return !attr.many;
             }).map((attr) => attr.name);
             // try to find json attributes that are included in join expressions
             const joins = event.emitter && event.emitter.query && event.emitter.query.$expand;
@@ -290,7 +294,7 @@ class OnJsonAttribute {
                     const [key] = Object.keys(element);
                     if (Object.hasOwnProperty.call(element, key)) {
                         /**
-                         * @type {{$jsonGet?: any[]}|string}
+                         * @type {{$jsonGet?: any[]}|{$name: string}|string}
                          */
                         const selectField = element[key];
                         // if select field has $jsonGet property
@@ -310,15 +314,22 @@ class OnJsonAttribute {
                         // or // { 'orderTags': 'OrderData.tags' }
                         // the tags attribute is a Json attribute and should be converted to object
                         if (!key.startsWith('$')) {
+                            /**
+                             * @type {string}
+                             */
+                            let fromString;
                             if (typeof selectField === 'string') {
-                                const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.emitter, selectField);
+                                fromString = selectField;
+                            } else if (typeof selectField.$name === 'string') {
+                                fromString = selectField.$name;
+                            }
+                            if (typeof fromString === 'string') {
+                                const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.emitter, fromString);
                                 if (attribute) {
                                     prev.push(key);
                                 }
                             }
                         }
-
-
                     }
                 }
                 return prev
