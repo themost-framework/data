@@ -211,7 +211,7 @@ describe('DataObjectTag', () => {
         audience = await PeopleAudience
             .where((x: { preferredName: { value: string } }) => {
                 return x.preferredName.value === 'Meilleurs clients';
-            }).equal('Meilleurs clients')
+            })
             .getTypedItem();
         expect(audience).toBeTruthy();
 
