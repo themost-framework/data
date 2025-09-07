@@ -104,13 +104,18 @@ UniqueConstraintListener.prototype.beforeSave = function(event, callback) {
             }
             //check field mapping
             var mapping = event.model.inferMapping(attr);
-            if (typeof mapping !== 'undefined' && mapping !== null) {
+            var attribute = event.model.getAttribute(attr);
+            if (mapping) {
                 if (typeof event.target[attr] === 'object') {
                     value=event.target[attr][mapping.parentField];
                 }
             }
-            if (typeof value=== 'undefined')
+            if (typeof value === 'undefined') {
                 value = null;
+            }
+            if (attribute.type === 'Json' && value != null) {
+                value = JSON.stringify(value);
+            }
             if (q) {
                 q.and(attr).equal(value);
             }
@@ -577,11 +582,6 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
         async.eachSeries(attrs, function(attr, cb) {
             try {
                 var expr = attr.value;
-                // if attribute is already defined
-                if (Object.prototype.hasOwnProperty.call(event.target, attr.name)) {
-                    // do nothing
-                    return cb();
-                }
                 // use value formatter for object-like expressions
                 if (isObjectDeep(expr)) {
                     return valueFormatter.format(expr).then(function(result) {
@@ -590,6 +590,12 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
                     }).catch(function(err) {
                         void cb(err);
                     });
+                }
+                //if attribute is already defined
+                if (typeof event.target[attr.name] !== 'undefined') {
+                    //do nothing
+                    cb(null);
+                    return;
                 }
                 //validate expression
                 if (typeof expr !== 'string') {
