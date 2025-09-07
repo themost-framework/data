@@ -187,4 +187,65 @@ describe('DataObjectTag', () => {
         });
     });
 
+    it('should try to insert json objects', async () => {
+        const PeopleAudience = context.model('PeopleAudience').silent();
+        const newAudience = {
+            name: 'Top customers',
+            preferredName: [
+                { recordLanguage: 'en',  value: 'Top customers' },
+                { recordLanguage: 'fr',  value: 'Meilleurs clients' }
+            ]
+        };
+        await PeopleAudience.save(newAudience)
+        let audience = await PeopleAudience
+            .where((x: { name: string })=> {
+                return x.name === 'Top customers';
+            })
+            .expand((x: { preferredName: unknown }) => x.preferredName)
+            .getTypedItem();
+        expect(audience).toBeTruthy();
+        expect(Array.isArray(audience.preferredName)).toBeTruthy();
+        const preferredName = audience.preferredName.find((x) => x.recordLanguage === 'en');
+        expect(preferredName).toBeTruthy();
+
+        audience = await PeopleAudience
+            .where((x: { preferredName: { value: string } }) => {
+                return x.preferredName.value === 'Meilleurs clients';
+            })
+            .getTypedItem();
+        expect(audience).toBeTruthy();
+
+    });
+
+    it('should try to select json object attributes', async () => {
+        const PeopleAudience = context.model('PeopleAudience').silent();
+        const newAudience = {
+            name: 'Top customers',
+            preferredName: [
+                { recordLanguage: 'en',  value: 'Top customers' },
+                { recordLanguage: 'fr',  value: 'Meilleurs clients' }
+            ]
+        };
+        await PeopleAudience.save(newAudience);
+        let audience = await PeopleAudience
+            .asQueryable().where((x: { preferredName: { value: string } }) => {
+                return x.preferredName.value === 'Meilleurs clients';
+            }).select((x: any) => {
+                return {
+                    id: x.id,
+                    preferredName: x.preferredName.value
+                }
+            }).getItem();
+        expect(audience).toBeTruthy();
+        expect(audience.preferredName).toEqual('Meilleurs clients');
+        audience = await PeopleAudience
+            .where('preferredName/value')
+            .equal('Meilleurs clients')
+            .select('id', 'preferredName/value as preferredName')
+            .getItem();
+        expect(audience).toBeTruthy();
+        expect(audience.preferredName).toEqual('Meilleurs clients');
+
+    });
+
 });

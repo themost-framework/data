@@ -1,0 +1,44 @@
+{
+  "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
+  "@id": "https://schema.org/PeopleAudience",
+  "name": "PeopleAudience",
+  "description": "An audience defined by a particular demographic.",
+  "title": "PeopleAudience",
+  "abstract": false,
+  "sealed": false,
+  "inherits": "Audience",
+  "version": "1.0.0",
+  "fields": [
+    {
+      "name": "id",
+      "title": "Id",
+      "type": "Integer",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "preferredName",
+      "title": "Preferred Name",
+      "type": "Json",
+      "description": "The name preferred by the audience.",
+      "many": true,
+      "additionalType": "LanguageTypedString",
+      "mapping": {
+        "associationType": "junction",
+        "associationObjectField": "audience",
+        "associationValueField": "languageString"
+      }
+    }
+  ],
+  "privileges": [
+    {
+      "mask": 15,
+      "type": "global"
+    },
+    {
+      "mask": 15,
+      "type": "global",
+      "account": "Administrators"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ var _ = require('lodash');
 var {DataNotFoundError} = require('@themost/common');
 var async = require('async');
 var {hasOwnProperty} = require('./has-own-property');
+var { isObjectDeep } = require('./is-object');
 /**
  * @class
  * @constructor
@@ -118,6 +119,11 @@ function mapKey_(obj, callback) {
                         }
                     }
                     else {
+                        // get attribute and check if type is JSON and value is object
+                        var attribute = self.getAttribute(attr);
+                        if (attribute && attribute.type === 'Json' && isObjectDeep(value)) {
+                            value = JSON.stringify(value);
+                        }
                         fnAppendQuery(attr, value);
                     }
                 }

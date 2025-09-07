@@ -125,6 +125,8 @@ class OnJsonAttribute {
                 return include && attr.type === 'Json' && attr.additionalType != null && attr.model === event.model.name;
             }).filter((attr) => {
                 return Object.prototype.hasOwnProperty.call(event.target, attr.name);
+            }).filter((attr) => {
+                return !attr.many;
             });
             // exit if there are no json attributes
             if (attributes.length === 0) {
@@ -244,6 +246,8 @@ class OnJsonAttribute {
         try {
             const jsonAttributes = event.model.attributes.filter((attr) => {
                 return attr.type === 'Json' && attr.model === event.model.name;
+            }).filter((attr) => {
+                return !attr.many;
             }).map((attr) => attr.name);
             // try to find json attributes that are included in join expressions
             const joins = event.emitter && event.emitter.query && event.emitter.query.$expand;

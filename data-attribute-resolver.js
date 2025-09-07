@@ -573,6 +573,24 @@ DataAttributeResolver.prototype.resolveJunctionAttributeJoin = function(attr) {
             q.join(entity).with(expr);
             //data object tagging
             if (typeof mapping.childModel === 'undefined') {
+                // check if field value
+                if (field.type === 'Json') {
+                    var objectPath = [
+                        associationAlias,
+                        mapping.associationValueField,
+                        ...member.slice(1)
+                    ].join('.');
+                    var objectGet = new MethodCallExpression('jsonGet', [
+                        new MemberExpression(objectPath)
+                    ]);
+                    return {
+                        $distinct,
+                        $select: new QueryField({
+                            $value: objectGet.exprOf()
+                        }),
+                        $expand: [q.$expand]
+                    }
+                }
                 return {
                     $distinct,
                     $expand:[q.$expand],
