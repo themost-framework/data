@@ -8,7 +8,7 @@ export declare interface DataValidationResult {
 }
 
 export declare class DataValidator {
-    setContext(context: DataContext);
+    setContext(context: DataContext): void;
     getContext(): DataContext;
     target: any;
 }
@@ -68,6 +68,11 @@ export declare class DataTypeValidator extends DataValidator {
 export declare class RequiredValidator extends DataValidator {
     constructor();
     validateSync(val:any): DataValidationResult;
+}
+
+export declare class JsonTypeValidator extends DataValidator {
+    constructor(type: string, state: number);
+    validate(value: unknown, callback?: (err?: Error, res?: DataValidationResult) => void): void;
 }
 
 export declare class DataValidatorListener implements  BeforeSaveEventListener {
