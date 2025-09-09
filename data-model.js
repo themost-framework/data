@@ -1574,6 +1574,8 @@ function castForValidation_(obj, state) {
                     else
                     //set raw value
                         result[x.name] = obj[name];
+                } else if (mapping.associationType==='junction') {
+                    result[x.name] = obj[name];
                 }
             }
         });
@@ -2895,6 +2897,10 @@ function validate_(obj, state, callback) {
         //-- DataTypeValidator #2
         if (attr.type && hasOwnProperty(objCopy, attr.name)) {
             arrValidators.push(new validators.DataTypeValidator(attr.type));
+        }
+        // Validate JSON typed attributes
+        if (attr.type === 'Json' && attr.additionalType != null) {
+            arrValidators.push(new validators.JsonTypeValidator(attr.additionalType, state));
         }
 
         if (arrValidators.length === 0) {
