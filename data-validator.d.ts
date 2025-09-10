@@ -70,6 +70,11 @@ export declare class RequiredValidator extends DataValidator {
     validateSync(val:any): DataValidationResult;
 }
 
+export declare class JsonTypeValidator extends DataValidator {
+    constructor(type: string, state: number);
+    validate(value: unknown, callback?: (err?: Error, res?: DataValidationResult) => void): void;
+}
+
 export declare class DataValidatorListener implements  BeforeSaveEventListener {
     beforeSave(event: DataEventArgs, callback: (err?: Error) => void): void;
 
