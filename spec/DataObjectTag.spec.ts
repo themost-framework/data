@@ -222,7 +222,7 @@ describe('DataObjectTag', () => {
         const newAudience = {
             name: 'Top customers',
             preferredName: [
-                { recordLanguage: 'en',  value: 'Top customers' },
+                { recordLanguage: 'en', value: 'Top customers' },
                 { recordLanguage: 'fr',  value: 'Meilleurs clients' }
             ]
         };

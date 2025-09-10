@@ -522,6 +522,12 @@ var {hasOwnProperty} = require('./has-own-property');
         else if ((typeof val === 'number') && isNaN(val)) {
             invalid=true;
         }
+        // validate array
+        if (Array.isArray(val)) {
+            if (val.length===0) {
+                invalid=true;
+            }
+        }
         if (invalid) {
 
             var innerMessage = null, message = 'A value is required.';
@@ -587,6 +593,76 @@ var {hasOwnProperty} = require('./has-own-property');
         }
     }
 
+    /**
+     *
+     * @param {string} additionalType
+     * @param {number} state
+     * @constructor
+     */
+    function JsonTypeValidator(additionalType, state) {
+        // noinspection JSUnresolvedReference
+        JsonTypeValidator.super_.call(this);
+        this.state = state;
+        this.additionalType = additionalType;
+    }
+    LangUtils.inherits(JsonTypeValidator, DataValidator);
+    /**
+     *
+     * @param {*} val
+     * @param {function(err?: *, validationResult?: *): void} callback
+     * @returns {void}
+     */
+    JsonTypeValidator.prototype.validate = function(val, callback) {
+        if (this.additionalType != null) {
+            // noinspection ES6ConvertVarToLetConst
+            /**
+             * @type {DataContext}
+             */
+            var context = this.getContext();
+            // noinspection ES6ConvertVarToLetConst
+            var additionalModel = context.model(this.additionalType);
+            if (additionalModel == null) {
+                return callback(null, {
+                    code:'E_MODEL',
+                    message: sprintf('The additional model "%s" for Json type cannot be found.', this.additionalType)
+                });
+            }
+            const values = Array.isArray(val) ? val : [val];
+            const state = this.state;
+
+            (async function() {
+                // noinspection ES6ConvertVarToLetConst
+                var res;
+                // noinspection ES6ConvertVarToLetConst
+                var attributes = additionalModel.attributeNames;
+                for (const value of values) {
+                    if (value != null) {
+                        const keys = Object.keys(value);
+                        const unknownKeys = keys.filter(function(k) {
+                            return attributes.indexOf(k) < 0;
+                        });
+                        if (unknownKeys.length > 0) {
+                            return {
+                                code:'E_UNKNOWN',
+                                message: sprintf('The target model "%s" does not contain attribute(s) %s.', additionalModel.name, unknownKeys.map(function(k) { return "\"" + k + "\"" }).slice(0, 5).join(', '))
+                            };
+                        }
+                    }
+                    if (state === 1) {
+                        res = await additionalModel.validateForInsert(value);
+                        if (res) return res;
+                    } else if (state === 2) {
+                        res = await additionalModel.validateForUpdate(value);
+                        if (res) return res;
+                    }
+                }
+            })().then(function(result) {
+                return callback(null, result);
+            }).catch(function(err) {
+                return callback(err);
+            });
+        }
+    };
 
     module.exports = {
         PatternValidator,
@@ -599,7 +675,8 @@ var {hasOwnProperty} = require('./has-own-property');
         RequiredValidator,
         DataTypeValidator,
         AsyncExecuteValidator,
-        DataValidatorListener
+        DataValidatorListener,
+        JsonTypeValidator
     };
 
 
