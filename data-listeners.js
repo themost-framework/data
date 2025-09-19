@@ -585,8 +585,7 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
                 //if attribute is already defined
                 if (typeof event.target[attr.name] !== 'undefined') {
                     //do nothing
-                    cb(null);
-                    return;
+                    return cb();
                 }
                 // use value formatter for object-like expressions
                 if (isObjectDeep(expr)) {
