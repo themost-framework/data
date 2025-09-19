@@ -177,6 +177,9 @@
         "valueType": {
             "type": "object",
             "properties": {
+                "$value": {
+                  "type": ["string", "number", "boolean", "object", "array", "null"]
+                },
                 "$date": {
                     "type": "number",
                     "default": 1
