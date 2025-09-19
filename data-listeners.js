@@ -582,6 +582,12 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
         async.eachSeries(attrs, function(attr, cb) {
             try {
                 var expr = attr.value;
+                //if attribute is already defined
+                if (typeof event.target[attr.name] !== 'undefined') {
+                    //do nothing
+                    cb(null);
+                    return;
+                }
                 // use value formatter for object-like expressions
                 if (isObjectDeep(expr)) {
                     return valueFormatter.format(expr).then(function(result) {
@@ -590,12 +596,6 @@ DefaultValueListener.prototype.beforeSave = function(event, callback) {
                     }).catch(function(err) {
                         void cb(err);
                     });
-                }
-                //if attribute is already defined
-                if (typeof event.target[attr.name] !== 'undefined') {
-                    //do nothing
-                    cb(null);
-                    return;
                 }
                 //validate expression
                 if (typeof expr !== 'string') {
