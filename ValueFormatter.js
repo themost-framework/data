@@ -693,7 +693,7 @@ class ValueFormatter {
       if (typeof val === 'string' && val.startsWith('$$')) {
         return this.formatVariable(val);
       }
-      return Promise.resolve(this.format(value));
+      return Promise.resolve(value);
     }
     if (property.startsWith('$$')) {
       return this.formatVariable(value);
