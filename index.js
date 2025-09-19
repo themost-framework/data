@@ -92,6 +92,8 @@ var { DataValueResolver } = require('./data-value-resolver');
 
 var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
 
+var { SelectObjectQuery } = require('./select-object-query');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -178,7 +180,7 @@ module.exports = {
     disableUnattendedExecution,
     DataValueResolver,
     ValueFormatter,
-    ValueDialect
-
+    ValueDialect,
+    SelectObjectQuery
 };
 

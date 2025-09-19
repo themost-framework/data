@@ -22,3 +22,4 @@ export * from './data-application';
 export * from './UnattendedMode';
 export * from './data-value-resolver';
 export * from './ValueFormatter';
+export * from './select-object-query';
