@@ -245,7 +245,7 @@ class OnJsonAttribute {
     static afterSelect(event, callback) {
         try {
             const jsonAttributes = event.model.attributes.filter((attr) => {
-                return attr.type === 'Json' && attr.model === event.model.name;
+                return attr.type === 'Json';
             }).filter((attr) => {
                 return !attr.many;
             }).map((attr) => attr.name);

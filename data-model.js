@@ -2544,7 +2544,7 @@ function inferDefaultMapping(conf, name) {
             var tagMapping = inferTagMapping.call(self, field);
             if (tagMapping) {
                 //apply data association mapping to definition
-                var definitionField = conf.fields.find(function(x) {
+                var definitionField = conf.attributes.find(function(x) {
                     return x.name === field.name;
                 });
                 definitionField.mapping = field.mapping = tagMapping;
