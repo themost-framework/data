@@ -172,6 +172,9 @@ class ValueDialect {
     if (Object.prototype.hasOwnProperty.call(this.context, 'interactiveUser') === true) {
       name = this.context.interactiveUser && this.context.interactiveUser.name;
     }
+    if (name == null) {
+        return null;
+    }
     return this.context.model('User').asQueryable().where((x, username) => {
       return x.name === username && x.name != null && x.name != 'anonymous';
     }, name).select(selectAttribute).value().then((result) => {
