@@ -504,29 +504,12 @@ DataAttributeResolver.prototype.testNestedAttribute = function(s) {
     if (matches) {
         return { name: matches[1] + '('  + matches[2] + '/' + matches[3] + '/' + matches[4] + matches[5]  + ')' };
     }
+    
     /**
-     * nested attribute with alias e.g. x/b
+     * nested attribute without alias e.g. a/b/../x
      * @ignore
      */
-    matches = /^(\w+)\/(\w+)$/.exec(s);
-    if (matches) {
-        return { name: s };
-    }
-
-    /**
-     * nested attribute with alias e.g. x/b/c
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)\/(\w+)$/.exec(s);
-    if (matches) {
-        return { name: s };
-    }
-
-    /**
-     * nested attribute with alias e.g. x/b/c/d
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)\/(\w+)\/(\w+)$/.exec(s);
+    matches = /^\b\w+(?:\/\w+)+\b$/.exec(s);
     if (matches) {
         return { name: s };
     }

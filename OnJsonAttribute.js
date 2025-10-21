@@ -125,8 +125,6 @@ class OnJsonAttribute {
                 return include && attr.type === 'Json' && attr.additionalType != null && attr.model === event.model.name;
             }).filter((attr) => {
                 return Object.prototype.hasOwnProperty.call(event.target, attr.name);
-            }).filter((attr) => {
-                return !attr.many;
             });
             // exit if there are no json attributes
             if (attributes.length === 0) {
@@ -183,189 +181,124 @@ class OnJsonAttribute {
 
     /**
      * @protected
-     * @param {import('./data-queryable').DataQueryable} queryable
-     * @param {string} expr
-     */
-    static tryGetJsonAttributeFromString(queryable , expr) {
-        if (queryable == null) {
-            return;
-        }
-        const model = queryable.model;
-        const matches = expr.split('.');
-        const {context} = model;
-        if (matches && matches.length > 1) {
-            let index = 1;
-            let nextModel = model;
-            //  get view source
-            const { viewAdapter: viewEntity } = model;
-            const fromEntity = matches[0].replace(/^\$/, '')
-            if (fromEntity !== viewEntity) {
-                if (Array.isArray(queryable.query.$expand) === false) {
-                    return;
-                }
-                // find join entity with the same name
-                const join = queryable.query.$expand.find((join) => {
-                    return join.$entity.$as === fromEntity;
-                });
-                const joinModel = join && join.$entity && join.$entity.model;
-                if (typeof joinModel !== 'string') {
-                    return;
-                }
-                // change next model to join model
-                nextModel = context.model(joinModel);
-            }
-
-            // iterate over matches
-            while(index < matches.length) {
-                let attribute = nextModel.getAttribute(matches[index]);
-                if (attribute && attribute.type === 'Json') {
-                    if (index + 1 === matches.length) {
-                        return attribute;
-                    }
-                    if (attribute.additionalType) {
-                        // get next model
-                        nextModel = context.model(attribute.additionalType)
-                    } else {
-                        return attribute;
-                    }
-                } else {
-                    break;
-                }
-                index++;
-            }
-        }
-    }
-
-    /**
-     * @protected
      * @param {{model: DataModel, result: any, emitter?: import('./data-queryable').DataQueryable}} event
      * @param {function(err?:Error): void} callback
      * @returns void
      */
     static afterSelect(event, callback) {
-        try {
-            const jsonAttributes = event.model.attributes.filter((attr) => {
-                return attr.type === 'Json';
-            }).filter((attr) => {
-                return !attr.many;
-            }).map((attr) => attr.name);
-            // try to find json attributes that are included in join expressions
-            const joins = event.emitter && event.emitter.query && event.emitter.query.$expand;
-            if (joins && joins.length > 0) {
-                joins.forEach((join) => {
+        const jsonAttributes = event.model.attributes.filter((attr) => {
+            return attr.type === 'Json';
+        }).map((attr) => attr.name);
+        if (jsonAttributes.length === 0) {
+            return callback();
+        }
+        
+        let select = [];
+        const { viewAdapter: entity } = event.model;
+        if (event.emitter && event.emitter.query && event.emitter.query.$select) {
+            const querySelect = event.emitter.query.$select[entity] || [];
+            select.push(...querySelect);
+        }
+        let attributes = select.reduce((prev, element) => {
+            // if select element is a typical query field with $name property
+            if (element && typeof element.$name === 'string') {
+                // split $name property by dot
+                const matches = element.$name.split('.');
+                // if there are more than one parts
+                if (matches && matches.length > 1) {
+                    // get last part
+                    if (jsonAttributes.indexOf(matches[1]) >= 0) {
+                        prev.push(matches.pop());
+                    }
+                }
+            } else {
+                // try to get first property which should be attribute alias
+                const [key] = Object.keys(element);
+                if (Object.hasOwnProperty.call(element, key)) {
                     /**
-                     * @type {{ $as: string=, model: string= }}
+                     * @type {{$jsonGet?: any[]}}
                      */
-                    const entity = join.$entity;
-                    if (entity && typeof entity.model === 'string') {
-                        const joinModel = event.model.context.model(entity.model);
-                        if (joinModel) {
-                            const attributes = joinModel.attributes.filter((attr) => {
-                                return attr.type === 'Json' && attr.model === joinModel.name;
-                            }).map((attr) => attr.name);
-                            jsonAttributes.push(...attributes);
-                        }
-                    }
-                })
-            }
-            if (jsonAttributes.length === 0) {
-                return callback();
-            }
-            let select = [];
-            const {viewAdapter: entity} = event.model;
-            if (event.emitter && event.emitter.query && event.emitter.query.$select) {
-                const querySelect = event.emitter.query.$select[entity] || [];
-                select.push(...querySelect);
-            }
-            let attributes = select.reduce((prev, element) => {
-                // if select element is a typical query field with $name property
-                if (element && typeof element.$name === 'string') {
-                    // split $name property by dot
-                    const matches = element.$name.split('.');
-                    // if there are more than one parts
-                    if (matches && matches.length > 1) {
-                        // get last part
-                        if (jsonAttributes.indexOf(matches[1]) >= 0) {
-                            prev.push(matches.pop());
-                        }
-                    }
-                } else {
-                    // try to get first property which should be attribute alias
-                    const [key] = Object.keys(element);
-                    if (Object.hasOwnProperty.call(element, key)) {
-                        /**
-                         * @type {{$jsonGet?: any[]}|{$name: string}|string}
-                         */
-                        const selectField = element[key];
-                        // if select field has $jsonGet property
-                        if (selectField.$jsonGet) {
-                            const [jsonGet] = selectField.$jsonGet;
-                            // if jsonGet has $name property
-                            if (jsonGet && typeof jsonGet.$name === 'string') {
-                                const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.emitter, jsonGet.$name);
-                                if (attribute) {
-                                    prev.push(key);
-                                }
+                    const selectField = element[key];
+                    if (selectField && typeof selectField.$name === 'string') {
+                        // split $name property by dot
+                        const matches = selectField.$name.split('.');
+                        // if there are more than one parts
+                        if (matches && matches.length > 1) {
+                            // get last part
+                            if (jsonAttributes.indexOf(matches[1]) >= 0) {
+                                prev.push(matches.pop());
+                                return prev;
                             }
                         }
-
-                        // try to validate query expressions where the query field has an alias
-                        // e.g. { 'orderTags': { $name: 'OrderData.tags' } }
-                        // or // { 'orderTags': 'OrderData.tags' }
-                        // the tags attribute is a Json attribute and should be converted to object
-                        if (!key.startsWith('$')) {
-                            /**
-                             * @type {string}
-                             */
-                            let fromString;
-                            if (typeof selectField === 'string') {
-                                fromString = selectField;
-                            } else if (typeof selectField.$name === 'string') {
-                                fromString = selectField.$name;
-                            }
-                            if (typeof fromString === 'string') {
-                                const attribute = OnJsonAttribute.tryGetJsonAttributeFromString(event.emitter, fromString);
-                                if (attribute) {
-                                    prev.push(key);
+                    }
+                    // if select field has $jsonGet property
+                    if (selectField.$jsonGet) {
+                        const [jsonGet] = selectField.$jsonGet;
+                        // if jsonGet has $name property
+                        if (jsonGet && typeof jsonGet.$name === 'string') {
+                            // split $name property by dot
+                            const matches = jsonGet.$name.split('.');
+                            if (matches && matches.length > 1) {
+                                let index = 1;
+                                let nextModel = event.model;
+                                // iterate over matches
+                                while(index < matches.length) {
+                                    let attribute = nextModel.getAttribute(matches[index]);
+                                    if (attribute && attribute.type === 'Json') {
+                                        if (index + 1 === matches.length) {
+                                            prev.push(key);
+                                            break;
+                                        } 
+                                        if (attribute.additionalType) {
+                                            // get next model
+                                            nextModel = event.model.context.model(attribute.additionalType)
+                                        } else {
+                                            // add last part
+                                            prev.push(key);
+                                            // and exit loop
+                                            break;
+                                        }
+                                    } else {
+                                        break;
+                                    }
+                                    index++;
                                 }
                             }
                         }
                     }
                 }
-                return prev
-            }, []);
-            if (select.length === 0) {
-                attributes = jsonAttributes;
             }
-            if (attributes.length === 0) {
-                return callback();
-            }
-            // define json converter
-            const parseJson = (item) => {
-                attributes.forEach((name) => {
-                    if (Object.prototype.hasOwnProperty.call(item, name)) {
-                        const value = item[name];
-                        if (typeof value === 'string') {
-                            item[name] = isJSON(value) ? JSON.parse(value) : value;
-                        }
-                    }
-                });
-            };
-            // iterate over result
-            const {result} = event;
-            if (result == null) {
-                return callback();
-            }
-            if (Array.isArray(result)) {
-                result.forEach((item) => parseJson(item));
-            } else {
-                // or parse json for single item
-                parseJson(result)
-            }
-            return callback();
-        } catch (err) {
-            return callback(err);
+            return prev
+        }, []);
+        if (select.length === 0) {
+            attributes = jsonAttributes;
         }
+        if (attributes.length === 0) {
+            return callback();
+        }
+        // define json converter
+        const parseJson = (item) => {
+            attributes.forEach((name) => {
+                if (Object.prototype.hasOwnProperty.call(item, name)) {
+                    const value = item[name];
+                    if (typeof value === 'string') {
+                        item[name] = isJSON(value) ? JSON.parse(value) : value;
+                    }
+                }
+            });
+        };
+        // iterate over result
+        const {result} = event;
+        if (result == null) {
+            return callback();
+        }
+        if (Array.isArray(result)) {
+            result.forEach((item) => parseJson(item));
+        } else {
+            // or parse json for single item
+            parseJson(result)
+        }
+        return callback();
     }
 
     /**
