@@ -1,6 +1,9 @@
 const {TraceUtils} = require('@themost/common');
-const JestLogger = require('./jest.logger');
+const {JsonLogger} = require('@themost/json-logger');
 // noinspection JSCheckFunctionSignatures
-TraceUtils.useLogger(new JestLogger());
+TraceUtils.useLogger(new JsonLogger({
+    level: 'debug',
+    format: 'raw'
+}));
 /* global jest */
 jest.setTimeout(60000);

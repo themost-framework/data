@@ -2,6 +2,7 @@ const {DataObjectState} = require('./types');
 const {eachSeries} = require('async');
 const {DataConfigurationStrategy} = require('./data-configuration');
 const {DataError} = require('@themost/common');
+require('@themost/promise-sequence');
 
 function isJSON(str) {
     try {
@@ -145,26 +146,37 @@ class OnJsonAttribute {
                     }
                     // execute beforeSave event
                     // this operation will add calculated values and validate the object against the current state of the model
-                    void targetModel.emit('before.save', {
-                        target: value,
-                        state: event.state,
-                        model: targetModel
-                    }, (err) => {
-                        if (err) {
-                            return cb(err);
-                        }
-                        // get object properties
-                        const properties = Object.getOwnPropertyNames(value);
-                        // get target model attributes
-                        const attributes = targetModel.attributeNames;
-                        // check if all properties are defined in the target model
-                        const additionalProperty = properties.find((prop) => attributes.indexOf(prop) < 0);
-                        if (additionalProperty != null) {
-                            return cb(new DataError('ERR_INVALID_PROPERTY', `The given structured value seems to be invalid. The property '${additionalProperty}' is not defined in the target model.`, null, event.model.name, attr.name));
-                        }
-                        return cb();
-                    });
 
+                    const items = Array.isArray(value) ? value : [value];
+                    Promise.sequence(items.map((item) => {
+                        return () => {
+                            return new Promise((resolve, reject) => {
+                                void targetModel.emit('before.save', {
+                                    target: item,
+                                    state: event.state,
+                                    model: targetModel
+                                }, (err) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                    // get object properties
+                                    const properties = Object.getOwnPropertyNames(item);
+                                    // get target model attributes
+                                    const attributes = targetModel.attributeNames;
+                                    // check if all properties are defined in the target model
+                                    const additionalProperty = properties.find((prop) => attributes.indexOf(prop) < 0);
+                                    if (additionalProperty != null) {
+                                        return reject(new DataError('ERR_INVALID_PROPERTY', `The given structured value seems to be invalid. The property '${additionalProperty}' is not defined in the target model.`, null, event.model.name, attr.name));
+                                    }
+                                    return resolve();
+                                });
+                            });
+                        };
+                    })).then(() => {
+                        return cb();
+                    }).catch((err) => {
+                        return cb(err);
+                    });
                 } catch(err) {
                     return cb(err);
                 }
@@ -186,9 +198,54 @@ class OnJsonAttribute {
      * @returns void
      */
     static afterSelect(event, callback) {
+
+        /**
+         * @type {string|null}
+         */
+        let from = null;
+        if (event.emitter && event.emitter.query && event.emitter.query.$select) {
+            from = Object.keys(event.emitter.query.$select)[0];
+        }
+
+        /**
+         * @type {{name: string, from: string}[]}
+         */
         const jsonAttributes = event.model.attributes.filter((attr) => {
             return attr.type === 'Json';
-        }).map((attr) => attr.name);
+        }).map((attr) => {
+            const { name  } = attr;
+            return {
+                name,
+                from
+            }
+        });
+
+        // try to find json attributes in select clause processing expand statements
+        if (event.emitter && event.emitter.query && event.emitter.query.$expand) {
+            const joins = event.emitter.query.$expand;
+            if (Array.isArray(joins)) {
+                joins.forEach((join) => {
+                   const joinEntityModel = join.$entity && join.$entity.model;
+                     if (joinEntityModel) {
+                         const joinModel = event.model.context.model(joinEntityModel);
+                         if (joinModel) {
+                             const from = join.$entity.$as || joinModel.viewAdapter;
+                             const otherJsonAttributes = joinModel.attributes.filter((attr) => {
+                                 return attr.type === 'Json';
+                             }).map((attr) => {
+                                    const { name  } = attr;
+                                    return {
+                                        name,
+                                        from
+                                    }
+                             });
+                             jsonAttributes.push(...otherJsonAttributes);
+                         }
+                     }
+                });
+            }
+        }
+
         if (jsonAttributes.length === 0) {
             return callback();
         }
@@ -206,9 +263,10 @@ class OnJsonAttribute {
                 const matches = element.$name.split('.');
                 // if there are more than one parts
                 if (matches && matches.length > 1) {
-                    // get last part
-                    if (jsonAttributes.indexOf(matches[1]) >= 0) {
-                        prev.push(matches.pop());
+                    // get collection and field
+                    const [from, name] = matches;
+                    if (jsonAttributes.findIndex((x) => x.name === name && x.from === from) >= 0) {
+                        prev.push(name);
                     }
                 }
             } else {
@@ -224,9 +282,10 @@ class OnJsonAttribute {
                         const matches = selectField.$name.split('.');
                         // if there are more than one parts
                         if (matches && matches.length > 1) {
-                            // get last part
-                            if (jsonAttributes.indexOf(matches[1]) >= 0) {
-                                prev.push(matches.pop());
+                            // get collection and field
+                            const [from, name] = matches;
+                            if (jsonAttributes.findIndex((x) => x.name === name && x.from === from) >= 0) {
+                                prev.push(key);
                                 return prev;
                             }
                         }
@@ -271,7 +330,7 @@ class OnJsonAttribute {
             return prev
         }, []);
         if (select.length === 0) {
-            attributes = jsonAttributes;
+            attributes = jsonAttributes.map((x) => x.name);
         }
         if (attributes.length === 0) {
             return callback();

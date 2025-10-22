@@ -17,7 +17,7 @@ module.exports = {
   // clearMocks: false,
 
   // Indicates whether the coverage information should be collected while executing the test
-  collectCoverage: true,
+  collectCoverage: false,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: ["!spec/**/*.ts"],
@@ -128,12 +128,11 @@ module.exports = {
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
   setupFiles: [
-    '<rootDir>/spec/helpers/env.js'
   ],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   setupFilesAfterEnv: [
-    './jest.setup.js'
+      '<rootDir>/jest.setup.js'
   ],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
