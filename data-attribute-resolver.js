@@ -509,7 +509,7 @@ DataAttributeResolver.prototype.testNestedAttribute = function(s) {
      * nested attribute without alias e.g. a/b/../x
      * @ignore
      */
-    matches = /^\b\w+(?:\/\w+)+\b$/.exec(s);
+    matches = /^\w+(?:\/\w+)+$/.exec(s);
     if (matches) {
         return { name: s };
     }
