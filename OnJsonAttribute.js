@@ -2,6 +2,7 @@ const {DataObjectState} = require('./types');
 const {eachSeries} = require('async');
 const {DataConfigurationStrategy} = require('./data-configuration');
 const {DataError} = require('@themost/common');
+require('@themost/promise-sequence');
 
 function isJSON(str) {
     try {
@@ -147,26 +148,37 @@ class OnJsonAttribute {
                     }
                     // execute beforeSave event
                     // this operation will add calculated values and validate the object against the current state of the model
-                    void targetModel.emit('before.save', {
-                        target: value,
-                        state: event.state,
-                        model: targetModel
-                    }, (err) => {
-                        if (err) {
-                            return cb(err);
-                        }
-                        // get object properties
-                        const properties = Object.getOwnPropertyNames(value);
-                        // get target model attributes
-                        const attributes = targetModel.attributeNames;
-                        // check if all properties are defined in the target model
-                        const additionalProperty = properties.find((prop) => attributes.indexOf(prop) < 0);
-                        if (additionalProperty != null) {
-                            return cb(new DataError('ERR_INVALID_PROPERTY', `The given structured value seems to be invalid. The property '${additionalProperty}' is not defined in the target model.`, null, event.model.name, attr.name));
-                        }
-                        return cb();
-                    });
 
+                    const items = Array.isArray(value) ? value : [value];
+                    Promise.sequence(items.map((item) => {
+                        return () => {
+                            return new Promise((resolve, reject) => {
+                                void targetModel.emit('before.save', {
+                                    target: item,
+                                    state: event.state,
+                                    model: targetModel
+                                }, (err) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                    // get object properties
+                                    const properties = Object.getOwnPropertyNames(item);
+                                    // get target model attributes
+                                    const attributes = targetModel.attributeNames;
+                                    // check if all properties are defined in the target model
+                                    const additionalProperty = properties.find((prop) => attributes.indexOf(prop) < 0);
+                                    if (additionalProperty != null) {
+                                        return reject(new DataError('ERR_INVALID_PROPERTY', `The given structured value seems to be invalid. The property '${additionalProperty}' is not defined in the target model.`, null, event.model.name, attr.name));
+                                    }
+                                    return resolve();
+                                });
+                            });
+                        };
+                    })).then(() => {
+                        return cb();
+                    }).catch((err) => {
+                        return cb(err);
+                    });
                 } catch(err) {
                     return cb(err);
                 }
