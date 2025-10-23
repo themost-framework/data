@@ -1,8 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataAssociationMapping, DataContext, DataField} from "./types";
-import {SequentialEventEmitter} from "@themost/common";
+import {DataModelBase, SequentialEventEmitter} from "@themost/common";
 import {DataQueryable} from "./data-queryable";
-import {DataObject} from "./data-object";
 import {SyncSeriesEventEmitter} from '@themost/events';
 
 export declare class DataModel extends SequentialEventEmitter{
@@ -16,7 +15,7 @@ export declare class DataModel extends SequentialEventEmitter{
     sealed?: boolean;
     abstract?: boolean;
     version: string;
-    caching?: string;
+    caching?: 'none' | 'always' | 'conditional';
     fields: Array<DataField>;
     eventListeners?: Array<any>;
     constraints?: Array<any>;
@@ -25,7 +24,7 @@ export declare class DataModel extends SequentialEventEmitter{
     context: DataContext;
     readonly sourceAdapter?: string;
     readonly viewAdapter?: string;
-    silent(value?: boolean): DataModel;
+    silent(value?: boolean): this;
     readonly attributes?: Array<DataField>;
     readonly primaryKey: any;
     readonly attributeNames: Array<string>;
@@ -38,26 +37,28 @@ export declare class DataModel extends SequentialEventEmitter{
     clone(): DataModel;
     join(model: string): DataModel;
     where(attr: string): DataQueryable;
+    where<T>(expr: (value: T, ...param: any) => any, params?: any): DataQueryable;
     search(text: string): DataQueryable;
     asQueryable(): DataQueryable;
-    filter(params: any, callback?: (err?: Error, res?: any) => void): void;
+    filter(params: any, callback?: (err?: Error, res?: DataQueryable) => void): void;
     filterAsync(params: any): Promise<DataQueryable>;
     find(obj: any):DataQueryable;
-    select<T>(expr: (value: T, ...param: any) => any, ...params: any[]): DataQueryable;
-    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, ...params: any[]): DataQueryable;
     select(...attr: any[]): DataQueryable;
-    orderBy(attr: any): this;
-    orderBy<T>(expr: (value: T, ...params: any[]) => any): this;
-    orderByDescending(attr: any): this;
-    orderByDescending<T>(expr: (value: T) => any, ...params: any[]): this;
+    select<T>(expr: (value: T, ...param: any) => any, params?: any): DataQueryable;
+    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): DataQueryable;
+    orderBy(attr: any): DataQueryable;
+    orderBy<T>(expr: (value: T) => any): DataQueryable;
+    orderByDescending(attr: any): DataQueryable;
+    orderByDescending<T>(expr: (value: T) => any): DataQueryable;
     take(n: number): DataQueryable;
     getList():Promise<any>;
     skip(n: number): DataQueryable;
     base(): DataModel;
-    convert(obj: any): DataObject;
+    convert<T>(obj: any): T;
     cast(obj: any, state: number): any;
     save(obj: any): Promise<any>;
     inferState(obj: any, callback: (err?: Error, res?: any) => void): void;
+    inferStateAsync(obj: any): Promise<any>;
     getSuperTypes(): Array<string>;
     update(obj: any): Promise<any>;
     insert(obj: any): Promise<any>;
@@ -71,10 +72,10 @@ export declare class DataModel extends SequentialEventEmitter{
     validateForUpdate(obj: any): Promise<any>;
     validateForInsert(obj: any): Promise<any>;
     levels(value: number): DataQueryable;
-    getSubTypes(): Promise<string>;
+    getSubTypes(): Array<string>;
     getReferenceMappings(deep?: boolean): Array<any>;
     getAttribute(name: string): DataField;
-    getTypedItems(): Promise<DataObject|any>;
+    getTypedItems(): Promise<any>;
     getItems(): Promise<any>;
     getTypedList():Promise<any>;
     upsert(obj: any | Array<any>): Promise<any>;

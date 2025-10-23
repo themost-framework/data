@@ -1,17 +1,16 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
 import {DataContextEmitter} from "./types";
-import {QueryExpression, QueryFunc, QueryJoinFunc} from '@themost/query';
-
+import {QueryExpression, QueryFunc} from '@themost/query';
 export declare class DataQueryable implements DataContextEmitter {
     constructor(model: DataModel);
     readonly model: DataModel;
     readonly query: QueryExpression;
     clone(): this;
+    where<T>(expr: (value: T, ...param: any) => any, params?: any): this;
     where(attr: string): this;
-    where<T>(expr: QueryFunc<T>, ...params: unknown[]): this;
     search(text: string): this;
-    join(model: string): this;
+    join(model: string | DataModel): this;
     and(attr: string): this;
     or(attr: string): this;
     prepare(orElse?: boolean): this;
@@ -30,17 +29,17 @@ export declare class DataQueryable implements DataContextEmitter {
     contains(value: any): this;
     notContains(value: any): this;
     between(value1: any, value2: any): this;
-    select<T>(expr: (value: T, ...param: any) => any, ...params: any[]): this;
-    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, ...params: any[]): this;
+    select<T>(expr: (value: T, ...param: any) => any, params?: any): this;
+    select<T,J>(expr: (value1: T, value2: J, ...param: any) => any, params?: any): this;
     select(...attr: any[]): this;
     orderBy(attr: any): this;
-    orderBy<T>(expr: (value: T, ...params: any[]) => any): this;
+    orderBy<T>(expr: (value: T) => any): this;
     orderByDescending(attr: any): this;
-    orderByDescending<T>(expr: (value: T) => any, ...params: any[]): this;
+    orderByDescending<T>(expr: (value: T) => any): this;
     thenBy(attr: any): this;
-    thenBy<T>(expr: (value: T) => any, ...params: any[]): this;
+    thenBy<T>(expr: (value: T) => any): this;
     thenByDescending(attr: any): this;
-    thenByDescending<T>(expr: (value: T) => any, ...params: any[]): this;
+    thenByDescending<T>(expr: (value: T) => any): this;
     groupBy(...attr: any[]): this;
     groupBy<T>(...args: [...expr:[(value: T) => any], ...params: any[]]): this;
     groupBy<T>(arg1: QueryFunc<T>, arg2: QueryFunc<T>, ...params: any[]): this;

@@ -7,7 +7,7 @@ var {TextUtils} = require('@themost/common');
 var {DataMappingExtender} = require('./data-mapping-extensions');
 var {DataAssociationMapping} = require('./types');
 var {DataError, Args} = require('@themost/common');
-var {QueryField, MethodCallExpression, MemberExpression} = require('@themost/query');
+var {QueryField, MethodCallExpression, MemberExpression, ObjectNameValidator} = require('@themost/query');
 var {QueryEntity, Expression} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var Q = require('q');
@@ -601,42 +601,16 @@ DataAttributeResolver.prototype.testAttribute = function(s) {
  */
 DataAttributeResolver.prototype.testAggregatedNestedAttribute = function(s) {
     if (typeof s !== 'string')
-        return;
-    /**
-     * @private
-     */
+        return null;
     var matches;
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b) as a
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
+    var pattern = (ObjectNameValidator.validator && ObjectNameValidator.validator.pattern) || new RegExp(ObjectNameValidator.Patterns.Default);
+    var exprFuncWithAlias = new RegExp('^(\\w+)\\((\\w+(?:\\/\\w+)+)\\)(?:\\s+as\\s+' + pattern.source + ')?$');
+    matches = exprFuncWithAlias.exec(s);
     if (matches) {
-        return { aggr: matches[1], name: matches[2] + '/' + matches[3], property:matches[4] };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b/c) as a
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
-    if (matches) {
-        return { aggr: matches[1], name: matches[2] + '/' + matches[3] + '/' + matches[4], property:matches[5] };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b)
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\)$/i.exec(s);
-    if (matches) {
-        return { aggr: matches[1], name: matches[2] + '/' + matches[3]  };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b/c)
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\)$/i.exec(s);
-    if (matches) {
-        return { aggr: matches[1], name: matches[2] + '/' + matches[3] + '/' + matches[4] };
+        // matches[1]: the function name
+        // matches[2]: the nested attribute
+        // matches[3]: the alias (optional)
+        return { aggr: matches[1], name: matches[2], property: matches[3] };
     }
 };
 
@@ -646,110 +620,29 @@ DataAttributeResolver.prototype.testAggregatedNestedAttribute = function(s) {
  */
 DataAttributeResolver.prototype.testNestedAttribute = function(s) {
     if (typeof s !== 'string')
-        return;
-    /**
-     * @private
-     */
+        return null;
     var matches;
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b) as a
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
+
+    var pattern = (ObjectNameValidator.validator && ObjectNameValidator.validator.pattern) || new RegExp(ObjectNameValidator.Patterns.Default);
+    var exprFuncWithAlias = new RegExp('^(\\w+)\\((\\w+(?:\\/\\w+)+)\\)(?:\\s+as\\s+' + pattern.source + ')?$');
+    matches = exprFuncWithAlias.exec(s);
     if (matches) {
-        return { name: matches[1] + '(' + matches[2] + '/' + matches[3]  + ')', property:matches[4] };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b/c) as a
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '(' + matches[2] + '/' + matches[3] + '/' + matches[4]  + ')', property:matches[5] };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b/c/d) as a
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\/(\w+)\)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '(' + matches[2] + '/' + matches[3] + '/' + matches[4] + '/' + matches[5]  + ')', property:matches[6] };
-    }
-    /**
-     * nested attribute with alias e.g. x/b as a
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '/' + matches[2], property:matches[3] };
-    }
-    /**
-     * nested attribute with alias e.g. x/b/c as a
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)\/(\w+)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '/' + matches[2] + '/' + matches[3], property:matches[4] };
-    }
-    /**
-     * nested attribute with alias e.g. x/b/c/d as a
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)\/(\w+)\/(\w+)\sas\s([\u0020-\u007F\u0080-\uFFFF]+)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '/' + matches[2] + '/' + matches[3] + '/' + matches[4], property:matches[5] };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b)
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '(' + matches[2] + '/' + matches[3]  + ')' };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b/c)
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '('  + matches[2] + '/' + matches[3] + '/' + matches[4]  + ')' };
-    }
-    /**
-     * nested attribute aggregate function with alias e.g. f(x/b/c/d)
-     * @ignore
-     */
-    matches = /^(\w+)\((\w+)\/(\w+)\/(\w+)\/(\w+)\)$/i.exec(s);
-    if (matches) {
-        return { name: matches[1] + '('  + matches[2] + '/' + matches[3] + '/' + matches[4] + matches[5]  + ')' };
-    }
-    /**
-     * nested attribute with alias e.g. x/b
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)$/.exec(s);
-    if (matches) {
-        return { name: s };
+        // matches[1]: the function name
+        // matches[2]: the nested attribute
+        // matches[3]: the alias (optional)
+        return { name: matches[2], property: matches[3] };
     }
 
+    var exprWithAlias = new RegExp('^(\\w+(?:\\/\\w+)+)(\\s+as\\s+' + pattern.source + ')?$')
     /**
-     * nested attribute with alias e.g. x/b/c
-     * @ignore
+     * nested attribute with alias e.g. a/b/../c as a
      */
-    matches = /^(\w+)\/(\w+)\/(\w+)$/.exec(s);
+    matches = exprWithAlias.exec(s);
     if (matches) {
-        return { name: s };
+        // matches[2]: the nested attribute
+        // matches[3]: the alias (optional)
+        return { name: matches[1], property: matches[3] };
     }
-
-    /**
-     * nested attribute with alias e.g. x/b/c/d
-     * @ignore
-     */
-    matches = /^(\w+)\/(\w+)\/(\w+)\/(\w+)$/.exec(s);
-    if (matches) {
-        return { name: s };
-    }
-
 };
 
 /**

@@ -8,7 +8,7 @@ var Symbol = require('symbol');
 var path = require('path');
 var pluralize = require('pluralize');
 var async = require('async');
-var {QueryUtils} = require('@themost/query');
+var {QueryUtils, Expression} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
@@ -761,6 +761,12 @@ function filterInternal(params, callback) {
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
+                    if (expr && expr.$select instanceof Expression) {
+                        member = expr.$select;
+                    }
+                    if (expr.$expand) {
+                        expr = expr.$expand;
+                    }
                 }
                 if (expr) {
                     var arrExpr = [];
@@ -781,9 +787,11 @@ function filterInternal(params, callback) {
                 }
             }
             catch (err) {
-                cb(err);
-                return;
+                return cb(err);
             }
+        }
+        if (member instanceof Expression) {
+            return cb(null, member);
         }
         if (typeof self.resolveMember === 'function')
             self.resolveMember.call(self, member, cb);
