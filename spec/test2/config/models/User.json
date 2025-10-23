@@ -7,7 +7,7 @@
     "abstract": false,
     "sealed": false,
     "inherits": "Account",
-    "version": "2.0",
+    "version": "2.1.0",
     "fields": [
         {
             "@id": "https://themost.io/schemas/lockoutTime",
@@ -109,6 +109,13 @@
             "@id": "https://themost.io/schemas/userReviews",
             "name": "userReviews",
             "type": "UserReview"
+        },
+        {
+          "@id": "https://themost.io/schemas/metadata",
+          "many": false,
+          "description": "A JSON object that contains additional metadata for the user.",
+          "name": "metadata",
+          "type": "Json"
         }
     ],
     "privileges": [

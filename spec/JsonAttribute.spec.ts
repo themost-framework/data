@@ -177,10 +177,14 @@ describe('JsonAttribute', () => {
             }
             await Products.save(item);
             expect(item.dateCreated).toBeTruthy();
-            item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)')
+            item = await Products
                 .where((x: any) => {
-                    return x.extraAttributes.cpu.brand === 'Intel'
+                    return x.name === 'Apple MacBook Air (13.3-inch, 2013 Version)' && x.extraAttributes.cpu.brand === 'Intel'
                 }).getItem();
+            expect(item).toBeTruthy();
+            expect(item.name).toBe('Apple MacBook Air (13.3-inch, 2013 Version)');
+            // query again using expressions
+            item = await Products.where('extraAttributes/cpu/brand').equal('Intel').getItem();
             expect(item).toBeTruthy();
             expect(item.name).toBe('Apple MacBook Air (13.3-inch, 2013 Version)');
         });
