@@ -183,6 +183,14 @@ describe('JsonAttribute', () => {
                 }).getItem();
             expect(item).toBeTruthy();
             expect(item.name).toBe('Apple MacBook Air (13.3-inch, 2013 Version)');
+
+            // use filterAsync
+            const q = await Products.filterAsync({
+                $filter: `extraAttributes/cpu/brand eq 'Intel'`
+            });
+            item = await q.select().getItem();
+            expect(item).toBeTruthy();
+            expect(item.name).toBe('Apple MacBook Air (13.3-inch, 2013 Version)');
         });
     });
 
@@ -208,6 +216,7 @@ describe('JsonAttribute', () => {
                 }).getItem();
             expect(item).toBeTruthy();
             expect(item.brand).toBe('INTEL');
+
         });
     });
 

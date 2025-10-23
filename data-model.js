@@ -8,7 +8,7 @@ var Symbol = require('symbol');
 var path = require('path');
 var pluralize = require('pluralize');
 var async = require('async');
-var {QueryUtils} = require('@themost/query');
+var {QueryUtils, Expression, QueryField} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
@@ -761,6 +761,9 @@ function filterInternal(params, callback) {
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
+                    if (expr && expr.$select instanceof Expression) {
+                        return cb(null, expr.$select);
+                    }
                 }
                 if (expr) {
                     var arrExpr = [];
@@ -781,8 +784,7 @@ function filterInternal(params, callback) {
                 }
             }
             catch (err) {
-                cb(err);
-                return;
+                return cb(err);
             }
         }
         if (typeof self.resolveMember === 'function')
