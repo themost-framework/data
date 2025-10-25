@@ -35,10 +35,9 @@ describe('Permissions', () => {
     it('should validate create access', async () => {
         const Products = context.model('Product');
         // set context user
-        Object.assign(context, {
-            user: {
-                name: 'christina.ali@example.com'
-        }});
+        context.switchUser({
+            name: 'christina.ali@example.com'
+        });
         const orderedItem = await Products.where('name').equal(
             'Apple MacBook Air (13.3-inch, 2013 Version)'
         ).getItem();
@@ -76,9 +75,7 @@ describe('Permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
-            });
+            context.switchUser(user);
             const user1 = await context.model('User').find(user)
                 .expand('groups').silent().getItem();
             expect(user1).toBeTruthy();
@@ -113,9 +110,7 @@ describe('Permissions', () => {
             const user = {
                 name: 'margaret.davis@example.com'
             };
-            Object.assign(context, {
-                user
-            });
+            context.switchUser(user);
             const group = await context.model('Group').where('name').equal('Contributors').getTypedItem();
             expect(group).toBeTruthy();
             const members = group.property('members').silent();

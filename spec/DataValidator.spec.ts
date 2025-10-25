@@ -43,7 +43,7 @@ describe('DataValidator', () => {
             await expect(People.save(item)).resolves.toBeTruthy();
             item.faxNumber = '301234567890';
             await expect(People.save(item)).rejects.toThrowError('Fax number should with "+" e.g. +301234567890');
-            delete context.user;
+            context.switchUser();
             
         });
     });
@@ -71,7 +71,7 @@ describe('DataValidator', () => {
                     name: 'Lenovo Yoga 2 Pro'
                 }
             })).rejects.toThrowError(field.validation.message);
-            delete context.user;
+            context.switchUser();
             
         });
     });
@@ -101,7 +101,7 @@ describe('DataValidator', () => {
                     name: 'Lenovo Yoga 2 Pro'
                 }
             })).rejects.toThrowError(field.validation.message);
-            delete context.user;
+            context.switchUser();
             
         });
     });
@@ -129,7 +129,7 @@ describe('DataValidator', () => {
                     name: 'Lenovo Yoga 2 Pro'
                 }
             })).rejects.toThrowError(field.validation.message);
-            delete context.user;
+            context.switchUser();
         });
     });
 

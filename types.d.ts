@@ -2,6 +2,7 @@
 import {DataModel} from "./data-model";
 import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration, DataContextBase, ContextUserBase} from "@themost/common";
 import {DataAssociationMappingBase, DataFieldBase} from '@themost/common';
+import { BehaviorSubject, Observable } from "rxjs";
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
@@ -75,23 +76,81 @@ export declare interface ContextUser extends ContextUserBase {
     
 }
 
-export declare class DataContext extends SequentialEventEmitter implements DataContextBase {
+export declare abstract class DataContext extends SequentialEventEmitter implements DataContextBase {
     
+    /**
+     * Optional property representing the use of the current context.
+     * 
+     * @type {ContextUser}
+     */
     user?: ContextUser;
 
+    /**
+     * Optional property representing the interactive user of the current context.
+     * The interactive user is the original user who initiated the current context.
+     */
     interactiveUser?: ContextUser;
 
-    model(name:any): DataModel;
+    /**
+     * An observable stream that emits user-related data.
+     * 
+     * @type {Observable<any>}
+     */
+    user$: Observable<any>;
+    
+    /**
+     * An observable stream that emits interactive user-related data.
+     * 
+     * @type {Observable}
+     */
+    interactiveUser$: Observable<any>;
 
+    /**
+     * The database adapter instance used for interacting with the database.
+     * This property provides the necessary methods and properties to perform
+     * database operations such as querying, inserting, updating, and deleting records.
+     */
     db: DataAdapterBase;
 
-    getConfiguration(): ConfigurationBase;
+    /**
+     * Returns an instance of the data model with the specified name.
+     * @param {*} name 
+     */
+    abstract model(name:any): DataModel;
 
-    finalize(callback?:(err?:Error) => void): void;
+    /**
+     * Returns the configuration service of the parent application.
+     * @returns {ConfigurationBase}
+     */
+    abstract getConfiguration(): ConfigurationBase;
 
+    /**
+     * Finalizes the current context and releases all resources.
+     * @param {(err?: Error) => void} callback 
+     */
+    abstract finalize(callback?:(err?:Error) => void): void;
+
+    /**
+     * Finalizes the current context and releases all resources.
+     * @returns {Promise<void>}
+     */
     finalizeAsync(): Promise<void>;
 
+    /**
+     * Executes the specified function within a transaction.
+     * A transaction is a set of operations that are executed as a single unit of work.
+     * @param func 
+     */
     executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
+
+    switchUser(user?: ContextUser): void;
+
+    setUser(user?: ContextUser): void;
+
+    switchInteractiveUser(user?: ContextUser): void;
+
+    setInteractiveUser(user?: ContextUser): void;
+    
 }
 
 export declare class DataContextEmitter {
