@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 const _ = require('lodash');
-const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
+const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError, TraceUtils} = require('@themost/common');
 const {defer, Observable, shareReplay, switchMap} = require('rxjs');
 const {UserService} = require('./UserService');
 /**
@@ -160,7 +160,7 @@ function DataContext() {
 
     this.anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
         const application = this.getApplication();
-        if (application) {
+        if (application && typeof application.getService === 'function') {
             const userService = application.getService(UserService);
             if (userService) {
                 return userService.anonymousUser$;
@@ -277,10 +277,9 @@ DataContext.prototype.getUser = function() {
         if ((this.user && this.user.name) == null) {
             return observer.next(null);
         }
-
         // get current application
         const application = this.getApplication();
-        if (application != null) {
+        if (application && typeof application.getService === 'function') {
             // get user service
             const userService = application.getService(UserService);
             // check if user service is available
@@ -326,7 +325,7 @@ DataContext.prototype.getInteractiveUser = function() {
 
         // get current application
         const application = this.getApplication();
-        if (application != null) {
+        if (application && typeof application.getService === 'function') {
             // get user service
             const userService = application.getService(UserService);
             // check if user service is available

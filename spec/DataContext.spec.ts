@@ -1,5 +1,5 @@
 import {TestApplication, TestApplication2} from './TestApplication';
-import {DataContext} from '@themost/data';
+import {DataContext, UserService} from '@themost/data';
 import {firstValueFrom} from 'rxjs';
 
 describe('DataContext', () => {
@@ -7,6 +7,7 @@ describe('DataContext', () => {
     let context: DataContext;
     beforeAll((done) => {
         app = new TestApplication2();
+        app.useService(UserService);
         context = app.createContext();
         return done();
     });

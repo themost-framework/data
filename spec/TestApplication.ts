@@ -1,4 +1,4 @@
-import { IApplication, ConfigurationBase } from "@themost/common";
+import {IApplication, ConfigurationBase, ApplicationService, ApplicationServiceConstructor} from "@themost/common";
 import {resolve} from 'path';
 import {
     DataConfigurationStrategy,
@@ -14,6 +14,12 @@ export class TestApplication extends IApplication {
     private _services: Map<any,any> = new Map();
     private readonly _configuration: ConfigurationBase;
 
+    useService(serviceCtor: ApplicationServiceConstructor<any>) {
+        const ServiceClass: any = serviceCtor;
+        this._services.set(ServiceClass.name, new ServiceClass(this));
+        return this;
+    }
+
     useStrategy(serviceCtor: void, strategyCtor: void): this {
         const ServiceClass: any = serviceCtor;
         const StrategyClass: any = strategyCtor;
@@ -23,9 +29,15 @@ export class TestApplication extends IApplication {
     hasStrategy(serviceCtor: void): boolean {
         return this._services.has((<any>serviceCtor).name);
     }
+
     getStrategy<T>(serviceCtor: new () => T): T {
         return this._services.get(serviceCtor.name);
     }
+
+    getService<T>(serviceCtor: new () => T): T {
+        return this._services.get(serviceCtor.name);
+    }
+
     getConfiguration(): ConfigurationBase {
         return this._configuration;
     }
@@ -67,6 +79,7 @@ export class TestApplication extends IApplication {
         context.getConfiguration = () => {
             return this._configuration;
         };
+        context.setApplication(this);
         return context;
     }
 

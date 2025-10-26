@@ -175,7 +175,7 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
      * Sets the application of the current context. The application is the parent application that created the current context.
      * @param {ApplicationBase} application
      */
-    setApplication(application: ApplicationBase): void;
+    setApplication(application: ApplicationBase | any): void;
 
     /**
      * Returns the application of the current context.
