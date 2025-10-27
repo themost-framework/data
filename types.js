@@ -1,189 +1,10 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var _ = require('lodash');
-var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
-
+const _ = require('lodash');
+const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
+const {shareReplay, switchMap, Observable, defer} = require('rxjs');
+const {UserService} = require('./UserService');
 /**
  * @classdesc Represents an abstract data connector to a database
- * @description
- * <p>
- There are several data adapters for connections to common database engines:
- </p>
- <ul>
-    <li>MOST Web Framework MySQL Adapter for connecting with MySQL Database Server
-    <p>Install the data adapter:<p>
-    <pre class="prettyprint"><code>npm install most-data-mysql</code></pre>
-    <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
-    <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"MySQL Data Adapter", "invariantName": "mysql", "type":"most-data-mysql" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"mysql", "default":true,
-     "options": {
-       "host":"localhost",
-       "port":3306,
-       "user":"user",
-       "password":"password",
-       "database":"test"
-     }
- }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework MSSQL Adapter for connecting with Microsoft SQL Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-mssql</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"MSSQL Data Adapter", "invariantName": "mssql", "type":"most-data-mssql" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"mssql", "default":true,
-        "options": {
-          "server":"localhost",
-          "user":"user",
-          "password":"password",
-          "database":"test"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework PostgreSQL Adapter for connecting with PostgreSQL Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-pg</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"PostgreSQL Data Adapter", "invariantName": "postgres", "type":"most-data-pg" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"postgres", "default":true,
-        "options": {
-          "host":"localhost",
-          "post":5432,
-          "user":"user",
-          "password":"password",
-          "database":"db"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework Oracle Adapter for connecting with Oracle Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-oracle</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"Oracle Data Adapter", "invariantName": "oracle", "type":"most-data-oracle" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"oracle", "default":true,
-        "options": {
-          "host":"localhost",
-          "port":1521,
-          "user":"user",
-          "password":"password",
-          "service":"orcl",
-          "schema":"PUBLIC"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework SQLite Adapter for connecting with Sqlite Databases
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-sqlite</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"SQLite Data Adapter", "invariantName": "sqlite", "type":"most-data-sqlite" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"sqlite", "default":true,
-        "options": {
-            database:"db/local.db"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework Data Pool Adapter for connection pooling
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-pool</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"Pool Data Adapter", "invariantName": "pool", "type":"most-data-pool" }
- { "name":"...", "invariantName": "...", "type":"..." }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- { "name":"development", "invariantName":"...", "default":false,
-    "options": {
-      "server":"localhost",
-      "user":"user",
-      "password":"password",
-      "database":"test"
-    }
-},
- { "name":"development_with_pool", "invariantName":"pool", "default":true,
-    "options": {
-      "adapter":"development"
-    }
-}
- ...
- ]
- </code></pre>
- </li>
- </ul>
  * @class
  * @constructor
  * @param {*} options - The database connection options
@@ -285,7 +106,7 @@ function DataEventArgs() {
 /**
  * @classdesc Represents the main data context.
  * @class
- * @augments SequentialEventEmitter
+ * @inherits SequentialEventEmitter
  * @constructor
  * @abstract
  */
@@ -295,6 +116,83 @@ function DataContext() {
     if (this.constructor === DataContext.prototype.constructor) {
         throw new AbstractClassError();
     }
+
+    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+
+    Object.defineProperty(this, 'user$', {
+        configurable: true,
+        enumerable: false,
+        value: user$
+    });
+
+    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+
+    Object.defineProperty(this, 'interactiveUser$', {
+        configurable: true,
+        enumerable: false,
+        value: interactiveUser$
+    });
+
+    var _user = null;
+    var self = this;
+    const handler = {
+        get(target, property) {
+            return target[property];
+        },
+        set(target, property, value) {
+            target[property] = value;
+            self.refreshState();
+            return true;
+        }
+    };
+    Object.defineProperty(this, 'user', {
+        get: function() {
+            return _user;
+        },
+        set: function(value) {
+            _user =  value != null ? new Proxy(value, handler) : value;
+            this.refreshState();
+        },
+        configurable: true,
+        enumerable: false
+    });
+
+    var _interactiveUser = null;
+    Object.defineProperty(this, 'interactiveUser', {
+        get: function() {
+            return _interactiveUser;
+        },
+        set: function(value) {
+            _interactiveUser = value != null ? new Proxy(value, handler) : value;
+            this.refreshState();
+        },
+        configurable: true,
+        enumerable: false
+    });
+
+    const anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            const userService = application.getService(UserService);
+            if (userService) {
+                return userService.anonymousUser$;
+            }
+        }
+        return new Observable((observer) => {
+            void this.model('User').where('name').equal('anonymous').expand('groups').silent().getItem().then((result) => {
+                return observer.next(result);
+            }).catch((err) => {
+                return observer.error(err);
+            });
+        });
+    }), shareReplay(1));
+
+    Object.defineProperty(this, 'anonymousUser$', {
+        configurable: true,
+        enumerable: false,
+        value: anonymousUser$
+    });
+
     /**
      * @property db
      * @description Gets the current database adapter
@@ -304,6 +202,13 @@ function DataContext() {
     Object.defineProperty(this, 'db', {
         get : function() {
             return null;
+        },
+        configurable : true,
+        enumerable:false });
+
+    Object.defineProperty(this, 'configuration', {
+        get : function() {
+            return this.getConfiguration();
         },
         configurable : true,
         enumerable:false });
@@ -322,7 +227,7 @@ DataContext.prototype.model = function(name) {
 
 /**
  * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase}
+ * @returns {import('@themost/common').ConfigurationBase}
  * @abstract
  */
 DataContext.prototype.getConfiguration = function() {
@@ -383,6 +288,121 @@ DataContext.prototype.executeInTransactionAsync = function(func) {
         });
     });
 }
+
+DataContext.prototype.getUser = function() {
+    return new Observable((observer) => {
+        if ((this.user && this.user.name) == null) {
+            return observer.next(null);
+        }
+        // get current application
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getUser(this, this.user.name).then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            }
+        }
+        // otherwise get user from data context
+        void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
+            return observer.next(result);
+        }).catch((err) => {
+            return observer.error(err);
+        });
+    });
+};
+
+DataContext.prototype.switchUser = function(user) {
+    this.user = user;
+};
+
+DataContext.prototype.setUser = function(user) {
+    this.user = user;
+};
+
+/**
+ * @protected
+ */
+DataContext.prototype.refreshState = function() {
+    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'user$', {
+        configurable: true,
+        enumerable: false,
+        value: user$
+    });
+    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'interactiveUser$', {
+        configurable: true,
+        enumerable: false,
+        value: interactiveUser$
+    });
+};
+
+DataContext.prototype.getInteractiveUser = function() {
+    return new Observable((observer) => {
+        if ((this.interactiveUser && this.interactiveUser.name) == null) {
+            return observer.next(null);
+        }
+
+        // get current application
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getUser(this, this.interactiveUser.name).then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            }
+        }
+        // otherwise get user from data context
+        void this.model('User').where('name').equal(this.interactiveUser.name).expand('groups').silent().getItem().then((result) => {
+            return observer.next(result)
+        }).catch((err) => {
+            return observer.error(err);
+        });
+    });
+};
+
+DataContext.prototype.switchInteractiveUser = function(user) {
+    this.interactiveUser = user;
+};
+
+DataContext.prototype.setInteractiveUser = function(user) {
+    this.interactiveUser = user;
+};
+
+/**
+ * Sets the application that is associated with this data context
+ * @param {import('@themost/common').ApplicationBase} application
+ */
+DataContext.prototype.setApplication = function(application) {
+    Object.defineProperty(this, 'application', {
+        get: function() {
+            return application;
+        },
+        configurable: true,
+        enumerable: false
+    });
+};
+
+/**
+ * Returns the application that is associated with this data context
+ * @returns {import('@themost/common').ApplicationBase}
+ */
+DataContext.prototype.getApplication = function() {
+    return this.application;
+};
 
 LangUtils.inherits(DataContext, SequentialEventEmitter);
 

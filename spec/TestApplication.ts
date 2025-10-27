@@ -1,4 +1,4 @@
-import { IApplication, ConfigurationBase } from "@themost/common";
+import {IApplication, ConfigurationBase, ApplicationServiceConstructor} from "@themost/common";
 import {resolve} from 'path';
 import * as fs from 'fs';
 import {
@@ -20,6 +20,14 @@ export class TestApplication extends IApplication {
         const StrategyClass: any = strategyCtor;
         this._services.set(ServiceClass.name, new StrategyClass(this));
         return this;
+    }
+    useService<T>(serviceCtor: ApplicationServiceConstructor<any>): this {
+        const ServiceClass: any = serviceCtor;
+        this._services.set(ServiceClass.name, new ServiceClass(this));
+        return this;
+    }
+    getService<T>(serviceCtor: () => T): T {
+        return this._services.get((<any>serviceCtor).name);
     }
     hasStrategy(serviceCtor: void): boolean {
         return this._services.has((<any>serviceCtor).name);
@@ -69,6 +77,7 @@ export class TestApplication extends IApplication {
 
     createContext(): DataContext {
         const adapters = this._configuration.getSourceAt('adapters');
+        // @ts-ignore
         const adapter: { name: string; invariantName: string; default: boolean } = adapters.find((item: any)=> {
             return item.default;
         });
@@ -76,10 +85,12 @@ export class TestApplication extends IApplication {
         context.getConfiguration = () => {
             return this._configuration;
         };
+        context.setApplication(this);
         return context;
     }
 
     async finalize(): Promise<void> {
+        // @ts-ignore
         const service = this.getConfiguration().getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
         if (typeof service.finalize === 'function') {
             await service.finalize();
