@@ -117,9 +117,21 @@ function DataContext() {
         throw new AbstractClassError();
     }
 
-    this.user$ = defer(() => this.getUser()).pipe(shareReplay());
+    const user$ = defer(() => this.getUser()).pipe(shareReplay());
 
-    this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'user$', {
+        configurable: true,
+        enumerable: false,
+        value: user$
+    });
+
+    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+
+    Object.defineProperty(this, 'interactiveUser$', {
+        configurable: true,
+        enumerable: false,
+        value: interactiveUser$
+    });
 
     var _user = null;
     var self = this;
@@ -158,7 +170,7 @@ function DataContext() {
         enumerable: false
     });
 
-    this.anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+    const anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
         const application = this.getApplication();
         if (application && typeof application.getService === 'function') {
             const userService = application.getService(UserService);
@@ -174,6 +186,12 @@ function DataContext() {
             });
         });
     }), shareReplay(1));
+
+    Object.defineProperty(this, 'anonymousUser$', {
+        configurable: true,
+        enumerable: false,
+        value: anonymousUser$
+    });
 
     /**
      * @property db
@@ -313,8 +331,18 @@ DataContext.prototype.setUser = function(user) {
  * @protected
  */
 DataContext.prototype.refreshState = function() {
-    this.user$ = defer(() => this.getUser()).pipe(shareReplay());
-    this.interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'user$', {
+        configurable: true,
+        enumerable: false,
+        value: user$
+    });
+    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'interactiveUser$', {
+        configurable: true,
+        enumerable: false,
+        value: interactiveUser$
+    });
 };
 
 DataContext.prototype.getInteractiveUser = function() {

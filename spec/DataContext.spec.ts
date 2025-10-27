@@ -16,7 +16,17 @@ describe('DataContext', () => {
         await app.finalize();
     });
 
+    it('should serialize context as empty object', async () => {
+        context.setUser({
+            name: 'alexis.rees@example.com',
+        });
+        const user = await firstValueFrom(context.user$);
+        const str = JSON.stringify(context);
+        expect(str).toEqual('{}');
+    })
+
     it('should have user$', async () => {
+        context.setUser(null);
         const user = await firstValueFrom(context.user$);
         expect(user?.name).toBeFalsy();
         context.setUser({
