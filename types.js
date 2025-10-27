@@ -1,189 +1,10 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-var _ = require('lodash');
-var {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
-
+const _ = require('lodash');
+const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
+const {defer, Observable, shareReplay, switchMap} = require('rxjs');
+const {UserService} = require('./UserService');
 /**
  * @classdesc Represents an abstract data connector to a database
- * @description
- * <p>
- There are several data adapters for connections to common database engines:
- </p>
- <ul>
-    <li>MOST Web Framework MySQL Adapter for connecting with MySQL Database Server
-    <p>Install the data adapter:<p>
-    <pre class="prettyprint"><code>npm install most-data-mysql</code></pre>
-    <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
-    <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"MySQL Data Adapter", "invariantName": "mysql", "type":"most-data-mysql" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"mysql", "default":true,
-     "options": {
-       "host":"localhost",
-       "port":3306,
-       "user":"user",
-       "password":"password",
-       "database":"test"
-     }
- }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework MSSQL Adapter for connecting with Microsoft SQL Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-mssql</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"MSSQL Data Adapter", "invariantName": "mssql", "type":"most-data-mssql" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"mssql", "default":true,
-        "options": {
-          "server":"localhost",
-          "user":"user",
-          "password":"password",
-          "database":"test"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework PostgreSQL Adapter for connecting with PostgreSQL Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-pg</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"PostgreSQL Data Adapter", "invariantName": "postgres", "type":"most-data-pg" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"postgres", "default":true,
-        "options": {
-          "host":"localhost",
-          "post":5432,
-          "user":"user",
-          "password":"password",
-          "database":"db"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework Oracle Adapter for connecting with Oracle Database Server
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-oracle</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"Oracle Data Adapter", "invariantName": "oracle", "type":"most-data-oracle" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"oracle", "default":true,
-        "options": {
-          "host":"localhost",
-          "port":1521,
-          "user":"user",
-          "password":"password",
-          "service":"orcl",
-          "schema":"PUBLIC"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework SQLite Adapter for connecting with Sqlite Databases
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-sqlite</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"SQLite Data Adapter", "invariantName": "sqlite", "type":"most-data-sqlite" }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- ...
- { "name":"development", "invariantName":"sqlite", "default":true,
-        "options": {
-            database:"db/local.db"
-        }
-    }
- ...
- ]
- </code></pre>
- </li>
-    <li>MOST Web Framework Data Pool Adapter for connection pooling
- <p>Install the data adapter:<p>
- <pre class="prettyprint"><code>npm install most-data-pool</code></pre>
- <p>Append the adapter type in application configuration (app.json#adapterTypes):<p>
- <pre class="prettyprint"><code>
- ...
- "adapterTypes": [
- ...
- { "name":"Pool Data Adapter", "invariantName": "pool", "type":"most-data-pool" }
- { "name":"...", "invariantName": "...", "type":"..." }
- ...
- ]
- </code></pre>
- <p>Register an adapter in application configuration (app.json#adapters):<p>
- <pre class="prettyprint"><code>
- adapters: [
- { "name":"development", "invariantName":"...", "default":false,
-    "options": {
-      "server":"localhost",
-      "user":"user",
-      "password":"password",
-      "database":"test"
-    }
-},
- { "name":"development_with_pool", "invariantName":"pool", "default":true,
-    "options": {
-      "adapter":"development"
-    }
-}
- ...
- ]
- </code></pre>
- </li>
- </ul>
  * @class
  * @constructor
  * @param {*} options - The database connection options
@@ -223,7 +44,7 @@ DataAdapter.prototype.close = function(callback) {
 /**
  * Executes the given query against the underlying database.
  * @param {string|*} query - A string or a query expression to execute.
- * @param {*} values - An object which represents the named parameters that are going to used during query parsing
+ * @param {*} values - An object which represents the named parameters that are going to be used during query parsing
  * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise. The second argument will contain the result.
  * @abstract
  */
@@ -258,7 +79,7 @@ DataAdapter.prototype.executeInTransaction = function(fn, callback) {
 /**
  * A helper method for creating a database view if the current data adapter supports views
  * @param {string} name - A string that represents the name of the view to be created
- * @param {QueryExpression|*} query - A query expression that represents the database view
+ * @param {import('@themost/query').QueryExpression|*} query - A query expression that represents the database view
  * @param {Function=} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
  * @abstract
  */
@@ -285,7 +106,7 @@ function DataEventArgs() {
 /**
  * @classdesc Represents the main data context.
  * @class
- * @augments SequentialEventEmitter
+ * @inherits SequentialEventEmitter
  * @constructor
  * @abstract
  */
@@ -295,6 +116,83 @@ function DataContext() {
     if (this.constructor === DataContext.prototype.constructor) {
         throw new AbstractClassError();
     }
+
+    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+
+    Object.defineProperty(this, 'user$', {
+        configurable: true,
+        enumerable: false,
+        value: user$
+    });
+
+    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+
+    Object.defineProperty(this, 'interactiveUser$', {
+        configurable: true,
+        enumerable: false,
+        value: interactiveUser$
+    });
+
+    var _user = null;
+    var self = this;
+    const handler = {
+        get(target, property) {
+            return target[property];
+        },
+        set(target, property, value) {
+            target[property] = value;
+            self.refreshState();
+            return true;
+        }
+    };
+    Object.defineProperty(this, 'user', {
+        get: function() {
+            return _user;
+        },
+        set: function(value) {
+            _user =  value != null ? new Proxy(value, handler) : value;
+            this.refreshState();
+        },
+        configurable: true,
+        enumerable: false
+    });
+
+    var _interactiveUser = null;
+    Object.defineProperty(this, 'interactiveUser', {
+        get: function() {
+            return _interactiveUser;
+        },
+        set: function(value) {
+            _interactiveUser = value != null ? new Proxy(value, handler) : value;
+            this.refreshState();
+        },
+        configurable: true,
+        enumerable: false
+    });
+
+    const anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            const userService = application.getService(UserService);
+            if (userService) {
+                return userService.anonymousUser$;
+            }
+        }
+        return new Observable((observer) => {
+            void this.model('User').where('name').equal('anonymous').expand('groups').silent().getItem().then((result) => {
+                return observer.next(result);
+            }).catch((err) => {
+                return observer.error(err);
+            });
+        });
+    }), shareReplay(1));
+
+    Object.defineProperty(this, 'anonymousUser$', {
+        configurable: true,
+        enumerable: false,
+        value: anonymousUser$
+    });
+
     /**
      * @property db
      * @description Gets the current database adapter
@@ -307,6 +205,14 @@ function DataContext() {
         },
         configurable : true,
         enumerable:false });
+
+    Object.defineProperty(this, 'configuration', {
+        get : function() {
+            return this.getConfiguration();
+        },
+        configurable : true,
+        enumerable:false });
+
 }
 // noinspection JSUnusedLocalSymbols
 /**
@@ -322,7 +228,7 @@ DataContext.prototype.model = function(name) {
 
 /**
  * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase}
+ * @returns {import('@themost/common').ConfigurationBase}
  * @abstract
  */
 DataContext.prototype.getConfiguration = function() {
@@ -383,6 +289,121 @@ DataContext.prototype.executeInTransactionAsync = function(func) {
         });
     });
 }
+
+DataContext.prototype.getUser = function() {
+    return new Observable((observer) => {
+        if ((this.user && this.user.name) == null) {
+            return observer.next(null);
+        }
+        // get current application
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getUser(this, this.user.name).then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            }
+        }
+        // otherwise get user from data context
+        void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
+            return observer.next(result);
+        }).catch((err) => {
+            return observer.error(err);
+        });
+    });
+};
+
+DataContext.prototype.switchUser = function(user) {
+    this.user = user;
+};
+
+DataContext.prototype.setUser = function(user) {
+    this.user = user;
+};
+
+/**
+ * @protected
+ */
+DataContext.prototype.refreshState = function() {
+    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'user$', {
+        configurable: true,
+        enumerable: false,
+        value: user$
+    });
+    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    Object.defineProperty(this, 'interactiveUser$', {
+        configurable: true,
+        enumerable: false,
+        value: interactiveUser$
+    });
+};
+
+DataContext.prototype.getInteractiveUser = function() {
+    return new Observable((observer) => {
+        if ((this.interactiveUser && this.interactiveUser.name) == null) {
+            return observer.next(null);
+        }
+
+        // get current application
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getUser(this, this.interactiveUser.name).then((result) => {
+                    return observer.next(result);
+                }).catch((err) => {
+                    return observer.error(err);
+                });
+            }
+        }
+        // otherwise get user from data context
+        void this.model('User').where('name').equal(this.interactiveUser.name).expand('groups').silent().getItem().then((result) => {
+            return observer.next(result)
+        }).catch((err) => {
+            return observer.error(err);
+        });
+    });
+};
+
+DataContext.prototype.switchInteractiveUser = function(user) {
+    this.interactiveUser = user;
+};
+
+DataContext.prototype.setInteractiveUser = function(user) {
+    this.interactiveUser = user;
+};
+
+/**
+ * Sets the application that is associated with this data context
+ * @param {import('@themost/common').ApplicationBase} application
+ */
+DataContext.prototype.setApplication = function(application) {
+    Object.defineProperty(this, 'application', {
+        get: function() {
+            return application;
+        },
+        configurable: true,
+        enumerable: false
+    });
+};
+
+/**
+ * Returns the application that is associated with this data context
+ * @returns {import('@themost/common').ApplicationBase}
+ */
+DataContext.prototype.getApplication = function() {
+    return this.application;
+};
 
 LangUtils.inherits(DataContext, SequentialEventEmitter);
 
@@ -511,7 +532,7 @@ function DataModelMigration() {
     this.version = '0.0';
     /**
      * Gets or sets a string that represents a short description of this migration
-     * @type {string}
+     * @type {string|null}
      */
     this.description = null;
     /**
@@ -528,91 +549,14 @@ function DataModelMigration() {
 
 /**
  * @classdesc DataAssociationMapping class describes the association between two models.
- * <p>
- *     An association between two models is described in field attributes. For example
- *     model Order may have an association with model Party (Person or Organization) through the field Order.customer:
- * </p>
- <pre class="prettyprint"><code>
-   { "name": "Order",
-     "fields": [
-    ...
-   {
-        "name": "customer",
-        "title": "Customer",
-        "description": "Party placing the order.",
-        "type": "Party"
-    }
-    ...]
-    }
- </code></pre>
- <p>
-      This association is equivalent with the following DataAssociationMapping instance:
- </p>
- <pre class="prettyprint"><code>
- "mapping": {
-    "cascade": "null",
-    "associationType": "association",
-    "select": [],
-    "childField": "customer",
-    "childModel": "Order",
-    "parentField": "id",
-    "parentModel": "Party"
-}
- </code></pre>
-  <p>
- The above association mapping was auto-generated from the field definition of Order.customer where the field type (Party)
- actually defines the association between these models.
- </p>
- <p>
- Another example of an association between two models is a many-to-many association. User model has a many-to-many association (for user groups) with Group model:
- </p>
- <pre class="prettyprint"><code>
- { "name": "User",
-   "fields": [
-  ...
- {
-    "name": "groups",
-    "title": "User Groups",
-    "description": "A collection of groups where user belongs.",
-    "type": "Group",
-    "expandable": true,
-    "mapping": {
-        "associationAdapter": "GroupMembers",
-        "parentModel": "Group",
-        "parentField": "id",
-        "childModel": "User",
-        "childField": "id",
-        "associationType": "junction",
-        "cascade": "delete"
-    }
-}
-  ...]
-  }
- </code></pre>
- <p>This association may also be defined in Group model:</p>
- <pre class="prettyprint"><code>
- { "name": "Group",
-   "fields": [
-  ...
- {
-    "name": "members",
-    "title": "Group Members",
-    "description": "Contains the collection of group members (users or groups).",
-    "type": "Account",
-    "many":true
-}
-  ...]
-  }
- </code></pre>
- *
  * @class
  * @property {string} associationAdapter - Gets or sets the association database object
  * @property {string} parentModel - Gets or sets the parent model name
  * @property {string} childModel - Gets or sets the child model name
  * @property {string} parentField - Gets or sets the parent field name
  * @property {string} childField - Gets or sets the child field name
- * @property {string} associationObjectField - Gets or sets the name of the parent field as it is defined in association adapter. This attribute is optional but it is required for many-to-many associations where parent and child model are the same.
- * @property {string} associationValueField - Gets or sets the name of the child field as it is defined in association adapter. This attribute is optional but it is required for many-to-many associations where parent and child model are the same.
+ * @property {string} associationObjectField - Gets or sets the name of the parent field as it is defined in association adapter. This attribute is optional, but it is required for many-to-many associations where parent and child model are the same.
+ * @property {string} associationValueField - Gets or sets the name of the child field as it is defined in association adapter. This attribute is optional, but it is required for many-to-many associations where parent and child model are the same.
  * @property {string} refersTo - Gets or sets the parent property where this association refers to
  * @property {string} parentLabel - Gets or sets the parent field that is going to be used as label for this association
  * @property {string} cascade - Gets or sets the action that occurs when parent item is going to be deleted (all|none|null|delete). The default value is 'none'.
@@ -680,43 +624,6 @@ DataField.prototype.getName = function() {
  * @property {string} name - Gets or sets a short description for this listener
  * @property {string} type - Gets or sets a string which is the path of the module that exports this listener.
  * @property {boolean} disabled - Gets or sets a boolean value that indicates whether this listener is disabled or not. The default value is false.
- * @description
- * <p>
- * A data model uses event listeners as triggers which are automatically executed after data operations.
- * Those listeners are defined in [eventListeners] section of a model's schema.
- * </p>
- * <pre class="prettyprint">
- *<code>
-*     {
-*          ...
-*          "fields": [ ... ],
-*          ...
-*          "eventListeners": [
-*              { "name":"Update Listener", "type":"/app/controllers/an-update-listener.js" },
-*              { "name":"Another Update Listener", "type":"module-a/lib/listener" }
-*          ]
-*          ...
-*     }
- *</code>
- * </pre>
- * @example
- * // A simple DataEventListener that sends a message to sales users after new order was arrived.
- * var web = require("most-web");
- exports.afterSave = function(event, callback) {
-    //exit if state is other than [Insert]
-    if (event.state != 1) { return callback() }
-    //initialize web mailer
-    var mm = require("most-web-mailer"), context = event.model.context;
-    //send new order mail template by passing new item data
-    mm.mailer(context).to("sales@example.com")
-        .cc("supervisor@example.com")
-        .subject("New Order")
-        .template("new-order").send(event.target, function(err) {
-        if (err) { return web.common.log(err); }
-        return callback();
-    });
-};
- *
  */
 function DataModelEventListener() {
 
@@ -749,7 +656,7 @@ var PrivilegeType = {
 };
 
 /**
- * @classdesc Represents a privilege which is defined in a data model and it may be given in users and groups
+ * @classdesc Represents a privilege which is defined in a data model, and it may be given in users and groups
  * @class
  * @constructor
  * @property {PermissionMask} mask - Gets or sets the set of permissions which may be given with this privilege.

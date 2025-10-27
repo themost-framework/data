@@ -1,7 +1,11 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 import {DataModel} from "./data-model";
-import {ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration, DataContextBase, ContextUserBase} from "@themost/common";
+import {
+    ConfigurationBase, SequentialEventEmitter, DataAdapterBase, DataAdapterMigration, DataContextBase, ContextUserBase,
+    ApplicationBase
+} from "@themost/common";
 import {DataAssociationMappingBase, DataFieldBase} from '@themost/common';
+import {Observable} from 'rxjs';
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
 
@@ -75,23 +79,115 @@ export declare interface ContextUser extends ContextUserBase {
     
 }
 
-export declare class DataContext extends SequentialEventEmitter implements DataContextBase {
-    
+export declare abstract class DataContext extends SequentialEventEmitter implements DataContextBase {
+
+
+    /**
+     * Optional property representing the use of the current context.
+     *
+     * @type {ContextUser}
+     */
     user?: ContextUser;
 
+    /**
+     * Optional property representing the interactive user of the current context.
+     * The interactive user is the original user who initiated the current context.
+     */
     interactiveUser?: ContextUser;
 
-    model(name:any): DataModel;
+    /**
+     * An observable stream that emits user-related data.
+     *
+     * @type {Observable<any>}
+     */
+    user$: Observable<any>;
 
-    db: DataAdapterBase;
+    /**
+     * An observable stream that emits interactive user-related data.
+     *
+     * @type {Observable}
+     */
+    interactiveUser$: Observable<any>;
 
-    getConfiguration(): ConfigurationBase;
+    /**
+     * The database adapter instance used for interacting with the database.
+     * This property provides the necessary methods and properties to perform
+     * database operations such as querying, inserting, updating, and deleting records.
+     */
+    readonly db: DataAdapterBase;
 
-    finalize(callback?:(err?:Error) => void): void;
+    /**
+     * Returns an instance of the data model with the specified name.
+     * @param {*} name
+     */
+    abstract model(name:any): DataModel;
 
+    /**
+     * Returns the configuration service of the parent application.
+     * @returns {ConfigurationBase}
+     */
+    abstract getConfiguration(): ConfigurationBase;
+
+    /**
+     * Finalizes the current context and releases all resources.
+     * @param {(err?: Error) => void} callback
+     */
+    abstract finalize(callback?:(err?:Error) => void): void;
+
+    /**
+     * Finalizes the current context and releases all resources.
+     * @returns {Promise<void>}
+     */
     finalizeAsync(): Promise<void>;
 
+    /**
+     * Executes the specified function within a transaction.
+     * A transaction is a set of operations that are executed as a single unit of work.
+     * @param func
+     */
     executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
+
+    /**
+     * Switches the current user of the context.
+     * @param {ContextUser} user
+     */
+    switchUser(user?: ContextUser): void;
+
+    /**
+     * An alternative method to switch the current user of the context.
+     * @param {ContextUser} user
+     */
+    setUser(user?: ContextUser): void;
+
+    /**
+     * Switches the interactive user of the context. The interactive user is the original user who initiated the current context.
+     * @param {ContextUser} user
+     */
+    switchInteractiveUser(user?: ContextUser): void;
+
+    /**
+     * An alternative method to switch the interactive user of the context.
+     * @param {ContextUser} user
+     */
+    setInteractiveUser(user?: ContextUser): void;
+
+    /**
+     * Sets the application of the current context. The application is the parent application that created the current context.
+     * @param {ApplicationBase} application
+     */
+    setApplication(application: ApplicationBase | any): void;
+
+    /**
+     * Returns the application of the current context.
+     *
+     */
+    getApplication(): ApplicationBase;
+
+    /**
+     * Refreshes the state of the current context including the state of the current user and the interactive user.
+     */
+    protected refreshState(): void;
+
 }
 
 export declare class DataContextEmitter {

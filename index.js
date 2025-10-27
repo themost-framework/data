@@ -94,6 +94,8 @@ var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
 
 var { SelectObjectQuery } = require('./select-object-query');
 
+var { UserService } = require('./UserService');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -181,6 +183,7 @@ module.exports = {
     DataValueResolver,
     ValueFormatter,
     ValueDialect,
-    SelectObjectQuery
+    SelectObjectQuery,
+    UserService
 };
 
