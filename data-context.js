@@ -39,6 +39,7 @@ var { DataModel } = require('./data-model');
  */
 function DefaultDataContext()
 {
+    DefaultDataContext.super_.bind(this)();
     /**
      * @type {import('./types').DataAdapter}
      */

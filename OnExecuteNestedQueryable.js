@@ -41,6 +41,22 @@ class OnExecuteNestedQueryable {
                                 // try to upgrade
                                 return model.migrateAsync();
                             }
+                            if (model == null) {
+                                // try to find if the given model is a pre-defined many-to-many association
+                                const attribute = event.model.attributes.filter((attr) => attr.many).find((attr) => {
+                                    const mapping = event.model.inferMapping(attr.name);
+                                    return mapping && mapping.associationAdapter === item.$entity.model;
+                                });
+                                if (attribute) {
+                                    /**
+                                     * use DataObjectJunction class as a helper for creating model
+                                     * (get an instance of DataObjectJunction class using DataObject.property() method)
+                                     * @type {import('./data-object-junction').DataObjectJunction}
+                                     */
+                                    const junction = event.model.convert({}).property(attribute.name);
+                                    return junction.getBaseModel().migrateAsync();
+                                }
+                            }
                         }
                         return Promise.resolve();
                     }
