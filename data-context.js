@@ -10,35 +10,15 @@ var nameProperty = Symbol('name');
 var { DataModel } = require('./data-model');
 
 /**
- * @classdesc Represents the default data context of MOST Data Applications.
- * The default data context uses the adapter which is registered as the default adapter in application configuration.
- * @description
- ```
- adapters: [
- ...
- { "name":"development", "invariantName":"...", "default":false,
-    "options": {
-      "server":"localhost",
-      "user":"user",
-      "password":"password",
-      "database":"test"
-    }
-},
- { "name":"development_with_pool", "invariantName":"pool", "default":true,
-    "options": {
-      "adapter":"development"
-    }
-}
- ...
- ]
- ```
  * @class
  * @constructor
- * @augments {DataContext}
+ * @inherits DataContext
  * @property {DataAdapter} db - Gets a data adapter based on the current configuration settings.
  */
 function DefaultDataContext()
 {
+    // noinspection JSUnresolvedReference
+    DefaultDataContext.super_.bind(this)();
     /**
      * @type {DataAdapter|*}
      */
@@ -143,7 +123,7 @@ LangUtils.inherits(DefaultDataContext, DataContext);
 
 /**
  * Gets an instance of DataConfiguration class which is associated with this data context
- * @returns {ConfigurationBase|*}
+ * @returns {import('@themost/common').ConfigurationBase|*}
  */
 DefaultDataContext.prototype.getConfiguration = function() {
     return cfg.getCurrent();
@@ -204,11 +184,12 @@ DefaultDataContext.prototype.finalize = function(cb) {
  * The specified adapter name must be registered in application configuration.
  * @class
  * @constructor
- * @augments DataContext
+ * @inherits DataContext
  * @property {DataAdapter} db - Gets a data adapter based on the given adapter's name.
  */
 function NamedDataContext(name)
 {
+    // noinspection JSUnresolvedReference
     NamedDataContext.super_.bind(this)();
     /**
      * @type {DataAdapter}
