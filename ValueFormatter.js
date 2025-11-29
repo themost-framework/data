@@ -33,7 +33,7 @@ function getValueReplacer(formatter, model, emitter) {
               const field = model.getAttribute(name);
               if (field) {
                   return {
-                      $name: collection + '.' + name
+                    $name: collection + '.' + name
                   }
               }
               throw new DataError('An expression contains an attribute that cannot be found', null, model.name, name);
@@ -169,15 +169,20 @@ class ValueDialect {
   $user(property) {
     const selectAttribute = property || 'id';
     let name = this.context.user && this.context.user.name;
-    if (Object.prototype.hasOwnProperty.call(this.context, 'interactiveUser') === true) {
-      name = this.context.interactiveUser && this.context.interactiveUser.name;
-    }
+      if (this.context.interactiveUser && this.context.interactiveUser.name){
+          name = this.context.interactiveUser && this.context.interactiveUser.name;
+      }
     if (name == null) {
         return null;
     }
     return this.context.model('User').asQueryable().where((x, username) => {
       return x.name === username && x.name != null && x.name != 'anonymous';
-    }, name).select(selectAttribute).value();
+    }, name).select(selectAttribute).value().then((result) => {
+      if (typeof result === 'undefined') {
+        return null;
+      }
+      return result;
+    });
   }
   /**
    * A shorthand for $user method
@@ -654,13 +659,19 @@ class ValueFormatter {
       $where
     });
     if (Array.isArray(query.$order)) {
+      const $order = JSON.parse(JSON.stringify(query.$order, function(key, value) {
+        return nameReplacer(key, value);
+      }));
       Object.assign(q.query, {
-        $order: query.$order
+        $order
       });
     }
     if (Array.isArray(query.$group)) {
+      const $group = JSON.parse(JSON.stringify(query.$group, function(key, value) {
+        return nameReplacer(key, value);
+      }));
       Object.assign(q.query, {
-        $group: query.$group
+        $group
       });
     }
     return q.value();
@@ -685,7 +696,7 @@ class ValueFormatter {
       if (typeof val === 'string' && val.startsWith('$$')) {
         return this.formatVariable(val);
       }
-      return Promise.resolve(value);
+      return Promise.resolve(val);
     }
     if (property.startsWith('$$')) {
       return this.formatVariable(value);
