@@ -108,7 +108,7 @@ function DataObjectTag(obj, association) {
                             'type': refersToType,
                             'nullable': false,
                             'many': false,
-                            'indexed': true
+                            'indexed': false
                         }
                     ],
                     'constraints': [
