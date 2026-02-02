@@ -2744,6 +2744,8 @@ function afterExecute_(result, callback) {
                                 return cb(err);
                             });
                     }
+                    // throw association error if mapping is not set
+                    return cb(new DataError('EASSOC', sprintf('Data association mapping (%s) for %s cannot be determined.', mapping.refersTo, self.model.name)));
                 }
                 else {
                     return cb(new Error('Not yet implemented'));
