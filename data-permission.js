@@ -683,7 +683,10 @@ function anonymousUser(context, callback) {
             callback(err);
         }
         else {
-            callback(null, result || { id:null, name:'anonymous', groups:[], enabled:false});
+            if (result) {
+                result.groups = [];
+            }
+            callback(null, result || {id: null, name: 'anonymous', groups: [], enabled: false});
         }
     });
 }
