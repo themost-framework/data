@@ -1,58 +1,28 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var _ = require('lodash');
+var {OpenDataParser} = require('@themost/query');
+
 /**
  * @param {string} s
  * @returns {Array}
  * @private
  */
 function testSplitExpandExpression(s) {
-    var ix = 0;
-    var paren = -1, charAt, ix1 = -1,
-        isLiteral = false,
-        lastSplitIndex = 0,
-        hasParen = false,
-        matches = [],
-        match = null;
-    while(ix<s.length) {
-        charAt=s.charAt(ix);
-        if ((charAt==='(') && !isLiteral) {
-            if (paren<0) {
-                match = [];
-                match[0] = s.substr(lastSplitIndex, ix-lastSplitIndex);
-                paren = 0;
+    const dataParser = new OpenDataParser();
+    const matches = dataParser.parseExpandSequence(s).map(x=>{
+        const match = [x.name]
+        if (x.options ) {
+            const keys = Object.keys(x.options);
+            if (keys.length > 0) {
+                match.push(Object.keys(x.options).filter(key => {
+                    return x.options[key] != null
+                }).map(key => `${key}=${x.options[key]}`).join(';'));
             }
-            if (ix1==-1) { ix1 = ix; }
-            hasParen = true;
-            paren += 1;
         }
-        else if ((charAt===')') && !isLiteral) {
-            if (paren>0) { paren -= 1; }
-        }
-        else if (charAt==='\'') {
-            isLiteral = !isLiteral;
-        }
-        else if ((charAt===',') && (paren ==-1)) {
-            if (match==null) {
-                matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex)]);
-            }
-            lastSplitIndex = ix+1;
-            hasParen = false;
-        }
-
-        if ((ix === s.length - 1) && (paren == -1)) {
-            matches.push([s.substr(lastSplitIndex, ix-lastSplitIndex+1)]);
-            match = null;
-        }
-        else if (paren == 0) {
-            match = match || [ ];
-            match[1] = s.substr(ix1+1, ix-ix1-1);
-            matches.push(match);
-            paren = -1;
-            ix1 = -1;
-        }
-        ix += 1;
-    }
+        return match;
+    });
     return matches;
+
 }
 
 /**
