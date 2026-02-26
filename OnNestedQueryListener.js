@@ -33,32 +33,32 @@ class OnNestedQueryListener {
         });
     }
 
-    beforeExecuteAsync(event) {
+    async beforeExecuteAsync(event) {
         const query = event.emitter && event.emitter.query;
         const context = event.model.context;
         if (query == null) {
-            return Promise.resolve();
+            return;
         }
         // handle only select statements
         if (query.$select == null) {
-            return Promise.resolve();
+            return;
         }
         // if queryable is silent
         if (event.emitter.$silent) {
             // exit
-            return Promise.resolve();
+            return;
         }
         // validate emitter.$view
         const view = event.emitter && event.emitter.$view;
         if (view && view.privileges && view.privileges.length) {
             // DataEventPermissionListener will validate view privileges itself
             // so, do nothing and exit
-            return Promise.resolve();
+            return;
         }
         if (Object.prototype.hasOwnProperty.call(query, '$expand')) {
             // exit if expand is null or undefined
             if (query.$expand == null) {
-                return Promise.resolve();
+                return;
             }
             /**
              * @type {Array<{ $entity:{ model:string }}>}
@@ -156,10 +156,9 @@ class OnNestedQueryListener {
                         return Promise.resolve();
                     }
                 });
-                return Promise.sequence(sources);
+                await Promise.sequence(sources);
             }
         }
-        return Promise.resolve();
     }
 
 }
