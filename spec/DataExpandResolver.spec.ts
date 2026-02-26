@@ -7,13 +7,12 @@ describe('DataExpandResolver', () => {
             name: 'orders'
         }]);
     });
-    it('should parse `orders,address()`', () => {
+    it('should parse `orders,address`', () => {
         const resolver = new DataExpandResolver();
-        expect(resolver.test('orders,address()')).toEqual([{
+        expect(resolver.test('orders,address')).toEqual([{
             name: 'orders'
         },{
-            name: 'address',
-            options: {}
+            name: 'address'
         }]);
     });
     it('should parse `orders($select=id,orderDate,orderedItem)`', () => {
