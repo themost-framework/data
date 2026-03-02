@@ -1,4 +1,6 @@
-// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/* eslint-disable no-var  */
+// noinspection ES6ConvertVarToLetConst
+
 var {QueryEntity} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var async = require('async');
@@ -12,6 +14,7 @@ var {hasOwnProperty} = require('./has-own-property');
 var {DataModelFilterParser} = require('./data-model-filter.parser');
 var {DataQueryable} = require('./data-queryable');
 var {SelectObjectQuery} = require('./select-object-query');
+const {firstValueFrom} = require('rxjs');
 
 /**
  * @class
@@ -275,6 +278,40 @@ DataPermissionEventListener.prototype.beforeRemove = function(event, callback)
     DataPermissionEventListener.prototype.validate(event, callback);
 };
 /**
+ * @param {import('./types').DataContext} context
+ * @param {function(Error=,Array=)} callback
+ * @private
+ */
+DataPermissionEventListener.prototype.effectiveAccounts = function (context, callback) {
+    var accounts = [ { id: null } ];
+    if (context == null) {
+        //push empty accounts
+        return callback(null, accounts);
+    }
+    // validate context user
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
+    try {
+        var source$ = context.user.name === 'anonymous' ? context.anonymousUser$ : context.user$;
+        void firstValueFrom(source$).then(function(user) {
+            if (user) {
+                accounts = [
+                    { id: user.id, name: user.name }
+                ];
+                if (Array.isArray(user.groups)) {
+                    accounts.push.apply(accounts, user.groups.map(function(x) { return { id: x.id, name: x.name }; }));
+                }
+            }
+            return callback(null, accounts);
+        }).catch(function (err) {
+            return callback(err);
+        });
+    } catch (err) {
+        return callback(err);
+    }
+}
+/**
  * Validates permissions against the event arguments provided.
  * @param {DataEventArgs|DataPermissionEventArgs} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
@@ -347,7 +384,7 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
         //do nothing
         return callback();
     }
-    effectiveAccounts(context, function(err, accounts) {
+    DataPermissionEventListener.prototype.effectiveAccounts(context, function(err, accounts) {
         if (err) { 
             return callback(err);
         }
@@ -719,74 +756,6 @@ function queryUser(context, username, callback) {
     }
 }
 /**
- * @param {DataContext} context
- * @param {function(Error=,Array=)} callback
- * @private
- */
-function effectiveAccounts(context, callback) {
-    if (_.isNil(context)) {
-        //push no account
-        return callback(null, [ { id: null } ]);
-    }
-
-    /**
-     * @type {DataCacheStrategy}
-     */
-    var cache = context.getConfiguration().getStrategy(DataCacheStrategy);
-    if (context.user == null) {
-        context.user = { name:'anonymous', authenticationType:'None' };
-    }
-    //if the current user is anonymous
-    if (context.user.name === 'anonymous') {
-        //get anonymous user data
-        cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function() {
-            return Q.nfbind(anonymousUser)(context);
-        }).then(function(result) {
-            var arr = [];
-            if (result) {
-                arr.push({ 'id': result.id, 'name': result.name });
-                result.groups = result.groups || [];
-                result.groups.forEach(function(x) { arr.push({ 'id': x.id, 'name': x.name }); });
-            }
-            if (arr.length===0)
-                arr.push({ id: null });
-            return callback(null, arr);
-        }).catch(function (err) {
-            return callback(err);
-        });
-    }
-    else {
-        //try to get data from cache
-        var USER_CACHE_PATH = '/User/' + context.user.name;
-
-        cache.getOrDefault(USER_CACHE_PATH, function() {
-            return Q.nfbind(queryUser)(context, context.user.name);
-        }).then(function(user) {
-            return cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function() {
-                return Q.nfbind(anonymousUser)(context);
-            }).then(function(anonymous) {
-                var arr = [ ];
-                if (user) {
-                    arr.push({ 'id': user.id, 'name': user.name });
-                    if (_.isArray(user.groups))
-                        user.groups.forEach(function(x) { arr.push({ 'id': x.id, 'name': x.name }); });
-                }
-                if (anonymous) {
-                    arr.push({ 'id': anonymous.id, 'name': 'anonymous' });
-                    if (_.isArray(anonymous.groups))
-                        anonymous.groups.forEach(function(x) { arr.push({ 'id': x.id, 'name': x.name }); });
-                }
-                if (arr.length===0)
-                    arr.push({ id: null });
-                return callback(null, arr);
-            });
-        }).catch(function (err) {
-            return callback(err);
-        });
-    }
-}
-
-/**
  * Occurs before executing a data operation.
  * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
@@ -922,7 +891,7 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
             return callback();
         }
 
-        effectiveAccounts(context, function(err, accounts) {
+        DataPermissionEventListener.prototype.effectiveAccounts(context, function(err, accounts) {
             if (err) { callback(err); return; }
             //get all enabled privileges
             var privileges = modelPrivileges.filter(function(x) {
