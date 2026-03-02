@@ -3,6 +3,9 @@ const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
+const {types} = require('util');
+const {isProxy} = types;
+
 /**
  * @classdesc Represents an abstract data connector to a database
  * @class
@@ -150,7 +153,13 @@ function DataContext() {
             return _user;
         },
         set: function(value) {
-            _user =  value != null ? new Proxy(value, handler) : value;
+            if (isProxy(value)) {
+                // get target
+                const target = Object.assign({}, value);
+                _user = new Proxy(target, handler);
+            } else {
+                _user =  value != null ? new Proxy(value, handler) : value;
+            }
             this.refreshState();
         },
         configurable: true,

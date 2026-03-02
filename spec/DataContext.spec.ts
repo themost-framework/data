@@ -107,4 +107,20 @@ describe('DataContext', () => {
         expect(user?.name).toBe('anonymous');
     });
 
+    it('should set user again', async () => {
+        context.user = null;
+        let user = await firstValueFrom(context.user$);
+        expect(user?.name).toBeFalsy();
+        context.user = {
+            name: 'alexis.rees@example.com'
+        };
+        user = await firstValueFrom(context.user$);
+        expect(user?.name).toBe('alexis.rees@example.com');
+        context.user = context.user || {
+            name: 'james.may@example.com'
+        };
+        user = await firstValueFrom(context.user$);
+        expect(user?.name).toBe( 'alexis.rees@example.com');
+    });
+
 });

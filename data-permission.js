@@ -320,7 +320,9 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
     //validate throwError
     if (typeof event.throwError === 'undefined')
         event.throwError = true;
-    context.user = context.user || { name:'anonymous',authenticationType:'None' };
+    if (context.user == null) {
+        context.user = { name:'anonymous',authenticationType:'None' };
+    }
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
     if (authSettings)
@@ -731,14 +733,9 @@ function effectiveAccounts(context, callback) {
      * @type {DataCacheStrategy}
      */
     var cache = context.getConfiguration().getStrategy(DataCacheStrategy);
-    /**
-     * Gets or sets an object that represents the user of the current data context.
-     * @property {*|{name: string, authenticationType: string}}
-     * @name DataContext#user
-     * @memberof DataContext
-     */
-    context.user = context.user || { name:'anonymous',authenticationType:'None' };
-    context.user.name = context.user.name || 'anonymous';
+    if (context.user == null) {
+        context.user = { name:'anonymous', authenticationType:'None' };
+    }
     //if the current user is anonymous
     if (context.user.name === 'anonymous') {
         //get anonymous user data
@@ -850,7 +847,9 @@ DataPermissionEventListener.prototype.beforeExecute = function(event, callback)
         }
     }
     //ensure context user
-    context.user = context.user || { name:'anonymous',authenticationType:'None' };
+    if (context.user == null) {
+        context.user = { name:'anonymous',authenticationType:'None' };
+    }
     //change: 2-May 2015
     //description: Use unattended execution account as an escape permission check account
     var authSettings = context.getConfiguration().getStrategy(DataConfigurationStrategy).getAuthSettings();
