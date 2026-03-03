@@ -1,4 +1,6 @@
-// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/* eslint-disable no-var  */
+// noinspection ES6ConvertVarToLetConst
+
 const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
@@ -172,7 +174,13 @@ function DataContext() {
             return _interactiveUser;
         },
         set: function(value) {
-            _interactiveUser = value != null ? new Proxy(value, handler) : value;
+            if (isProxy(value)) {
+                // get target
+                const target = Object.assign({}, value);
+                _interactiveUser = new Proxy(target, handler);
+            } else {
+                _interactiveUser = value != null ? new Proxy(value, handler) : value;
+            }
             this.refreshState();
         },
         configurable: true,
@@ -188,7 +196,12 @@ function DataContext() {
             }
         }
         return new Observable((observer) => {
-            void this.model('User').where('name').equal('anonymous').expand('groups').silent().getItem().then((result) => {
+            void this.model('User').where('name').equal('anonymous').silent().getItem().then((result) => {
+                if (result) {
+                    Object.assign(result, {
+                        groups: []
+                    });
+                }
                 return observer.next(result);
             }).catch((err) => {
                 return observer.error(err);
@@ -320,6 +333,11 @@ DataContext.prototype.getUser = function() {
         }
         // otherwise get user from data context
         void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
+            if (result && result.name === 'anonymous') {
+                Object.assign(result, {
+                    groups: []
+                });
+            }
             return observer.next(result);
         }).catch((err) => {
             return observer.error(err);

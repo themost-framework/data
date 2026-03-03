@@ -707,55 +707,6 @@ DataPermissionEventListener.prototype.validate = function(event, callback) {
     });
 };
 /**
- * @private
- * @type {string}
- */
-var ANONYMOUS_USER_CACHE_PATH = '/User/anonymous';
-/**
- * @param {DataContext} context
- * @param {function(Error=,*=)} callback
- * @private
- */
-function anonymousUser(context, callback) {
-    queryUser(context, 'anonymous', function(err, result) {
-        if (err) {
-            callback(err);
-        }
-        else {
-            if (result) {
-                result.groups = [];
-            }
-            callback(null, result || {id: null, name: 'anonymous', groups: [], enabled: false});
-        }
-    });
-}
-/**
- *
- * @param {DataContext} context
- * @param {string} username
- * @param {function(Error=,*=)} callback
- * @private
- */
-function queryUser(context, username, callback) {
-    try {
-        if (_.isNil(context)) {
-            return callback();
-        }
-        var users = context.model('User');
-        if (_.isNil(users)) {
-            return callback();
-        }
-        users.where('name').equal(username).silent().select('id','name').expand('groups').getTypedItem().then(function(result) {
-            return callback(null, result);
-        }).catch(function(err) {
-            return callback(err);
-        });
-    }
-    catch (err) {
-        callback(err);
-    }
-}
-/**
  * Occurs before executing a data operation.
  * @param {DataEventArgs} event - An object that represents the event arguments passed to this operation.
  * @param {Function} callback - A callback function that should be called at the end of this operation. The first argument may be an error if any occurred.
