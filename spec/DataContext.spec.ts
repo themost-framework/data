@@ -123,11 +123,11 @@ describe('DataContext', () => {
         };
         user = await firstValueFrom(context.user$);
         expect(user?.name).toBe('alexis.rees@example.com');
-        context.user = context.user || {
+        context.user = {
             name: 'james.may@example.com'
         };
         user = await firstValueFrom(context.user$);
-        expect(user?.name).toBe( 'alexis.rees@example.com');
+        expect(user?.name).toBe( 'james.may@example.com');
     });
 
 });
