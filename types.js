@@ -307,17 +307,12 @@ DataContext.prototype.getUser = function() {
     });
 };
 
-DataContext.prototype.switchUser = function(user) {
-    this.refreshUser();
-    this.user = user;
-};
-
 DataContext.prototype.setUser = function(user) {
-    this.refreshUser();
+    this.refreshState();
     this.user = user;
 };
 
-DataContext.prototype.refreshUser = function() {
+DataContext.prototype.refreshState = function() {
     this[contextUser] = void 0;
     this[contextInteractiveUser] = void 0;
 };
@@ -362,11 +357,9 @@ DataContext.prototype.getInteractiveUser = function() {
     });
 };
 
-DataContext.prototype.switchInteractiveUser = function(user) {
-    this.interactiveUser = user;
-};
 
 DataContext.prototype.setInteractiveUser = function(user) {
+    this[contextInteractiveUser] = void 0;
     this.interactiveUser = user;
 };
 

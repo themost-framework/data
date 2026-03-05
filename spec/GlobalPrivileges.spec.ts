@@ -28,7 +28,7 @@ describe('Global permissions', () => {
     });
 
     it('should switch user to user', async () => {
-        context.switchUser({
+        context.setUser({
             name: 'margaret.davis@example.com'
         });
         const spyGetUser = jest.spyOn(context, 'getUser');
@@ -36,7 +36,7 @@ describe('Global permissions', () => {
         currentUser = await firstValueFrom(context.user$);
         expect(spyGetUser).toHaveBeenCalledTimes(2);
         expect(currentUser.name).toEqual('margaret.davis@example.com');
-        context.switchUser({
+        context.setUser({
             name: 'alexis.rees@example.com'
         });
         currentUser = await firstValueFrom(context.user$);
@@ -134,7 +134,7 @@ describe('Global permissions', () => {
 
     it('should validate that user does not have access to select values from nested objects', async () => {
         await context.executeInTransactionAsync(async () => {
-            context.switchUser({
+            context.setUser({
                 name: 'margaret.davis@example.com'
             });
             let users = await context.model('User')
@@ -153,7 +153,7 @@ describe('Global permissions', () => {
     it('should validate that user does not have access to select an associated object', async () => {
         await context.executeInTransactionAsync(async () => {
             const Products = context.model('Product');
-            context.switchUser({
+            context.setUser({
                 name: 'margaret.davis@example.com'
             });
             const orderCount = await context.model('Order').where('orderedItem/name').equal('Samsung Galaxy S4').silent().count();
@@ -246,7 +246,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            context.switchUser({
+            context.setUser({
                 name: 'margaret.davis@example.com'
             });
             item = await Products.where('name').equal('Samsung Galaxy S4').expand(
@@ -276,7 +276,7 @@ describe('Global permissions', () => {
             let item = await Products.where('name').equal(
                 'Apple MacBook Air (13.3-inch, 2013 Version)'
             ).getItem();
-            context.switchUser({
+            context.setUser({
                 name: 'alexis.rees@example.com'
             });
             expect(item.model).not.toBe('APPLE-MACBOOK-AIR-13.3-2013');
@@ -293,7 +293,7 @@ describe('Global permissions', () => {
 
     it('should validate admin delete access to products', async () => {
         await executeInTransaction(context,async () => {
-            context.switchUser({
+            context.setUser({
                 name: 'alexis.rees@example.com'
             });
             const user = await firstValueFrom(context.user$);
@@ -329,7 +329,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            context.switchUser(user);
+            context.setUser(user);
             const currentUser = await firstValueFrom(context.user$);
             expect(currentUser.name).toEqual('margaret.davis@example.com');
             let items = await Orders.where('orderedItem/name').equal(
@@ -370,7 +370,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            context.switchUser(user);
+            context.setUser(user);
             // add read access to contributors
             await context.model('Permission').silent().save([
                 {
@@ -420,7 +420,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            context.switchUser(user);
+            context.setUser(user);
             // add read access to contributors
             await context.model('Permission').silent().save([
                 {
@@ -473,7 +473,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            context.switchUser(user);
+            context.setUser(user);
             // add read access to contributors
             await context.model('Permission').silent().save([
                 {

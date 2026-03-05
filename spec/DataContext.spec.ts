@@ -42,7 +42,7 @@ describe('DataContext', () => {
         });
         const user2 = await firstValueFrom(context.user$);
         expect(user2?.name).toBe('alexis.rees@example.com');
-        context.switchUser({
+        context.setUser({
             name: 'james.may@example.com'
         });
         const user3 = await firstValueFrom(context.user$);
@@ -60,7 +60,7 @@ describe('DataContext', () => {
     });
 
     it('should use different context', async () => {
-        context.switchUser({
+        context.setUser({
             name: 'james.may@example.com'
         });
         let user = await firstValueFrom(context.user$);
