@@ -220,10 +220,9 @@ export declare abstract class DataContext extends SequentialEventEmitter {
      */
     getApplication(): ApplicationBase;
 
-    /**
-     * Refreshes the state of the current context including the state of the current user and the interactive user.
-     */
-    protected refreshState(): void;
+    public getUser(): Promise<any>;
+
+    public getInteractiveUser(): Promise<any>;
 }
 
 export declare class DataContextEmitter {

@@ -5,8 +5,9 @@ const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
-const {types} = require('util');
-const {isProxy} = types;
+const contextUser = Symbol('user');
+const contextInteractiveUser = Symbol('interactiveUser');
+const { cloneDeep } = require('lodash');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -122,7 +123,7 @@ function DataContext() {
         throw new AbstractClassError();
     }
 
-    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+    const user$ = defer(() => this.getUser());
 
     Object.defineProperty(this, 'user$', {
         configurable: true,
@@ -130,61 +131,12 @@ function DataContext() {
         value: user$
     });
 
-    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    const interactiveUser$ = defer(() => this.getInteractiveUser());
 
     Object.defineProperty(this, 'interactiveUser$', {
         configurable: true,
         enumerable: false,
         value: interactiveUser$
-    });
-
-    var _user = null;
-    var self = this;
-    const handler = {
-        get(target, property) {
-            return target[property];
-        },
-        set(target, property, value) {
-            target[property] = value;
-            self.refreshState();
-            return true;
-        }
-    };
-    Object.defineProperty(this, 'user', {
-        get: function() {
-            return _user;
-        },
-        set: function(value) {
-            if (isProxy(value)) {
-                // get target
-                const target = Object.assign({}, value);
-                _user = new Proxy(target, handler);
-            } else {
-                _user =  value != null ? new Proxy(value, handler) : value;
-            }
-            this.refreshState();
-        },
-        configurable: true,
-        enumerable: false
-    });
-
-    var _interactiveUser = null;
-    Object.defineProperty(this, 'interactiveUser', {
-        get: function() {
-            return _interactiveUser;
-        },
-        set: function(value) {
-            if (isProxy(value)) {
-                // get target
-                const target = Object.assign({}, value);
-                _interactiveUser = new Proxy(target, handler);
-            } else {
-                _interactiveUser = value != null ? new Proxy(value, handler) : value;
-            }
-            this.refreshState();
-        },
-        configurable: true,
-        enumerable: false
     });
 
     const anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
@@ -312,9 +264,17 @@ DataContext.prototype.executeInTransactionAsync = function(func) {
 }
 
 DataContext.prototype.getUser = function() {
-    return new Observable((observer) => {
+    return new Promise((resolve, reject) => {
         if ((this.user && this.user.name) == null) {
-            return observer.next(null);
+            return resolve(null);
+        }
+        // get current username from context
+        const name = this.user && this.user.name;
+        // get cached user from context
+        const curr = this[contextUser];
+        // if cached user is the same with current username then return cached user
+        if (curr && curr.name === name) {
+            return resolve(cloneDeep(curr));
         }
         // get current application
         const application = this.getApplication();
@@ -325,9 +285,10 @@ DataContext.prototype.getUser = function() {
             if (userService != null) {
                 // get user
                 return userService.getUser(this, this.user.name).then((result) => {
-                    return observer.next(result);
+                    this[contextUser] = result;
+                    return resolve(cloneDeep(result));
                 }).catch((err) => {
-                    return observer.error(err);
+                    return reject(err);
                 });
             }
         }
@@ -338,45 +299,43 @@ DataContext.prototype.getUser = function() {
                     groups: []
                 });
             }
-            return observer.next(result);
+            this[contextUser] = result;
+            return resolve(cloneDeep(result));
         }).catch((err) => {
-            return observer.error(err);
+            return reject(err);
         });
     });
 };
 
 DataContext.prototype.switchUser = function(user) {
+    this.refreshUser();
     this.user = user;
 };
 
 DataContext.prototype.setUser = function(user) {
+    this.refreshUser();
     this.user = user;
 };
 
-/**
- * @protected
- */
-DataContext.prototype.refreshState = function() {
-    const user$ = defer(() => this.getUser()).pipe(shareReplay());
-    Object.defineProperty(this, 'user$', {
-        configurable: true,
-        enumerable: false,
-        value: user$
-    });
-    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
-    Object.defineProperty(this, 'interactiveUser$', {
-        configurable: true,
-        enumerable: false,
-        value: interactiveUser$
-    });
+DataContext.prototype.refreshUser = function() {
+    this[contextUser] = void 0;
+    this[contextInteractiveUser] = void 0;
 };
 
-DataContext.prototype.getInteractiveUser = function() {
-    return new Observable((observer) => {
-        if ((this.interactiveUser && this.interactiveUser.name) == null) {
-            return observer.next(null);
-        }
 
+DataContext.prototype.getInteractiveUser = function() {
+    return new Promise((resolve, reject) => {
+        if ((this.interactiveUser && this.interactiveUser.name) == null) {
+            return resolve(null);
+        }
+        // get current username from context
+        const name = this.interactiveUser && this.interactiveUser.name;
+        // get cached user from context
+        const curr = this[contextInteractiveUser];
+        // if cached user is the same with current username then return cached user
+        if (curr && curr.name === name) {
+            return resolve(cloneDeep(curr));
+        }
         // get current application
         const application = this.getApplication();
         if (application && typeof application.getService === 'function') {
@@ -386,17 +345,19 @@ DataContext.prototype.getInteractiveUser = function() {
             if (userService != null) {
                 // get user
                 return userService.getUser(this, this.interactiveUser.name).then((result) => {
-                    return observer.next(result);
+                    this[contextInteractiveUser] = result;
+                    return resolve(cloneDeep(result));
                 }).catch((err) => {
-                    return observer.error(err);
+                    return reject(err);
                 });
             }
         }
         // otherwise get user from data context
         void this.model('User').where('name').equal(this.interactiveUser.name).expand('groups').silent().getItem().then((result) => {
-            return observer.next(result)
+            this[contextInteractiveUser] = result;
+            return resolve(cloneDeep(result));
         }).catch((err) => {
-            return observer.error(err);
+            return reject(err);
         });
     });
 };

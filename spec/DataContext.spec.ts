@@ -1,6 +1,6 @@
 import {TestApplication} from './TestApplication';
 import {DataContext, UserService} from '@themost/data';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {resolve} from 'path';
 
 describe('DataContext', () => {
@@ -12,6 +12,9 @@ describe('DataContext', () => {
         context = app.createContext();
         return done();
     });
+    beforeEach(() => {
+        context.setUser(null);
+    })
     afterAll(async () => {
         await context.finalizeAsync();
         await app.finalize();
@@ -23,7 +26,11 @@ describe('DataContext', () => {
         });
         const user = await firstValueFrom(context.user$);
         const str = JSON.stringify(context);
-        expect(str).toEqual('{}');
+        expect(str).toEqual(JSON.stringify({
+            user: {
+                name: 'alexis.rees@example.com',
+            }
+        }));
     })
 
     it('should have user$', async () => {
