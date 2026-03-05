@@ -5,9 +5,6 @@ const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
-const contextUser = Symbol('user');
-const contextInteractiveUser = Symbol('interactiveUser');
-const { cloneDeep } = require('lodash');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -268,14 +265,6 @@ DataContext.prototype.getUser = function() {
         if ((this.user && this.user.name) == null) {
             return resolve(null);
         }
-        // get current username from context
-        const name = this.user && this.user.name;
-        // get cached user from context
-        const curr = this[contextUser];
-        // if cached user is the same with current username then return cached user
-        if (curr && curr.name === name) {
-            return resolve(cloneDeep(curr));
-        }
         // get current application
         const application = this.getApplication();
         if (application && typeof application.getService === 'function') {
@@ -285,8 +274,7 @@ DataContext.prototype.getUser = function() {
             if (userService != null) {
                 // get user
                 return userService.getUser(this, this.user.name).then((result) => {
-                    this[contextUser] = result;
-                    return resolve(cloneDeep(result));
+                    return resolve(result);
                 }).catch((err) => {
                     return reject(err);
                 });
@@ -299,8 +287,7 @@ DataContext.prototype.getUser = function() {
                     groups: []
                 });
             }
-            this[contextUser] = result;
-            return resolve(cloneDeep(result));
+            return resolve(result);
         }).catch((err) => {
             return reject(err);
         });
@@ -313,8 +300,7 @@ DataContext.prototype.setUser = function(user) {
 };
 
 DataContext.prototype.refreshState = function() {
-    this[contextUser] = void 0;
-    this[contextInteractiveUser] = void 0;
+    //
 };
 
 
@@ -322,14 +308,6 @@ DataContext.prototype.getInteractiveUser = function() {
     return new Promise((resolve, reject) => {
         if ((this.interactiveUser && this.interactiveUser.name) == null) {
             return resolve(null);
-        }
-        // get current username from context
-        const name = this.interactiveUser && this.interactiveUser.name;
-        // get cached user from context
-        const curr = this[contextInteractiveUser];
-        // if cached user is the same with current username then return cached user
-        if (curr && curr.name === name) {
-            return resolve(cloneDeep(curr));
         }
         // get current application
         const application = this.getApplication();
@@ -340,8 +318,7 @@ DataContext.prototype.getInteractiveUser = function() {
             if (userService != null) {
                 // get user
                 return userService.getUser(this, this.interactiveUser.name).then((result) => {
-                    this[contextInteractiveUser] = result;
-                    return resolve(cloneDeep(result));
+                    return resolve(result);
                 }).catch((err) => {
                     return reject(err);
                 });
@@ -349,8 +326,7 @@ DataContext.prototype.getInteractiveUser = function() {
         }
         // otherwise get user from data context
         void this.model('User').where('name').equal(this.interactiveUser.name).expand('groups').silent().getItem().then((result) => {
-            this[contextInteractiveUser] = result;
-            return resolve(cloneDeep(result));
+            return resolve(result);
         }).catch((err) => {
             return reject(err);
         });
@@ -359,7 +335,6 @@ DataContext.prototype.getInteractiveUser = function() {
 
 
 DataContext.prototype.setInteractiveUser = function(user) {
-    this[contextInteractiveUser] = void 0;
     this.interactiveUser = user;
 };
 
