@@ -5,6 +5,7 @@ const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
+const {beforeExecute, afterExecute} = require('./DataContextCacheListener');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -120,6 +121,12 @@ function DataContext() {
         throw new AbstractClassError();
     }
 
+    Object.defineProperty(this, 'cache', {
+        configurable: true,
+        enumerable: false,
+        value: new Map()
+    });
+
     const user$ = defer(() => this.getUser());
 
     Object.defineProperty(this, 'user$', {
@@ -136,7 +143,7 @@ function DataContext() {
         value: interactiveUser$
     });
 
-    const anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+    const anonymousUser$ = new Observable(observer => observer.next(void 0)).pipe(switchMap(() => {
         const application = this.getApplication();
         if (application && typeof application.getService === 'function') {
             const userService = application.getService(UserService);
@@ -281,16 +288,12 @@ DataContext.prototype.getUser = function() {
             }
         }
         // otherwise get user from data context
-        void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
-            if (result && result.name === 'anonymous') {
-                Object.assign(result, {
-                    groups: []
-                });
-            }
-            return resolve(result);
-        }).catch((err) => {
-            return reject(err);
-        });
+        void this.model('User').on('before.execute', beforeExecute).on('after.execute', afterExecute)
+            .asQueryable().where('name').equal(this.user.name).expand((x) => x.groups).silent().getItem().then((result) => {
+                return resolve(result);
+            }).catch((err) => {
+                return reject(err);
+            });
     });
 };
 
@@ -302,7 +305,6 @@ DataContext.prototype.setUser = function(user) {
 DataContext.prototype.refreshState = function() {
     //
 };
-
 
 DataContext.prototype.getInteractiveUser = function() {
     return new Promise((resolve, reject) => {
@@ -325,9 +327,10 @@ DataContext.prototype.getInteractiveUser = function() {
             }
         }
         // otherwise get user from data context
-        void this.model('User').where('name').equal(this.interactiveUser.name).expand('groups').silent().getItem().then((result) => {
-            return resolve(result);
-        }).catch((err) => {
+        void this.model('User').on('before.execute', beforeExecute).on('after.execute', afterExecute)
+            .asQueryable().where('name').equal(this.interactiveUser.name).expand((x) => x.groups).silent().getItem().then((result) => {
+                return resolve(result);
+            }).catch((err) => {
             return reject(err);
         });
     });

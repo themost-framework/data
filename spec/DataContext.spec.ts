@@ -8,7 +8,7 @@ describe('DataContext', () => {
     let context: DataContext;
     beforeAll((done) => {
         app = new TestApplication(resolve(process.cwd(), 'spec/test2'));
-        app.useService(UserService);
+        //app.useService(UserService);
         context = app.createContext();
         return done();
     });
@@ -47,6 +47,16 @@ describe('DataContext', () => {
         });
         const user3 = await firstValueFrom(context.user$);
         expect(user3?.name).toBe('james.may@example.com');
+    });
+
+    it('should reuse user data', async () => {
+        context.setUser({
+            name: 'alexis.rees@example.com'
+        });
+        let user = await firstValueFrom(context.user$);
+        expect(user?.name).toBeTruthy();
+        user = await firstValueFrom(context.user$);
+        expect(user?.name).toBeTruthy();
     });
 
     it('should have interactiveUser$', async () => {
