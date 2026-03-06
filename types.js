@@ -314,6 +314,31 @@ DataContext.prototype.getInteractiveUser = function() {
     });
 };
 
+DataContext.prototype.getAnonymousUser = function() {
+    return new Promise((resolve, reject) => {
+        // get current application
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getAnonymousUser(this).then((result) => {
+                    return resolve(result);
+                }).catch((err) => {
+                    return reject(err);
+                });
+            }
+        }
+        return new UserService(application).getAnonymousUser(this).then((result) => {
+            return resolve(result);
+        }).catch((err) => {
+            return reject(err);
+        });
+    });
+};
+
 
 DataContext.prototype.setInteractiveUser = function(user) {
     this.interactiveUser = user;
