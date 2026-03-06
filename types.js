@@ -5,7 +5,6 @@ const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
-const {beforeExecute, afterExecute} = require('./data-context-cache');
 
 /**
  * @classdesc Represents an abstract data connector to a database
@@ -152,7 +151,7 @@ function DataContext() {
             }
         }
         return new Observable((observer) => {
-            void this.model('User').where('name').equal('anonymous').silent().getItem().then((result) => {
+            void this.model('User').where('name').equal('anonymous').silent().data('cache', true).getItem().then((result) => {
                 if (result) {
                     Object.assign(result, {
                         groups: []
@@ -290,8 +289,7 @@ DataContext.prototype.getUser = function() {
             }
         }
         // otherwise get user from data context
-        void this.model('User').once('before.execute', beforeExecute).once('after.execute', afterExecute)
-            .asQueryable().where('name').equal(this.user.name).expand((x) => x.groups).silent().getItem().then((result) => {
+        void this.model('User').asQueryable().where('name').equal(this.user.name).expand((x) => x.groups).silent().data('cache', true).getItem().then((result) => {
                 return resolve(result);
             }).catch((err) => {
                 return reject(err);
@@ -329,8 +327,7 @@ DataContext.prototype.getInteractiveUser = function() {
             }
         }
         // otherwise get user from data context
-        void this.model('User').once('before.execute', beforeExecute).once('after.execute', afterExecute)
-            .asQueryable().where('name').equal(this.interactiveUser.name).expand((x) => x.groups).silent().getItem().then((result) => {
+        void this.model('User').asQueryable().where('name').equal(this.interactiveUser.name).expand((x) => x.groups).silent().data('cache', true).getItem().then((result) => {
                 return resolve(result);
             }).catch((err) => {
             return reject(err);

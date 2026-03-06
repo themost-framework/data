@@ -7,6 +7,13 @@ function beforeExecute(event, callback) {
     try {
         if (event.query && event.query.$select) {
             if (event.emitter) {
+                // check if caching is disabled but emitter sets cache flag to true
+                const useCache = event.model.caching === 'none'
+                    && typeof event.emitter.data === 'function'
+                    && event.emitter.data('cache') === true;
+                if (!useCache) {
+                    return callback();
+                }
                 if (typeof event.emitter.hashCode === 'undefined') {
                     Object.defineProperty(event.emitter, 'hashCode', {
                         enumerable: false,
@@ -39,6 +46,13 @@ function afterExecute(event, callback) {
             return callback();
         }
         if (event.emitter && event.emitter.hashCode) {
+            // check if caching is disabled but emitter sets cache flag to true
+            const useCache = event.model.caching === 'none'
+                && typeof event.emitter.data === 'function'
+                && event.emitter.data('cache') === true;
+            if (!useCache) {
+                return callback();
+            }
             event.model.context.cache.set(`/${event.model.name}/?$query=${event.emitter.hashCode}`, event.result);
         }
         return callback();
