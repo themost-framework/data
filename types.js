@@ -5,7 +5,7 @@ const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
-const {beforeExecute, afterExecute} = require('./DataContextCacheListener');
+const {beforeExecute, afterExecute} = require('./data-context-cache');
 
 /**
  * @classdesc Represents an abstract data connector to a database

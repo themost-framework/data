@@ -7,10 +7,14 @@ function beforeExecute(event, callback) {
     try {
         if (event.query && event.query.$select) {
             if (event.emitter) {
-                Object.defineProperty(event.emitter, 'hashCode', {
-                    enumerable: false,
-                    value: event.emitter.toMD5()
-                });
+                if (typeof event.emitter.hashCode === 'undefined') {
+                    Object.defineProperty(event.emitter, 'hashCode', {
+                        enumerable: false,
+                        configurable: true,
+                        writable: true,
+                        value: event.emitter.toMD5()
+                    });
+                }
                 // noinspection JSUnresolvedReference
                 const item = event.model.context.cache.get(`/${event.model.name}/?$query=${event.emitter.hashCode}`);
                 if (typeof item !== 'undefined') {
