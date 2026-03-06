@@ -8,7 +8,6 @@ var {TraceUtils} = require('@themost/common');
 var moment = require('moment');
 var _ = require('lodash');
 var Q = require('q');
-const {firstValueFrom} = require('rxjs');
 
 /**
  * @class
@@ -290,10 +289,10 @@ FunctionContext.prototype.user = async function() {
      */
     var context = (this.model && this.model.context) || this.context;
     if (context.interactiveUser) {
-        const interactiveUser = await firstValueFrom(context.interactiveUser$);
+        const interactiveUser = await context.getInteractiveUser();
         return interactiveUser && interactiveUser.id ? interactiveUser.id : null;
     } else if (context.user) {
-        const user = await firstValueFrom(context.user$);
+        const user = await context.getUser();
         return user && user.id ? user.id : null;
     }
     return null;

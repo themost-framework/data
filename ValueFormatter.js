@@ -10,7 +10,6 @@ const { AsyncSeriesEventEmitter } = require('@themost/events');
 const { round } = require('@themost/query');
 const MD5 = require('crypto-js/md5');
 const { DataAttributeResolver } = require('./data-attribute-resolver');
-const {firstValueFrom} = require('rxjs');
 
 const testFieldRegex = /^\$\w+(\.\w+)*$/g;
 
@@ -169,8 +168,8 @@ class ValueDialect {
    */
   async $user(property) {
     const selectProperty = property || 'id';
-    const source$ = this.context.interactiveUser ? this.context.interactiveUser$ : this.context.user$;
-    const user = await firstValueFrom(source$);
+    const invokeGetUser = this.context.interactiveUser ? this.context.getInteractiveUser : this.context.getUser;
+    const user = await invokeGetUser.call(this.context);
     if (user == null) {
       return null;
     }

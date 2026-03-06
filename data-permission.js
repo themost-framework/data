@@ -8,13 +8,10 @@ var {AccessDeniedError, DataError} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var _ = require('lodash');
 var { at } = require('lodash')
-var {DataCacheStrategy} = require('./data-cache');
-var Q = require('q');
 var {hasOwnProperty} = require('./has-own-property');
 var {DataModelFilterParser} = require('./data-model-filter.parser');
 var {DataQueryable} = require('./data-queryable');
 var {SelectObjectQuery} = require('./select-object-query');
-const {firstValueFrom} = require('rxjs');
 
 /**
  * @class
@@ -293,8 +290,8 @@ DataPermissionEventListener.prototype.effectiveAccounts = function (context, cal
         context.setUser({ name:'anonymous',authenticationType:'None' });
     }
     try {
-        var source$ = context.user.name === 'anonymous' ? context.anonymousUser$ : context.user$;
-        void firstValueFrom(source$).then(function(user) {
+        var invokeGetUser = context.user.name === 'anonymous' ? context.getAnonymousUser : context.getUser;
+        void invokeGetUser.call(context).then(function(user) {
             if (user) {
                 accounts = [
                     { id: user.id, name: user.name }
