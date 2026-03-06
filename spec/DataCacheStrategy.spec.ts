@@ -15,11 +15,13 @@ describe('DataCacheStrategy', () => {
     });
 
     afterEach(async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         await cache.clear();
     })
 
     it('should get cached item', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         expect(cache).toBeTruthy();
         let value = await cache.get<{message: string}>('test-key');
@@ -33,6 +35,7 @@ describe('DataCacheStrategy', () => {
     });
 
     it('should remove cached item', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         expect(cache).toBeTruthy();
         let value = await cache.get('test-key');
@@ -46,6 +49,7 @@ describe('DataCacheStrategy', () => {
     });
 
     it('should use absolute expiration', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         expect(cache).toBeTruthy();
         await cache.add('test-key', {
@@ -62,6 +66,7 @@ describe('DataCacheStrategy', () => {
     });
 
     it('should clear cache', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         expect(cache).toBeTruthy();
         await cache.add('test-key-1', {
@@ -80,6 +85,7 @@ describe('DataCacheStrategy', () => {
     });
 
     it('should get default value', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         await cache.getOrDefault<{ message: string }>('test-key-1', async () => {
             return {
@@ -92,6 +98,7 @@ describe('DataCacheStrategy', () => {
     });
 
     it('should get default null value', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         const getValue: () => Promise<any> = async () => {
             return null;
@@ -102,6 +109,7 @@ describe('DataCacheStrategy', () => {
     });
 
     it('should get default value once', async () => {
+        // @ts-ignore
         const cache = app.getConfiguration().getStrategy(DataCacheStrategy);
         let counter = 0;
         await cache.getOrDefault<any>('test-key-1', async () => {

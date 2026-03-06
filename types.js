@@ -1,8 +1,11 @@
-// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/* eslint-disable no-var  */
+// noinspection ES6ConvertVarToLetConst
+
 const _ = require('lodash');
 const {SequentialEventEmitter, LangUtils, AbstractClassError, AbstractMethodError} = require('@themost/common');
 const {shareReplay, switchMap, Observable, defer} = require('rxjs');
 const {UserService} = require('./UserService');
+
 /**
  * @classdesc Represents an abstract data connector to a database
  * @class
@@ -117,7 +120,7 @@ function DataContext() {
         throw new AbstractClassError();
     }
 
-    const user$ = defer(() => this.getUser()).pipe(shareReplay());
+    const user$ = defer(() => this.getUser());
 
     Object.defineProperty(this, 'user$', {
         configurable: true,
@@ -125,7 +128,7 @@ function DataContext() {
         value: user$
     });
 
-    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
+    const interactiveUser$ = defer(() => this.getInteractiveUser());
 
     Object.defineProperty(this, 'interactiveUser$', {
         configurable: true,
@@ -133,53 +136,16 @@ function DataContext() {
         value: interactiveUser$
     });
 
-    var _user = null;
-    var self = this;
-    const handler = {
-        get(target, property) {
-            return target[property];
-        },
-        set(target, property, value) {
-            target[property] = value;
-            self.refreshState();
-            return true;
-        }
-    };
-    Object.defineProperty(this, 'user', {
-        get: function() {
-            return _user;
-        },
-        set: function(value) {
-            _user =  value != null ? new Proxy(value, handler) : value;
-            this.refreshState();
-        },
-        configurable: true,
-        enumerable: false
-    });
-
-    var _interactiveUser = null;
-    Object.defineProperty(this, 'interactiveUser', {
-        get: function() {
-            return _interactiveUser;
-        },
-        set: function(value) {
-            _interactiveUser = value != null ? new Proxy(value, handler) : value;
-            this.refreshState();
-        },
-        configurable: true,
-        enumerable: false
-    });
-
-    const anonymousUser$ = new Observable(observer => observer.next()).pipe(switchMap(() => {
+    const anonymousUser$ = new Observable(observer => observer.next(void 0)).pipe(switchMap(() => {
         const application = this.getApplication();
         if (application && typeof application.getService === 'function') {
             const userService = application.getService(UserService);
             if (userService) {
-                return userService.anonymousUser$;
+                return userService.getAnonymousUser(this);
             }
         }
         return new Observable((observer) => {
-            void this.model('User').where('name').equal('anonymous').expand('groups').silent().getItem().then((result) => {
+            void new UserService(this.getApplication()).getAnonymousUser(this).then((result) => {
                 return observer.next(result);
             }).catch((err) => {
                 return observer.error(err);
@@ -236,11 +202,10 @@ DataContext.prototype.getConfiguration = function() {
 // noinspection JSUnusedLocalSymbols
 /**
  * @param {Function} callback
- * @abstract
  */
 // eslint-disable-next-line no-unused-vars
 DataContext.prototype.finalize = function(callback) {
-    throw new AbstractMethodError();
+    return callback();
 };
 /**
  * Finalizes data context
@@ -290,9 +255,9 @@ DataContext.prototype.executeInTransactionAsync = function(func) {
 }
 
 DataContext.prototype.getUser = function() {
-    return new Observable((observer) => {
+    return new Promise((resolve, reject) => {
         if ((this.user && this.user.name) == null) {
-            return observer.next(null);
+            return resolve(null);
         }
         // get current application
         const application = this.getApplication();
@@ -303,53 +268,29 @@ DataContext.prototype.getUser = function() {
             if (userService != null) {
                 // get user
                 return userService.getUser(this, this.user.name).then((result) => {
-                    return observer.next(result);
+                    return resolve(result);
                 }).catch((err) => {
-                    return observer.error(err);
+                    return reject(err);
                 });
             }
         }
-        // otherwise get user from data context
-        void this.model('User').where('name').equal(this.user.name).expand('groups').silent().getItem().then((result) => {
-            return observer.next(result);
+        return new UserService(application).getUser(this, this.user.name).then((result) => {
+            return resolve(result);
         }).catch((err) => {
-            return observer.error(err);
+            return reject(err);
         });
     });
-};
-
-DataContext.prototype.switchUser = function(user) {
-    this.user = user;
 };
 
 DataContext.prototype.setUser = function(user) {
     this.user = user;
 };
 
-/**
- * @protected
- */
-DataContext.prototype.refreshState = function() {
-    const user$ = defer(() => this.getUser()).pipe(shareReplay());
-    Object.defineProperty(this, 'user$', {
-        configurable: true,
-        enumerable: false,
-        value: user$
-    });
-    const interactiveUser$ = defer(() => this.getInteractiveUser()).pipe(shareReplay());
-    Object.defineProperty(this, 'interactiveUser$', {
-        configurable: true,
-        enumerable: false,
-        value: interactiveUser$
-    });
-};
-
 DataContext.prototype.getInteractiveUser = function() {
-    return new Observable((observer) => {
+    return new Promise((resolve, reject) => {
         if ((this.interactiveUser && this.interactiveUser.name) == null) {
-            return observer.next(null);
+            return resolve(null);
         }
-
         // get current application
         const application = this.getApplication();
         if (application && typeof application.getService === 'function') {
@@ -359,24 +300,45 @@ DataContext.prototype.getInteractiveUser = function() {
             if (userService != null) {
                 // get user
                 return userService.getUser(this, this.interactiveUser.name).then((result) => {
-                    return observer.next(result);
+                    return resolve(result);
                 }).catch((err) => {
-                    return observer.error(err);
+                    return reject(err);
                 });
             }
         }
-        // otherwise get user from data context
-        void this.model('User').where('name').equal(this.interactiveUser.name).expand('groups').silent().getItem().then((result) => {
-            return observer.next(result)
+        return new UserService(application).getUser(this, this.interactiveUser.name).then((result) => {
+            return resolve(result);
         }).catch((err) => {
-            return observer.error(err);
+            return reject(err);
         });
     });
 };
 
-DataContext.prototype.switchInteractiveUser = function(user) {
-    this.interactiveUser = user;
+DataContext.prototype.getAnonymousUser = function() {
+    return new Promise((resolve, reject) => {
+        // get current application
+        const application = this.getApplication();
+        if (application && typeof application.getService === 'function') {
+            // get user service
+            const userService = application.getService(UserService);
+            // check if user service is available
+            if (userService != null) {
+                // get user
+                return userService.getAnonymousUser(this).then((result) => {
+                    return resolve(result);
+                }).catch((err) => {
+                    return reject(err);
+                });
+            }
+        }
+        return new UserService(application).getAnonymousUser(this).then((result) => {
+            return resolve(result);
+        }).catch((err) => {
+            return reject(err);
+        });
+    });
 };
+
 
 DataContext.prototype.setInteractiveUser = function(user) {
     this.interactiveUser = user;

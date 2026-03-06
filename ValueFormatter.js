@@ -163,26 +163,17 @@ class ValueDialect {
 
   /**
    * Get current user identifier or the value of the specified attribute
-   * @param {string=} property 
+   * @param {string=} property
    * @returns Promise<any>
    */
-  $user(property) {
-    const selectAttribute = property || 'id';
-    let name = this.context.user && this.context.user.name;
-      if (this.context.interactiveUser && this.context.interactiveUser.name){
-          name = this.context.interactiveUser && this.context.interactiveUser.name;
-      }
-    if (name == null) {
-        return null;
+  async $user(property) {
+    const selectProperty = property || 'id';
+    const invokeGetUser = this.context.interactiveUser ? this.context.getInteractiveUser : this.context.getUser;
+    const user = await invokeGetUser.call(this.context);
+    if (user == null) {
+      return null;
     }
-    return this.context.model('User').asQueryable().where((x, username) => {
-      return x.name === username && x.name != null && x.name != 'anonymous';
-    }, name).select(selectAttribute).value().then((result) => {
-      if (typeof result === 'undefined') {
-        return null;
-      }
-      return result;
-    });
+    return getProperty(user, selectProperty.replace(/^\//, '.'));
   }
   /**
    * A shorthand for $user method

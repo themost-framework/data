@@ -2,6 +2,7 @@ import { resolve } from 'path';
 import {DataCacheFinalize, DataCacheStrategy, DataContext} from '../index';
 import { TestApplication } from './TestApplication';
 import { TestUtils } from './adapter/TestUtils';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 const executeInTransaction = TestUtils.executeInTransaction;
 describe('Global permissions', () => {
     let app: TestApplication;
@@ -14,13 +15,32 @@ describe('Global permissions', () => {
         await context.finalizeAsync();
         await app.finalize();
     });
+    beforeEach(() => {
+        context.setUser(null);
+    })
     afterEach(async () => {
-        delete context.user;
         const configuration = context.getConfiguration();
         // @ts-ignore
         delete configuration.cache;
+        // @ts-ignore
         const service = configuration.getStrategy(DataCacheStrategy) as unknown as DataCacheFinalize;
         await service.clear();
+    });
+
+    it('should switch user to user', async () => {
+        context.setUser({
+            name: 'margaret.davis@example.com'
+        });
+        const spyGetUser = jest.spyOn(context, 'getUser');
+        let currentUser = await firstValueFrom(context.user$);
+        currentUser = await firstValueFrom(context.user$);
+        expect(spyGetUser).toHaveBeenCalledTimes(2);
+        expect(currentUser.name).toEqual('margaret.davis@example.com');
+        context.setUser({
+            name: 'alexis.rees@example.com'
+        });
+        currentUser = await firstValueFrom(context.user$);
+        expect(currentUser.name).toEqual('alexis.rees@example.com');
     });
 
     it('should validate anonymous read access to products', async () => {
@@ -114,10 +134,8 @@ describe('Global permissions', () => {
 
     it('should validate that user does not have access to select values from nested objects', async () => {
         await context.executeInTransactionAsync(async () => {
-            Object.assign(context, {
-                user: {
-                    name: 'margaret.davis@example.com'
-                }
+            context.setUser({
+                name: 'margaret.davis@example.com'
             });
             let users = await context.model('User')
                 .where('groups/name').equal('Administrators').getItems();
@@ -135,12 +153,9 @@ describe('Global permissions', () => {
     it('should validate that user does not have access to select an associated object', async () => {
         await context.executeInTransactionAsync(async () => {
             const Products = context.model('Product');
-            Object.assign(context, {
-                user: {
-                    name: 'margaret.davis@example.com'
-                }
+            context.setUser({
+                name: 'margaret.davis@example.com'
             });
-
             const orderCount = await context.model('Order').where('orderedItem/name').equal('Samsung Galaxy S4').silent().count();
             expect(orderCount).toBeTruthy();
             const items: { id?: number, customer?: number, name: string, orderDate?: Date }[] = await Products
@@ -186,9 +201,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
-            });
+            context.setUser(user);
             item = await Products.where('name').equal('Samsung Galaxy S4').expand(
                     'tags'
                 ).getItem();
@@ -233,8 +246,8 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
+            context.setUser({
+                name: 'margaret.davis@example.com'
             });
             item = await Products.where('name').equal('Samsung Galaxy S4').expand(
                 'tags'
@@ -263,10 +276,8 @@ describe('Global permissions', () => {
             let item = await Products.where('name').equal(
                 'Apple MacBook Air (13.3-inch, 2013 Version)'
             ).getItem();
-            Object.assign(context, {
-                user: {
-                    name: 'alexis.rees@example.com'
-                }
+            context.setUser({
+                name: 'alexis.rees@example.com'
             });
             expect(item.model).not.toBe('APPLE-MACBOOK-AIR-13.3-2013');
             expect(item).toBeTruthy();
@@ -282,11 +293,11 @@ describe('Global permissions', () => {
 
     it('should validate admin delete access to products', async () => {
         await executeInTransaction(context,async () => {
-            Object.assign(context, {
-                user: {
-                    name: 'alexis.rees@example.com'
-                }
+            context.setUser({
+                name: 'alexis.rees@example.com'
             });
+            const user = await firstValueFrom(context.user$);
+            expect(user.name).toEqual('alexis.rees@example.com');
             const Products = context.model('Product');
             await Products.insert({
                 name: 'Apple MacBook Air (13.3-inch, 2022 Version)',
@@ -318,9 +329,9 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
-            });
+            context.setUser(user);
+            const currentUser = await firstValueFrom(context.user$);
+            expect(currentUser.name).toEqual('margaret.davis@example.com');
             let items = await Orders.where('orderedItem/name').equal(
                 'Apple MacBook Air (13.3-inch, 2013 Version)'
             ).getItems();
@@ -359,9 +370,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
-            });
+            context.setUser(user);
             // add read access to contributors
             await context.model('Permission').silent().save([
                 {
@@ -411,9 +420,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
-            });
+            context.setUser(user);
             // add read access to contributors
             await context.model('Permission').silent().save([
                 {
@@ -466,9 +473,7 @@ describe('Global permissions', () => {
             expect(group).toBeTruthy();
             const members = group.property('members').silent();
             await members.insert(user);
-            Object.assign(context, {
-                user
-            });
+            context.setUser(user);
             // add read access to contributors
             await context.model('Permission').silent().save([
                 {

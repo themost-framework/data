@@ -1,4 +1,6 @@
-// MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
+/* eslint-disable no-var  */
+// noinspection ES6ConvertVarToLetConst
+
 var {TypeParser} = require('./types');
 var {sprintf} = require('sprintf-js');
 var {TraceUtils} = require('@themost/common');
@@ -279,50 +281,21 @@ FunctionContext.prototype.password = function(length) {
     return deferred.promise;
 };
 /**
- * @returns {Promise|*}
+ * @returns {Promise<any>}
  */
-FunctionContext.prototype.user = function() {
-    var self = this, context = self.model.context, deferred = Q.defer();
-    var user = context.interactiveUser || context.user || { };
-    process.nextTick(function() {
-        if (typeof user.id !== 'undefined') {
-            return deferred.resolve(user.id);
-        }
-        var userModel = context.model('User'), parser, undefinedUser = null;
-        userModel.where('name').equal(user.name).silent().select('id').first(function(err, result) {
-            if (err) {
-                TraceUtils.log(err);
-                //try to get undefined user
-                parser = TypeParser.hasParser(userModel.field('id').type);
-                if (typeof parser === 'function')
-                    undefinedUser = parser(null);
-                //set id for next calls
-                user.id = undefinedUser;
-                if (_.isNil(context.user)) {
-                    context.user = user;
-                }
-                return deferred.resolve(undefinedUser);
-            }
-            else if (_.isNil(result)) {
-                //try to get undefined user
-                parser = TypeParser.hasParser(userModel.field('id').type);
-                if (typeof parser === 'function')
-                    undefinedUser = parser(null);
-                //set id for next calls
-                user.id = undefinedUser;
-                if (_.isNil(context.user)) {
-                    context.user = user;
-                }
-                return deferred.resolve(undefinedUser);
-            }
-            else {
-                //set id for next calls
-                user.id = result.id;
-                return deferred.resolve(result.id);
-            }
-        });
-    });
-    return deferred.promise;
+FunctionContext.prototype.user = async function() {
+    /**
+     * @type {import('./types').DataContext}
+     */
+    var context = (this.model && this.model.context) || this.context;
+    if (context.interactiveUser) {
+        const interactiveUser = await context.getInteractiveUser();
+        return interactiveUser && interactiveUser.id ? interactiveUser.id : null;
+    } else if (context.user) {
+        const user = await context.getUser();
+        return user && user.id ? user.id : null;
+    }
+    return null;
 };
 /**
  * @returns {Promise|*}
@@ -330,6 +303,7 @@ FunctionContext.prototype.user = function() {
 FunctionContext.prototype.me = function() {
     return this.user();
 };
+
 
 /**
  * Creates a new instance of FunctionContext class

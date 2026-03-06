@@ -14,6 +14,9 @@ describe('DataAttributeResolver', () => {
         await context.finalizeAsync();
         await app.finalize();
     })
+    beforeEach(() => {
+        context.setUser(null);
+    })
     it('should resolve child nested attributes', async () => {
         Object.assign(context, {
             user: {

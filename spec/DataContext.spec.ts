@@ -1,6 +1,6 @@
 import {TestApplication} from './TestApplication';
 import {DataContext, UserService} from '@themost/data';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {resolve} from 'path';
 
 describe('DataContext', () => {
@@ -8,10 +8,13 @@ describe('DataContext', () => {
     let context: DataContext;
     beforeAll((done) => {
         app = new TestApplication(resolve(process.cwd(), 'spec/test2'));
-        app.useService(UserService);
+        //app.useService(UserService);
         context = app.createContext();
         return done();
     });
+    beforeEach(() => {
+        context.setUser(null);
+    })
     afterAll(async () => {
         await context.finalizeAsync();
         await app.finalize();
@@ -23,7 +26,11 @@ describe('DataContext', () => {
         });
         const user = await firstValueFrom(context.user$);
         const str = JSON.stringify(context);
-        expect(str).toEqual('{}');
+        expect(str).toEqual(JSON.stringify({
+            user: {
+                name: 'alexis.rees@example.com',
+            }
+        }));
     })
 
     it('should have user$', async () => {
@@ -35,11 +42,21 @@ describe('DataContext', () => {
         });
         const user2 = await firstValueFrom(context.user$);
         expect(user2?.name).toBe('alexis.rees@example.com');
-        context.switchUser({
+        context.setUser({
             name: 'james.may@example.com'
         });
         const user3 = await firstValueFrom(context.user$);
         expect(user3?.name).toBe('james.may@example.com');
+    });
+
+    it('should reuse user data', async () => {
+        context.setUser({
+            name: 'alexis.rees@example.com'
+        });
+        let user = await firstValueFrom(context.user$);
+        expect(user?.name).toBeTruthy();
+        user = await firstValueFrom(context.user$);
+        expect(user?.name).toBeTruthy();
     });
 
     it('should have interactiveUser$', async () => {
@@ -53,7 +70,7 @@ describe('DataContext', () => {
     });
 
     it('should use different context', async () => {
-        context.switchUser({
+        context.setUser({
             name: 'james.may@example.com'
         });
         let user = await firstValueFrom(context.user$);
@@ -105,6 +122,22 @@ describe('DataContext', () => {
         context.user = null;
         let user = await firstValueFrom(context.anonymousUser$);
         expect(user?.name).toBe('anonymous');
+    });
+
+    it('should set user again', async () => {
+        context.user = null;
+        let user = await firstValueFrom(context.user$);
+        expect(user?.name).toBeFalsy();
+        context.user = {
+            name: 'alexis.rees@example.com'
+        };
+        user = await firstValueFrom(context.user$);
+        expect(user?.name).toBe('alexis.rees@example.com');
+        context.user = {
+            name: 'james.may@example.com'
+        };
+        user = await firstValueFrom(context.user$);
+        expect(user?.name).toBe( 'james.may@example.com');
     });
 
 });

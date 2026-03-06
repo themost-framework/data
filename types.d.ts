@@ -7,6 +7,7 @@ import {
     DataAdapterBase,
     SequentialEventEmitter
 } from "@themost/common";
+// @ts-ignore
 import {Observable} from 'rxjs';
 
 export declare function DataAdapterCallback(err?:Error, result?:any): void;
@@ -44,7 +45,7 @@ export declare class DataAdapter {
      * @param {Array<any>} values
      * @param {(err?: Error, result?: any) => void} callback
      */
-    execute(query:any, values:Array<any>, callback:(err?:Error, result?:any) => void): void;
+    execute(query:any, values:any[], callback:(err?:Error, result?:any) => void): void;
 
     /**
      *
@@ -59,7 +60,7 @@ export declare class DataAdapter {
      * @param {Function} fn
      * @param {(err?: Error) => void} callback
      */
-    executeInTransaction(fn:Function, callback:(err?:Error) => void): void;
+    executeInTransaction(fn:(cb:(err?:Error) => void) => void, callback:(err?:Error) => void): void;
 
     /**
      *
@@ -100,9 +101,11 @@ export interface AuthenticatedUser {
 /**
  * Holds user information when a data context is in unattended mode
  */
+// tslint:disable-next-line:no-empty-interface
 export interface InteractiveUser extends AuthenticatedUser{
 }
 
+// tslint:disable-next-line:no-empty-interface
 export declare interface ContextUser extends ContextUserBase {
 
 }
@@ -166,7 +169,7 @@ export declare abstract class DataContext extends SequentialEventEmitter {
      * Finalizes the current context and releases all resources.
      * @param {(err?: Error) => void} callback
      */
-    abstract finalize(callback?:(err?:Error) => void): void;
+    finalize(callback?:(err?:Error) => void): void;
 
     /**
      * Finalizes the current context and releases all resources.
@@ -182,22 +185,10 @@ export declare abstract class DataContext extends SequentialEventEmitter {
     executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
 
     /**
-     * Switches the current user of the context.
-     * @param {ContextUser} user
-     */
-    switchUser(user?: ContextUser): void;
-
-    /**
      * An alternative method to switch the current user of the context.
      * @param {ContextUser} user
      */
     setUser(user?: ContextUser): void;
-
-    /**
-     * Switches the interactive user of the context. The interactive user is the original user who initiated the current context.
-     * @param {ContextUser} user
-     */
-    switchInteractiveUser(user?: ContextUser): void;
 
     /**
      * An alternative method to switch the interactive user of the context.
@@ -217,10 +208,11 @@ export declare abstract class DataContext extends SequentialEventEmitter {
      */
     getApplication(): ApplicationBase;
 
-    /**
-     * Refreshes the state of the current context including the state of the current user and the interactive user.
-     */
-    protected refreshState(): void;
+    public getUser(): Promise<any>;
+
+    public getAnonymousUser(): Promise<any>;
+
+    public getInteractiveUser(): Promise<any>;
 }
 
 export declare class DataContextEmitter {
@@ -249,9 +241,8 @@ export declare class DataAssociationMapping {
     associationValueField?: string;
     cascade?: any;
     associationType?: string;
-    select?: Array<string>;
-    privileges?: Array<DataModelPrivilege>;
-  
+    select?: string[];
+    privileges?: DataModelPrivilege[];
 }
 
 export declare interface QueryPipelineLookup {
