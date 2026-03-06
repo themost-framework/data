@@ -214,11 +214,13 @@ DataContext.prototype.getConfiguration = function() {
 // noinspection JSUnusedLocalSymbols
 /**
  * @param {Function} callback
- * @abstract
  */
 // eslint-disable-next-line no-unused-vars
 DataContext.prototype.finalize = function(callback) {
-    throw new AbstractMethodError();
+    if (this.cache) {
+        this.cache.clear();
+    }
+    return callback();
 };
 /**
  * Finalizes data context
@@ -288,7 +290,7 @@ DataContext.prototype.getUser = function() {
             }
         }
         // otherwise get user from data context
-        void this.model('User').on('before.execute', beforeExecute).on('after.execute', afterExecute)
+        void this.model('User').once('before.execute', beforeExecute).once('after.execute', afterExecute)
             .asQueryable().where('name').equal(this.user.name).expand((x) => x.groups).silent().getItem().then((result) => {
                 return resolve(result);
             }).catch((err) => {
@@ -327,7 +329,7 @@ DataContext.prototype.getInteractiveUser = function() {
             }
         }
         // otherwise get user from data context
-        void this.model('User').on('before.execute', beforeExecute).on('after.execute', afterExecute)
+        void this.model('User').once('before.execute', beforeExecute).once('after.execute', afterExecute)
             .asQueryable().where('name').equal(this.interactiveUser.name).expand((x) => x.groups).silent().getItem().then((result) => {
                 return resolve(result);
             }).catch((err) => {

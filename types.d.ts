@@ -169,7 +169,7 @@ export declare abstract class DataContext extends SequentialEventEmitter {
      * Finalizes the current context and releases all resources.
      * @param {(err?: Error) => void} callback
      */
-    abstract finalize(callback?:(err?:Error) => void): void;
+    finalize(callback?:(err?:Error) => void): void;
 
     /**
      * Finalizes the current context and releases all resources.
