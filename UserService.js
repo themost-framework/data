@@ -1,25 +1,7 @@
 const { ApplicationService } = require('@themost/common');
-const { BehaviorSubject, shareReplay, switchMap, from, of } = require('rxjs');
-
 class UserService extends ApplicationService {
   constructor(app) {
     super(app);
-
-    this.refreshAnonymousUser$ = new BehaviorSubject(void 0);
-    
-    this.anonymousUser$ = this.refreshAnonymousUser$.pipe(switchMap((value) => {
-        if (typeof value !== 'undefined') {
-            return of(value);
-        }
-        // create a new context
-        const context = this.getApplication().createContext();
-        // get anonymous user
-        return from(this.getAnonymousUser(context).finally(() => {
-            // finalize context
-            return context.finalizeAsync();
-        }));
-    }), shareReplay(1));
-
   }
 
   /**
@@ -28,30 +10,56 @@ class UserService extends ApplicationService {
    * @returns {Promise<any>}
    */
   getUser(context, name) {
-    return context.model('User').asQueryable().where((x, username) => {
-        return x.name === username;
-    }, name).expand((x) => x.groups).silent().getItem();
+      // noinspection JSCheckFunctionSignatures
+      /**
+       * @type {import('./data-cache').DataCacheStrategy}
+       */
+          // noinspection JSCheckFunctionSignatures
+      const cache = context.getConfiguration().getStrategy(function DataCacheStrategy() {});
+      if (cache) {
+          return cache.getOrDefault(`/User/${name}`, () => {
+              return context.model('User').where('name').equal(name).expand('groups').silent().getItem().then((user) => {
+                  return user;
+              });
+          });
+      }
+      return context.model('User').where('name').equal(name).expand('groups').silent().getItem();
   }
 
-  /**
-   * @param {import('@themost/common').DataContextBase} context
-   * @param {string} name 
-   * @returns {Promise<any>}
-   */
-  getGroup(context, name) {
-    return context.model('Group').asQueryable().where((x, username) => {
-        return x.name === username;
-    }, name).silent().getItem();
-  }
+    /**
+     * @param {import('@themost/common').DataContextBase} context
+     * @param {string} name
+     * @returns {Promise<any>}
+     */
+    getGroup(context, name) {
+        // noinspection JSCheckFunctionSignatures
+        /**
+         * @type {import('./data-cache').DataCacheStrategy}
+         */
+            // noinspection JSCheckFunctionSignatures
+        const cache = context.getConfiguration().getStrategy(function DataCacheStrategy() {});
+        if (cache) {
+            return cache.getOrDefault(`/Group/${name}`, () => {
+                return context.model('Group').asQueryable().where('name').equal(name).silent().getItem();
+            });
+        }
+
+        return context.model('Group').asQueryable().where('name').equal(name).silent().getItem();
+    }
 
   /**
    * @param {import('@themost/common').DataContextBase} context
    * @returns {Promise<any>}
    */
   getAnonymousUser(context) {
-    return context.model('User').asQueryable().where((x) => {
-        return x.name === 'anonymous';
-    }).expand((x) => x.groups).silent().getItem();
+      return this.getUser(context, 'anonymous').then((anonymousUser) => {
+            if (anonymousUser) {
+                Object.assign(anonymousUser, {
+                    groups: []
+                });
+            }
+            return anonymousUser;
+      });
   }
   
 }

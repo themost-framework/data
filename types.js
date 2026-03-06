@@ -120,12 +120,6 @@ function DataContext() {
         throw new AbstractClassError();
     }
 
-    Object.defineProperty(this, 'cache', {
-        configurable: true,
-        enumerable: false,
-        value: new Map()
-    });
-
     const user$ = defer(() => this.getUser());
 
     Object.defineProperty(this, 'user$', {
@@ -147,16 +141,11 @@ function DataContext() {
         if (application && typeof application.getService === 'function') {
             const userService = application.getService(UserService);
             if (userService) {
-                return userService.anonymousUser$;
+                return userService.getAnonymousUser(this);
             }
         }
         return new Observable((observer) => {
-            void this.model('User').where('name').equal('anonymous').silent().data('cache', true).getItem().then((result) => {
-                if (result) {
-                    Object.assign(result, {
-                        groups: []
-                    });
-                }
+            void new UserService(this.getApplication()).getAnonymousUser(this).then((result) => {
                 return observer.next(result);
             }).catch((err) => {
                 return observer.error(err);
@@ -216,9 +205,6 @@ DataContext.prototype.getConfiguration = function() {
  */
 // eslint-disable-next-line no-unused-vars
 DataContext.prototype.finalize = function(callback) {
-    if (this.cache) {
-        this.cache.clear();
-    }
     return callback();
 };
 /**
@@ -288,22 +274,16 @@ DataContext.prototype.getUser = function() {
                 });
             }
         }
-        // otherwise get user from data context
-        void this.model('User').asQueryable().where('name').equal(this.user.name).expand((x) => x.groups).silent().data('cache', true).getItem().then((result) => {
-                return resolve(result);
-            }).catch((err) => {
-                return reject(err);
-            });
+        return new UserService(application).getUser(this, this.user.name).then((result) => {
+            return resolve(result);
+        }).catch((err) => {
+            return reject(err);
+        });
     });
 };
 
 DataContext.prototype.setUser = function(user) {
-    this.refreshState();
     this.user = user;
-};
-
-DataContext.prototype.refreshState = function() {
-    //
 };
 
 DataContext.prototype.getInteractiveUser = function() {
@@ -326,10 +306,9 @@ DataContext.prototype.getInteractiveUser = function() {
                 });
             }
         }
-        // otherwise get user from data context
-        void this.model('User').asQueryable().where('name').equal(this.interactiveUser.name).expand((x) => x.groups).silent().data('cache', true).getItem().then((result) => {
-                return resolve(result);
-            }).catch((err) => {
+        return new UserService(application).getUser(this, this.interactiveUser.name).then((result) => {
+            return resolve(result);
+        }).catch((err) => {
             return reject(err);
         });
     });

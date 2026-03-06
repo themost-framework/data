@@ -211,8 +211,6 @@ export declare abstract class DataContext extends SequentialEventEmitter {
     public getUser(): Promise<any>;
 
     public getInteractiveUser(): Promise<any>;
-
-    public refreshState(): void;
 }
 
 export declare class DataContextEmitter {
