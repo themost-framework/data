@@ -102,7 +102,7 @@ function getSearchableObject(targetModel, obj) {
                                 // if the attribute is a json object with additional type, try to find the model for the additional type
                                 const model = targetModel.context.model(attribute.additionalType);
                                 if (model == null) {
-                                    throw new DataError('ERR_MODEL_NOT_FOUND', 'Model not found for the give additional type.', null, targetModel.name, field);
+                                    throw new DataError('ERR_MODEL_NOT_FOUND', 'Model not found for the given additional type.', null, targetModel.name, field);
                                 }
                                 searchObject[field] = getSearchableObject(model, value);
                             }
