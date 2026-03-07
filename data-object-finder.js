@@ -159,7 +159,7 @@ class DataObjectFinder {
         const findSet = paths(findObject).reduce(function(acc, path) {
             var prop = path.split('.').join('/');
             Object.assign(acc, {
-                [prop]: getProperty(obj, path)
+                [prop]: getProperty(findObject, path)
             });
             return acc;
         }, {});
