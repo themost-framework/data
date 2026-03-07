@@ -91,9 +91,12 @@ function getSearchableObject(targetModel, obj) {
                 return attributes.includes(field);
             }).forEach(function(field) {
                 if (Object.prototype.hasOwnProperty.call(obj, field)) {
+                    const attribute = targetModel.getAttribute(field);
+                    if (attribute.many) {
+                        return;
+                    }
                     var value = obj[field];
                     if (isObjectDeep(value)) {
-                        const attribute = targetModel.getAttribute(field);
                         if (attribute.type === 'Json') {
                             if (attribute.additionalType == null) {
                                 // if the attribute is a JSON object without an additional type, assign it directly; downstream query logic may resolve nested JSON properties into field/subfield comparisons rather than comparing the entire JSON blob

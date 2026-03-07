@@ -76,6 +76,16 @@ describe('Find', () => {
         }
     });
 
+    it('should find objects using array values', async () => {
+        const items = await context.model('Person').find({
+            email: [
+                'fernando.dunn@example.com',
+                'eduardo.jordan@example.com'
+            ]
+        }).silent().getItems();
+        expect(items.length).toEqual(2)
+    });
+
     it('should find orders using address locality', async () => {
         const items = await context.model('Order').find({
             customer: {
