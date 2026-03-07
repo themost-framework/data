@@ -96,7 +96,7 @@ function getSearchableObject(targetModel, obj) {
                         const attribute = targetModel.getAttribute(field);
                         if (attribute.type === 'Json') {
                             if (attribute.additionalType == null) {
-                                // if the attribute is a json object, use it as is for find
+                                // if the attribute is a JSON object without an additional type, assign it directly; downstream query logic may resolve nested JSON properties into field/subfield comparisons rather than comparing the entire JSON blob
                                 searchObject[field] = value;
                             } else {
                                 // if the attribute is a json object with additional type, try to find the model for the additional type
