@@ -29,7 +29,7 @@ function paths(tree) {
         path = path || '';
         for(var n in obj){
             if (Object.prototype.hasOwnProperty.call(obj, n)) {
-                if(typeof obj[n] === 'object' || obj[n] instanceof Array) {
+                if(isObjectDeep(obj[n])) {
                     walk(obj[n],path + '.' + n);
                 } else {
                     properties.push(path + '.' + n);
