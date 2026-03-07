@@ -72,7 +72,7 @@ function getSearchableObject(targetModel, obj) {
                             // if the value is an object, call _getFindSet recursively to get the find set for this object
                             const model = targetModel.context.model(mapping.parentModel);
                             if (model == null) {
-                                throw new DataError('ERR_MODEL_NOT_FOUND', 'Model not found for the give association.', null, mapping.parentModel);
+                                throw new DataError('ERR_MODEL_NOT_FOUND', 'Model not found for the given association.', null, mapping.parentModel);
                             }
                             findAttrs[field] = getSearchableObject(model, value);
                         } else {
