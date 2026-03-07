@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { DataContext } from '../index';
 import { TestApplication } from './TestApplication';
 
-describe('DataModel.find', () => {
+describe('Find', () => {
 
     let app: TestApplication;
     let context: DataContext;
@@ -23,6 +23,12 @@ describe('DataModel.find', () => {
         }).getItem();
         expect(item).toBeDefined();
         expect(item.name).toEqual('Lenovo Yoga 2 Pro');
+    });
+
+    it('should find object using id', async () => {
+        const item = await context.model('Product').find(39).getItem();
+        expect(item).toBeDefined();
+        expect(item.id).toEqual(39);
     });
 
     it('should not find object', async () => {
