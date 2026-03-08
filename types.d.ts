@@ -79,8 +79,7 @@ export declare interface ContextUser extends ContextUserBase {
     
 }
 
-export declare abstract class DataContext extends SequentialEventEmitter implements DataContextBase {
-
+export declare abstract class DataContext extends SequentialEventEmitter {
 
     /**
      * Optional property representing the use of the current context.
@@ -110,6 +109,13 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
     interactiveUser$: Observable<any>;
 
     /**
+     * An observable stream that emits anonymous user-related data.
+     *
+     * @type {Observable}
+     */
+    anonymousUser$: Observable<any>;
+
+    /**
      * The database adapter instance used for interacting with the database.
      * This property provides the necessary methods and properties to perform
      * database operations such as querying, inserting, updating, and deleting records.
@@ -132,7 +138,7 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
      * Finalizes the current context and releases all resources.
      * @param {(err?: Error) => void} callback
      */
-    abstract finalize(callback?:(err?:Error) => void): void;
+    finalize(callback?:(err?:Error) => void): void;
 
     /**
      * Finalizes the current context and releases all resources.
@@ -148,22 +154,10 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
     executeInTransactionAsync(func: () => Promise<void>): Promise<void>;
 
     /**
-     * Switches the current user of the context.
-     * @param {ContextUser} user
-     */
-    switchUser(user?: ContextUser): void;
-
-    /**
      * An alternative method to switch the current user of the context.
      * @param {ContextUser} user
      */
     setUser(user?: ContextUser): void;
-
-    /**
-     * Switches the interactive user of the context. The interactive user is the original user who initiated the current context.
-     * @param {ContextUser} user
-     */
-    switchInteractiveUser(user?: ContextUser): void;
 
     /**
      * An alternative method to switch the interactive user of the context.
@@ -183,11 +177,11 @@ export declare abstract class DataContext extends SequentialEventEmitter impleme
      */
     getApplication(): ApplicationBase;
 
-    /**
-     * Refreshes the state of the current context including the state of the current user and the interactive user.
-     */
-    protected refreshState(): void;
+    public getUser(): Promise<any>;
 
+    public getAnonymousUser(): Promise<any>;
+
+    public getInteractiveUser(): Promise<any>;
 }
 
 export declare class DataContextEmitter {

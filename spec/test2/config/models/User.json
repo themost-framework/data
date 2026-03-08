@@ -7,7 +7,7 @@
     "abstract": false,
     "sealed": false,
     "inherits": "Account",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "fields": [
         {
             "@id": "https://themost.io/schemas/lockoutTime",

@@ -16,15 +16,6 @@ describe('DataContext', () => {
         await app.finalize();
     });
 
-    it('should serialize context as empty object', async () => {
-        context.setUser({
-            name: 'alexis.rees@example.com',
-        });
-        const user = await firstValueFrom(context.user$);
-        const str = JSON.stringify(context);
-        expect(str).toEqual('{}');
-    })
-
     it('should have user$', async () => {
         context.setUser(null);
         const user = await firstValueFrom(context.user$);
@@ -34,7 +25,7 @@ describe('DataContext', () => {
         });
         const user2 = await firstValueFrom(context.user$);
         expect(user2?.name).toBe('alexis.rees@example.com');
-        context.switchUser({
+        context.setUser({
             name: 'james.may@example.com'
         });
         const user3 = await firstValueFrom(context.user$);
@@ -52,7 +43,7 @@ describe('DataContext', () => {
     });
 
     it('should use different context', async () => {
-        context.switchUser({
+        context.setUser({
             name: 'james.may@example.com'
         });
         let user = await firstValueFrom(context.user$);

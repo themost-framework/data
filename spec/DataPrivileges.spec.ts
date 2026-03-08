@@ -14,6 +14,12 @@ describe('Permissions', () => {
         await app.finalize();
     });
 
+    afterEach(async () => {
+        const configuration = context.getConfiguration();
+        // @ts-ignore
+        delete configuration.cache;
+    })
+
     it('should read access', async () => {
         const Products = context.model('Product');
         const items = await Products.getItems();
@@ -35,10 +41,11 @@ describe('Permissions', () => {
     it('should validate create access', async () => {
         const Products = context.model('Product');
         // set context user
-        Object.assign(context, {
-            user: {
-                name: 'christina.ali@example.com'
-        }});
+        context.setUser({
+            name: 'christina.ali@example.com'
+        });
+        const user = await context.model('User').find(context.user).getItem();
+        expect(user).toBeTruthy();
         const orderedItem = await Products.where('name').equal(
             'Apple MacBook Air (13.3-inch, 2013 Version)'
         ).getItem();
