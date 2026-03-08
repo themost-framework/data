@@ -246,51 +246,19 @@ FunctionContext.prototype.password = function(length) {
 /**
  * @returns {Promise<any>}
  */
-FunctionContext.prototype.user = function() {
-    var self = this;
-    // backward compatibility issue (get FunctionContext.model.context first)
-    var context = (self.model && self.model.context) || self.context;
-    var user = context.interactiveUser || context.user || { };
-    return new Promise(function(resolve) {
-        if (typeof user.id !== 'undefined') {
-            return resolve(user.id);
-        }
-        var userModel = context.model('User');
-        var parser;
-        var undefinedUser = null;
-        userModel.where('name').equal(user.name).silent().select('id').first(function(err, result) {
-            if (err) {
-                TraceUtils.log(err);
-                //try to get undefined user
-                parser = TypeParser.hasParser(userModel.field('id').type);
-                if (typeof parser === 'function')
-                    undefinedUser = parser(null);
-                //set id for next calls
-                user.id = undefinedUser;
-                if (context.user == null) {
-                    context.user = user;
-                }
-                return resolve(undefinedUser);
-            }
-            else if (result == null) {
-                //try to get undefined user
-                parser = TypeParser.hasParser(userModel.field('id').type);
-                if (typeof parser === 'function')
-                    undefinedUser = parser(null);
-                //set id for next calls
-                user.id = undefinedUser;
-                if (context.user == null) {
-                    context.user = user;
-                }
-                return resolve(undefinedUser);
-            }
-            else {
-                //set id for next calls
-                user.id = result.id;
-                return resolve(result.id);
-            }
-        });
-    });
+FunctionContext.prototype.user = async function() {
+    /**
+     * @type {import('./types').DataContext}
+     */
+    var context = (this.model && this.model.context) || this.context;
+    if (context.interactiveUser) {
+        const interactiveUser = await context.getInteractiveUser();
+        return interactiveUser && interactiveUser.id ? interactiveUser.id : null;
+    } else if (context.user) {
+        const user = await context.getUser();
+        return user && user.id ? user.id : null;
+    }
+    return null;
 };
 /**
  * @returns {Promise|*}

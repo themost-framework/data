@@ -8,7 +8,6 @@ var async = require('async');
 var { AccessDeniedError } = require('@themost/common');
 var { DataConfigurationStrategy } = require('./data-configuration');
 var _ = require('lodash');
-var { DataCacheStrategy } = require('./data-cache');
 var Q = require('q');
 var { hasOwnProperty } = require('./has-own-property');
 var { at } = require('lodash');
@@ -342,7 +341,7 @@ DataPermissionEventListener.prototype.validate = function (event, callback) {
         //do nothing
         return callback();
     }
-    effectiveAccounts(context, function (err, accounts) {
+    DataPermissionEventListener.prototype.effectiveAccounts(context, function (err, accounts) {
         if (err) {
             return callback(err);
         }
@@ -680,76 +679,34 @@ function queryUser(context, username, callback) {
         callback(err);
     }
 }
-/**
- * @param {DataContext} context
- * @param {function(Error=,Array=)} callback
- * @private
- */
-function effectiveAccounts(context, callback) {
-    if (_.isNil(context)) {
-        //push no account
-        return callback(null, [{ id: null }]);
-    }
 
-    /**
-     * @type {DataCacheStrategy}
-     */
-    var cache = context.getConfiguration().getStrategy(DataCacheStrategy);
-    /**
-     * Gets or sets an object that represents the user of the current data context.
-     * @property {*|{name: string, authenticationType: string}}
-     * @name DataContext#user
-     * @memberof DataContext
-     */
-    context.user = context.user || { name: 'anonymous', authenticationType: 'None' };
-    context.user.name = context.user.name || 'anonymous';
-    //if the current user is anonymous
-    if (context.user.name === 'anonymous') {
-        //get anonymous user data
-        cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function () {
-            return Q.nfbind(anonymousUser)(context);
-        }).then(function (result) {
-            var arr = [];
-            if (result) {
-                arr.push({ 'id': result.id, 'name': result.name });
-                result.groups = result.groups || [];
-                result.groups.forEach(function (x) { arr.push({ 'id': x.id, 'name': x.name }); });
+DataPermissionEventListener.prototype.effectiveAccounts = function (context, callback) {
+    var accounts = [ { id: null } ];
+    if (context == null) {
+        //push empty accounts
+        return callback(null, accounts);
+    }
+    // validate context user
+    if (context.user == null) {
+        context.setUser({ name:'anonymous',authenticationType:'None' });
+    }
+    try {
+        var invokeGetUser = context.user.name === 'anonymous' ? context.getAnonymousUser : context.getUser;
+        void invokeGetUser.call(context).then(function(user) {
+            if (user) {
+                accounts = [
+                    { id: user.id, name: user.name }
+                ];
+                if (Array.isArray(user.groups)) {
+                    accounts.push.apply(accounts, user.groups.map(function(x) { return { id: x.id, name: x.name }; }));
+                }
             }
-            if (arr.length === 0)
-                arr.push({ id: null });
-            return callback(null, arr);
+            return callback(null, accounts);
         }).catch(function (err) {
             return callback(err);
         });
-    }
-    else {
-        //try to get data from cache
-        var USER_CACHE_PATH = '/User/' + context.user.name;
-
-        cache.getOrDefault(USER_CACHE_PATH, function () {
-            return Q.nfbind(queryUser)(context, context.user.name);
-        }).then(function (user) {
-            return cache.getOrDefault(ANONYMOUS_USER_CACHE_PATH, function () {
-                return Q.nfbind(anonymousUser)(context);
-            }).then(function (anonymous) {
-                var arr = [];
-                if (user) {
-                    arr.push({ 'id': user.id, 'name': user.name });
-                    if (_.isArray(user.groups))
-                        user.groups.forEach(function (x) { arr.push({ 'id': x.id, 'name': x.name }); });
-                }
-                if (anonymous) {
-                    arr.push({ 'id': anonymous.id, 'name': 'anonymous' });
-                    if (_.isArray(anonymous.groups))
-                        anonymous.groups.forEach(function (x) { arr.push({ 'id': x.id, 'name': x.name }); });
-                }
-                if (arr.length === 0)
-                    arr.push({ id: null });
-                return callback(null, arr);
-            });
-        }).catch(function (err) {
-            return callback(err);
-        });
+    } catch (err) {
+        return callback(err);
     }
 }
 
@@ -882,7 +839,7 @@ DataPermissionEventListener.prototype.beforeExecute = function (event, callback)
             return callback();
         }
 
-        effectiveAccounts(context, function (err, accounts) {
+        DataPermissionEventListener.prototype.effectiveAccounts(context, function (err, accounts) {
             if (err) { callback(err); return; }
             //get all enabled privileges
             var privileges = modelPrivileges.filter(function (x) {

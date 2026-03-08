@@ -194,17 +194,25 @@ DefaultDataContext.prototype.model = function(name) {
 };
 /**
  * Finalizes the current data context
- * @param {Function} cb - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
+ * @param {Function} callback - A callback function where the first argument will contain the Error object if an error occurred, or null otherwise.
  */
-DefaultDataContext.prototype.finalize = function(cb) {
-    cb = cb || function () {};
-    void this._finalize(function(err) {
-        if (err) {
-            TraceUtils.error('An error occurred while finalizing the underlying database context.');
-            TraceUtils.error(err);
-        }
-        return cb();
-    });
+DefaultDataContext.prototype.finalize = function(callback) {
+    callback = callback || function () {};
+    try {
+        // noinspection JSPotentiallyInvalidConstructorUsage
+        const superFinalize = DefaultDataContext.super_.prototype.finalize;
+        void superFinalize.call(this, () => {
+            void this._finalize(function(err) {
+                if (err) {
+                    TraceUtils.error('An error occurred while finalizing the underlying database context.');
+                    TraceUtils.error(err);
+                }
+                return callback();
+            });
+        });
+    } catch (err) {
+        return callback(err);
+    }
 };
 
 
@@ -372,15 +380,23 @@ NamedDataContext.prototype.model = function(name) {
 
 };
 
-NamedDataContext.prototype.finalize = function(cb) {
-    cb = cb || function () {};
-    this._finalize(function(err) {
-        if (err) {
-            TraceUtils.error('An error occurred while finalizing the underlying database context.');
-            TraceUtils.error(err);
-        }
-        cb();
-    });
+NamedDataContext.prototype.finalize = function(callback) {
+    callback = callback || function () {};
+    try {
+        // noinspection JSPotentiallyInvalidConstructorUsage
+        const superFinalize = NamedDataContext.super_.prototype.finalize;
+        void superFinalize.call(this, () => {
+            void this._finalize(function(err) {
+                if (err) {
+                    TraceUtils.error('An error occurred while finalizing the underlying database context.');
+                    TraceUtils.error(err);
+                }
+                return callback();
+            });
+        });
+    } catch (err) {
+        return callback(err);
+    }
 };
 
 module.exports = {
