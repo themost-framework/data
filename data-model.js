@@ -47,6 +47,7 @@ var { isObjectDeep } = require('./is-object');
 var { DataStateValidatorListener } = require('./data-state-validator');
 var resolver = require('./data-expand-resolver');
 var isArrayLikeObject = require('lodash/isArrayLikeObject');
+var {DataObjectFinder} = require('./data-object-finder');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -943,72 +944,7 @@ DataModel.prototype.filterAsync = function(params) {
  });
  */
 DataModel.prototype.find = function(obj) {
-    var self = this, result;
-    if (_.isNil(obj))
-    {
-        result = new DataQueryable(this);
-        result.where(self.primaryKey).equal(null);
-        return result;
-    }
-    var find = { }, findSet = false;
-    if (_.isObject(obj)) {
-        if (hasOwnProperty(obj, self.primaryKey)) {
-            find[self.primaryKey] = obj[self.primaryKey];
-            findSet = true;
-        }
-        else {
-            //get unique constraint
-            var constraint = _.find(self.constraints, function(x) {
-                return x.type === 'unique';
-            });
-            //find by constraint
-            if (_.isObject(constraint) && _.isArray(constraint.fields)) {
-                //search for all constrained fields
-                var findAttrs = {}, constrained = true;
-                _.forEach(constraint.fields, function(x) {
-                   if (hasOwnProperty(obj, x)) {
-                       findAttrs[x] = obj[x];
-                   }
-                   else {
-                       constrained = false;
-                   }
-                });
-                if (constrained) {
-                    _.assign(find, findAttrs);
-                    findSet = true;
-                }
-            }
-        }
-    }
-    else {
-        find[self.primaryKey] = obj;
-        findSet = true;
-    }
-    if (!findSet) {
-        _.forEach(self.attributeNames, function(x) {
-            if (hasOwnProperty(obj, x)) {
-                find[x] = obj[x];
-            }
-        });
-    }
-    result = new DataQueryable(this);
-    findSet = false;
-    //enumerate properties and build query
-    for(var key in find) {
-        if (hasOwnProperty(find, key)) {
-            if (!findSet) {
-                result.where(key).equal(find[key]);
-                findSet = true;
-            }
-            else
-                result.and(key).equal(find[key]);
-        }
-    }
-    if (!findSet) {
-        //there is no query defined a dummy one (e.g. primary key is null)
-        result.where(self.primaryKey).equal(null);
-    }
-    return result;
+    return new DataObjectFinder(this).find(obj);
 };
 
 /**
