@@ -85,6 +85,42 @@ describe('Find', () => {
         }
     });
 
+    it('should get item using names', async () => {
+        context.user = {
+            name: 'alexis.rees@example.com',
+        }
+        const items = await context.model('Order').find({
+            customer: {
+                familyName: 'Thorpe',
+                givenName: 'Luke'
+            }
+        }).expand('customer').getItems();
+        expect(items.length).toBeGreaterThan(0);
+        const [item] = items;
+        const updateOrder = {
+            orderedItem: {
+                name: item.orderedItem.name
+            },
+            customer: {
+                familyName: item.customer.familyName,
+                givenName: item.customer.givenName
+            },
+            orderStatus: {
+                alternateName: item.orderStatus.alternateName
+            }
+        }
+        const testOrders = await context.model('Order').find(updateOrder).expand('customer').getItems();
+        expect(testOrders.length).toEqual(1);
+        const [testOrder] = testOrders;
+        expect(testOrder).toBeDefined();
+        expect(testOrder.orderedItem.name).toEqual(item.orderedItem.name);
+        expect(testOrder.customer.familyName).toEqual(item.customer.familyName);
+        expect(testOrder.customer.givenName).toEqual(item.customer.givenName);
+        expect(testOrder.orderStatus.alternateName).toEqual(item.orderStatus.alternateName);
+
+    });
+
+
     it('should find objects using array values', async () => {
         const items = await context.model('Person').find({
             email: [
