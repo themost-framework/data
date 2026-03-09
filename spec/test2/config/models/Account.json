@@ -10,6 +10,15 @@
     "version": "2.0",
     "fields": [
         ],
+    "constraints": [
+        {
+            "name": "uniqueName",
+            "type": "unique",
+            "fields": [
+                "name"
+            ]
+        }
+    ],
     "privileges": [
         {
             "mask": 15,

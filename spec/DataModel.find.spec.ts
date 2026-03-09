@@ -30,6 +30,15 @@ describe('Find', () => {
         expect(item).toBeDefined();
         expect(item.id).toEqual(39);
     });
+    it('should find object using a unique constraint', async () => {
+        const items = await context.model('Account').silent().find({
+            name: 'alexis.rees@example.com'
+        }).getItems();
+        expect(items).toBeDefined();
+        expect(items.length).toEqual(1);
+        const [item] = items;
+        expect(item.name).toEqual('alexis.rees@example.com');
+    });
 
     it('should not find object', async () => {
         let item = await context.model('Product').find({}).getItem();
