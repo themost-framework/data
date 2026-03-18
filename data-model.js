@@ -2621,10 +2621,6 @@ DataModel.prototype.inferMapping = function(name) {
     }
     //extend default mapping attributes
     var mapping = _.assign(defaultMapping, field.mapping);
-    // set refersTo property if it's not defined in mapping
-    if (mapping.refersTo == null && mapping.associationType === 'junction') {
-        mapping.refersTo = field.name;
-    }
 
     var associationAdapter;
     if (mapping.associationType === 'junction' && mapping.associationAdapter && typeof mapping.associationObjectField === 'undefined') {
@@ -2633,7 +2629,7 @@ DataModel.prototype.inferMapping = function(name) {
         if (associationAdapter) {
             // try to find association adapter parent field
             var associationParentAttr = _.find(associationAdapter.attributes, function (x) {
-                return (typeof x.primary === 'undefined' || x.primary === false) && x.type === mapping.parentModel;
+                return (x.primary === 'undefined' || x.primary === false) && x.type === mapping.parentModel;
             });
             if (associationParentAttr) {
                 mapping.associationObjectField = associationParentAttr.name;
@@ -2659,7 +2655,7 @@ DataModel.prototype.inferMapping = function(name) {
         if (associationAdapter) {
             // try to find association adapter parent field
             var associationChildAttr = _.find(associationAdapter.attributes, function (x) {
-                return typeof (typeof x.primary === 'undefined' || x.primary === false) &&  x.type === mapping.childModel;
+                return typeof (x.primary === 'undefined' || x.primary === false) &&  x.type === mapping.childModel;
             });
             if (associationChildAttr) {
                 mapping.associationValueField = associationChildAttr.name;
