@@ -2622,8 +2622,8 @@ DataModel.prototype.inferMapping = function(name) {
     //extend default mapping attributes
     var mapping = _.assign(defaultMapping, field.mapping);
     // set refersTo property if it's not defined in mapping
-    if (mapping.refersTo == null) {
-        mapping.refersTo = field.property || field.name;
+    if (mapping.refersTo == null && mapping.associationType === 'junction') {
+        mapping.refersTo = field.name;
     }
 
     var associationAdapter;
