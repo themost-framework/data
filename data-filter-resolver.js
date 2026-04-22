@@ -35,7 +35,7 @@ DataFilterResolver.prototype.resolveMember = function(member, callback) {
 
 DataFilterResolver.prototype.resolveMethod = function(name, args, callback) {
     callback = callback || function() { };
-    if (typeof DataFilterResolver.prototype[name] === 'function') {
+    if (Object.prototype.hasOwnProperty.call(DataFilterResolver.prototype, name) && typeof DataFilterResolver.prototype[name] === 'function') {
         var a = args || [];
         a.push(callback);
         try {
