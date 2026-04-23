@@ -55,6 +55,7 @@ export declare class EntitySetKind {
 
 export class EdmMapping {
     static entityType(name?: string): Function;
+    static filter(): Function;
     static action(name: string, returnType: any): Function;
     static func(name: string, returnType: any): Function;
     static param(name: string, type: string, nullable?: boolean, fromBody?: boolean): Function;

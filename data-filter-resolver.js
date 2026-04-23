@@ -3,6 +3,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var {FunctionContext} = require('./functions');
+var {EdmMapping} = require('./odata');
 
 /**
  * @module @themost/data/data-filter-resolver
@@ -93,21 +94,11 @@ DataFilterResolver.prototype.user = function(callback) {
     return this.me(callback);
 };
 
-Object.defineDecorator(DataFilterResolver.prototype, 'me', function(target, key, descriptor) {
-    descriptor.value.filterDecorator = true;
-});
-Object.defineDecorator(DataFilterResolver.prototype, 'now', function(target, key, descriptor) {
-    descriptor.value.filterDecorator = true;
-});
-Object.defineDecorator(DataFilterResolver.prototype, 'today', function(target, key, descriptor) {
-    descriptor.value.filterDecorator = true;
-});
-Object.defineDecorator(DataFilterResolver.prototype, 'lang', function(target, key, descriptor) {
-    descriptor.value.filterDecorator = true;
-});
-Object.defineDecorator(DataFilterResolver.prototype, 'user', function(target, key, descriptor) {
-    descriptor.value.filterDecorator = true;
-});
+Object.defineDecorator(DataFilterResolver.prototype, 'me', EdmMapping.filter);
+Object.defineDecorator(DataFilterResolver.prototype, 'now', EdmMapping.filter);
+Object.defineDecorator(DataFilterResolver.prototype, 'today', EdmMapping.filter);
+Object.defineDecorator(DataFilterResolver.prototype, 'lang', EdmMapping.filter);
+Object.defineDecorator(DataFilterResolver.prototype, 'user', EdmMapping.filter);
 
 module.exports = {
     DataFilterResolver
