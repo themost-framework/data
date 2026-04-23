@@ -9,3 +9,7 @@ export declare class DataFilterResolver {
     lang(callback: (err?: Error, res?: string) => void);
 
 }
+
+export class EdmFilter {
+    static expression(): Function;
+}

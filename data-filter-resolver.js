@@ -3,7 +3,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var {FunctionContext} = require('./functions');
-var {EdmMapping} = require('./odata');
+var {defineDecorator} = require('./odata');
 
 /**
  * @module @themost/data/data-filter-resolver
@@ -94,12 +94,36 @@ DataFilterResolver.prototype.user = function(callback) {
     return this.me(callback);
 };
 
-Object.defineDecorator(DataFilterResolver.prototype, 'me', EdmMapping.filter);
-Object.defineDecorator(DataFilterResolver.prototype, 'now', EdmMapping.filter);
-Object.defineDecorator(DataFilterResolver.prototype, 'today', EdmMapping.filter);
-Object.defineDecorator(DataFilterResolver.prototype, 'lang', EdmMapping.filter);
-Object.defineDecorator(DataFilterResolver.prototype, 'user', EdmMapping.filter);
+/**
+ * @class
+ * @constructor
+ */
+function EdmFilter() {
+    //
+}
+
+/**
+ * @static
+ * Maps a method as a valid OData filter function
+ * @returns {Function}
+ */
+EdmFilter.expression = function() {
+    return function(target, key, descriptor) {
+        if (typeof descriptor.value !== 'function') {
+            throw new Error('Decorator is not valid on this declaration type.');
+        }
+        descriptor.value.filterDecorator = true;
+        return descriptor;
+    };
+};
+
+defineDecorator(DataFilterResolver.prototype, 'me', EdmFilter.expression);
+defineDecorator(DataFilterResolver.prototype, 'now', EdmFilter.expression);
+defineDecorator(DataFilterResolver.prototype, 'today', EdmFilter.expression);
+defineDecorator(DataFilterResolver.prototype, 'lang', EdmFilter.expression);
+defineDecorator(DataFilterResolver.prototype, 'user', EdmFilter.expression);
 
 module.exports = {
-    DataFilterResolver
+    DataFilterResolver,
+    EdmFilter,
 };

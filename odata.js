@@ -2149,21 +2149,6 @@ EdmMapping.entityType = function (name) {
 
 /**
  * @static
- * Maps a method as a valid OData filter function
- * @returns {Function}
- */
-EdmMapping.filter = function() {
-    return function(target, key, descriptor) {
-        if (typeof descriptor.value !== 'function') {
-            throw new Error('Decorator is not valid on this declaration type.');
-        }
-        descriptor.value.filterDecorator = true;
-        return descriptor;
-    };
-};
-
-/**
- * @static
  * Maps a function to an OData entity type action
  * @param {string} name
  * @param {*=} returnType
