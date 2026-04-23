@@ -107,7 +107,7 @@ function EdmFilter() {
  * Maps a method as a valid OData filter function
  * @returns {Function}
  */
-EdmFilter.expression = function() {
+EdmFilter.func = function() {
     return function(target, key, descriptor) {
         if (typeof descriptor.value !== 'function') {
             throw new Error('Decorator is not valid on this declaration type.');
@@ -117,11 +117,11 @@ EdmFilter.expression = function() {
     };
 };
 
-defineDecorator(DataFilterResolver.prototype, 'me', EdmFilter.expression());
-defineDecorator(DataFilterResolver.prototype, 'now', EdmFilter.expression());
-defineDecorator(DataFilterResolver.prototype, 'today', EdmFilter.expression());
-defineDecorator(DataFilterResolver.prototype, 'lang', EdmFilter.expression());
-defineDecorator(DataFilterResolver.prototype, 'user', EdmFilter.expression());
+defineDecorator(DataFilterResolver.prototype, 'me', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'now', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'today', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'lang', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'user', EdmFilter.func());
 
 module.exports = {
     DataFilterResolver,
