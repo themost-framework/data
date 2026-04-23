@@ -3,7 +3,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var {FunctionContext} = require('./functions');
-var {defineDecorator} = require('./odata');
+var {defineDecorator} = require('./define-decorator');
 
 /**
  * @module @themost/data/data-filter-resolver
@@ -117,11 +117,11 @@ EdmFilter.expression = function() {
     };
 };
 
-defineDecorator(DataFilterResolver.prototype, 'me', EdmFilter.expression);
-defineDecorator(DataFilterResolver.prototype, 'now', EdmFilter.expression);
-defineDecorator(DataFilterResolver.prototype, 'today', EdmFilter.expression);
-defineDecorator(DataFilterResolver.prototype, 'lang', EdmFilter.expression);
-defineDecorator(DataFilterResolver.prototype, 'user', EdmFilter.expression);
+defineDecorator(DataFilterResolver.prototype, 'me', EdmFilter.expression());
+defineDecorator(DataFilterResolver.prototype, 'now', EdmFilter.expression());
+defineDecorator(DataFilterResolver.prototype, 'today', EdmFilter.expression());
+defineDecorator(DataFilterResolver.prototype, 'lang', EdmFilter.expression());
+defineDecorator(DataFilterResolver.prototype, 'user', EdmFilter.expression());
 
 module.exports = {
     DataFilterResolver,

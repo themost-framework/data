@@ -25,6 +25,7 @@ var {
     DataModelEventListener,
     DataModelPrivilege
 } = require('./types');
+var { defineDecorator } = require('./define-decorator');
 var { DataModel } = require('./data-model');
 var { DataQueryable } = require('./data-queryable');
 var { DataObject } = require('./data-object');
@@ -53,7 +54,6 @@ var {
     ProcedureConfiguration,
     EdmType,
     EdmMapping,
-    defineDecorator,
     EdmMultiplicity,
     EntityCollectionConfiguration,
     EntityDataContext,
@@ -119,6 +119,7 @@ module.exports = {
     ModelClassLoaderStrategy,
     SchemaLoaderStrategy,
     FileSchemaLoaderStrategy,
+    defineDecorator,
     DataModel,
     DataQueryable,
     DataObject,
@@ -168,7 +169,6 @@ module.exports = {
     ProcedureConfiguration,
     EdmType,
     EdmMapping,
-    defineDecorator,
     EdmMultiplicity,
     EntityCollectionConfiguration,
     EntityDataContext,
