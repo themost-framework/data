@@ -65,7 +65,10 @@ var {
 var { PermissionMask,
     DataPermissionEventArgs,
     DataPermissionEventListener} = require('./data-permission');
-var { DataFilterResolver } = require('./data-filter-resolver');
+var {
+    DataFilterResolver,
+    EdmFilter,
+} = require('./data-filter-resolver');
 var { DataObjectJunction } = require('./data-object-junction');
 var { DataObjectTag } = require('./data-object-tag');
 var { HasOneAssociation } = require('./has-one-association');
@@ -169,6 +172,7 @@ module.exports = {
     ProcedureConfiguration,
     EdmType,
     EdmMapping,
+    EdmFilter,
     EdmMultiplicity,
     EntityCollectionConfiguration,
     EntityDataContext,
