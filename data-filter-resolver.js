@@ -35,16 +35,16 @@ DataFilterResolver.prototype.resolveMember = function(member, callback) {
 
 DataFilterResolver.prototype.resolveMethod = function(name, args, callback) {
     callback = callback || function() { };
-    if (Object.prototype.hasOwnProperty.call(DataFilterResolver.prototype, name) && typeof DataFilterResolver.prototype[name] === 'function') {
+    var fn = DataFilterResolver.prototype[name];
+    if (typeof fn === 'function' && fn.filterDecorator === true) {
         var a = args || [];
         a.push(callback);
         try {
-            return DataFilterResolver.prototype[name].apply(this, a);
+            return fn.apply(this, a);
         }
         catch(e) {
             return callback(e);
         }
-
     }
     callback();
 };
@@ -92,6 +92,22 @@ DataFilterResolver.prototype.lang = function(callback) {
 DataFilterResolver.prototype.user = function(callback) {
     return this.me(callback);
 };
+
+Object.defineDecorator(DataFilterResolver.prototype, 'me', function(target, key, descriptor) {
+    descriptor.value.filterDecorator = true;
+});
+Object.defineDecorator(DataFilterResolver.prototype, 'now', function(target, key, descriptor) {
+    descriptor.value.filterDecorator = true;
+});
+Object.defineDecorator(DataFilterResolver.prototype, 'today', function(target, key, descriptor) {
+    descriptor.value.filterDecorator = true;
+});
+Object.defineDecorator(DataFilterResolver.prototype, 'lang', function(target, key, descriptor) {
+    descriptor.value.filterDecorator = true;
+});
+Object.defineDecorator(DataFilterResolver.prototype, 'user', function(target, key, descriptor) {
+    descriptor.value.filterDecorator = true;
+});
 
 module.exports = {
     DataFilterResolver
