@@ -213,5 +213,3 @@ export declare class EntityDataContext extends DataContext {
 export declare class ODataConventionModelBuilder extends ODataModelBuilder{
 
 }
-
-export declare function defineDecorator(proto: Object|Function, key: string, decorator:Function): void;

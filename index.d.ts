@@ -1,6 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 export * from './data-configuration';
 export * from './types';
+export * from './define-decorator';
 export * from './data-model';
 export * from './data-queryable';
 export * from './data-object';

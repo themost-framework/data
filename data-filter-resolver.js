@@ -3,6 +3,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var {FunctionContext} = require('./functions');
+var {defineDecorator} = require('./define-decorator');
 
 /**
  * @module @themost/data/data-filter-resolver
@@ -35,16 +36,19 @@ DataFilterResolver.prototype.resolveMember = function(member, callback) {
 
 DataFilterResolver.prototype.resolveMethod = function(name, args, callback) {
     callback = callback || function() { };
-    if (typeof DataFilterResolver.prototype[name] === 'function') {
+    var fn = typeof this[name] === 'function' ? this[name] : DataFilterResolver.prototype[name];
+    if (typeof fn === 'function') {
+        if (fn.filterDecorator !== true) {
+            return callback(new Error('The specified method has not been marked as a filter method.'));
+        }
         var a = args || [];
         a.push(callback);
         try {
-            return DataFilterResolver.prototype[name].apply(this, a);
+            return fn.apply(this, a);
         }
         catch(e) {
             return callback(e);
         }
-
     }
     callback();
 };
@@ -93,6 +97,36 @@ DataFilterResolver.prototype.user = function(callback) {
     return this.me(callback);
 };
 
+/**
+ * @class
+ * @constructor
+ */
+function EdmFilter() {
+    //
+}
+
+/**
+ * @static
+ * Maps a method as a valid OData filter function
+ * @returns {Function}
+ */
+EdmFilter.func = function() {
+    return function(target, key, descriptor) {
+        if (typeof descriptor.value !== 'function') {
+            throw new Error('Decorator is not valid on this declaration type.');
+        }
+        descriptor.value.filterDecorator = true;
+        return descriptor;
+    };
+};
+
+defineDecorator(DataFilterResolver.prototype, 'me', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'now', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'today', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'lang', EdmFilter.func());
+defineDecorator(DataFilterResolver.prototype, 'user', EdmFilter.func());
+
 module.exports = {
-    DataFilterResolver
+    DataFilterResolver,
+    EdmFilter,
 };

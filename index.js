@@ -25,6 +25,7 @@ var {
     DataModelEventListener,
     DataModelPrivilege
 } = require('./types');
+var { defineDecorator } = require('./define-decorator');
 var { DataModel } = require('./data-model');
 var { DataQueryable } = require('./data-queryable');
 var { DataObject } = require('./data-object');
@@ -53,7 +54,6 @@ var {
     ProcedureConfiguration,
     EdmType,
     EdmMapping,
-    defineDecorator,
     EdmMultiplicity,
     EntityCollectionConfiguration,
     EntityDataContext,
@@ -65,7 +65,10 @@ var {
 var { PermissionMask,
     DataPermissionEventArgs,
     DataPermissionEventListener} = require('./data-permission');
-var { DataFilterResolver } = require('./data-filter-resolver');
+var {
+    DataFilterResolver,
+    EdmFilter,
+} = require('./data-filter-resolver');
 var { DataObjectJunction } = require('./data-object-junction');
 var { DataObjectTag } = require('./data-object-tag');
 var { HasOneAssociation } = require('./has-one-association');
@@ -119,6 +122,7 @@ module.exports = {
     ModelClassLoaderStrategy,
     SchemaLoaderStrategy,
     FileSchemaLoaderStrategy,
+    defineDecorator,
     DataModel,
     DataQueryable,
     DataObject,
@@ -168,7 +172,7 @@ module.exports = {
     ProcedureConfiguration,
     EdmType,
     EdmMapping,
-    defineDecorator,
+    EdmFilter,
     EdmMultiplicity,
     EntityCollectionConfiguration,
     EntityDataContext,
