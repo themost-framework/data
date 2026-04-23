@@ -37,7 +37,10 @@ DataFilterResolver.prototype.resolveMember = function(member, callback) {
 DataFilterResolver.prototype.resolveMethod = function(name, args, callback) {
     callback = callback || function() { };
     var fn = DataFilterResolver.prototype[name];
-    if (typeof fn === 'function' && fn.filterDecorator === true) {
+    if (typeof fn === 'function') {
+        if (fn.filterDecorator !== true) {
+            return callback(new Error('The specified method has not been marked as a filter method.'));
+        }
         var a = args || [];
         a.push(callback);
         try {
