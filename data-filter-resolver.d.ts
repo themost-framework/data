@@ -11,5 +11,5 @@ export declare class DataFilterResolver {
 }
 
 export class EdmFilter {
-    static expression(): Function;
+    static func(): Function;
 }
