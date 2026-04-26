@@ -3,6 +3,7 @@ import { TestApplication } from './TestApplication';
 import { resolve } from 'path';
 import {SqliteAdapter} from '@themost/sqlite';
 import * as listener from './test1/listeners/Employee.beforeUpgrade';
+import { OnUpdateProduct, onRemoveProduct } from './test1/listeners/OnUpdateProduct';
 
 class Employee {
     public EmployeeID?: number;
@@ -108,6 +109,7 @@ describe('DataModel', () => {
     });
 
     it('should use beforeUpgrade', async () => {
+        // @ts-ignore
         const schema: SchemaLoaderStrategy = context.getConfiguration().getStrategy(SchemaLoaderStrategy);
         const modelDefinition = schema.getModelDefinition('Employee')
         modelDefinition.eventListeners = modelDefinition.eventListeners || [];
@@ -122,6 +124,26 @@ describe('DataModel', () => {
         const [beforeUpgradeListener] = listeners;
         expect(beforeUpgradeListener).toBeTruthy();
         expect(beforeUpgradeListener).toBe(listener.beforeUpgrade);
+    });
+
+    it('should use class event listener', async () => {
+        const model = context.model('Product');
+        expect(model).toBeTruthy();
+        const listeners = model.listeners('before.save');
+        expect(listeners).toBeTruthy();
+        expect(listeners.length).toBeGreaterThan(0);
+        const found = listeners.find((f) => f === OnUpdateProduct.prototype.beforeSave);
+        expect(found).toBeTruthy();
+    });
+
+    it('should use object event listener', async () => {
+        const model = context.model('Product');
+        expect(model).toBeTruthy();
+        const listeners = model.listeners('before.remove');
+        expect(listeners).toBeTruthy();
+        expect(listeners.length).toBeGreaterThan(0);
+        const found = listeners.find((f) => f === onRemoveProduct.beforeRemove);
+        expect(found).toBeTruthy();
     });
 
 });
