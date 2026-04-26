@@ -41,6 +41,14 @@
             "nullable": false
         }
     ],
+    "eventListeners": [
+        {
+            "type": "./listeners/OnUpdateProduct#OnUpdateProduct"
+        },
+        {
+            "type": "./listeners/OnUpdateProduct#onRemoveProduct"
+        }
+    ],
     "seed": [
         {
             "ProductID": 1,

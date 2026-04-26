@@ -610,10 +610,9 @@ function unregisterContextListeners() {
  * @private
  */
  function registerContextListeners() {
-
-    //description: change default max listeners (10) to 64 in order to avoid node.js message
-    // for reaching the maximum number of listeners
-    //author: k.barbounakis@gmail.com
+    // unregister listeners
+    unregisterContextListeners.call(this);
+    // set max listeners
     if (typeof this.setMaxListeners === 'function') {
         this.setMaxListeners(64);
     }
@@ -652,7 +651,7 @@ function unregisterContextListeners() {
     this.on('before.save', OnJsonAttribute.prototype.beforeSave);
     //get module loader
     /**
-     * @type {ModuleLoader|*}
+     * @type {ModuleLoaderStrategy}
      */
     var moduleLoader = this.context.getConfiguration().getStrategy(ModuleLoaderStrategy);
     //register configuration listeners
@@ -662,10 +661,25 @@ function unregisterContextListeners() {
             //get listener type (e.g. type: require('./custom-listener.js'))
             if (listener.type && !listener.disabled)
             {
+                const [listenerModule, listenerClassOrObject] = listener.type.split('#');
                 /**
                  * @type {{beforeSave?:function,afterSave?:function,beforeRemove?:function,afterRemove?:function,beforeExecute?:function,afterExecute?:function,beforeUpgrade?:function,afterUpgrade?:function}}
                  */
-                var dataEventListener = moduleLoader.require(listener.type);
+                let dataEventListener;
+                if (listenerClassOrObject) {
+                    const module =  moduleLoader.require(listenerModule);
+                    if (Object.prototype.hasOwnProperty.call(module, listenerClassOrObject) === false) {
+                        throw new DataError('ERR_TYPE_NOENT'`The event listener type "${listenerClassOrObject}" cannot be found in target module`, null, this.name);
+                    }
+                    if (isObjectDeep(module[listenerClassOrObject])) {
+                        dataEventListener = module[listenerClassOrObject];
+                    } else {
+                        const ListenerClass = module[listenerClassOrObject];
+                        dataEventListener = new ListenerClass();
+                    }
+                } else {
+                    dataEventListener = moduleLoader.require(listener.type);
+                }
                 if (typeof dataEventListener.beforeUpgrade === 'function')
                     this.on('before.upgrade', dataEventListener.beforeUpgrade);
                 if (typeof dataEventListener.beforeSave === 'function')
