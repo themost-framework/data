@@ -93,6 +93,8 @@ var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
 
 var { UserService } = require('./UserService');
 
+var { OnBeforeGetExpandableAssociation, OnBeforeGetExpandableTag, OnBeforeGetExpandableJunction } = require('./OnBeforeExecuteExpand')
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -181,6 +183,9 @@ module.exports = {
     executeInUnattendedModeAsync,
     ValueFormatter,
     ValueDialect,
-    UserService
+    UserService,
+    OnBeforeGetExpandableAssociation,
+    OnBeforeGetExpandableTag,
+    OnBeforeGetExpandableJunction
 };
 

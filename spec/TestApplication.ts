@@ -67,7 +67,8 @@ export class TestApplication extends IApplication {
                 'invariantName': 'test',
                 'default':true,
                 "options": {
-                    "database": db
+                    "database": db,
+                    logLevel: 'debug'
                 }
             }
         ]);
