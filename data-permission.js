@@ -523,7 +523,7 @@ DataPermissionEventListener.prototype.validate = function (event, callback) {
                             // if privilege should be excluded
                             if (exclude === true) {
                                 // break
-                                return cb;
+                                return cb();
                             }
                             // otherwise, continue with permission validation
                             if (requestMask === PermissionMask.Create) {
