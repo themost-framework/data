@@ -791,37 +791,36 @@ function filterInternal(params, callback) {
                 if (mapping && mapping.associationType === 'junction') {
                     var expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, member);
                     expr = {
-                        $expand: expr1.$expand
+                        $expand: expr1.$expand,
+                        $select: expr1.$select
                     };
                     if (expr1.$distinct) {
                         $distinct = true;
                     }
-                    //replace member expression
-                    member = expr1.$select.$name.replace(/\./g,'/');
                 }
                 else {
                     expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(self, member);
                     if (expr.$distinct) {
                         $distinct = true;
                     }
-                    // get member expression
-                    if (expr && expr.$select && Object.prototype.hasOwnProperty.call(expr.$select, '$value')) {
-                        // get value
-                        var {$value} = expr.$select;
-                        // get first property
-                        var [property] = Object.keys($value);
-                        // check if property starts with $ (e.g. $concat, $jsonGet etc)
-                        if (property && property.startsWith('$')) {
-                            // get arguments
-                            var {[property]: args} = $value;
-                            // create method call expression
-                            member = new MethodCallExpression(property.substring(1), args);
-                        } else {
-                            return cb(new Error('Invalid member expression. Expected a method call expression.'));
-                        }
-                    } else if (expr && expr.$select) {
-                        member = expr.$select.$name.replace(/\./g, '/');
+                }
+                // get member expression
+                if (expr && expr.$select && Object.prototype.hasOwnProperty.call(expr.$select, '$value')) {
+                    // get value
+                    var {$value} = expr.$select;
+                    // get first property
+                    var [property] = Object.keys($value);
+                    // check if property starts with $ (e.g. $concat, $jsonGet etc)
+                    if (property && property.startsWith('$')) {
+                        // get arguments
+                        var {[property]: args} = $value;
+                        // create method call expression
+                        member = new MethodCallExpression(property.substring(1), args);
+                    } else {
+                        return cb(new Error('Invalid member expression. Expected a method call expression.'));
                     }
+                } else if (expr && expr.$select) {
+                    member = expr.$select.$name.replace(/\./g, '/');
                 }
                 if (expr && expr.$expand) {
                     var arrExpr = [];
