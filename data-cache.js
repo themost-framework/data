@@ -204,6 +204,9 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
             try {
                 void self.rawCache.get(key, (err, res) => {
                     if (typeof res !== 'undefined') {
+                        if (res === null) {
+                            return resolve(res);
+                        }
                         if (Object.prototype.hasOwnProperty.call(res, key)) {
                             return resolve(res[key]);
                         }
