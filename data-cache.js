@@ -127,10 +127,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
                     if (err) {
                         return reject(err);
                     }
-                    if (Object.prototype.hasOwnProperty.call(res, key)) {
-                        return resolve(res[key]);
-                    }
-                    return resolve();
+                    return resolve(res);
                 });
             } catch (err) {
                 return reject(err);
@@ -204,9 +201,7 @@ class DefaultDataCacheStrategy extends DataCacheStrategy {
             try {
                 void self.rawCache.get(key, (err, res) => {
                     if (typeof res !== 'undefined') {
-                        if (Object.prototype.hasOwnProperty.call(res, key)) {
-                            return resolve(res[key]);
-                        }
+                        return resolve(res);
                     }
                     try {
                         void getFunc().then(function (res) {
