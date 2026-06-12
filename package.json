@@ -40,13 +40,13 @@
     "rxjs": "^7.8.2",
     "sprintf-js": "^1.1.2",
     "symbol": "^0.3.1",
-    "uuid": "^11.1.1"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.17.2",
     "@babel/preset-env": "^7.23.8",
     "@babel/preset-typescript": "^7.16.7",
-    "@themost/common": "^2.12.1",
+    "@themost/common": "^2.12.2",
     "@themost/json-logger": "^1.1.0",
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.6.77",
