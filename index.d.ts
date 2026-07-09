@@ -24,3 +24,4 @@ export * from './UnattendedMode';
 export * from './ValueFormatter';
 export * from './UserService';
 export * from './OnBeforeExecuteExpand';
+export * from './select-object-query';
