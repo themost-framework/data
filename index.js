@@ -95,6 +95,8 @@ var { UserService } = require('./UserService');
 
 var { OnBeforeGetExpandableAssociation, OnBeforeGetExpandableTag, OnBeforeGetExpandableJunction } = require('./OnBeforeExecuteExpand')
 
+var { SelectObjectQuery } = require('./select-object-query');
+
 module.exports = {
     TypeParser,
     PrivilegeType,
@@ -186,6 +188,7 @@ module.exports = {
     UserService,
     OnBeforeGetExpandableAssociation,
     OnBeforeGetExpandableTag,
-    OnBeforeGetExpandableJunction
+    OnBeforeGetExpandableJunction,
+    SelectObjectQuery
 };
 
