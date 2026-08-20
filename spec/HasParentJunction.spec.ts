@@ -43,7 +43,7 @@ describe('HasParentJunction', () => {
             const invalidGroup = {
                 name: 'InvalidGroup'
             };
-            await expect(newUser.property('groups').insert(invalidGroup)).rejects.toThrowError('An associated object cannot be found');
+            await expect(newUser.property('groups').insert(invalidGroup)).rejects.toThrow('An associated object cannot be found');
 
         });
     });
@@ -66,12 +66,12 @@ describe('HasParentJunction', () => {
             newUser = await context.model('User').where('name').equal('luis.nash@example.com').getTypedItem();
             await expect(newUser.property('groups').insert({
                 name: 'Contributors'
-            })).rejects.toThrowError('Access Denied');
+            })).rejects.toThrow('Access Denied');
 
             const invalidGroup = {
                 name: 'InvalidGroup'
             };
-            await expect(newUser.property('groups').insert(invalidGroup)).rejects.toThrowError('An associated object cannot be found');
+            await expect(newUser.property('groups').insert(invalidGroup)).rejects.toThrow('An associated object cannot be found');
 
         });
     });
@@ -149,7 +149,7 @@ describe('HasParentJunction', () => {
 
             await expect(newUser.property('groups').remove({
                 name: 'Contributors'
-            })).rejects.toThrowError('Access Denied');
+            })).rejects.toThrow('Access Denied');
 
         });
     });

@@ -44,7 +44,7 @@ describe('DataConfiguration', () => {
         configuration.setModelDefinition(modelDefinition);
         expect(() => {
             context.model('Account').getDataObjectType();
-        }).toThrowError('Module exported member not found');
+        }).toThrow('Module exported member not found');
         await TestUtils.finalize(app);
 
     });

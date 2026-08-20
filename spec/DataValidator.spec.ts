@@ -42,7 +42,7 @@ describe('DataValidator', () => {
             item.faxNumber = '+301234567890';
             await expect(People.save(item)).resolves.toBeTruthy();
             item.faxNumber = '301234567890';
-            await expect(People.save(item)).rejects.toThrowError('Fax number should with "+" e.g. +301234567890');
+            await expect(People.save(item)).rejects.toThrow('Fax number should with "+" e.g. +301234567890');
             delete context.user;
             
         });
@@ -70,7 +70,7 @@ describe('DataValidator', () => {
                 itemOffered: {
                     name: 'Lenovo Yoga 2 Pro'
                 }
-            })).rejects.toThrowError(field.validation.message);
+            })).rejects.toThrow(field.validation.message);
             delete context.user;
             
         });
@@ -100,7 +100,7 @@ describe('DataValidator', () => {
                 itemOffered: {
                     name: 'Lenovo Yoga 2 Pro'
                 }
-            })).rejects.toThrowError(field.validation.message);
+            })).rejects.toThrow(field.validation.message);
             delete context.user;
             
         });
@@ -128,7 +128,7 @@ describe('DataValidator', () => {
                 itemOffered: {
                     name: 'Lenovo Yoga 2 Pro'
                 }
-            })).rejects.toThrowError(field.validation.message);
+            })).rejects.toThrow(field.validation.message);
             delete context.user;
         });
     });
@@ -150,7 +150,7 @@ describe('DataValidator', () => {
             item.model = 'LNYO2PRO';
             await expect(Products.silent().save(item)).resolves.toBeTruthy();
             item.model = 'LNY';
-            await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
+            await expect(Products.silent().save(item)).rejects.toThrow(field.validation.message);
         });
     });
 
@@ -172,7 +172,7 @@ describe('DataValidator', () => {
             item.model = 'LNYO2PR';
             await expect(Products.silent().save(item)).resolves.toBeTruthy();
             item.model = 'LNYO2PRO';
-            await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
+            await expect(Products.silent().save(item)).rejects.toThrow(field.validation.message);
         });
     });
 
@@ -199,7 +199,7 @@ describe('DataValidator', () => {
             item.model = 'LNYO2PR';
             await expect(Products.silent().save(item)).resolves.toBeTruthy();
             item.model = 'LNYO2PrO';
-            await expect(Products.silent().save(item)).rejects.toThrowError(field.validation.message);
+            await expect(Products.silent().save(item)).rejects.toThrow(field.validation.message);
         });
     });
     
