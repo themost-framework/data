@@ -3,7 +3,7 @@
 
 var {TypeParser} = require('./types');
 var {sprintf} = require('sprintf-js');
-var {TraceUtils} = require('@themost/common');
+var {TraceUtils, Guid} = require('@themost/common');
 // eslint-disable-next-line no-unused-vars
 var moment = require('moment');
 var _ = require('lodash');
@@ -173,16 +173,14 @@ function newGuidInternal() {
  * @returns {Promise|*}
  */
 FunctionContext.prototype.newGuid = function() {
-    var deferred = Q.defer();
-    process.nextTick(function() {
+    return new Promise(function(resolve, reject) {
         try {
-            deferred.resolve(newGuidInternal());
+            return resolve(Guid.newGuid().toString());
         }
-        catch(err) {
-            deferred.reject(err)
+        catch (err) {
+            return reject(err);
         }
     });
-    return deferred.promise;
 };
 
 /**
