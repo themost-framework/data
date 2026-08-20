@@ -1,6 +1,5 @@
 const { Args, Guid, DataError } = require('@themost/common');
 const moment = require('moment');
-const { v4 } = require('uuid');
 const {isObjectDeep} = require('./is-object');
 const random = require('lodash/random');
 const getProperty = require('lodash/get');
@@ -189,7 +188,7 @@ class ValueDialect {
    * @returns {Promise<string>}
    */
   $newGuid() {
-    return Promise.resolve(v4().toString());
+    return this.$uuid();
   }
 
   /**
@@ -197,7 +196,14 @@ class ValueDialect {
    * @returns {Promise<string>}
    */
     $uuid() {
-      return Promise.resolve(v4().toString());
+      return new Promise(function(resolve, reject) {
+        try {
+          return resolve(Guid.newGuid().toString());
+        }
+        catch (err) {
+          return reject(err);
+        }
+      });
     }
 
   /**
