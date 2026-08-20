@@ -1,9 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 /*eslint no-var: "off"*/
 // noinspection ES6ConvertVarToLetConst
-
-var {TypeParser} = require('./types');
-var {TraceUtils} = require('@themost/common');
+var {Guid} = require('@themost/common');
 // eslint-disable-next-line no-unused-vars
 var moment = require('moment');
 var _ = require('lodash');
@@ -112,33 +110,13 @@ FunctionContext.prototype.newid = function() {
     });
 };
 
-var UUID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
-
-function newGuidInternal() {
-    var chars = UUID_CHARS, uuid = [], i;
-    // rfc4122, version 4 form
-    var r;
-    // rfc4122 requires these characters
-    uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
-    uuid[14] = '4';
-
-    // Fill in random data.  At i==19 set the high bits of clock sequence as
-    // per rfc4122, sec. 4.1.5
-    for (i = 0; i < 36; i++) {
-        if (!uuid[i]) {
-            r = 0 | Math.random()*16;
-            uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
-        }
-    }
-    return uuid.join('');
-}
 /**
  * @returns {Promise|*}
  */
 FunctionContext.prototype.newGuid = function() {
     return new Promise(function(resolve, reject) {
         try {
-            resolve(newGuidInternal());
+            resolve(Guid.newGuid().toString());
         }
         catch(err) {
             reject(err)
