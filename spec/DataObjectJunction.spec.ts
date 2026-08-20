@@ -44,7 +44,7 @@ describe('DataObjectJunction', () => {
             const invalidUser = {
                 name: 'invalid.user@example.com'
             };
-            await expect(newGroup.property('members').insert(invalidUser)).rejects.toThrowError('An associated object cannot be found');
+            await expect(newGroup.property('members').insert(invalidUser)).rejects.toThrow('An associated object cannot be found');
 
         });
     });
@@ -73,7 +73,7 @@ describe('DataObjectJunction', () => {
             const invalidUser = {
                 name: 'invalid.user@example.com'
             };
-            await expect(newGroup.property('members').silent().insert(invalidUser)).rejects.toThrowError('An associated object cannot be found');
+            await expect(newGroup.property('members').silent().insert(invalidUser)).rejects.toThrow('An associated object cannot be found');
 
         });
     });
@@ -112,7 +112,7 @@ describe('DataObjectJunction', () => {
             const invalidUser = {
                 name: 'invalid.user@example.com'
             };
-            await expect(newGroup.property('members').remove(invalidUser)).rejects.toThrowError('An associated object cannot be found');
+            await expect(newGroup.property('members').remove(invalidUser)).rejects.toThrow('An associated object cannot be found');
         });
     });
 

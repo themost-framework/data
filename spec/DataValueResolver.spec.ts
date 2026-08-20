@@ -30,7 +30,7 @@ describe('DataValueResolver', () => {
         // remove product id
         delete product.id;
         const Orders = context.model('Order').silent();
-        expect(() => Orders.where('orderedItem').equal(product)).toThrowError('Invalid value for property "orderedItem"');
+        expect(() => Orders.where('orderedItem').equal(product)).toThrow('Invalid value for property "orderedItem"');
     });
 
     it('should resolve value from a property of an associated parent object', async () => {
@@ -102,7 +102,7 @@ describe('DataValueResolver', () => {
         expect(lastOrder).toBeTruthy();
         const { customer } = lastOrder;
         delete customer.id;
-        expect(() => Products.where('orders/customer').equal(customer)).toThrowError('Invalid value for property "customer"');
+        expect(() => Products.where('orders/customer').equal(customer)).toThrow('Invalid value for property "customer"');
     });
 
     it('should resolve value from an object based on a many-to-many association', async () => {

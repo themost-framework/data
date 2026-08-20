@@ -52,7 +52,7 @@ describe('DataObjectTag', () => {
             await expect(user.property('tags').insert([
                 'NewUser',
                 'ValidUser'
-            ])).rejects.toThrowError('Access Denied');
+            ])).rejects.toThrow('Access Denied');
 
             await user.property('tags').silent().insert([
                 'NewUser',
@@ -130,7 +130,7 @@ describe('DataObjectTag', () => {
             ]);
             await expect(user.property('tags').remove([
                 'ValidUser'
-            ])).rejects.toThrowError('Access Denied');
+            ])).rejects.toThrow('Access Denied');
             user = await context.model('User')
             .where('name').equal('luis.nash@example.com')
             .expand('tags')
@@ -156,7 +156,7 @@ describe('DataObjectTag', () => {
                 'NewUser',
                 'ValidUser'
             ]);
-            await expect(user.property('tags').removeAll()).rejects.toThrowError('Access Denied');
+            await expect(user.property('tags').removeAll()).rejects.toThrow('Access Denied');
 
             user = await context.model('User')
                 .where('name').equal('luis.nash@example.com')
