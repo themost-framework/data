@@ -48,6 +48,7 @@ var { DataStateValidatorListener } = require('./data-state-validator');
 var resolver = require('./data-expand-resolver');
 var isArrayLikeObject = require('lodash/isArrayLikeObject');
 var {DataObjectFinder} = require('./data-object-finder');
+var { DataAttributeResolver:DataAttributeResolverClass } = require('./data-attribute-resolver');
 /**
  * @this DataModel
  * @param {DataField} field
@@ -755,7 +756,7 @@ function filterInternal(params, callback) {
                     mapping = self.inferMapping(member1[0]),
                     expr;
                 if (mapping && mapping.associationType === 'junction') {
-                    var expr1 = DataAttributeResolver.prototype.resolveJunctionAttributeJoin.call(self, member);
+                    var expr1 = DataAttributeResolverClass.prototype.resolveNestedAttributeJoin.call(self, member);
                     expr = expr1.$expand;
                     //replace member expression
                     member = expr1.$select.$name.replace(/\./g,'/');
