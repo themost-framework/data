@@ -11,13 +11,14 @@ var {QueryField, MethodCallExpression, MemberExpression, ObjectNameValidator} = 
 var {QueryEntity, Expression} = require('@themost/query');
 var {QueryUtils} = require('@themost/query');
 var Q = require('q');
-var aliasProperty = Symbol('alias');
 var {hasOwnProperty} = require('./has-own-property');
 var {isObjectDeep} = require('./is-object');
 var { UnknownAttributeError } = require('./data-errors');
 var { DataExpandResolver } = require('./data-expand-resolver');
 var {instanceOf} = require('./instance-of');
-
+var { DataAttributeResolver:DataAttributeResolverClass, DataAttributeResolverAliasProperty } = require('./data-attribute-resolver');
+// noinspection JSUnresolvedReference
+var aliasProperty = DataAttributeResolverAliasProperty;
 /**
  * @param {DataQueryable} target 
  */
@@ -549,7 +550,12 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             return res.$expand;
         }
         else {
-            throw new Error(sprintf('The association type between %s and %s model is not supported for filtering, grouping or sorting data.', mapping.parentModel , mapping.childModel));
+            if (mapping.associationType === 'junction') {
+                const res = new DataAttributeResolverClass().resolveNestedAttributeJoin.call(self, memberExpr);
+                return res.$expand;
+            } else {
+                throw new Error(sprintf('The association of type "%s" between "%s" and "%s", defined by "%s", is not supported for filtering, grouping or sorting data.', mapping.associationType, mapping.parentModel , mapping.childModel, mapping.refersTo));
+            }
         }
     }
 };
