@@ -19,6 +19,41 @@ DataFilterResolver.prototype.resolveMember = function(member, callback) {
     }
     if (/\//.test(member)) {
         var arr = member.split('/');
+        // validate that the expression resolves an existing attribute
+        var index = 0;
+        var model = this;
+        var context = this.context;
+        while (index < arr.length) {
+            var name = arr[index];
+            var attr = model.getAttribute(name);
+            if (attr == null) {
+                return callback(new UnknownAttributeError(model.name, name));
+            }
+            // if the attribute is a JSON type, then break the loop because
+            // the given expression e.g. metadata/identifier/name will be handled internally by the database engine
+            // and the attribute is not mapped to a model (the additionalType property is null)
+            if (attr.type === 'Json' && attr.additionalType == null) {
+                break;
+            }
+            // get mapping for the attribute
+            var mapping = model.inferMapping(name);
+            // throw exception because the attribute is not mapped and the expression is not fully resolved
+            if (mapping == null && index < arr.length-1) {
+                return callback(new UnknownAttributeError(model.name, name));
+            }
+            // if mapping is found, then get the model for the mapping
+            if (mapping != null) {
+                // throw exception because the mapping defines an association to a collection of primitive typed values
+                // and the expression is not fully resolved
+                // e.g. tags/tag/name where tags is an array of strings
+                if (mapping.childModel == null && index < arr.length-1) {
+                    return callback(new UnknownAttributeError(model.name, name));
+                }
+                var type = attr.additionalType != null ? attr.additionalType : attr.type;
+                model = context.model(type);
+            }
+            index++;
+        }
         return callback(null, arr.slice(arr.length-2).join('.'));
     }
     var attribute = this.getAttribute(member);
