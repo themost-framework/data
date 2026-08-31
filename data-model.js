@@ -806,7 +806,16 @@ function filterInternal(params, callback) {
             if (result instanceof MemberExpression) {
                 if (Object.prototype.hasOwnProperty.call(result, '$expand')) {
                     // handle $expand property
-                    $joinExpressions.push(...result.$expand);
+                    result.$expand.forEach(function(expand) {
+                        // try to find if the expand expression already exists in $joinExpressions
+                        var joinExpr = $joinExpressions.find(function(x) {
+                           return expand.$entity.$as === x.$entity.$as;
+                        });
+                        if (joinExpr == null) {
+                            $joinExpressions.push(expand);
+                        }
+                    });
+
                 }
             }
             return cb(null, result);
