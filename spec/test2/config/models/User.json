@@ -137,6 +137,34 @@
             "@id": "https://themost.io/schemas/userReviews",
             "name": "userReviews",
             "type": "UserReview"
+        },
+        {
+            "@id": "https://themost.io/schemas/region",
+            "name": "userRegions",
+            "type": "Text",
+            "many": true,
+            "mapping": {
+                "associationType": "junction",
+                "associationAdapter": "UserRegions",
+                "associationObjectField": "user",
+                "associationValueField": "region",
+                "privileges": [
+                    {
+                        "mask": 15,
+                        "type": "global"
+                    },
+                    {
+                        "mask": 15,
+                        "type": "global",
+                        "account": "Administrators"
+                    },
+                    {
+                        "mask": 1,
+                        "type": "self",
+                        "filter": "user eq me()"
+                    }
+                ]
+            }
         }
     ],
     "privileges": [

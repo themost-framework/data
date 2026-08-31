@@ -1,5 +1,5 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
-// noinspection ES6ConvertVarToLetConst
+// noinspection ES6ConvertVarToLetConst,JSUnresolvedReference
 
 var _ = require('lodash');
 var {cloneDeep} = require('lodash');
@@ -8,7 +8,7 @@ var Symbol = require('symbol');
 var path = require('path');
 var pluralize = require('pluralize');
 var async = require('async');
-var {QueryUtils, Expression} = require('@themost/query');
+var {QueryUtils, Expression, MemberExpression} = require('@themost/query');
 var {OpenDataParser} = require('@themost/query');
 var types = require('./types');
 var {DataAssociationMapping} = require('./types');
@@ -800,10 +800,26 @@ function filterInternal(params, callback) {
             DataFilterResolver.prototype.resolveMember.call(self, member, cb);
     };
     parser.resolveMethod = function(name, args, cb) {
-        if (typeof self.resolveMethod === 'function')
-            self.resolveMethod.call(self, name, args, cb);
-        else
-            DataFilterResolver.prototype.resolveMethod.call(self, name, args, cb);
+        var resolveMethod = (typeof self.resolveMethod === 'function') ? self.resolveMethod : DataFilterResolver.prototype.resolveMethod;
+        resolveMethod.call(self, name, args, function(err, result) {
+            if (err) { return cb(err); }
+            if (result instanceof MemberExpression) {
+                if (Object.prototype.hasOwnProperty.call(result, '$expand')) {
+                    // handle $expand property
+                    result.$expand.forEach(function(expand) {
+                        // try to find if the expand expression already exists in $joinExpressions
+                        var joinExpr = $joinExpressions.find(function(x) {
+                           return expand.$entity.$as === x.$entity.$as;
+                        });
+                        if (joinExpr == null) {
+                            $joinExpressions.push(expand);
+                        }
+                    });
+
+                }
+            }
+            return cb(null, result);
+        });
     };
     var filter;
 
