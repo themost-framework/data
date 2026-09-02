@@ -2712,7 +2712,7 @@ function afterExecute_(result, callback) {
                 var thisMapping = _.assign({}, mapping);
                 thisMapping.options = options;
                 if (mapping.associationType==='association' || mapping.associationType==='junction') {
-                    if ((mapping.childModel===self.model.name) && (mapping.associationType==='association') && (mapping.refersTo === mapping.childField)) {
+                    if ((mapping.childModel===self.model.name) && (mapping.associationType==='association') && (mapping.refersTo === mapping.childField || mapping.refersTo == null)) {
                         return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
                             .then(function() {
                                 return cb();
