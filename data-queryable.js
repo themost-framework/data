@@ -2712,7 +2712,15 @@ function afterExecute_(result, callback) {
                 var thisMapping = _.assign({}, mapping);
                 thisMapping.options = options;
                 if (mapping.associationType==='association' || mapping.associationType==='junction') {
-                    if ((mapping.parentModel===self.model.name) && (mapping.associationType==='association')) {
+                    if ((mapping.childModel===self.model.name) && (mapping.associationType==='association') && (mapping.refersTo === mapping.childField || mapping.refersTo == null)) {
+                        return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
+                            .then(function() {
+                                return cb();
+                            }).catch(function(err) {
+                                return cb(err);
+                            });
+                    }
+                    else if ((mapping.parentModel===self.model.name) && (mapping.associationType==='association')) {
                         return new DataMappingExtender(thisMapping).for(self).getAssociatedChildren(result)
                             .then(function() {
                                 return cb();
@@ -2730,14 +2738,6 @@ function afterExecute_(result, callback) {
                     }
                     else if (mapping.parentModel===self.model.name && mapping.associationType==='junction') {
                         return new DataMappingExtender(thisMapping).for(self).getChildren(result)
-                            .then(function() {
-                                return cb();
-                            }).catch(function(err) {
-                                return cb(err);
-                            });
-                    }
-                    else if ((mapping.childModel===self.model.name) && (mapping.associationType==='association')) {
-                        return new DataMappingExtender(thisMapping).for(self).getAssociatedParents(result)
                             .then(function() {
                                 return cb();
                             }).catch(function(err) {
