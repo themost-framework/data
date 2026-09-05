@@ -2185,7 +2185,7 @@ function afterExecute_(result, callback) {
                 }
             }
             else {
-                return cb(new DataError('E_ASSOCIATION', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.name), null, self.model));
+                return cb(new DataError('E_ASSOCIATION', sprintf('Data association mapping (%s) for %s cannot be found or the association between these two models defined more than once.', expand, self.model.name), null, self.model.name));
             }
         }, function(err) {
             if (err) {
