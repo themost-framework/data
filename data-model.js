@@ -1694,7 +1694,7 @@ DataModel.prototype.recast = function(dest, src, callback)
     if (_.isNil(dest)) {
         dest = { };
     }
-    async.eachSeries(self.fields, function(field, cb) {
+    async.eachSeries(self.attributes, function(field, cb) {
         try {
             if (hasOwnProperty(src, field.name)) {
                 //ensure db property removal
