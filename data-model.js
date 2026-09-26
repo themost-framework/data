@@ -618,6 +618,10 @@ function unregisterContextListeners() {
     var CalculatedValueListener = dataListeners.CalculatedValueListener;
     var DefaultValueListener = dataListeners.DefaultValueListener;
     var DataCachingListener = dataListeners.DataCachingListener;
+    var cachingListener = this.context.getConfiguration().getStrategy(DataCachingListener);
+    if (cachingListener == null) {
+        cachingListener = new DataCachingListener();
+    }
     var DataModelCreateViewListener = dataListeners.DataModelCreateViewListener;
     var DataModelSeedListener = dataListeners.DataModelSeedListener;
     
@@ -631,14 +635,14 @@ function unregisterContextListeners() {
 
     //register before execute caching
     if (this.caching==='always' || this.caching==='conditional') {
-        this.on('before.execute', DataCachingListener.prototype.beforeExecute);
+        this.on('before.execute', cachingListener.beforeExecute);
     }
     this.on('before.execute', OnExecuteNestedQueryable.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryOptionsListener.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryListener.prototype.beforeExecute);
     //register after execute caching
     if (this.caching==='always' || this.caching==='conditional') {
-        this.on('after.execute', DataCachingListener.prototype.afterExecute);
+        this.on('after.execute', cachingListener.afterExecute);
     }
 
     //migration listeners
