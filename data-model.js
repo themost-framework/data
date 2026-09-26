@@ -648,7 +648,13 @@ function unregisterContextListeners() {
     //migration listeners
     this.on('after.upgrade',DataModelCreateViewListener.prototype.afterUpgrade);
     this.on('after.upgrade',DataModelSeedListener.prototype.afterUpgrade);
-
+    // register after save and after remove listeners for caching listener if they are defined
+    if (typeof cachingListener.afterSave === 'function') {
+        this.on('after.save', cachingListener.afterSave.bind(cachingListener));
+    }
+    if (typeof cachingListener.afterRemove === 'function') {
+        this.on('after.remove', cachingListener.afterRemove.bind(cachingListener));
+    }
     // json listener
     this.on('after.save', OnJsonAttribute.prototype.afterSave);
     this.on('after.execute', OnJsonAttribute.prototype.afterExecute);

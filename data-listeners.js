@@ -533,6 +533,16 @@ DataCachingListener.prototype.afterExecute = function(event, callback) {
     }
 };
 
+DataCachingListener.prototype.afterSave = function(event, callback) {
+    // do nothing and let application strategy handle cache purging
+    return callback();
+}
+
+DataCachingListener.prototype.afterRemove = function(event, callback) {
+    // do nothing and let application strategy handle cache purging
+    return callback();
+}
+
 
 /**
  * @class
