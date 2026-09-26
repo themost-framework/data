@@ -24,9 +24,9 @@ export declare class CalculatedValueListener implements BeforeSaveEventListener 
 
 export declare class DataCachingListener implements BeforeExecuteEventListener, AfterExecuteEventListener {
     afterExecute(event: DataEventArgs, callback: (err?: Error) => void): void;
-
     beforeExecute(event: DataEventArgs, callback: (err?: Error) => void): void;
-
+    afterSave(event: DataEventArgs, callback: (err?: Error) => void): void;
+    afterRemove(event: DataEventArgs, callback: (err?: Error) => void): void;
 }
 
 export declare class DefaultValueListener implements BeforeSaveEventListener {
