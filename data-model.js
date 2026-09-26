@@ -635,14 +635,14 @@ function unregisterContextListeners() {
 
     //register before execute caching
     if (this.caching==='always' || this.caching==='conditional') {
-        this.on('before.execute', cachingListener.beforeExecute);
+        this.on('before.execute', cachingListener.beforeExecute.bind(cachingListener));
     }
     this.on('before.execute', OnExecuteNestedQueryable.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryOptionsListener.prototype.beforeExecute);
     this.on('before.execute', OnNestedQueryListener.prototype.beforeExecute);
     //register after execute caching
     if (this.caching==='always' || this.caching==='conditional') {
-        this.on('after.execute', cachingListener.afterExecute);
+        this.on('after.execute', cachingListener.afterExecute.bind(cachingListener));
     }
 
     //migration listeners
