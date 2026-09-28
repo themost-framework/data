@@ -170,6 +170,7 @@
             "name": "orders",
             "title": "Orders",
             "type": "Order",
+            "@json.expandable": true,
             "mapping": {
                 "associationType": "association",
                 "childModel": "Order",

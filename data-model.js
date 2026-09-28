@@ -672,10 +672,25 @@ function unregisterContextListeners() {
             //get listener type (e.g. type: require('./custom-listener.js'))
             if (listener.type && !listener.disabled)
             {
+                const [listenerModule, listenerClassOrObject] = listener.type.split('#');
                 /**
                  * @type {{beforeSave?:function,afterSave?:function,beforeRemove?:function,afterRemove?:function,beforeExecute?:function,afterExecute?:function,beforeUpgrade?:function,afterUpgrade?:function}}
                  */
-                var dataEventListener = moduleLoader.require(listener.type);
+                var dataEventListener;
+                if (listenerClassOrObject) {
+                    var module =  moduleLoader.require(listenerModule);
+                    if (Object.prototype.hasOwnProperty.call(module, listenerClassOrObject) === false) {
+                        throw new DataError('ERR_TYPE_NOENT', `The event listener type "${listenerClassOrObject}" cannot be found in target module`, null, this.name);
+                    }
+                    if (isObjectDeep(module[listenerClassOrObject])) {
+                        dataEventListener = module[listenerClassOrObject];
+                    } else {
+                        var ListenerClass = module[listenerClassOrObject];
+                        dataEventListener = new ListenerClass();
+                    }
+                } else {
+                    dataEventListener = moduleLoader.require(listener.type);
+                }
                 if (typeof dataEventListener.beforeUpgrade === 'function')
                     this.on('before.upgrade', dataEventListener.beforeUpgrade);
                 if (typeof dataEventListener.beforeSave === 'function')

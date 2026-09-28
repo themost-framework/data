@@ -1,5 +1,9 @@
 import { resolve } from 'path';
-import {DataContext, OnBeforeGetExpandableAssociation, OnBeforeGetExpandableJunction} from '../index';
+import {
+    DataContext, OnBeforeGetAnyExpandable,
+    OnBeforeGetExpandableAssociation,
+    OnBeforeGetExpandableJunction
+} from '../index';
 import { TestApplication } from './TestApplication';
 
 describe('OnBeforeExecuteExpand', () => {
@@ -22,7 +26,7 @@ describe('OnBeforeExecuteExpand', () => {
             name: 'james.may@example.com'
         })
         const items = await context.model('Order').on('before.execute', (event, callback) => {
-            return new OnBeforeGetExpandableAssociation().beforeExecute(event, callback);
+            return new OnBeforeGetAnyExpandable().beforeExecute(event, callback);
             //return callback();
         }).where('orderStatus/alternateName').equal('OrderPickup').getItems();
         expect(items).toBeTruthy();
@@ -34,7 +38,7 @@ describe('OnBeforeExecuteExpand', () => {
             name: 'james.may@example.com'
         })
         const q = await context.model('Order').on('before.execute', (event, callback) => {
-            return new OnBeforeGetExpandableAssociation().beforeExecute(event, callback);
+            return new OnBeforeGetAnyExpandable().beforeExecute(event, callback);
         }).filterAsync({
             $filter: 'orderStatus/alternateName eq \'OrderPickup\'',
             $expand: [
@@ -42,6 +46,31 @@ describe('OnBeforeExecuteExpand', () => {
                 'orderStatus($select=name,alternateName)',
                 'customer($select=givenName,familyName;$expand=address($select=streetAddress,addressLocality))'
                 ].join(',')
+        });
+        const items = await q.getItems();
+        expect(items).toBeTruthy();
+        expect(items.length).toBeTruthy();
+        for (const item of items) {
+            expect(item).toBeTruthy();
+            const keys = Object.keys(item.orderStatus);
+            expect(keys).toEqual([ 'name', 'alternateName' ]);
+        }
+    });
+
+    it('should get nested associated objects', async () => {
+        context.setUser({
+            name: 'alexis.rees@example.com'
+        })
+        const q = await context.model('Order').on('before.execute', (event, callback) => {
+            return new OnBeforeGetExpandableAssociation().beforeExecute(event, callback);
+        }).filterAsync({
+            $filter: 'orderStatus/alternateName eq \'OrderPickup\'',
+            $expand: [
+                'orderedItem($select=name)',
+                'paymentMethod($select=name,alternateName)',
+                'orderStatus($select=name,alternateName)',
+                'customer($select=givenName,familyName;$expand=address($select=streetAddress,addressLocality))'
+            ].join(',')
         });
         const items = await q.getItems();
         expect(items).toBeTruthy();
@@ -128,6 +157,27 @@ describe('OnBeforeExecuteExpand', () => {
                 const keys = Object.keys(member);
                 expect(keys).toEqual([ 'name', 'alternateName' ]);
             }
+        }
+    });
+
+    it('should get associated children', async () => {
+        context.setUser({
+            name: 'alexis.rees@example.com'
+        })
+        const q = await context.model('Person').on('before.execute', (event, callback) => {
+            return new OnBeforeGetAnyExpandable().beforeExecute(event, callback);
+        }).filterAsync({
+            $select: 'id,givenName,familyName',
+            $expand: [
+                'orders($expand=paymentMethod($select=name,alternateName),orderedItem($select=name))'
+            ].join(',')
+        });
+        const items = await q.take(1).getItems();
+        expect(items).toBeTruthy();
+        expect(items.length).toBeTruthy();
+        for (const item of items) {
+            expect(item).toBeTruthy();
+            expect(Array.isArray(item.orders)).toBeTruthy();
         }
     });
 

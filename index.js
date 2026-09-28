@@ -93,7 +93,7 @@ var { ValueFormatter, ValueDialect } = require('./ValueFormatter');
 
 var { UserService } = require('./UserService');
 
-var { OnBeforeGetExpandableAssociation, OnBeforeGetExpandableTag, OnBeforeGetExpandableJunction } = require('./OnBeforeExecuteExpand')
+var { OnBeforeGetExpandableAssociation, OnBeforeGetExpandableTag, OnBeforeGetExpandableJunction, OnBeforeGetExpandableChildren, OnBeforeGetAnyExpandable } = require('./OnBeforeExecuteExpand')
 
 var { SelectObjectQuery } = require('./select-object-query');
 
@@ -189,6 +189,8 @@ module.exports = {
     OnBeforeGetExpandableAssociation,
     OnBeforeGetExpandableTag,
     OnBeforeGetExpandableJunction,
+    OnBeforeGetExpandableChildren,
+    OnBeforeGetAnyExpandable,
     SelectObjectQuery
 };
 
