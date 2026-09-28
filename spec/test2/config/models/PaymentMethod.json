@@ -7,6 +7,7 @@
     "sealed": false,
     "abstract": false,
     "implements": "Enumeration",
+    "@json.expandable": true,
     "version": "2.1",
     "fields": [
         {

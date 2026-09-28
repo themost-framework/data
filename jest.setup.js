@@ -1,7 +1,8 @@
 const { TraceUtils } = require('@themost/common');
 const { JsonLogger  } = require('@themost/json-logger');
 TraceUtils.useLogger(new JsonLogger({
-    format: 'raw'
+    format: 'raw',
+    level: 'debug',
 }));
 /* env */
 process.env.NODE_ENV = 'development';

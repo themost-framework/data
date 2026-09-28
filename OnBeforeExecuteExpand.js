@@ -129,6 +129,43 @@ function getBeforeExecuteMappings(event) {
     return [];
 }
 
+/**
+ * Validates if the given attribute is expandable by checking the @json.expandable property
+ * @param {import('@themost/data').DataField} attribute
+ * @returns {boolean}
+ */
+function isJsonExpandableAttibute(attribute) {
+    if (attribute == null) {
+        // do nothing if attribute is not found
+        return false;
+    }
+    const jsonExpandable =  Object.getOwnPropertyDescriptor(attribute, '@json.expandable');
+    if (jsonExpandable == null) {
+        // do nothing if @json.expandable attribute is not found
+        return false;
+    }
+    return jsonExpandable.value === true;
+}
+
+/**
+ * Validates if the given model is expandable by checking the @json.expandable property
+ * @param {import('@themost/data').DataModel} model
+ * @returns {boolean}
+ */
+function isJsonExpandableModel(model) {
+    if (model == null) {
+        // do nothing if attribute is not found
+        return false;
+    }
+    const jsonExpandable =  Object.getOwnPropertyDescriptor(model, '@json.expandable');
+    if (jsonExpandable == null) {
+        // do nothing if @json.expandable attribute is not found
+        return false;
+    }
+    return jsonExpandable.value === true;
+
+}
+
 class OnAfterGetExpandableObject {
     /**
      * @param {import('@themost/data').DataEventArgs} event
@@ -230,6 +267,14 @@ class OnBeforeGetExpandableAssociation {
                             const { mapping, expr } = item;
                             try {
                                 if (mapping.associationType === 'association' && mapping.childModel === model.name) {
+                                    // get associated model query
+                                    const parentModel = context.model(mapping.parentModel);
+                                    const attribute = model.getAttribute(mapping.refersTo);
+                                    const isJsonExpandable = isJsonExpandableModel(parentModel) || isJsonExpandableAttibute(attribute);
+                                    if (isJsonExpandable === false) {
+                                        // do nothing if current attribute or parent model is not expandable
+                                        return cb();
+                                    }
                                     // get select query object name
                                     const [selectView] = Object.keys(event.emitter.query.$select);
                                     // get the view object of the current model
@@ -238,8 +283,7 @@ class OnBeforeGetExpandableAssociation {
                                     const selectFields = event.emitter.query.$select[selectView];
                                     // try to include json-like query for getting foreign key association
                                     const options = mapping.options || {};
-                                    // get associated model query
-                                    const parentModel = context.model(mapping.parentModel);
+
                                     void parentModel.migrateAsync().then(() => {
                                         void parentModel.filterAsync(options).then((q) => {
                                             const { query } = q.prepare();
@@ -255,7 +299,7 @@ class OnBeforeGetExpandableAssociation {
                                             };
                                             return new Promise((resolve, reject) => {
                                                 // execute before execute event for the parent model of the current association
-                                                void new OnBeforeGetExpandableAssociation().beforeExecute(event, (err) => {
+                                                void new OnBeforeGetAnyExpandable().beforeExecute(event, (err) => {
                                                     if (err) {
                                                         return reject(err);
                                                     }
@@ -376,6 +420,12 @@ class OnBeforeGetExpandableTag {
                             const { mapping, expr } = item;
                             // handle object tags (a collection of primitive values associated to a model)
                             if (mapping.associationType === 'junction' && mapping.childModel == null && mapping.parentModel === model.name) {
+                                // get the attribute of the current model that is associated to the junction model by the current mapping
+                                const attribute = model.getAttribute(mapping.refersTo);
+                                if (isJsonExpandableAttibute(attribute) === false) {
+                                    // do nothing if attribute is not expandable
+                                    return cb();
+                                }
                                 // get select query object name
                                 const [selectView] = Object.keys(event.emitter.query.$select);
                                 // get the view object of the current model
@@ -389,8 +439,6 @@ class OnBeforeGetExpandableTag {
                                 const property = model.convert({}).property(mapping.refersTo);
                                 // get the data model that holds the values of this association
                                 const baseModel = property.getBaseModel();
-                                // get the attribute of the current model that is associated to the junction model by the current mapping
-                                const attribute = model.getAttribute(mapping.refersTo);
                                 // if attribute type
                                 if (attribute.type === 'Json' && attribute.additionalType !== 'null') {
                                     // upgrade base model
@@ -448,7 +496,6 @@ class OnBeforeGetExpandableTag {
 }
 
 
-
 class OnBeforeGetExpandableJunction {
     /**
      * @param {import('@themost/data').DataEventArgs} event
@@ -479,6 +526,18 @@ class OnBeforeGetExpandableJunction {
                             const { mapping, expr } = item;
                             // handle object tags (a collection of primitive values associated to a model)
                             if (mapping.associationType === 'junction' && mapping.childModel != null) {
+                                /**
+                                 * @type {import('./data-model').DataModel}
+                                 */
+                                const additionalModel = mapping.childModel === model.name ?
+                                    context.model(mapping.parentModel) :
+                                    context.model(mapping.childModel);
+                                const attribute = model.getAttribute(mapping.refersTo);
+                                const isJsonExpandable = isJsonExpandableModel(additionalModel) || isJsonExpandableAttibute(attribute);
+                                if (isJsonExpandable === false) {
+                                    // do nothing if current attribute or additional model is not expandable
+                                    return cb();
+                                }
                                 // get select query object name
                                 const [selectView] = Object.keys(event.emitter.query.$select);
                                 // get the view object of the current model
@@ -492,12 +551,7 @@ class OnBeforeGetExpandableJunction {
                                 const property = model.convert({}).property(mapping.refersTo);
                                 // get the data model that holds the values of this association
                                 const baseModel = property.getBaseModel();
-                                /**
-                                 * @type {import('./data-model').DataModel}
-                                 */
-                                const additionalModel = mapping.childModel === model.name ?
-                                    context.model(mapping.parentModel) :
-                                    context.model(mapping.childModel);
+
                                 // ensure that data objects exist
                                 return baseModel.migrateAsync().then(() => {
                                     return additionalModel.migrateAsync()
@@ -517,7 +571,7 @@ class OnBeforeGetExpandableJunction {
                                         };
                                         return new Promise((resolve, reject) => {
                                             // execute before execute event for the parent model of the current association
-                                            void new OnBeforeGetExpandableJunction().beforeExecute(event, (err) => {
+                                            void new OnBeforeGetAnyExpandable().beforeExecute(event, (err) => {
                                                 if (err) {
                                                     return reject(err);
                                                 }
@@ -592,8 +646,160 @@ class OnBeforeGetExpandableJunction {
     }
 }
 
+
+class OnBeforeGetExpandableChildren {
+    /**
+     * @param {import('@themost/data').DataEventArgs} event
+     * @param {function(err?:Error)} callback
+     */
+    beforeExecute(event, callback) {
+        try {
+            void supportsBeforeExecuteExpand(event, function (err, supported) {
+                if (err) {
+                    return callback(err);
+                }
+                try {
+                    if (supported) {
+                        const mappings = getBeforeExecuteMappings(event);
+                        if (mappings.length === 0) {
+                            return callback();
+                        }
+                        const {model} = event.emitter;
+                        // get after execute listeners
+                        const listeners = model.listeners('after.execute');
+                        // and search for OnAfterGetExpandableObject listener to parse and format object that
+                        // are going to be returned to the client by the current query execution using JSON-like queries
+                        if (listeners.indexOf(OnAfterGetExpandableObject.prototype.beforeExecute) === -1) {
+                            model.on('after.execute', OnAfterGetExpandableObject.prototype.afterExecute);
+                        }
+                        const { context } = model;
+                        return eachSeries(mappings, (item, cb) => {
+                            const { mapping } = item;
+                            const attribute = model.getAttribute(mapping.refersTo);
+                            if (mapping.associationType === 'association' && mapping.parentModel === model.name) {
+                                const childModel = context.model(mapping.childModel);
+                                const isJsonExpandable = isJsonExpandableModel(childModel) || isJsonExpandableAttibute(attribute);
+                                if (isJsonExpandable === false) {
+                                    // do nothing if child model is not expandable
+                                    return cb();
+                                }
+                                // get select query object name
+                                const [selectView] = Object.keys(event.emitter.query.$select);
+                                // get the view object of the current model
+                                const { viewAdapter: ModelView } = model;
+                                // get select fields of the current queryable
+                                const selectFields = event.emitter.query.$select[selectView];
+                                if (isJsonExpandableAttibute(attribute) === false) {
+                                    // do nothing if attribute is not expandable
+                                    return cb();
+                                }
+                                // ensure that data objects exist
+                                return childModel.migrateAsync().then(() => {
+                                    const options = mapping.options || {};
+                                    void childModel.filterAsync(options).then((q) => {
+                                        const { query } = q.prepare();
+                                        // if select clause is not set, use queryable to select any field
+                                        if (query.$select == null) {
+                                            q.select();
+                                        }
+                                        // trigger a before execute event for making this procedure recursive
+                                        const event = {
+                                            model: childModel,
+                                            emitter: q,
+                                            target: null
+                                        };
+                                        return new Promise((resolve, reject) => {
+                                            // execute before execute event for the parent model of the current association
+                                            void new OnBeforeGetAnyExpandable().beforeExecute(event, (err) => {
+                                                if (err) {
+                                                    return reject(err);
+                                                }
+                                                resolve(q);
+                                            });
+                                        });
+                                    }).then((q) => {
+                                        const { viewAdapter: ChildView } = childModel;
+                                        const { query } = q.prepare();
+                                        // join
+                                        query.where(
+                                            new QueryField(mapping.childField).from(ChildView)
+                                        ).equal(
+                                            new QueryField(mapping.parentField).from(ModelView)
+                                        )
+                                        void new DataPermissionEventListener().beforeExecute({
+                                            model: childModel, // set model, the instance of child model of the current association
+                                            emitter: q, // set event emitter, the instance of data queryable
+                                            query: query, // set query, the instance of the modified query expression
+                                            target: null
+                                        }, (err) => {
+                                            if (err) {
+                                                return cb(err);
+                                            }
+                                            // include json-like query in select clause of the current queryable
+                                            selectFields.push({
+                                                [mapping.refersTo]: {
+                                                    $jsonArray: [
+                                                        query
+                                                    ]
+                                                }
+                                            });
+                                            // remove field from select clause
+                                            const index = selectFields.findIndex((field) => {
+                                                return field.$name === `${selectView}.${mapping.childField}`;
+                                            });
+                                            if (index >= 0) {
+                                                selectFields.splice(index, 1);
+                                            }
+                                            return cb();
+                                        });
+                                    });
+                                });
+                            }
+                            return cb();
+                        }, (err) => {
+                            if (err) {
+                                return callback(err);
+                            }
+                            return callback();
+                        });
+                    }
+                    return callback();
+                } catch (error) {
+                    return callback(error);
+                }
+            });
+        } catch (err) {
+            return callback(err);
+        }
+    }
+}
+
+class OnBeforeGetAnyExpandable {
+    /**
+     * @param {import('@themost/data').DataEventArgs} event
+     * @param {function(err?:Error)} callback
+     */
+    beforeExecute(event, callback) {
+        eachSeries([
+            new OnBeforeGetExpandableAssociation(),
+            new OnBeforeGetExpandableChildren(),
+            new OnBeforeGetExpandableJunction(),
+            new OnBeforeGetExpandableTag()
+        ], (listener, cb) => {
+            void listener.beforeExecute(event, cb);
+        }, (err) => {
+            if (err) {
+                return callback(err);
+            }
+            return callback();
+        });
+    }
+}
+
 module.exports = {
+    OnBeforeGetAnyExpandable,
     OnBeforeGetExpandableAssociation,
+    OnBeforeGetExpandableChildren,
     OnBeforeGetExpandableJunction,
     OnBeforeGetExpandableTag
 }
