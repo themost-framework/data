@@ -1,27 +1,32 @@
-# Use `@themost/data` to create a data model
+---
+title: Create a data model
+summary: Learn how to define a model schema, add fields, and understand how inherited models map to database tables and views.
+category: Data models
+readingTime: 5 minutes
+---
 
-`@themost/data` is a module that provides a simple way to create a data model schema. A data model schema is a set of rules that define the structure of a data model. It defines the fields of the data model, the type of each field, and other properties of the data model.
+# Create a data model
 
-This tutorial will show you how to create a simple data model schema.
+In `@themost/data`, a model schema describes a model's fields, their types, and other model properties. Model definitions are JSON files stored in the application's `config/models` directory.
 
-## Create a data model
+## Define a model
 
-To create a data model, you need to create a new file in the `config/models` directory. The file name will be the name of the data model. For example, if you want to create a data model called `Product`, you need to create a file called `Product.json`.
+Create a file named after the model. For example, define a `Product` model in `config/models/Product.json`:
 
 ```json
 {
     "$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json",
     "name": "Product",
     "version": "2.1",
-    "inherits": "Thing",
+    "inherits": "Thing"
 }
 ```
 
-The `name` property is the name of the data model. The `version` property is the version of the data model. The `inherits` property is the name of the base data model. In this example, the `Product` data model inherits from the `Thing` data model. The `Thing` data model is a built-in data model that is used to represent any object in the system.
+The `name` property identifies the model, `version` tracks its schema version, and `inherits` specifies its base model. In this example, `Product` inherits the common fields defined by the built-in `Thing` model.
 
-Important Note: Don't forget to use `$schema` property as `https://themost-framework.github.io/themost/models/2018/2/schema.json` in order to enable intellisense in your editor.
+Include `"$schema": "https://themost-framework.github.io/themost/models/2018/2/schema.json"` to enable schema validation and editor support.
 
-Let's see the json schema of `Thing` model
+The following is the model definition for `Thing`:
 
 ```json
 {
@@ -149,36 +154,34 @@ Let's see the json schema of `Thing` model
 }
 ```
 
-The `fields` property is an array of fields. Each field has a name, a type, and other properties. The `name` property is the name of the field. The `type` property is the type of the field. The `value` property is the default value of the field. The `readonly` property indicates whether the field is read-only. The `primary` property indicates whether the field is a primary key. The `calculation` property is a function that is used to calculate the value of the field.
+The `fields` property is an array of field definitions. Each field has a `name` and a `type`; optional properties describe its value and behavior. For example, `value` sets a default, `readonly` marks a field as read-only, `primary` identifies a key field, and `calculation` defines a calculated value.
 
-Note: If you want to read more about the `Thing` data model, you can read the [schema.org](https://schema.org/Thing) documentation.
+For more information about the concepts represented by `Thing`, see the [schema.org Thing documentation](https://schema.org/Thing).
 
-### Database schema
+## Database tables and views
 
-Each one of these fields are going to be represented as a column in the database table  e.g. `ThingBase` where the `id` field is the primary key of the table. The `dateCreated` field is the date on which the record was created. The `dateModified` field is the date on which the record was last modified. The `createdBy` field is the user who created the record. The `modifiedBy` field is the user who last modified the record.
+The model's stored fields are represented by columns in its database table. For example, the `Thing` model is stored in `ThingBase`, where `id` is the primary key. The `dateCreated` and `dateModified` fields record when a row was created and last modified, while `createdBy` and `modifiedBy` identify the users responsible for those changes.
 
 ![ThingBase](./images/ThingBaseSchema.png)
 
- Each data model will have a corresponding table in the database which will be used to store the data of the data model. e.g. The `Product` data model will have a corresponding `ProductBase` table in the database. The `source` attribute of the data model is used to specify the name of the database table. If you don't specify the `source` attribute, the name of the database table will be the name of the data model with the suffix `Base`. 
- 
- ![ProductBase](./images/ProductBaseTable.png)
+Each model has a corresponding database table for storing its data. By default, the table name is the model name with the `Base` suffix; for example, `Product` uses `ProductBase`. Set the model's `source` property to choose a different table name.
 
- `ProductBase` table will have a foreign key to the `ThingBase` table. This foreign key will be used to represent the inheritance of the `Product` data model from the `Thing` data model.
- 
- This table will be created automatically by the `@themost/data` module each time that you are upgrading your data model by increasing the `version` attribute. `@themost/data` data migration engine will automatically add new fields, remove unused fields or update existing ones.
+![ProductBase](./images/ProductBaseTable.png)
 
-`@themost/data`  will automatically create also a database view for each data model e.g. The `Product` data model will have a corresponding `ProductData` database view in the database. The `view` attribute of the data model is used to specify the name of the database view. If you don't specify the `view` attribute, the name of the database view will be the name of the data model with the suffix `Data`.
+Because `Product` inherits from `Thing`, `ProductBase` has a foreign key to `ThingBase`. When you increase the model's version, the `@themost/data` migration engine can apply schema changes, including adding, removing, or updating fields.
 
-This database view will be used to query the data of the data model. It will be a join of a data model and its inherited model e.g.  the `ProductBase` table which represents `Product` with the `ThingBase` table which represents `Thing`.
+`@themost/data` also creates a database view for each model. By default, the view name is the model name with the `Data` suffix, such as `ProductData`. Set the model's `view` property to choose a different name.
+
+The view is used to query model data and joins the model's table with those of its inherited models. For `Product`, `ProductData` joins `ProductBase` and `ThingBase`.
 
 ![ProductData](./images/ProductDataView.png)
 
 
-### Define fields
+## Define fields
 
-Each data model has a set of fields. The type of each field can be a primitive type, such as `Text`, `Date`, `Number`, or a reference to another data model.
+Each model has a set of fields. A field can use a built-in type such as `Text`, `Date`, or `Number`, or use another model's name as its type to refer to that model.
 
-The following json schema represents `Product` model and defines all extra fields that represent this model which inherits `Thing`.
+The following definition adds fields to `Product`, which inherits fields from `Thing`:
 
 ```json
 {
@@ -239,7 +242,10 @@ The following json schema represents `Product` model and defines all extra field
 }
 ```
 
-Checkout [this example at stackblitz.com](https://stackblitz.com/edit/stackblitz-starters-a36ttb) to see how to define a simple model like `Product` using `@themost/data` module.
+See [this StackBlitz example](https://stackblitz.com/edit/stackblitz-starters-a36ttb) for a working project that uses `@themost/data` to define a model like `Product`.
 
 ![Stackblitz](./images/StackblitzStarterProject.png)
 
+## Summary
+
+Define models as JSON files in `config/models`, use the `$schema` property for editor support, and describe model data with fields and types. Inheritance maps models to related database tables, while the generated data view provides a queryable representation of the model and its inherited fields.
