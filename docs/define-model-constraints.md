@@ -1,4 +1,5 @@
 ---
+index: 700
 title: Define a model constraint
 summary: Add a unique constraint to a model and use one or more fields to define which values must be unique.
 category: Data models

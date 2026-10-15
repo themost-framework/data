@@ -1,4 +1,5 @@
 ---
+index: 1200
 title: Create a data model
 summary: Learn how to define a model schema, add fields, and understand how inherited models map to database tables and views.
 category: Data models

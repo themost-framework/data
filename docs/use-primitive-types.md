@@ -1,4 +1,5 @@
 ---
+index: 1000
 title: Use primitive types in data models
 summary: Choose built-in field types for text, numbers, dates, and other values in a data model.
 category: Data models
@@ -67,7 +68,7 @@ These types describe value expectations in the data type catalog; do not assume 
 
 ## Distinguish primitive values from associations
 
-`Model` is a primitive type for storing a model name as a value. To refer to another model's records, use that model's name as the field type instead. For example, a `Product` field whose type is `Category` is model-valued and represents an association, not a scalar primitive. See [Define associations between data models](003-define-model-associations.md) for association examples.
+`Model` is a primitive type for storing a model name as a value. To refer to another model's records, use that model's name as the field type instead. For example, a `Product` field whose type is `Category` is model-valued and represents an association, not a scalar primitive. See [Define associations between data models](define-model-associations.md) for association examples.
 
 The schema also accepts type names outside its built-in list. Use such a type only when the application or its data adapter defines and supports it.
 

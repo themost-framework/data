@@ -1,4 +1,5 @@
 ---
+index: 200
 title: Define field types
 summary: A guide to the built-in scalar field types in @themost/data, when to use them, and how model-valued fields differ from scalar types.
 category: Data models

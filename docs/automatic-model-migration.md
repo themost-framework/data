@@ -1,4 +1,5 @@
 ---
+index: 900
 title: Run automatic model migrations after a version change
 summary: Understand how changing a model version is detected, which operations start migration, and how to request an upgrade explicitly.
 category: Data models

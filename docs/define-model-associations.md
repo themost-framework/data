@@ -1,4 +1,5 @@
 ---
+index: 300
 title: Define associations between data models
 summary: Learn how model-valued fields, association mappings, and junction mappings describe relationships between data models.
 category: Data models

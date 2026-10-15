@@ -1,4 +1,5 @@
 ---
+index: 1300
 title: Define model fields
 summary: Learn how to declare model fields with primitive types and configure associations between data models.
 category: Data models
@@ -75,7 +76,7 @@ Use these types in a model's `fields` array:
 }
 ```
 
-Here, `age` stores an integer, `isActive` stores a Boolean, and `createdAt` stores a date and time. For more information, see [Use primitive types](01000-use-primitive-types.md).
+Here, `age` stores an integer, `isActive` stores a Boolean, and `createdAt` stores a date and time. For more information, see [Use primitive types](use-primitive-types.md).
 
 ## Define relationships
 
@@ -330,4 +331,4 @@ The `associationObjectField` and `associationValueField` properties specify the 
 
 ## Summary
 
-Define each field with a name and type, then add properties for constraints, display, or behavior as needed. Use a model name as the type to create an association, and configure its mapping to represent one-to-many, many-to-many, or one-to-one relationships. Use primitive types for scalar values; see the [primitive types guide](01000-use-primitive-types.md) for details.
+Define each field with a name and type, then add properties for constraints, display, or behavior as needed. Use a model name as the type to create an association, and configure its mapping to represent one-to-many, many-to-many, or one-to-one relationships. Use primitive types for scalar values; see the [primitive types guide](use-primitive-types.md) for details.

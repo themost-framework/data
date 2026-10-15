@@ -1,4 +1,5 @@
 ---
+index: 100
 title: Working with ValueFormatter in Model Schemas
 summary: Learn how model field defaults and calculations use ValueFormatter expressions, which operators are available, and how to write practical schema examples.
 category: Data models

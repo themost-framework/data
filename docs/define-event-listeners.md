@@ -1,4 +1,5 @@
 ---
+index: 600
 title: Define event listeners
 summary: Learn how to attach custom handlers to data model events, load their modules, and implement the callback-based listener contract.
 category: Data models

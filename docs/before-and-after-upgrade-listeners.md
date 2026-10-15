@@ -1,4 +1,5 @@
 ---
+index: 800
 title: Handle data model upgrades with event listeners
 summary: Learn when beforeUpgrade and afterUpgrade run during automatic model migration, how to register them, and what to expect from their event and callback arguments.
 category: Data models

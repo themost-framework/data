@@ -1,4 +1,5 @@
 ---
+index: 500
 title: Create and configure a data model
 summary: Learn how to define a model in JSON, configure its fields and key, and access it through a data context.
 category: Data models
@@ -84,7 +85,7 @@ const items = await products
 
 ## Add related models deliberately
 
-For a field that refers to another model, use that model's name as the field's `type`. Association mappings can specify how the relationship is represented when needed; their mapping options are covered in [Define associations between data models](00300-define-model-associations.md). For a deeper reference to supported built-in types, see [Define field types](00200-field-types-in-model-schemas.md).
+For a field that refers to another model, use that model's name as the field's `type`. Association mappings can specify how the relationship is represented when needed; their mapping options are covered in [Define associations between data models](define-model-associations.md). For a deeper reference to supported built-in types, see [Define field types](field-types-in-model-schemas.md).
 
 ## Summary
 

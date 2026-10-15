@@ -1,4 +1,5 @@
 ---
+index: 400
 title: Define multi-valued properties
 summary: Learn how to define a property that holds multiple scalar values, how @themost/data maps those values, and how to read and update them.
 category: Data models
