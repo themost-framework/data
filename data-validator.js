@@ -3,7 +3,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var _ = require('lodash');
-var {sprintf} = require('sprintf-js');
+var {printf:sprintf} = require('fast-printf');
 var {LangUtils} = require('@themost/common');
 var {DataConfigurationStrategy} = require('./data-configuration');
 var {hasOwnProperty} = require('./has-own-property');

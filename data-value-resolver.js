@@ -1,6 +1,6 @@
 const {DataAttributeResolver} = require('./data-attribute-resolver');
 const {isObjectDeep} = require('./is-object');
-const {sprintf} = require('sprintf-js');
+const {printf:sprintf} = require('fast-printf');
 var {Expression} = require('@themost/query');
 
 /**
