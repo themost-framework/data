@@ -1,5 +1,5 @@
 const { DataError } = require('@themost/common');
-const { sprintf } = require('sprintf-js');
+const { printf:sprintf } = require('fast-printf');
 
 /**
    * @private

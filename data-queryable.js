@@ -1,6 +1,6 @@
 // MOST Web Framework 2.0 Codename Blueshift BSD-3-Clause license Copyright (c) 2017-2022, THEMOST LP All rights reserved
 var async = require('async');
-var {sprintf} = require('sprintf-js');
+var {printf:sprintf} = require('fast-printf');
 var Symbol = require('symbol');
 var _ = require('lodash');
 var {TextUtils} = require('@themost/common');

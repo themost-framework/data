@@ -1,5 +1,5 @@
 var {QueryField, QueryEntity, QueryUtils, MethodCallExpression, MemberExpression, Expression, ObjectNameValidator} = require('@themost/query');
-var {sprintf} = require('sprintf-js');
+var {printf:sprintf} = require('fast-printf');
 var _ = require('lodash');
 var {DataError} = require('@themost/common');
 var Symbol = require('symbol');

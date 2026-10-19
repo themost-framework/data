@@ -2,7 +2,7 @@
 // noinspection ES6ConvertVarToLetConst
 
 var {TypeParser} = require('./types');
-var {sprintf} = require('sprintf-js');
+var {printf:sprintf} = require('fast-printf');
 var {TraceUtils, Guid} = require('@themost/common');
 // eslint-disable-next-line no-unused-vars
 var moment = require('moment');

@@ -3,7 +3,7 @@
 
 var _ = require('lodash');
 var {cloneDeep} = require('lodash');
-var {sprintf} = require('sprintf-js');
+var {printf:sprintf} = require('fast-printf');
 var Symbol = require('symbol');
 var path = require('path');
 var pluralize = require('pluralize');
