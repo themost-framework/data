@@ -1,10 +1,73 @@
-import { resolve } from 'path';
-import { DataContext } from '../index';
-import { TestApplication } from './TestApplication';
+// noinspection JSUnusedLocalSymbols
+
+import {resolve} from 'path';
+import {DataAssociationMapping, DataContext, DataObjectTag} from '../index';
+import {TestApplication} from './TestApplication';
+import {DataFilterResolver} from '@themost/data';
+import {MemberExpression, QueryEntity, QueryExpression, QueryField} from '@themost/query';
+
+declare class DataFilterResolverWithExtensions extends DataFilterResolver {
+    regions(): Promise<string[]>;
+}
 
 describe('Permissions', () => {
     let app: TestApplication;
     let context: DataContext;
+
+    function regions(callback: (err?: Error, res?: any) => void) {
+        return this.context.model('User').asQueryable()
+            .select('id', 'name')
+            .where('name').equal(this.context.user.name)
+            .expand('userRegions').silent().getItem().then((user: any) => {
+                const values = (user && user.userRegions || []);
+                return callback(null, values);
+            }).catch((err: Error) => {
+                return callback(err);
+            });
+    }
+
+    function userRegions(callback: (err?: Error, res?: any) => void) {
+        const Users = this.context.model('User');
+        const { viewAdapter: UserView } = Users;
+        const property: DataObjectTag = Users.convert({}).property('userRegions');
+        const { viewAdapter: UserRegionView } = property.getBaseModel();
+        const mapping: DataAssociationMapping = property.mapping;
+        void property.migrate((err: Error) => {
+            if (err) {
+                return callback(err);
+            }
+            const query = new QueryExpression().select(
+                new QueryField(mapping.associationValueField).from('userRegions')
+            ).from('Any')
+                .join(new QueryEntity(UserView).as('userRegions_Users'))
+                .with(
+                    new QueryExpression().where(
+                        new QueryField('name').from('userRegions_Users')
+                    ).equal(
+                        this.context.user.name
+                    )
+                )
+                .join(new QueryEntity(UserRegionView).as('userRegions')).with(
+                    new QueryExpression().where(
+                        new QueryField(mapping.associationObjectField).from('userRegions')
+                    ).equal(
+                        new QueryField('id').from('userRegions_Users')
+                    )
+                );
+            const { $expand } = query;
+            return callback(null, Object.assign(new MemberExpression(`userRegions.${mapping.associationValueField}`), {
+                $expand
+            }));
+        });
+    }
+
+    if (Object.prototype.hasOwnProperty.call(DataFilterResolver.prototype, 'regions') === false) {
+        Object.assign(DataFilterResolver.prototype, {
+            regions,
+            userRegions
+        })
+    }
+
     beforeAll(async () => {
         app = new TestApplication(resolve(__dirname, 'test2'));
         context = app.createContext();
@@ -123,6 +186,50 @@ describe('Permissions', () => {
         };
         await expect(OrderActions.save(updateAction)).resolves.toBeTruthy();
 
+    });
+
+    it('should get items based on user access', async () => {
+        context.user = {
+            name: 'jane.keene@example.com'
+        };
+        const q = await context.model('Person').filterAsync(
+            { $filter: 'address/addressRegion eq regions()'}
+        );
+
+        const user = await context.model('User').asQueryable()
+            .select('id', 'name')
+            .where('name').equal(context.user.name)
+            .expand('userRegions').silent().getItem();
+
+        expect(q).toBeTruthy();
+        const items = await q.getItems();
+        expect(items).toBeTruthy();
+        expect(items.length).toBeTruthy();
+        for (const item of items) {
+            expect(user.userRegions.some((region: string) => region === item.address.addressRegion)).toBeTruthy();
+        }
+    });
+
+    it('should get items using queryable method', async () => {
+        context.user = {
+            name: 'jane.keene@example.com'
+        };
+        const q = await context.model('Person').filterAsync(
+            { $filter: 'address/addressRegion eq userRegions()'}
+        );
+
+        const user = await context.model('User').asQueryable()
+            .select('id', 'name')
+            .where('name').equal(context.user.name)
+            .expand('userRegions').silent().getItem();
+
+        expect(q).toBeTruthy();
+        const items = await q.getItems();
+        expect(items).toBeTruthy();
+        expect(items.length).toBeTruthy();
+        for (const item of items) {
+            expect(user.userRegions.some((region: string) => region === item.address.addressRegion)).toBeTruthy();
+        }
     });
 
 });
