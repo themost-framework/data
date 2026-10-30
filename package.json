@@ -1,6 +1,6 @@
 {
   "name": "@themost/data",
-  "version": "2.6.114",
+  "version": "2.6.115",
   "description": "MOST Web Framework Codename Blueshift - Data module",
   "main": "index.js",
   "types": "index.d.ts",
