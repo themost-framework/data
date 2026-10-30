@@ -95,6 +95,49 @@ describe('JsonAttribute', () => {
         });
     });
 
+    it('should update and get unknown nested json attribute', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            const Orders = context.model('Order').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            const items = await Orders.where('orderedItem/extraAttributes/ram').equal('8GB').getItems();
+            expect(items.length).toBeTruthy();
+        });
+    });
+
+    it('should update and get unknown nested json attribute using filter', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Products = context.model('Product').silent();
+            const Orders = context.model('Order').silent();
+            let item = await Products.where('name').equal('Apple MacBook Air (13.3-inch, 2013 Version)').getItem()
+            expect(item).toBeTruthy();
+            item.extraAttributes = {
+                cpu: {
+                    brand: 'Intel',
+                    model: 'Core i5'
+                },
+                ram: '8GB'
+            }
+            await Products.save(item);
+            expect(item.dateCreated).toBeTruthy();
+            const q = await Orders.filterAsync({
+                $filter: "orderedItem/extraAttributes/ram eq '8GB'"
+            });
+            const items = await q.getItems();
+            expect(items.length).toBeTruthy();
+        });
+    });
+
     it('should update and get unknown json attribute value', async () => {
         await TestUtils.executeInTransaction(context, async () => {
             const Products = context.model('Product').silent();
@@ -398,6 +441,31 @@ describe('JsonAttribute', () => {
                 $select: 'id as id,orderedItem as orderedItem,tags as orderTags'
             });
             const [item] = await q.getItems();
+            expect(item).toBeTruthy();
+            expect(Array.isArray(item.orderTags)).toBeTruthy();
+        });
+    });
+
+    it('should use nested json attribute using filter', async () => {
+        await TestUtils.executeInTransaction(context, async () => {
+            const Orders = context.model('Order').silent();
+            const order =  await Orders.asQueryable().where((x: { id:number, orderedItem: { name: string }, tags?: string[] }) => {
+                return x.orderedItem.name === 'Apple MacBook Air (13.3-inch, 2013 Version)';
+            }).getItem();
+            expect(order).toBeTruthy();
+            const { id } = order;
+            order.tags = ['apple', 'macbook', 'laptop'];
+            await Orders.save(order);
+            const { customer } = order;
+            // get customer orders
+            const People = context.model('Person').silent();
+            // force set aliases
+            const q = await People.filterAsync({
+                $filter: `id eq ${customer}`,
+                $select: 'orders/id as id,orders/orderedItem as orderedItem,orders/tags as orderTags'
+            });
+            const items = await q.getItems();
+            const item = items.find((item) => item.id === id);
             expect(item).toBeTruthy();
             expect(Array.isArray(item.orderTags)).toBeTruthy();
         });
