@@ -377,8 +377,17 @@ DataAttributeResolver.prototype.resolveNestedAttribute = function(attr) {
                 // do nothing and return select expression
                 return select;
             }
-            if (_.isNil(self.query.$expand)) {
-                self.query.$expand = expr;
+            if (self.query.$expand == null) {
+                // if expr is a join expression e.g. { $entity: ..., $with: ... }
+                if (Object.prototype.hasOwnProperty.call(expr, '$entity')) {
+                    self.query.$expand = [].concat(expr);
+                } else if (Array.isArray(expr.$expand)) {
+                    self.query.$expand = [].concat(expr.$expand);
+                } else if (expr.$expand && Object.prototype.hasOwnProperty.call(expr.$expand, '$entity')) {
+                    self.query.$expand = [].concat(expr.$expand);
+                } else if (Array.isArray(expr)) {
+                    self.query.$expand = [].concat(expr);
+                }
             }
             else {
                 arr = [];
@@ -487,7 +496,19 @@ DataAttributeResolver.prototype.resolveNestedAttributeJoin = function(memberExpr
             if (arrMember.length>2) {
                 parentModel[aliasProperty] = mapping.childField;
                 expr = DataAttributeResolver.prototype.resolveNestedAttributeJoin.call(parentModel, arrMember.slice(1).join('/'));
+                if (typeof expr.$select === 'object') {
+                    return {
+                        $select: expr.$select,
+                        $expand: [].concat(res.$expand).concat(expr.$expand)
+                    }
+                }
+                if (expr.$expand) {
+                    return {
+                        $expand: [].concat(res.$expand).concat(expr.$expand)
+                    }
+                }
                 return [].concat(res.$expand).concat(expr);
+
             } else {
                 // validate attribute name
                 var attribute = parentModel.getAttribute(arrMember[1]);
