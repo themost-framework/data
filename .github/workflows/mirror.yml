@@ -9,5 +9,5 @@ concurrency: codeberg-mirror
 
 jobs:
   mirror:
-    uses: themost-framework/shared-workflows/.github/workflows/mirror_codeberg.yml@main
+    uses: themost-framework/.github/.github/workflows/mirror_codeberg.yml@main
     secrets: inherit
