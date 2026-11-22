@@ -1,0 +1,13 @@
+name: Mirror
+
+on:
+  push:
+  delete:
+  workflow_dispatch:
+
+concurrency: codeberg-mirror
+
+jobs:
+  mirror:
+    uses: themost-framework/shared-workflows/.github/workflows/mirror_codeberg.yml@main
+    secrets: inherit
